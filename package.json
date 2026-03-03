@@ -7,17 +7,29 @@
         "dev": "vite"
     },
     "devDependencies": {
+        "@iconify/iconify": "^3.1.1",
+        "@iconify/json": "^2.2.444",
+        "@iconify/tools": "^5.0.3",
+        "@iconify/utils": "^3.1.0",
         "@popperjs/core": "^2.11.8",
-        "@tailwindcss/vite": "^4.0.0",
-        "axios": "^1.8.2",
-        "bootstrap": "^5.3.7",
-        "concurrently": "^9.0.1",
-        "laravel-vite-plugin": "^1.2.0",
-        "sass": "^1.89.2",
-        "vite": "^6.2.4"
+        "@rollup/plugin-html": "^2.0.0",
+        "axios": "^1.13.6",
+        "bootstrap": "^5.3.8",
+        "concurrently": "^9.2.1",
+        "deepmerge": "^4.3.1",
+        "glob": "^13.0.0",
+        "gulp-environment": "^1.5.2",
+        "laravel-vite-plugin": "^2.0.1",
+        "perfect-scrollbar": "^1.5.6",
+        "vite": "^7.2.4"
     },
     "dependencies": {
-        "perfect-scrollbar": "^1.5.6",
-        "smooth-scrollbar": "^8.8.4"
+        "apexcharts": "^5.6.0",
+        "flatpickr": "^4.6.13",
+        "highlight.js": "^11.11.1",
+        "jquery": "^3.7.1",
+        "sass-embedded": "^1.93.3",
+        "select2": "^4.1.0-rc.0",
+        "sweetalert2": "^11.26.21"
     }
 }

@@ -1,31 +1,34 @@
-<x-layout>
+@extends('layouts/contentNavbarLayout')
+
+@section('title', 'Cards basic - UI elements')
+@section('content')
     {{-- breadcrumb --}}
-    @section('breadcrumb')
-        @php
+@section('breadcrumb')
+    @php
         // Definisikan item breadcrumb dalam bentuk array
         $breadcrumbItems = [
             ['name' => 'Page', 'url' => '/dashboard'],
             ['name' => 'Manajemen User', 'url' => route('users.index')],
         ];
-        @endphp
+    @endphp
 
-        {{-- Panggil component breadcrumb dan kirim datanya --}}
-        <x-breadcrumb :items="$breadcrumbItems" />
-    @endsection
+    {{-- Panggil component breadcrumb dan kirim datanya --}}
+    <x-breadcrumb :items="$breadcrumbItems" />
+@endsection
 
-    <div class="container-fluid p-3 ">
-        <div class="card rounded-2">
-            <div class="card-header d-flex pb-0">
-                <div class="mb-3 mt-n2">
-                    <h5 class="mb-0">Data Pengguna</h5>
-                    <p class="text-sm mb-0">Kelola Data Penggunamu</p>
-                </div>
-                <div class="ms-auto mt-n2">
-                    <a href="{{ route('users.create') }}" class="btn btn-outline-info">
-                        <i class="bi bi-plus-lg pe-2"></i>Buat User
-                    </a>
-                </div>
+<div class="container-fluid p-3 ">
+    <div class="card rounded-2">
+        <div class="card-header d-flex pb-0">
+            <div class="mb-3 mt-n2">
+                <h5 class="mb-0">Data Pengguna</h5>
+                <p class="text-sm mb-0">Kelola Data Penggunamu</p>
             </div>
+            <div class="ms-auto mt-n2">
+                <a href="{{ route('users.create') }}" class="btn btn-outline-info">
+                    <i class="bx bx-plus-lg pe-2"></i>Buat User
+                </a>
+            </div>
+        </div>
         <div class="card-body p-0">
             <div class="row justify-content-between px-4 mb-3">
                 <div class="col-md-3 col-6">
@@ -37,33 +40,37 @@
                     </select>
                 </div>
             </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-items-center justify-content-start mb-0" id="tableData">
-                        <thead>
-                            <tr class="table-secondary">
-                                <th class="text-uppercase text-dark text-xs font-weight-bolder">Nama</th>
-                                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">kontak</th>
-                                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Posisi</th>
-                                <th class="text-uppercase text-dark text-xs font-weight-bolder text-center">Mulai Bekerja</th>
-                                <th class="text-uppercase text-dark text-xs font-weight-bolder text-center">status</th>
-                                <th class="text-dark"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="isiTable">
-                            @foreach ($users as $user)
+            <div class="table-responsive">
+                <table class="table table-hover align-items-center justify-content-start mb-0" id="tableData">
+                    <thead>
+                        <tr class="table-secondary">
+                            <th class="text-uppercase text-dark text-xs font-weight-bolder">Nama</th>
+                            <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">kontak</th>
+                            <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Posisi</th>
+                            <th class="text-uppercase text-dark text-xs font-weight-bolder text-center">Mulai Bekerja
+                            </th>
+                            <th class="text-uppercase text-dark text-xs font-weight-bolder text-center">status</th>
+                            <th class="text-dark"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="isiTable">
+                        @foreach ($users as $user)
                             <tr>
                                 <td>
                                     <div title="image & Nama User" class="d-flex align-items-center px-2 py-1">
                                         @if ($user->img_user)
-                                            <img src="{{ asset('storage/' . $user->img_user) }}" class="avatar avatar-sm me-3" alt="{{ $user->nama }}">
+                                            <img src="{{ asset('storage/' . $user->img_user) }}"
+                                                class="avatar avatar-sm me-3" alt="{{ $user->nama }}">
                                         @else
-                                            <img src="{{ asset('assets/img/user.webp') }}" class="avatar avatar-sm me-3" alt="Gambar produk default">
+                                            <img src="{{ asset('assets/img/user.webp') }}" class="avatar avatar-sm me-3"
+                                                alt="Gambar produk default">
                                         @endif
                                         <h6 class="mb-0 text-sm">{{ $user->nama }}</h6>
                                     </div>
                                 </td>
                                 <td>
-                                    <p title="nomer whatsapp" class="text-xs text-dark fw-bold mb-0">{{ $user->kontak }}</p>
+                                    <p title="nomer whatsapp" class="text-xs text-dark fw-bold mb-0">{{ $user->kontak }}
+                                    </p>
                                     <p title="email" class="text-xs text-dark mb-0">{{ $user->email }}</p>
                                 </td>
 
@@ -71,12 +78,14 @@
                                     @if ($user->role->id == 1)
                                         <span class="badge badge-info" title="Role user">{{ $user->role->nama }}</span>
                                     @else
-                                        <span class="badge badge-warning" title="Role user">{{ $user->role->nama }}</span>
+                                        <span class="badge badge-warning"
+                                            title="Role user">{{ $user->role->nama }}</span>
                                     @endif
                                 </td>
 
                                 <td class="align-middle text-center">
-                                    <span class="text-dark text-xs fw-bold">{{ $user->mulai_kerja?->translatedFormat('d M Y')}}</span>
+                                    <span
+                                        class="text-dark text-xs fw-bold">{{ $user->mulai_kerja?->translatedFormat('d M Y') }}</span>
                                 </td>
 
                                 <td class="align-middle text-center text-sm">
@@ -88,72 +97,74 @@
                                 </td>
 
                                 <td class="align-middle">
-                                    <a href="{{ route('users.edit', $user->username) }}" class="text-dark fw-bold px-3 text-xs" data-toggle="tooltip" data-original-title="Edit user">
-                                        <i class="bi bi-pencil-square text-dark text-sm opacity-10"></i>
+                                    <a href="{{ route('users.edit', $user->username) }}"
+                                        class="text-dark fw-bold px-3 text-xs" data-toggle="tooltip"
+                                        data-original-title="Edit user">
+                                        <i class="bx bx-pencil-square text-dark text-sm opacity-10"></i>
                                     </a>
-                                    <a href="#" class="text-dark delete-user-btn"
-                                        data-bs-toggle="modal"
+                                    <a href="#" class="text-dark delete-user-btn" data-bs-toggle="modal"
                                         data-bs-target="#deleteConfirmationModal"
                                         data-user-username="{{ $user->username }}"
-                                        data-user-name="{{ $user->nama }}"
-                                        title="Hapus User">
-                                        <i class="bi bi-trash"></i>
+                                        data-user-name="{{ $user->nama }}" title="Hapus User">
+                                        <i class="bx bx-trash"></i>
                                     </a>
                                 </td>
                             </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                    <div class="my-3 ms-3">{{ $users->onEachSide(1)->links() }}</div>
-                </div>
+                        @endforeach
+                    </tbody>
+                </table>
+                <div class="my-3 ms-3">{{ $users->onEachSide(1)->links() }}</div>
             </div>
         </div>
-        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body text-center mt-3 mx-n5">
-                        <i class="bi bi-trash fa-3x text-danger mb-3"></i>
-                        <p class="mb-0">Apakah Anda yakin ingin menghapus user ini?</p>
-                        <h6 class="mt-2" id="userNameToDelete"></h6>
-                        <div class="mt-4">
-                            <form id="deleteUserForm" method="POST" action="#">
-                                @method('delete')
-                                @csrf
-                                <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-bs-dismiss="modal">Batal</button>
-                            </form>
-                        </div>
+    </div>
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center mt-3 mx-n5">
+                    <i class="bx bx-trash fa-3x text-danger mb-3"></i>
+                    <p class="mb-0">Apakah Anda yakin ingin menghapus user ini?</p>
+                    <h6 class="mt-2" id="userNameToDelete"></h6>
+                    <div class="mt-4">
+                        <form id="deleteUserForm" method="POST" action="#">
+                            @method('delete')
+                            @csrf
+                            <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
+                                data-bs-dismiss="modal">Batal</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const deleteModal = document.getElementById('deleteConfirmationModal');
-                if (deleteModal) {
-                    deleteModal.addEventListener('show.bs.modal', function (event) {
-                        const button = event.relatedTarget;
+</div>
+@section('page-script')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteModal = document.getElementById('deleteConfirmationModal');
+            if (deleteModal) {
+                deleteModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
 
-                        // Ambil 'username' dari atribut data-*
-                        const userUsername = button.getAttribute('data-user-username'); // <-- DIUBAH DI SINI
-                        const userName = button.getAttribute('data-user-name');
+                    // Ambil 'username' dari atribut data-*
+                    const userUsername = button.getAttribute('data-user-username'); // <-- DIUBAH DI SINI
+                    const userName = button.getAttribute('data-user-name');
 
-                        const modalBodyName = deleteModal.querySelector('#userNameToDelete');
-                        const deleteForm = deleteModal.querySelector('#deleteUserForm');
+                    const modalBodyName = deleteModal.querySelector('#userNameToDelete');
+                    const deleteForm = deleteModal.querySelector('#deleteUserForm');
 
-                        modalBodyName.textContent = userName;
+                    modalBodyName.textContent = userName;
 
-                        // Atur action form menggunakan username
-                        deleteForm.action = `/users/${userUsername}`; // <-- DIUBAH DI SINI
-                    });
-                }
+                    // Atur action form menggunakan username
+                    deleteForm.action = `/users/${userUsername}`; // <-- DIUBAH DI SINI
+                });
+            }
 
-                const searchInput = document.getElementById('searchInput');
-                const posisiFilter = document.getElementById('posisiFilter');
-                const tableBody = document.getElementById('isiTable');
-                const rows = tableBody.getElementsByTagName('tr');
+            const searchInput = document.getElementById('searchInput');
+            const posisiFilter = document.getElementById('posisiFilter');
+            const tableBody = document.getElementById('isiTable');
+            const rows = tableBody.getElementsByTagName('tr');
 
             function populatePosisiFilter() {
                 const posisiSet = new Set();
@@ -189,7 +200,7 @@
                         // Mengambil teks dari dalam tag <h6>
                         const namaElement = namaCell.querySelector('h6'); // Nama ada di dalam h6
 
-                        if(namaElement){
+                        if (namaElement) {
                             const namaText = namaElement.textContent.toLowerCase();
                             const posisiText = posisiCell.textContent.trim(); // Posisi adalah text content dari sel
 
@@ -216,13 +227,13 @@
             posisiFilter.addEventListener('change', filterTable);
 
 
-            });
-        </script>
+        });
+    </script>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
 
-            });
-        </script>
-    @endpush
-</x-layout>
+        });
+    </script>
+@endsection
+@endsection

@@ -1,40 +1,44 @@
-<x-layout>
-    @push('styles')
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
-        <style>
-            .disabled-form-section {
-                pointer-events: none;
-                opacity: 0.6;
-                user-select: none;
-            }
-        </style>
-    @endpush
+@extends('layouts/contentNavbarLayout')
 
-    @section('breadcrumb')
-        @php
-            $breadcrumbItems = [
-                ['name' => 'Page', 'url' => '#'],
-                ['name' => 'Daftar Invoice Penjualan', 'url' => route('penjualan.index')],
-                ['name' => 'Edit Invoice', 'url' => '#'],
-            ];
-        @endphp
-        <x-breadcrumb :items="$breadcrumbItems" />
-    @endsection
+@section('title', 'Cards basic - UI elements')
+@section('content')
+@section('vendor-style')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
+    <style>
+        .disabled-form-section {
+            pointer-events: none;
+            opacity: 0.6;
+            user-select: none;
+        }
+    </style>
+@endsection
 
-    <div class="container-fluid p-3">
-        <div class="card rounded-2">
-            <div class="card-header pb-0 px-3 pt-2 mb-3">
-                <h6 class="mb-0">Edit Transaksi Penjualan</h6>
-                <p class="text-sm">Invoice: <span class="fw-bold">{{ $penjualan->referensi }}</span></p>
-            </div>
-            <div class="card-body pt-0">
-                <form id="editPenjualanForm" action="{{ route('penjualan.update', $penjualan->referensi) }}" method="POST">
-                    @method('put')
-                    @csrf
-                    {{-- Display All Validation Errors --}}
-                    @if ($errors->any())
+@section('breadcrumb')
+    @php
+        $breadcrumbItems = [
+            ['name' => 'Page', 'url' => '#'],
+            ['name' => 'Daftar Invoice Penjualan', 'url' => route('penjualan.index')],
+            ['name' => 'Edit Invoice', 'url' => '#'],
+        ];
+    @endphp
+    <x-breadcrumb :items="$breadcrumbItems" />
+@endsection
+
+<div class="container-fluid p-3">
+    <div class="card rounded-2">
+        <div class="card-header pb-0 px-3 pt-2 mb-3">
+            <h6 class="mb-0">Edit Transaksi Penjualan</h6>
+            <p class="text-sm">Invoice: <span class="fw-bold">{{ $penjualan->referensi }}</span></p>
+        </div>
+        <div class="card-body pt-0">
+            <form id="editPenjualanForm" action="{{ route('penjualan.update', $penjualan->referensi) }}" method="POST">
+                @method('put')
+                @csrf
+                {{-- Display All Validation Errors --}}
+                @if ($errors->any())
                     <div class="alert alert-danger text-white mt-3" role="alert">
                         <strong class="font-weight-bold">Oops! Terjadi kesalahan:</strong>
                         <ul class="mb-0 ps-3">
@@ -43,200 +47,222 @@
                             @endforeach
                         </ul>
                     </div>
-                    @endif
+                @endif
 
+                <div class="row g-3">
+                    {{-- Informasi Dasar --}}
+                    <div class="col-md-3">
+                        <label for="pelanggan_id" class="form-label">Pelanggan</label>
+                        <select name="pelanggan_id" id="pelanggan_id" class="form-select" required>
+                            @foreach ($pelanggans as $pelanggan)
+                                <option value="{{ $pelanggan->id }}" @selected($penjualan->pelanggan_id == $pelanggan->id)>{{ $pelanggan->nama }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="tanggal_penjualan" class="form-label">Tanggal</label>
+                        <input type="datetime-local" name="tanggal_penjualan" id="tanggal_penjualan"
+                            class="form-control"
+                            value="{{ \Carbon\Carbon::parse($penjualan->tanggal_penjualan)->format('Y-m-d\TH:i') }}"
+                            required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="metode_pembayaran" class="form-label">Metode Pembayaran</label>
+                        <select name="metode_pembayaran" id="metode_pembayaran" class="form-select" required>
+                            <option value="TUNAI" @selected($penjualan->metode_pembayaran == 'TUNAI')>Tunai</option>
+                            <option value="TRANSFER" @selected($penjualan->metode_pembayaran == 'TRANSFER')>Transfer</option>
+                            <option value="QRIS" @selected($penjualan->metode_pembayaran == 'QRIS')>QRIS</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status_pembayaran" class="form-label">Status Pembayaran</label>
+                        <select name="status_pembayaran" id="status_pembayaran" class="form-select" required>
+                            <option value="Lunas" @selected($penjualan->status_pembayaran == 'Lunas')>Lunas</option>
+                            <option value="Belum Lunas" @selected($penjualan->status_pembayaran == 'Belum Lunas')>Belum Lunas</option>
+                            <option value="Dibatalkan" @selected($penjualan->status_pembayaran == 'Dibatalkan')>Dibatalkan</option>
+                        </select>
+                    </div>
+
+                    {{-- Pencarian Produk --}}
+                    <div class="col-12">
+                        <label for="produk_search" class="form-label">Cari & Tambah Produk</label>
+                        <select id="produk_search" class="form-control"></select>
+                    </div>
+
+                    {{-- Tabel Item --}}
+                    <div class="col-12 table-responsive" style="max-height: 350px; overflow-y: auto;">
+                        <table class="table table-sm table-hover align-items-center" id="items_table">
+                            <thead class="table-secondary sticky-top">
+                                <tr>
+                                    <th class="text-dark text-xs font-weight-bolder">Produk</th>
+                                    <th class="text-dark text-xs font-weight-bolder text-center">Qty</th>
+                                    <th class="text-dark text-xs font-weight-bolder ps-2">Harga Jual</th>
+                                    <th class="text-dark text-xs font-weight-bolder text-center">Pajak</th>
+                                    <th class="text-dark text-xs font-weight-bolder ps-2">Diskon (Rp)</th>
+                                    <th class="text-dark text-xs font-weight-bolder ps-2">Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{-- Items will be injected here by JS --}}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Rincian Biaya & Total --}}
+                    <div class="col-md-6">
+                        <label for="catatan" class="form-label">Catatan (Opsional)</label>
+                        <div id="quill_catatan" style="height: 120px;">{!! $penjualan->catatan !!}</div>
+                        <input type="hidden" name="catatan" id="catatan_hidden" value="{{ $penjualan->catatan }}">
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <p class="text-sm">Subtotal (DPP)</p>
+                            <p class="text-sm font-weight-bold" id="subtotal_dpp_display">Rp 0</p>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <p class="text-sm">PPN</p>
+                            <p class="text-sm font-weight-bold" id="pajak_total_display">Rp 0</p>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center" style="cursor: pointer;"
+                            data-bs-toggle="modal" data-bs-target="#editExtraCostModal" data-type="service"
+                            data-label="Service">
+                            <p class="text-sm mb-0">Service</p>
+                            <p class="text-sm font-weight-bold mb-0" id="service-display">
+                                {{ 'Rp ' . number_format($penjualan->service, 0, ',', '.') }}</p>
+                            <input type="hidden" name="service" id="service-input" value="{{ $penjualan->service }}">
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center my-3" style="cursor: pointer;"
+                            data-bs-toggle="modal" data-bs-target="#editExtraCostModal" data-type="ongkir"
+                            data-label="Ongkos Kirim">
+                            <p class="text-sm mb-0">Ongkir</p>
+                            <p class="text-sm font-weight-bold mb-0" id="ongkir-display">
+                                {{ 'Rp ' . number_format($penjualan->ongkir, 0, ',', '.') }}</p>
+                            <input type="hidden" name="ongkir" id="ongkir-input"
+                                value="{{ $penjualan->ongkir }}">
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center" style="cursor: pointer;"
+                            data-bs-toggle="modal" data-bs-target="#editExtraCostModal" data-type="diskon"
+                            data-label="Diskon">
+                            <p class="text-sm mb-0">Diskon (Rp)</p>
+                            <p class="text-sm font-weight-bold mb-0" id="diskon-display">
+                                {{ 'Rp ' . number_format($penjualan->diskon, 0, ',', '.') }}</p>
+                            <input type="hidden" name="diskon" id="diskon-input"
+                                value="{{ $penjualan->diskon }}">
+                        </div>
+                        <hr class="horizontal dark my-2">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="fw-bolder">Total</h6>
+                            <h6 class="fw-bolder" id="total_akhir">Rp 0</h6>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <label for="jumlah_dibayar" class="form-label text-sm mb-0">Jumlah Dibayar</label>
+                            <div class="input-group w-50">
+                                <span class="input-group-text">Rp</span>
+                                <input type="text" name="jumlah_dibayar" id="jumlah_dibayar"
+                                    class="form-control text-end"
+                                    value="{{ number_format($penjualan->jumlah_dibayar, 0, ',', '.') }}">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <h6 class="text-sm">Sisa/Kembalian</h6>
+                            <h6 class="text-sm" id="kembalian_display">Rp 0</h6>
+                        </div>
+                    </div>
+
+                    <div class="col-12 d-flex justify-content-end mt-4">
+                        <a href="{{ route('penjualan.index') }}" class="btn btn-secondary me-2">Batal</a>
+                        <button type="submit" class="btn btn-info">Simpan Perubahan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Edit Item Detail --}}
+<div class="modal fade" id="editItemDetailModal" tabindex="-1" aria-labelledby="editItemDetailModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editItemDetailModalLabel">Edit Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editItemDetailForm" onsubmit="return false;">
+                    <input type="hidden" id="edit_item_produk_id">
+                    <div class="mb-3">
+                        <label class="form-label">Nama Produk</label>
+                        <input type="text" class="form-control" id="edit_item_nama" readonly disabled>
+                    </div>
                     <div class="row g-3">
-                        {{-- Informasi Dasar --}}
-                        <div class="col-md-3">
-                            <label for="pelanggan_id" class="form-label">Pelanggan</label>
-                            <select name="pelanggan_id" id="pelanggan_id" class="form-select" required>
-                                @foreach ($pelanggans as $pelanggan)
-                                    <option value="{{ $pelanggan->id }}" @selected($penjualan->pelanggan_id == $pelanggan->id)>{{ $pelanggan->nama }}</option>
+                        <div class="col-6">
+                            <label for="edit_item_qty" class="form-label">Qty</label>
+                            <input type="number" class="form-control" id="edit_item_qty" min="1" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="edit_item_harga" class="form-label">Harga Jual</label>
+                            <input type="text" class="form-control" id="edit_item_harga" placeholder="0">
+                        </div>
+                        <div class="col-6">
+                            <label for="edit_item_pajak_id" class="form-label">Pajak</label>
+                            <select class="form-select" id="edit_item_pajak_id">
+                                <option value="" data-rate="0" selected>Tidak Ada</option>
+                                @foreach ($pajaks as $pajak)
+                                    <option value="{{ $pajak->id }}" data-rate="{{ $pajak->rate }}">
+                                        {{ $pajak->nama_pajak }} ({{ $pajak->rate }}%)</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label for="tanggal_penjualan" class="form-label">Tanggal</label>
-                            <input type="datetime-local" name="tanggal_penjualan" id="tanggal_penjualan" class="form-control" value="{{ \Carbon\Carbon::parse($penjualan->tanggal_penjualan)->format('Y-m-d\TH:i') }}" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="metode_pembayaran" class="form-label">Metode Pembayaran</label>
-                            <select name="metode_pembayaran" id="metode_pembayaran" class="form-select" required>
-                                <option value="TUNAI" @selected($penjualan->metode_pembayaran == 'TUNAI')>Tunai</option>
-                                <option value="TRANSFER" @selected($penjualan->metode_pembayaran == 'TRANSFER')>Transfer</option>
-                                <option value="QRIS" @selected($penjualan->metode_pembayaran == 'QRIS')>QRIS</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="status_pembayaran" class="form-label">Status Pembayaran</label>
-                            <select name="status_pembayaran" id="status_pembayaran" class="form-select" required>
-                                <option value="Lunas" @selected($penjualan->status_pembayaran == 'Lunas')>Lunas</option>
-                                <option value="Belum Lunas" @selected($penjualan->status_pembayaran == 'Belum Lunas')>Belum Lunas</option>
-                                <option value="Dibatalkan" @selected($penjualan->status_pembayaran == 'Dibatalkan')>Dibatalkan</option>
-                            </select>
-                        </div>
-
-                        {{-- Pencarian Produk --}}
-                        <div class="col-12">
-                            <label for="produk_search" class="form-label">Cari & Tambah Produk</label>
-                            <select id="produk_search" class="form-control"></select>
-                        </div>
-
-                        {{-- Tabel Item --}}
-                        <div class="col-12 table-responsive" style="max-height: 350px; overflow-y: auto;">
-                            <table class="table table-sm table-hover align-items-center" id="items_table">
-                                <thead class="table-secondary sticky-top">
-                                    <tr>
-                                        <th class="text-dark text-xs font-weight-bolder">Produk</th>
-                                        <th class="text-dark text-xs font-weight-bolder text-center">Qty</th>
-                                        <th class="text-dark text-xs font-weight-bolder ps-2">Harga Jual</th>
-                                        <th class="text-dark text-xs font-weight-bolder text-center">Pajak</th>
-                                        <th class="text-dark text-xs font-weight-bolder ps-2">Diskon (Rp)</th>
-                                        <th class="text-dark text-xs font-weight-bolder ps-2">Subtotal</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {{-- Items will be injected here by JS --}}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- Rincian Biaya & Total --}}
-                        <div class="col-md-6">
-                            <label for="catatan" class="form-label">Catatan (Opsional)</label>
-                            <div id="quill_catatan" style="height: 120px;">{!! $penjualan->catatan !!}</div>
-                            <input type="hidden" name="catatan" id="catatan_hidden" value="{{ $penjualan->catatan }}">
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="d-flex justify-content-between">
-                                <p class="text-sm">Subtotal (DPP)</p>
-                                <p class="text-sm font-weight-bold" id="subtotal_dpp_display">Rp 0</p>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <p class="text-sm">PPN</p>
-                                <p class="text-sm font-weight-bold" id="pajak_total_display">Rp 0</p>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editExtraCostModal" data-type="service" data-label="Service">
-                                <p class="text-sm mb-0">Service</p>
-                                <p class="text-sm font-weight-bold mb-0" id="service-display">{{ 'Rp ' . number_format($penjualan->service, 0, ',', '.') }}</p>
-                                <input type="hidden" name="service" id="service-input" value="{{ $penjualan->service }}">
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center my-3" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editExtraCostModal" data-type="ongkir" data-label="Ongkos Kirim">
-                                <p class="text-sm mb-0">Ongkir</p>
-                                <p class="text-sm font-weight-bold mb-0" id="ongkir-display">{{ 'Rp ' . number_format($penjualan->ongkir, 0, ',', '.') }}</p>
-                                <input type="hidden" name="ongkir" id="ongkir-input" value="{{ $penjualan->ongkir }}">
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editExtraCostModal" data-type="diskon" data-label="Diskon">
-                                <p class="text-sm mb-0">Diskon (Rp)</p>
-                                <p class="text-sm font-weight-bold mb-0" id="diskon-display">{{ 'Rp ' . number_format($penjualan->diskon, 0, ',', '.') }}</p>
-                                <input type="hidden" name="diskon" id="diskon-input" value="{{ $penjualan->diskon }}">
-                            </div>
-                            <hr class="horizontal dark my-2">
-                            <div class="d-flex justify-content-between">
-                                <h6 class="fw-bolder">Total</h6>
-                                <h6 class="fw-bolder" id="total_akhir">Rp 0</h6>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <label for="jumlah_dibayar" class="form-label text-sm mb-0">Jumlah Dibayar</label>
-                                <div class="input-group w-50">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="text" name="jumlah_dibayar" id="jumlah_dibayar" class="form-control text-end" value="{{ number_format($penjualan->jumlah_dibayar, 0, ',', '.') }}">
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-between mt-2">
-                                <h6 class="text-sm">Sisa/Kembalian</h6>
-                                <h6 class="text-sm" id="kembalian_display">Rp 0</h6>
-                            </div>
-                        </div>
-
-                        <div class="col-12 d-flex justify-content-end mt-4">
-                            <a href="{{ route('penjualan.index') }}" class="btn btn-secondary me-2">Batal</a>
-                            <button type="submit" class="btn btn-info">Simpan Perubahan</button>
+                        <div class="col-6">
+                            <label for="edit_item_diskon" class="form-label">Diskon (Rp)</label>
+                            <input type="text" class="form-control" id="edit_item_diskon" placeholder="0">
                         </div>
                     </div>
                 </form>
             </div>
-        </div>
-    </div>
-
-    {{-- Modal Edit Item Detail --}}
-    <div class="modal fade" id="editItemDetailModal" tabindex="-1" aria-labelledby="editItemDetailModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editItemDetailModalLabel">Edit Item</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editItemDetailForm" onsubmit="return false;">
-                        <input type="hidden" id="edit_item_produk_id">
-                        <div class="mb-3">
-                            <label class="form-label">Nama Produk</label>
-                            <input type="text" class="form-control" id="edit_item_nama" readonly disabled>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <label for="edit_item_qty" class="form-label">Qty</label>
-                                <input type="number" class="form-control" id="edit_item_qty" min="1" required>
-                            </div>
-                            <div class="col-6">
-                                <label for="edit_item_harga" class="form-label">Harga Jual</label>
-                                <input type="text" class="form-control" id="edit_item_harga" placeholder="0">
-                            </div>
-                            <div class="col-6">
-                                <label for="edit_item_pajak_id" class="form-label">Pajak</label>
-                                <select class="form-select" id="edit_item_pajak_id">
-                                    <option value="" data-rate="0" selected>Tidak Ada</option>
-                                    @foreach($pajaks as $pajak)
-                                        <option value="{{ $pajak->id }}" data-rate="{{ $pajak->rate }}">{{ $pajak->nama_pajak }} ({{ $pajak->rate }}%)</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-6">
-                                <label for="edit_item_diskon" class="form-label">Diskon (Rp)</label>
-                                <input type="text" class="form-control" id="edit_item_diskon" placeholder="0">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-info" id="saveItemDetailChangesBtn">Simpan</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-info" id="saveItemDetailChangesBtn">Simpan</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
             </div>
         </div>
     </div>
+</div>
 
-    {{-- Modal Edit Biaya Tambahan (Service, Ongkir, Diskon) --}}
-    <div class="modal fade" id="editExtraCostModal" tabindex="-1" aria-labelledby="editExtraCostModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title" id="editExtraCostModalLabel">Edit Biaya</h6>
-                    <button type="button" class="btn bg-dark btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editExtraCostForm" onsubmit="return false;">
-                        <input type="hidden" id="extra-cost-type">
-                        <div class="form-group">
-                            <label for="extra-cost-value" class="form-control-label" id="extra-cost-label">Jumlah</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rp.</span>
-                                <input type="text" class="form-control" id="extra-cost-value" min="0" required>
-                            </div>
+{{-- Modal Edit Biaya Tambahan (Service, Ongkir, Diskon) --}}
+<div class="modal fade" id="editExtraCostModal" tabindex="-1" aria-labelledby="editExtraCostModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title" id="editExtraCostModalLabel">Edit Biaya</h6>
+                <button type="button" class="btn bg-dark btn-close" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editExtraCostForm" onsubmit="return false;">
+                    <input type="hidden" id="extra-cost-type">
+                    <div class="form-group">
+                        <label for="extra-cost-value" class="form-control-label" id="extra-cost-label">Jumlah</label>
+                        <div class="input-group">
+                            <span class="input-group-text">Rp.</span>
+                            <input type="text" class="form-control" id="extra-cost-value" min="0"
+                                required>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-info" id="saveExtraCostBtn">Simpan</button>
-                </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-info" id="saveExtraCostBtn">Simpan</button>
             </div>
         </div>
     </div>
+</div>
 
-    @push('scripts')
+@section('page-script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
@@ -249,11 +275,15 @@
     </script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // --- STATE & UTILITIES ---
             const cart = new Map();
             let itemCounter = 0;
-            const formatCurrency = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+            const formatCurrency = (number) => new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
             const parseCurrency = (string) => parseFloat(String(string).replace(/[^0-9]/g, '')) || 0;
 
             function formatInputAsCurrency(input) {
@@ -283,17 +313,20 @@
                     url: "{{ route('get-data.produk') }}",
                     dataType: 'json',
                     delay: 250,
-                    data: params => ({ search: params.term, page: params.page || 1 }),
-                    processResults: function (response) {
+                    data: params => ({
+                        search: params.term,
+                        page: params.page || 1
+                    }),
+                    processResults: function(response) {
                         // Menyesuaikan dengan struktur data paginasi Laravel
                         return {
                             results: response.data.map(item => ({
-                            id: item.id,
-                            text: item.nama_produk,
-                            harga_jual: item.harga_jual,
-                            stok: item.qty,
-                            pajak_id: item.pajak_id,
-                            img_produk: item.img_produk, // Ambil data gambar
+                                id: item.id,
+                                text: item.nama_produk,
+                                harga_jual: item.harga_jual,
+                                stok: item.qty,
+                                pajak_id: item.pajak_id,
+                                img_produk: item.img_produk, // Ambil data gambar
                             })),
                             pagination: {
                                 more: response.next_page_url !== null
@@ -328,7 +361,8 @@
                 itemCounter = 0;
 
                 if (cart.size === 0) {
-                    tableBody.html('<tr><td colspan="7" class="text-center text-muted py-4">Belum ada item.</td></tr>');
+                    tableBody.html(
+                        '<tr><td colspan="7" class="text-center text-muted py-4">Belum ada item.</td></tr>');
                     return;
                 }
 
@@ -359,8 +393,8 @@
                             <td class="text-sm fw-bold">${formatCurrency(subtotal)}</td>
                             <td class="text-center">
                                 <div class="d-flex">
-                                    <button type="button" class="btn btn-link text-dark p-0 m-0 me-2 btn-edit-item" title="Edit Item"><i class="bi bi-pencil-square"></i></button>
-                                    <button type="button" class="btn btn-link text-danger  p-0 m-0 btn-remove-item" title="Hapus Item"><i class="bi bi-trash"></i></button>
+                                    <button type="button" class="btn btn-link text-dark p-0 m-0 me-2 btn-edit-item" title="Edit Item"><i class="bx bx-pencil-square"></i></button>
+                                    <button type="button" class="btn btn-link text-danger  p-0 m-0 btn-remove-item" title="Hapus Item"><i class="bx bx-trash"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -430,7 +464,8 @@
                 $('#produk_search').prop('disabled', isCancelled).trigger('change');
 
                 // Item action buttons
-                $('#items_table .btn-edit-item, #items_table .btn-remove-item').css('pointer-events', enabled ? 'auto' : 'none');
+                $('#items_table .btn-edit-item, #items_table .btn-remove-item').css('pointer-events', enabled ?
+                    'auto' : 'none');
 
                 // Extra cost modals
                 $('[data-bs-toggle="modal"][data-type]').css('pointer-events', enabled ? 'auto' : 'none');
@@ -449,12 +484,13 @@
                 // Add/remove disabled class for visual feedback
                 const sectionsToToggle = ['#produk_search', '#items_table', '[data-bs-toggle="modal"][data-type]'];
                 sectionsToToggle.forEach(selector => {
-                    $(selector).closest('.row > div, div.table-responsive').toggleClass('disabled-form-section', isCancelled);
+                    $(selector).closest('.row > div, div.table-responsive').toggleClass(
+                        'disabled-form-section', isCancelled);
                 });
             }
 
             // --- EVENT LISTENERS ---
-            productSearch.on('select2:select', function (e) {
+            productSearch.on('select2:select', function(e) {
                 const data = e.params.data;
                 const defaultPajak = allPajak.find(p => p.id === data.pajak_id);
 
@@ -501,7 +537,8 @@
                     item.jumlah = parseInt($('#edit_item_qty').val()) || 1;
                     item.harga_jual = parseCurrency($('#edit_item_harga').val() || '0');
                     item.diskon = parseCurrency($('#edit_item_diskon').val() || '0');
-                    item.pajak_id = parseInt($('#edit_item_pajak_id').val()) || null; // Tetap null jika tidak ada
+                    item.pajak_id = parseInt($('#edit_item_pajak_id').val()) ||
+                        null; // Tetap null jika tidak ada
                 }
 
                 renderTable();
@@ -521,7 +558,8 @@
             $('#status_pembayaran').on('change', function() {
                 if ($(this).val() === 'Lunas') {
                     const totalAkhir = parseCurrency($('#total_akhir').text());
-                    $('#jumlah_dibayar').val(new Intl.NumberFormat('id-ID').format(totalAkhir)).trigger('input');
+                    $('#jumlah_dibayar').val(new Intl.NumberFormat('id-ID').format(totalAkhir)).trigger(
+                        'input');
                     toggleFormControls(true); // Pastikan form aktif
                 } else if ($(this).val() === 'Dibatalkan') {
                     $('#jumlah_dibayar').val('0').trigger('input');
@@ -532,7 +570,7 @@
             });
 
             // --- EXTRA COST MODAL LOGIC ---
-            $('#editExtraCostModal').on('show.bs.modal', function (event) {
+            $('#editExtraCostModal').on('show.bs.modal', function(event) {
                 const triggerElement = $(event.relatedTarget);
                 const type = triggerElement.data('type');
                 const label = triggerElement.data('label');
@@ -586,5 +624,5 @@
             });
         });
     </script>
-    @endpush
-</x-layout>
+@endsection
+@endsection

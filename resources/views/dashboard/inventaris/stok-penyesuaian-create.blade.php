@@ -1,102 +1,107 @@
-<x-layout>
-    @push('styles')
-        {{-- Select2 untuk pencarian produk --}}
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-        <link rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    @endpush
+@extends('layouts/contentNavbarLayout')
 
-    @section('breadcrumb')
-        @php
+@section('title', 'Cards basic - UI elements')
+@section('content')
+@section('vendor-style')
+    {{-- Select2 untuk pencarian produk --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+@endsection
+
+@section('breadcrumb')
+    @php
         $breadcrumbItems = [
             ['name' => 'Dashboard', 'url' => '/dashboard'],
             ['name' => 'Inventaris', 'url' => '#'],
             ['name' => 'Riwayat Penyesuaian', 'url' => route('stok-penyesuaian.index')],
             ['name' => 'Buat Penyesuaian', 'url' => '#'],
         ];
-        @endphp
-        <x-breadcrumb :items="$breadcrumbItems" />
-    @endsection
+    @endphp
+    <x-breadcrumb :items="$breadcrumbItems" />
+@endsection
 
-    <div class="container-fluid p-3">
-        <form action="{{ route('stok-penyesuaian.store') }}" method="POST" id="adjustmentForm">
-            @csrf
-            <div class="card rounded-2 mb-4">
-                <div class="card-header pb-0 px-3 pt-2">
-                    <h6 class="mb-0">Informasi Umum</h6>
-                </div>
-                <div class="card-body pt-2">
-                    <div class="mb-3">
-                        <label for="catatan" class="form-label">Catatan Umum (Opsional)</label>
-                        <textarea class="form-control" id="catatan" name="catatan" rows="2"
-                            placeholder="Contoh: Penyesuaian stok karena barang rusak">{{ old('catatan') }}</textarea>
-                    </div>
+<div class="container-fluid p-3">
+    <form action="{{ route('stok-penyesuaian.store') }}" method="POST" id="adjustmentForm">
+        @csrf
+        <div class="card rounded-2 mb-4">
+            <div class="card-header pb-0 px-3 pt-2">
+                <h6 class="mb-0">Informasi Umum</h6>
+            </div>
+            <div class="card-body pt-2">
+                <div class="mb-3">
+                    <label for="catatan" class="form-label">Catatan Umum (Opsional)</label>
+                    <textarea class="form-control" id="catatan" name="catatan" rows="2"
+                        placeholder="Contoh: Penyesuaian stok karena barang rusak">{{ old('catatan') }}</textarea>
                 </div>
             </div>
+        </div>
 
-            <div class="card rounded-2">
-                <div class="card-header pb-0 px-3 pt-2">
-                    <h6 class="mb-0">Item Penyesuaian</h6>
-                    <p class="text-sm mb-0">Tambahkan produk yang akan disesuaikan stoknya.</p>
-                </div>
-                <div class="card-body pt-2">
-                    {{-- Form untuk menambah item --}}
-                    <div class="row g-3 align-items-end border-bottom pb-3 mb-3">
-                        <div class="col-md-4">
-                            <label for="select-produk" class="form-label">Pilih Produk</label>
-                            <select id="select-produk" class="form-control"></select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="adjustment-type" class="form-label">Tipe</label>
-                            <select id="adjustment-type" class="form-select">
-                                <option value="IN">Masuk (IN)</option>
-                                <option value="OUT">Keluar (OUT)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="adjustment-qty" class="form-label">Jumlah</label>
-                            <input type="number" id="adjustment-qty" class="form-control" min="1" value="1">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="adjustment-reason" class="form-label">Alasan</label>
-                            <input type="text" id="adjustment-reason" class="form-control" placeholder="Contoh: Barang rusak">
-                        </div>
-                        <div class="col-md-1 d-grid mb-n3">
-                            <button type="button" id="btn-add-item" class="btn btn-outline-info"><i class="bi bi-plus-lg"></i> Tambah</button>
-                        </div>
+        <div class="card rounded-2">
+            <div class="card-header pb-0 px-3 pt-2">
+                <h6 class="mb-0">Item Penyesuaian</h6>
+                <p class="text-sm mb-0">Tambahkan produk yang akan disesuaikan stoknya.</p>
+            </div>
+            <div class="card-body pt-2">
+                {{-- Form untuk menambah item --}}
+                <div class="row g-3 align-items-end border-bottom pb-3 mb-3">
+                    <div class="col-md-4">
+                        <label for="select-produk" class="form-label">Pilih Produk</label>
+                        <select id="select-produk" class="form-control"></select>
                     </div>
-
-                    {{-- Tabel untuk menampilkan item yang ditambahkan --}}
-                    <div class="table-responsive p-0">
-                        <table class="table table-hover align-items-center mb-0" id="adjustment-items-table">
-                            <thead class="table-secondary">
-                                <tr>
-                                    <th class="text-uppercase text-dark text-xs font-weight-bolder ps-4">Produk</th>
-                                    <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Tipe</th>
-                                    <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Jumlah</th>
-                                    <th class="text-uppercase text-dark text-xs font-weight-bolder">Alasan</th>
-                                    <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr id="no-items-row">
-                                    <td colspan="5" class="text-center py-4">
-                                        <p class="text-sm fw-bold mb-0">Belum ada item yang ditambahkan.</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="col-md-2">
+                        <label for="adjustment-type" class="form-label">Tipe</label>
+                        <select id="adjustment-type" class="form-select">
+                            <option value="IN">Masuk (IN)</option>
+                            <option value="OUT">Keluar (OUT)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="adjustment-qty" class="form-label">Jumlah</label>
+                        <input type="number" id="adjustment-qty" class="form-control" min="1" value="1">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="adjustment-reason" class="form-label">Alasan</label>
+                        <input type="text" id="adjustment-reason" class="form-control"
+                            placeholder="Contoh: Barang rusak">
+                    </div>
+                    <div class="col-md-1 d-grid mb-n3">
+                        <button type="button" id="btn-add-item" class="btn btn-outline-info"><i
+                                class="bx bx-plus-lg"></i> Tambah</button>
                     </div>
                 </div>
-                <div class="card-footer text-end">
-                    <a href="{{ route('stok-penyesuaian.index') }}" class="btn btn-secondary me-2">Batal</a>
-                    <button type="submit" id="btn-submit-form" class="btn btn-info" disabled>Simpan Penyesuaian</button>
+
+                {{-- Tabel untuk menampilkan item yang ditambahkan --}}
+                <div class="table-responsive p-0">
+                    <table class="table table-hover align-items-center mb-0" id="adjustment-items-table">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-4">Produk</th>
+                                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Tipe</th>
+                                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Jumlah</th>
+                                <th class="text-uppercase text-dark text-xs font-weight-bolder">Alasan</th>
+                                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr id="no-items-row">
+                                <td colspan="5" class="text-center py-4">
+                                    <p class="text-sm fw-bold mb-0">Belum ada item yang ditambahkan.</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </form>
-    </div>
+            <div class="card-footer text-end">
+                <a href="{{ route('stok-penyesuaian.index') }}" class="btn btn-secondary me-2">Batal</a>
+                <button type="submit" id="btn-submit-form" class="btn btn-info" disabled>Simpan Penyesuaian</button>
+            </div>
+        </div>
+    </form>
+</div>
 
-    @push('scripts')
+@section('page-script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -127,7 +132,9 @@
                                 text: `${item.nama_produk} (Stok: ${item.qty})`,
                                 nama_produk: item.nama_produk,
                                 sku: item.sku,
-                                img_url: item.img_produk ? `{{ asset('storage/') }}/${item.img_produk}` : `{{ asset('assets/img/produk.webp') }}`
+                                img_url: item.img_produk ?
+                                    `{{ asset('storage/') }}/${item.img_produk}` :
+                                    `{{ asset('assets/img/produk.webp') }}`
                             })),
                             pagination: {
                                 more: data.next_page_url !== null
@@ -223,7 +230,7 @@
                         </td>
                         <td class="align-middle text-center">
                             <button type="button" class="btn btn-link text-danger p-0 m-0 btn-remove-item">
-                                <i class="bi bi-trash bi-lg"></i>
+                                <i class="bx bx-trash bi-lg"></i>
                             </button>
                         </td>
                     </tr>
@@ -258,5 +265,5 @@
 
         });
     </script>
-    @endpush
-</x-layout>
+@endsection
+@endsection

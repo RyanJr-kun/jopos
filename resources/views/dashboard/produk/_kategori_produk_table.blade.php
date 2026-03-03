@@ -12,40 +12,54 @@
         </thead>
         <tbody id="isiTable">
             @forelse ($kategoris as $kategori)
-            <tr id="kategori-row-{{ $kategori->slug }}">
-                <td>
-                    <div title="image & Nama Kategori" class="d-flex align-items-center px-2 py-1">
-                        @if ($kategori->img_kategori)
-                            <img src="{{ asset('storage/' . $kategori->img_kategori) }}" class="avatar avatar-sm me-3" alt="{{ $kategori->nama }}">
+                <tr id="kategori-row-{{ $kategori->slug }}">
+                    <td>
+                        <div title="image & Nama Kategori" class="d-flex align-items-center px-2 py-1">
+                            @if ($kategori->img_kategori)
+                                <img src="{{ asset('storage/' . $kategori->img_kategori) }}"
+                                    class="avatar avatar-sm me-3" alt="{{ $kategori->nama }}">
+                            @else
+                                <img src="{{ asset('assets/img/produk.png') }}" class="avatar avatar-sm me-3"
+                                    alt="Gambar produk default">
+                            @endif
+                            <h6 class="mb-0 text-sm">{{ $kategori->nama }}</h6>
+                        </div>
+                    </td>
+                    <td>
+                        <p title="kategori slug" class=" text-xs text-dark fw-bold mb-0">{{ $kategori->slug }}</p>
+                    </td>
+                    <td>
+                        <p class="text-xs text-dark fw-bold mb-0">{{ $kategori->produks_count }}</p>
+                    </td>
+                    <td class="align-middle ">
+                        <span
+                            class="text-dark text-xs fw-bold">{{ $kategori->created_at?->translatedFormat('d M Y') }}</span>
+                    </td>
+                    <td class="align-middle text-center text-sm">
+                        @if ($kategori->status)
+                            <span class="badge badge-success">Aktif</span>
                         @else
-                            <img src="{{ asset('assets/img/produk.png') }}" class="avatar avatar-sm me-3" alt="Gambar produk default">
+                            <span class="badge badge-secondary">Tidak Aktif</span>
                         @endif
-                        <h6 class="mb-0 text-sm">{{ $kategori->nama }}</h6>
-                    </div>
-                </td>
-                <td>
-                    <p title="kategori slug" class=" text-xs text-dark fw-bold mb-0">{{ $kategori->slug }}</p>
-                </td>
-                <td>
-                    <p class="text-xs text-dark fw-bold mb-0">{{ $kategori->produks_count }}</p>
-                </td>
-                <td class="align-middle ">
-                    <span class="text-dark text-xs fw-bold">{{ $kategori->created_at?->translatedFormat('d M Y')}}</span>
-                </td>
-                <td class="align-middle text-center text-sm">
-                    @if ($kategori->status)
-                        <span class="badge badge-success">Aktif</span>
-                    @else
-                        <span class="badge badge-secondary">Tidak Aktif</span>
-                    @endif
-                </td>
-                <td class="align-middle">
-                    <a href="#" class="text-dark fw-bold px-3 text-xs" data-bs-toggle="modal" data-bs-target="#editModal" data-url="{{ route('kategoriproduk.getjson', $kategori->slug) }}" data-update-url="{{ route('kategoriproduk.update', $kategori->slug) }}" title="Edit kategori"><i class="bi bi-pencil-square text-dark text-sm opacity-10"></i></a>
-                    <a href="#" class="text-dark delete-btn" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal" data-kategori-slug="{{ $kategori->slug }}" data-kategori-name="{{ $kategori->nama }}" title="Hapus kategori"><i class="bi bi-trash"></i></a>
-                </td>
-            </tr>
+                    </td>
+                    <td class="align-middle">
+                        <a href="#" class="text-dark fw-bold px-3 text-xs" data-bs-toggle="modal"
+                            data-bs-target="#editModal"
+                            data-url="{{ route('kategoriproduk.getjson', $kategori->slug) }}"
+                            data-update-url="{{ route('kategoriproduk.update', $kategori->slug) }}"
+                            title="Edit kategori"><i class="bx bx-pencil-square text-dark text-sm opacity-10"></i></a>
+                        <a href="#" class="text-dark delete-btn" data-bs-toggle="modal"
+                            data-bs-target="#deleteConfirmationModal" data-kategori-slug="{{ $kategori->slug }}"
+                            data-kategori-name="{{ $kategori->nama }}" title="Hapus kategori"><i
+                                class="bx bx-trash"></i></a>
+                    </td>
+                </tr>
             @empty
-                <tr id="kategori-row-empty"><td colspan="6" class="text-center py-4"><p class="text-dark text-sm fw-bold mb-0">Belum ada data kategori.</p></td></tr>
+                <tr id="kategori-row-empty">
+                    <td colspan="6" class="text-center py-4">
+                        <p class="text-dark text-sm fw-bold mb-0">Belum ada data kategori.</p>
+                    </td>
+                </tr>
             @endforelse
         </tbody>
     </table>

@@ -13,49 +13,44 @@
         </thead>
         <tbody id="isiTable">
             @forelse ($pelanggans as $pelanggan)
-            <tr id="pelanggan-row-{{ $pelanggan->id }}">
-                <td>
-                    <p title="Nama Pelanggan" class="ms-3 text-xs text-dark fw-bold mb-0">{{ $pelanggan->nama }}</p>
-                </td>
-                <td>
-                    <p title="Kontak" class="text-xs text-dark fw-bold mb-0">{{ $pelanggan->kontak }}</p>
-                </td>
-                <td>
-                    <p title="Email" class="text-xs text-dark fw-bold mb-0" >{{ $pelanggan->email }}</p>
-                </td>
-                <td>
-                    <p title="Alamat" class="text-xs text-dark fw-bold mb-0">{!! wordwrap($pelanggan->alamat, 50, "<br>\n", true) !!}</p>
-                </td>
+                <tr id="pelanggan-row-{{ $pelanggan->id }}">
+                    <td>
+                        <p title="Nama Pelanggan" class="ms-3 text-xs text-dark fw-bold mb-0">{{ $pelanggan->nama }}</p>
+                    </td>
+                    <td>
+                        <p title="Kontak" class="text-xs text-dark fw-bold mb-0">{{ $pelanggan->kontak }}</p>
+                    </td>
+                    <td>
+                        <p title="Email" class="text-xs text-dark fw-bold mb-0">{{ $pelanggan->email }}</p>
+                    </td>
+                    <td>
+                        <p title="Alamat" class="text-xs text-dark fw-bold mb-0">{!! wordwrap($pelanggan->alamat, 50, "<br>\n", true) !!}</p>
+                    </td>
 
-                <td class="align-middle text-center text-sm">
-                    @if ($pelanggan->status)
-                        <span class="badge badge-success">Aktif</span>
-                    @else
-                        <span class="badge badge-secondary">Tidak Aktif</span>
-                    @endif
-                </td>
+                    <td class="align-middle text-center text-sm">
+                        @if ($pelanggan->status)
+                            <span class="badge badge-success">Aktif</span>
+                        @else
+                            <span class="badge badge-secondary">Tidak Aktif</span>
+                        @endif
+                    </td>
 
-                <td class="text-center align-middle">
-                    @if ($pelanggan->id != 1)
-                        <a href="#" class="text-dark fw-bold px-3 text-xs"
-                            data-bs-toggle="modal"
-                            data-bs-target="#editModal"
-                            data-url="{{ route('pelanggan.getjson', $pelanggan->id) }}"
-                            data-update-url="{{ route('pelanggan.update', $pelanggan->id) }}"
-                            title="Edit Pelanggan">
-                            <i class="bi bi-pencil-square text-dark text-sm opacity-10"></i>
-                        </a>
-                        <a href="#" class="text-dark delete-btn me-md-4"
-                            data-bs-toggle="modal"
-                            data-bs-target="#deleteConfirmationModal"
-                            data-pelanggan-id="{{ $pelanggan->id }}"
-                            data-pelanggan-name="{{ $pelanggan->nama }}"
-                            title="Hapus Pelanggan">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    @endif
-                </td>
-            </tr>
+                    <td class="text-center align-middle">
+                        @if ($pelanggan->id != 1)
+                            <a href="#" class="text-dark fw-bold px-3 text-xs" data-bs-toggle="modal"
+                                data-bs-target="#editModal" data-url="{{ route('pelanggan.getjson', $pelanggan->id) }}"
+                                data-update-url="{{ route('pelanggan.update', $pelanggan->id) }}"
+                                title="Edit Pelanggan">
+                                <i class="bx bx-pencil-square text-dark text-sm opacity-10"></i>
+                            </a>
+                            <a href="#" class="text-dark delete-btn me-md-4" data-bs-toggle="modal"
+                                data-bs-target="#deleteConfirmationModal" data-pelanggan-id="{{ $pelanggan->id }}"
+                                data-pelanggan-name="{{ $pelanggan->nama }}" title="Hapus Pelanggan">
+                                <i class="bx bx-trash"></i>
+                            </a>
+                        @endif
+                    </td>
+                </tr>
             @empty
                 <tr>
                     <td colspan="6" class="text-center py-4 text-muted">Data pelanggan tidak ditemukan.</td>

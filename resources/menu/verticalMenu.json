@@ -1,0 +1,253 @@
+{
+  "menu": [
+    {
+      "url": "dashboard",
+      "name": "Dashboards",
+      "icon": "menu-icon icon-base bx bx-home-smile",
+      "slug": "dashboard"
+    },
+    {
+      "name": "penjualan",
+      "icon": "menu-icon icon-base bx bx-shop",
+      "slug": ["penjualan","pelanggan"],
+      "submenu": [
+        {
+          "url": "penjualan/create",
+          "name": "kasir",
+          "slug": "penjualan.create"
+        },
+        {
+          "url": "penjualan",
+          "name": "Faktur Penjualan",
+          "slug": "penjualan.index"
+        },
+        {
+          "url": "pelanggan",
+          "name": "Pelanggan",
+          "slug": "pelanggan.index"
+        }
+      ]
+    }, 
+    {
+      "name": "Pembelian",
+      "icon": "menu-icon icon-base bx bx-shop-buy",
+      "slug": ["pembelian","pemasok"],
+      "submenu": [
+        {
+          "url": "pembelian/create",
+          "name": "Beli Produk",
+          "slug": "pembelian.create"
+        },
+        {
+          "url": "/pembelian",
+          "name": "Faktur Pembelian",
+          "slug": "pembelian.index"
+        },
+        {
+          "url": "pemasok",
+          "name": "Pemasok",
+          "slug": "pemasok.index"
+        }
+      ]
+    },
+    {
+      "url": "produk",
+      "name": "Projek",
+      "icon": "menu-icon icon-base bx bx-product",
+      "slug": "produk.index",
+      "badge": [
+            "label-primary fs-tiny",
+            "NEW"
+          ]
+    },
+    {
+      "menuHeader": "Produk"
+    },
+    {
+      "name": "Kategori Produk",
+      "icon": "menu-icon icon-base bx bx-badge-2",
+      "slug": "kategoriproduk",
+      "badge": [
+            "label-primary fs-tiny",
+            "1"
+          ],
+      "submenu": [
+        {
+          "url": "kategoriproduk",
+          "name": "Utama",
+          "slug": "kategoriproduk.index"
+        },
+        {
+          "url": "kategoriproduk",
+          "name": "Sub kategori",
+          "slug": "kategoriproduk.index",
+          "badge": [
+            "label-primary fs-tiny",
+            "New"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "brand",
+      "name": "Brand",
+      "icon": "menu-icon icon-base bx bx-brand",
+      "slug": "brand.index"
+    },
+    {
+      "url": "unit",
+      "name": "Satuan",
+      "icon": "menu-icon icon-base bx bx-view-list",
+      "slug": "unit.index"
+    },
+    {
+      "url": "garansi",
+      "name": "Garansi",
+      "icon": "menu-icon icon-base bx bx-warranty",
+      "slug": "garansi.index"
+    },
+    {
+      "url": "produk",
+      "name": "Produk",
+      "icon": "menu-icon icon-base bx bx-product",
+      "slug": "produk.index",
+      "badge": [
+            "label-primary fs-tiny",
+            "MC"
+          ]
+    },
+    {
+      "url": "serialNumber",
+      "name": "Serial Number",
+      "icon": "menu-icon icon-base bx bx-serial",
+      "slug": "serialNumber.index"
+    },
+    {
+      "menuHeader": "Inventaris"
+    },
+    {
+      "url": "stok-penyesuaian",
+      "name": "Penyesuaian Stok",
+      "icon": "menu-icon icon-base bx bx-stock-change",
+      "slug": "stok-penyesuaian.index"
+    },
+    {
+      "url": "#",
+      "name": "Stok Opname",
+      "icon": "menu-icon icon-base bx bx-opname-2",
+      "slug": "stok-opname",
+      "submenu": [
+        {
+          "url": "stok-opname",
+          "name": "Buat Data Baru",
+          "slug": "stok-opname.index"
+        },
+        {
+          "url": "stok-opname/history",
+          "name": "Lihat Riwayat",
+          "slug": "stok-opname.history"
+        }
+      ]
+    },
+    {
+      "url": "stok/rendah",
+      "name": "Stok Rendah",
+      "icon": "menu-icon icon-base bx bx-line-chart-down",
+      "slug": "stok.rendah"
+    },
+    {
+      "url": "promo",
+      "name": "Promo & Diskon",
+      "icon": "menu-icon icon-base bx bx-percent",
+      "slug": "promo.index"
+    },
+    {
+      "url": "banner",
+      "name": "Banner",
+      "icon": "menu-icon icon-base bx bx-images",
+      "slug": "banner.index"
+    },
+    
+    {
+      "menuHeader": "Keuangan & Laporan"
+    },
+    {
+      "name": "Administrasi",
+      "icon": "menu-icon icon-base bx bx-money-2",
+      "slug": ["keuangan", "pemasukan", "pengeluaran", "kategori"],
+      "submenu": [
+        {
+          "url": "keuangan",
+          "name": "Rekap Keuangan",
+          "slug": "keuangan"
+        },
+        {
+          "url": "pemasukan",
+          "name": "Pemasukan",
+          "slug": "pemasukan.index"
+        },
+        {
+          "url": "pengeluaran",
+          "name": "Pengeluaran",
+          "slug": "pengeluaran.index"
+        },
+        {
+          "url": "kategoritransaksi",
+          "name": "Kategori Transaksi",
+          "slug": "kategoritransaksi.index"
+        }
+      ]
+    },
+     {
+      "name": "Laporan",
+      "icon": "menu-icon icon-base bx bx-report",
+      "slug": "laporan",
+      "submenu": [
+        {
+          "url": "laporan/inventaris",
+          "name": "Pergerakan Stok",
+          "slug": "laporan.inventaris"
+        },
+        {
+          "url": "laporan/penjualan",
+          "name": "Laporan Penjualan",
+          "slug": "laporan.penjualan"
+        },
+        {
+          "url": "laporan/pembelian",
+          "name": "Laporan Pembelian",
+          "slug": "laporan.pembelian"
+        },
+        {
+          "url": "laporan/laba-rugi",
+          "name": "Laporan Laba & Rugi",
+          "slug": "laporan.laba-rugi"
+        }
+      ]
+    },
+    {
+      "menuHeader": "Autentikasi"
+    },
+    {
+      "name": "Toko",
+      "icon": "menu-icon icon-base bx bx-store",
+      "slug": "front-pages",
+      "badge": [
+        "label-primary fs-tiny",
+        "New"
+      ]
+    },
+    {
+      "url": "pengaturan/profil-toko",
+      "name": "Setting",
+      "icon": "menu-icon icon-base bx bx-cog",
+      "slug": "pengaturan.profil-toko.edit"
+    },
+    {
+      "url": "users",
+      "name": "Pengguna",
+      "icon": "menu-icon icon-base bx bx-users",
+      "slug": "users.index"
+    }
+  ]
+}

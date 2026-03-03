@@ -1,112 +1,129 @@
-<x-layout>
-    @push('styles')
+@extends('layouts/contentNavbarLayout')
+
+@section('title', 'Cards basic - UI elements')
+@section('content')
+@section('vendor-style')
     {{-- Select2 untuk filter yang lebih baik --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
     <style>
         /* Style untuk input stok fisik agar lebih rapi */
         .physical-stock-input {
             width: 100px;
             text-align: center;
         }
+
         /* Style untuk selisih agar lebih jelas */
         .difference-positive {
-            color: #2dce89; /* green */
+            color: #2dce89;
+            /* green */
             font-weight: bold;
         }
+
         .difference-negative {
-            color: #f5365c; /* red */
+            color: #f5365c;
+            /* red */
             font-weight: bold;
         }
+
         .difference-zero {
-            color: #8898aa; /* gray */
+            color: #8898aa;
+            /* gray */
         }
     </style>
-    @endpush
-    {{-- breadcrumb --}}
-    @section('breadcrumb')
-        @php
+@endsection
+{{-- breadcrumb --}}
+@section('breadcrumb')
+    @php
         // Asumsi route 'stok-opname.index' sudah ada
         $breadcrumbItems = [
             ['name' => 'Dashboard', 'url' => '/dashboard'],
             ['name' => 'Stok Opname', 'url' => route('stok-opname.index')],
         ];
-        @endphp
-        <x-breadcrumb :items="$breadcrumbItems" />
-    @endsection
+    @endphp
+    <x-breadcrumb :items="$breadcrumbItems" />
+@endsection
 
-    <div class="container-fluid p-3">
-        {{-- Asumsi controller akan mengirimkan variabel $produks dan $kategoris --}}
-        @php
-            $produks = $produks ?? collect();
-            $kategoris = $kategoris ?? collect();
-        @endphp
-        <div class="card rounded-2">
-            <div class="card-header pb-0 px-3 pt-2 mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-n1">Stok Opname</h6>
-                        <p class="text-sm mb-0">Sesuaikan stok fisik dengan stok sistem.</p>
-                    </div>
-                    <div class="ms-md-auto mt-2">
-                        {{-- Tombol ini bisa digunakan untuk melihat riwayat stok opname --}}
-                        <a href="{{ route('stok-opname.history') }}" class="btn btn-outline-secondary mb-0">
-                            <i class="bi bi-clock-history me-2"></i>Riwayat
-                        </a>
-                    </div>
+<div class="container-fluid p-3">
+    {{-- Asumsi controller akan mengirimkan variabel $produks dan $kategoris --}}
+    @php
+        $produks = $produks ?? collect();
+        $kategoris = $kategoris ?? collect();
+    @endphp
+    <div class="card rounded-2">
+        <div class="card-header pb-0 px-3 pt-2 mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-n1">Stok Opname</h6>
+                    <p class="text-sm mb-0">Sesuaikan stok fisik dengan stok sistem.</p>
+                </div>
+                <div class="ms-md-auto mt-2">
+                    {{-- Tombol ini bisa digunakan untuk melihat riwayat stok opname --}}
+                    <a href="{{ route('stok-opname.history') }}" class="btn btn-outline-secondary mb-0">
+                        <i class="bx bx-clock-history me-2"></i>Riwayat
+                    </a>
                 </div>
             </div>
-            <div class="card-body px-0 pt-0 pb-2">
-                {{-- Form untuk filter --}}
-                <form method="GET" action="{{ route('stok-opname.index') }}" id="filterForm">
-                    <div class="filter-container p-3">
-                        <div class="row g-3 align-items-center justify-content-start">
-                            <div class="col-md-4">
-                                <input type="text" name="search" id="searchInput" class="form-control" placeholder="Cari nama atau SKU produk..." value="{{ request('search') }}">
-                            </div>
-                            <div class="col-md-3">
-                                <select name="kategori" id="categoryFilter" class="form-select">
-                                    <option value="">Semua Kategori</option>
-                                    @foreach ($kategoris as $kategori)
-                                        <option value="{{ $kategori->id }}" @selected(request('kategori') == $kategori->id)>{{ $kategori->nama }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+        </div>
+        <div class="card-body px-0 pt-0 pb-2">
+            {{-- Form untuk filter --}}
+            <form method="GET" action="{{ route('stok-opname.index') }}" id="filterForm">
+                <div class="filter-container p-3">
+                    <div class="row g-3 align-items-center justify-content-start">
+                        <div class="col-md-4">
+                            <input type="text" name="search" id="searchInput" class="form-control"
+                                placeholder="Cari nama atau SKU produk..." value="{{ request('search') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="kategori" id="categoryFilter" class="form-select">
+                                <option value="">Semua Kategori</option>
+                                @foreach ($kategoris as $kategori)
+                                    <option value="{{ $kategori->id }}" @selected(request('kategori') == $kategori->id)>
+                                        {{ $kategori->nama }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
-                </form>
+                </div>
+            </form>
 
-                <form action="{{ route('stok-opname.store') }}" method="POST" id="stockOpnameForm">
-                    <div class="p-3">
-                        <div class="form-group">
-                            <label for="catatan_opname" class="form-label">Catatan Umum (Opsional)</label>
-                            <textarea name="catatan_opname" id="catatan_opname" class="form-control" rows="2" placeholder="Contoh: Stok opname bulanan untuk gudang utama"></textarea>
-                        </div>
+            <form action="{{ route('stok-opname.store') }}" method="POST" id="stockOpnameForm">
+                <div class="p-3">
+                    <div class="form-group">
+                        <label for="catatan_opname" class="form-label">Catatan Umum (Opsional)</label>
+                        <textarea name="catatan_opname" id="catatan_opname" class="form-control" rows="2"
+                            placeholder="Contoh: Stok opname bulanan untuk gudang utama"></textarea>
                     </div>
+                </div>
 
-                    @csrf
-                    <div id="stock-opname-table-container" class="mt-3 table-responsive">
-                        <table class="table table-hover align-items-center mb-0">
-                            <thead class="table-secondary">
-                                <tr>
-                                    <th class="text-uppercase text-dark text-xs font-weight-bolder ps-4">Produk</th>
-                                    <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Stok Sistem</th>
-                                    <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Stok Fisik</th>
-                                    <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Selisih</th>
-                                    <th class="text-uppercase text-dark text-xs font-weight-bolder">Keterangan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($produks as $produk)
+                @csrf
+                <div id="stock-opname-table-container" class="mt-3 table-responsive">
+                    <table class="table table-hover align-items-center mb-0">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-4">Produk</th>
+                                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Stok Sistem
+                                </th>
+                                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Stok Fisik
+                                </th>
+                                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Selisih</th>
+                                <th class="text-uppercase text-dark text-xs font-weight-bolder">Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($produks as $produk)
                                 <tr class="opname-row">
                                     <td>
                                         <div class="d-flex px-2 py-1">
                                             <div>
-                                                <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.webp') }}" class="avatar avatar-sm me-3" alt="product image">
+                                                <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.webp') }}"
+                                                    class="avatar avatar-sm me-3" alt="product image">
                                             </div>
                                             <div class="d-flex flex-column justify-content-center">
                                                 <h6 class="mb-0 text-sm">{{ $produk->nama_produk }}</h6>
-                                                <p class="text-xs text-secondary mb-0">{{ $produk->sku ?: 'SKU tidak ada' }}</p>
+                                                <p class="text-xs text-secondary mb-0">
+                                                    {{ $produk->sku ?: 'SKU tidak ada' }}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -114,40 +131,44 @@
                                         <span class="fw-bold system-stock">{{ $produk->qty }}</span>
                                     </td>
                                     <td class="align-middle text-center">
-                                        <input type="number" name="items[{{ $produk->id }}][stok_fisik]" class="form-control form-control-sm physical-stock-input mx-auto" value="{{ $produk->qty }}" min="0">
+                                        <input type="number" name="items[{{ $produk->id }}][stok_fisik]"
+                                            class="form-control form-control-sm physical-stock-input mx-auto"
+                                            value="{{ $produk->qty }}" min="0">
                                     </td>
                                     <td class="align-middle text-center text-sm">
                                         <span class="difference-cell difference-zero">0</span>
                                     </td>
                                     <td class="align-middle">
-                                        <input type="text" name="items[{{ $produk->id }}][keterangan]" class="form-control form-control-sm" placeholder="Catatan...">
+                                        <input type="text" name="items[{{ $produk->id }}][keterangan]"
+                                            class="form-control form-control-sm" placeholder="Catatan...">
                                     </td>
                                 </tr>
-                                @empty
+                            @empty
                                 <tr>
                                     <td colspan="5" class="text-center py-4">
-                                        <p class="text-dark text-sm fw-bold mb-0">Tidak ada produk untuk ditampilkan.</p>
+                                        <p class="text-dark text-sm fw-bold mb-0">Tidak ada produk untuk ditampilkan.
+                                        </p>
                                     </td>
                                 </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                        <div class="d-flex justify-content-center my-4">
-                            {{ $produks->links() }}
-                        </div>
+                            @endforelse
+                        </tbody>
+                    </table>
+                    <div class="d-flex justify-content-center my-4">
+                        {{ $produks->links() }}
                     </div>
+                </div>
 
-                    <div class="card-footer text-end">
-                        <button type="submit" class="btn btn-info" {{ $produks->isEmpty() ? 'disabled' : '' }}>
-                            <i class="bi bi-save me-2"></i>Simpan Hasil Opname
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div class="card-footer text-end">
+                    <button type="submit" class="btn btn-info" {{ $produks->isEmpty() ? 'disabled' : '' }}>
+                        <i class="bx bx-save me-2"></i>Simpan Hasil Opname
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    @push('scripts')
+@section('page-script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
@@ -217,5 +238,5 @@
             });
         });
     </script>
-    @endpush
-</x-layout>
+@endsection
+@endsection
