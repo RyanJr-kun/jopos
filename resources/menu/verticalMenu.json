@@ -18,34 +18,34 @@
         },
         {
           "url": "penjualan",
-          "name": "Faktur Penjualan",
+          "name": "Faktur Sale",
           "slug": "penjualan.index"
         },
         {
           "url": "pelanggan",
-          "name": "Pelanggan",
+          "name": "Customer",
           "slug": "pelanggan.index"
         }
       ]
     }, 
     {
-      "name": "Pembelian",
+      "name": "Purchase",
       "icon": "menu-icon icon-base bx bx-shop-buy",
       "slug": ["pembelian","pemasok"],
       "submenu": [
         {
           "url": "pembelian/create",
-          "name": "Beli Produk",
+          "name": "Beli Product",
           "slug": "pembelian.create"
         },
         {
           "url": "/pembelian",
-          "name": "Faktur Pembelian",
+          "name": "Faktur Purchase",
           "slug": "pembelian.index"
         },
         {
           "url": "pemasok",
-          "name": "Pemasok",
+          "name": "Supplier",
           "slug": "pemasok.index"
         }
       ]
@@ -61,10 +61,10 @@
           ]
     },
     {
-      "menuHeader": "Produk"
+      "menuHeader": "Product"
     },
     {
-      "name": "Kategori Produk",
+      "name": "Kategori Product",
       "icon": "menu-icon icon-base bx bx-badge-2",
       "slug": "kategoriproduk",
       "badge": [
@@ -102,13 +102,13 @@
     },
     {
       "url": "garansi",
-      "name": "Garansi",
+      "name": "Warrantie",
       "icon": "menu-icon icon-base bx bx-warranty",
       "slug": "garansi.index"
     },
     {
       "url": "produk",
-      "name": "Produk",
+      "name": "Product",
       "icon": "menu-icon icon-base bx bx-product",
       "slug": "produk.index",
       "badge": [
@@ -127,13 +127,13 @@
     },
     {
       "url": "stok-penyesuaian",
-      "name": "Penyesuaian Stok",
+      "name": "Penyesuaian Stock",
       "icon": "menu-icon icon-base bx bx-stock-change",
       "slug": "stok-penyesuaian.index"
     },
     {
       "url": "#",
-      "name": "Stok Opname",
+      "name": "Stock Opname",
       "icon": "menu-icon icon-base bx bx-opname-2",
       "slug": "stok-opname",
       "submenu": [
@@ -151,7 +151,7 @@
     },
     {
       "url": "stok/rendah",
-      "name": "Stok Rendah",
+      "name": "Stock Rendah",
       "icon": "menu-icon icon-base bx bx-line-chart-down",
       "slug": "stok.rendah"
     },
@@ -174,7 +174,7 @@
     {
       "name": "Administrasi",
       "icon": "menu-icon icon-base bx bx-money-2",
-      "slug": ["keuangan", "pemasukan", "pengeluaran", "kategori"],
+      "slug": ["keuangan", "income", "expense", "kategori"],
       "submenu": [
         {
           "url": "keuangan",
@@ -182,14 +182,14 @@
           "slug": "keuangan"
         },
         {
-          "url": "pemasukan",
-          "name": "Pemasukan",
-          "slug": "pemasukan.index"
+          "url": "income",
+          "name": "Income",
+          "slug": "income.index"
         },
         {
-          "url": "pengeluaran",
-          "name": "Pengeluaran",
-          "slug": "pengeluaran.index"
+          "url": "expense",
+          "name": "Expense",
+          "slug": "expense.index"
         },
         {
           "url": "kategoritransaksi",
@@ -205,17 +205,17 @@
       "submenu": [
         {
           "url": "laporan/inventaris",
-          "name": "Pergerakan Stok",
+          "name": "Pergerakan Stock",
           "slug": "laporan.inventaris"
         },
         {
           "url": "laporan/penjualan",
-          "name": "Laporan Penjualan",
+          "name": "Laporan Sale",
           "slug": "laporan.penjualan"
         },
         {
           "url": "laporan/pembelian",
-          "name": "Laporan Pembelian",
+          "name": "Laporan Purchase",
           "slug": "laporan.pembelian"
         },
         {

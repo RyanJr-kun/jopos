@@ -73,7 +73,7 @@
                                 @endif
                                 <div class="ms-2">
                                     <p class="mb-0 text-xs fw-bolder">{{ auth()->user()->username }}</p>
-                                    <p class="text-xs text-secondary">{{ auth()->user()->role->nama }}</p>
+                                    <p class="text-xs text-secondary">{{ Auth::user()->getRolesName() }}</p>
                                 </div>
                             </li>
                             <li>
@@ -141,13 +141,13 @@
                     <li class="nav-item me-4">
                         <div class="dropdown dropdown-hover-market">
                             <a class="nav-link text-sm dropdown-toggle" href="#" id="produkDrop"
-                                role="button" data-bs-toggle="dropdown" aria-expanded="false">Produk</a>
+                                role="button" data-bs-toggle="dropdown" aria-expanded="false">Product</a>
                             <ul class="dropdown-menu p-2 mt-2 rounded-2" aria-labelledby="produkDrop">
                                 @forelse ($kategoris as $kategori)
                                     <li>
                                         {{-- Arahkan ke halaman produk dengan filter kategori --}}
                                         <a class="dropdown-item border-radius-md"
-                                            href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}">{{ $kategori->nama }}</a>
+                                            href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}">{{ $kategori->name }}</a>
                                     </li>
                                 @empty
                                     <li><a class="dropdown-item border-radius-md text-muted" href="#">Kategori
@@ -184,13 +184,13 @@
                 <li class="nav-item"><a class="nav-link fs-5" href="{{ url('/') }}">Beranda</a></li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle fs-5" href="#" id="offcanvasKategoriDropdown"
-                        role="button" data-bs-toggle="dropdown" aria-expanded="false">Produk</a>
+                        role="button" data-bs-toggle="dropdown" aria-expanded="false">Product</a>
                     <ul class="dropdown-menu border-0" aria-labelledby="offcanvasKategoriDropdown">
                         @forelse ($kategoris as $kategori)
                             <li>
                                 {{-- Arahkan ke halaman produk dengan filter kategori --}}
                                 <a class="dropdown-item"
-                                    href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}">{{ $kategori->nama }}</a>
+                                    href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}">{{ $kategori->name }}</a>
                             </li>
                         @empty
                             <li><a class="dropdown-item text-muted" href="#">Tidak ada kategori</a></li>
@@ -264,11 +264,11 @@
                         .then(response => response.json())
                         .then(data => {
                             resultsContainer.innerHTML = ''; // Kosongkan hasil sebelumnya
-                            if (data.produks && data.produks.length > 0) {
+                            if (data.products && data.products.length > 0) {
                                 let productsHtml =
                                     `<div class="p-3 border-bottom"><p class="mb-0 text-sm text-muted">Menampilkan ${data.total} dari hasil teratas...</p></div><div class="list-group list-group-flush">`;
 
-                                data.produks.forEach(produk => {
+                                data.products.forEach(produk => {
                                     const detailUrl =
                                         `{{ url('produk') }}/${produk.slug}`;
                                     const imageUrl = produk.img_produk ?
@@ -280,10 +280,10 @@
 
                                     productsHtml += `
                             <a href="${detailUrl}" class="list-group-item list-group-item-action d-flex align-items-center">
-                                <img src="${imageUrl}" alt="${produk.nama_produk}" class="avatar avatar-md rounded me-3">
+                                <img src="${imageUrl}" alt="${produk.name_produk}" class="avatar avatar-md rounded me-3">
                                 <div class="flex-grow-1">
-                                    <p class="fw-bold mb-0 text-dark text-sm">${produk.nama_produk}</p>
-                                    <small class="text-muted d-block">${produk.kategori_produk.nama} / ${produk.brand ? produk.brand.nama : ''}</small>
+                                    <p class="fw-bold mb-0 text-dark text-sm">${produk.name_produk}</p>
+                                    <small class="text-muted d-block">${produk.category.name} / ${produk.brand ? produk.brand.name : ''}</small>
                                     <p class="fw-bolder text-info mb-0 text-sm">${harga}</p>
                                 </div>
                             </a>

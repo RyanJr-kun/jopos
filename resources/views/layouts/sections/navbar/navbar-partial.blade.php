@@ -179,8 +179,8 @@
                             <img src="{{ asset('storage/' . auth()->user()->img_user) }}" alt="Profile"
                                 class="w-px-40 h-auto rounded-circle">
                         @else
-                            <img src="{{ asset('assets/img/user.webp') }}" class="w-px-40 h-auto rounded-circle"
-                                alt="Gambar user default">
+                            <span
+                                class="avatar-initial rounded-circle bg-label-primary">{{ substr(Auth::user()->name, 0, 2) }}</span>
                         @endif
                     </div>
                 </a>
@@ -194,14 +194,30 @@
                                             <img src="{{ asset('storage/' . auth()->user()->img_user) }}" alt="Profile"
                                                 class="w-px-40 h-auto rounded-circle">
                                         @else
-                                            <img src="{{ asset('assets/img/user.webp') }}"
-                                                class="w-px-40 h-auto rounded-circle" alt="Gambar user default">
+                                            <span
+                                                class="avatar-initial rounded-circle bg-label-primary">{{ substr(Auth::user()->name, 0, 2) }}</span>
                                         @endif
                                     </div>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0">{{ auth()->user()->username }}</h6>
-                                    <small class="text-muted">{{ auth()->user()->role->nama }}</small>
+                                <div class="grow">
+                                    <h6 class="mb-0">{{ Auth::user()->name ?? 'user' }}</h6>
+                                    @php
+                                        $roleColors = [
+                                            'admin' => 'danger',
+                                            'kasir' => 'primary',
+                                            'teknisi' => 'success',
+                                            'pelayan' => 'info',
+                                            'Magang' => 'warning',
+                                            'Manajer' => 'dark',
+                                        ];
+                                    @endphp
+                                    @forelse(Auth::user()->getRoleNames() as $role)
+                                        @php $colorClass = $roleColors[strtolower($role)] ?? 'primary'; @endphp
+                                        <small class="badge py-1 bg-label-{{ $colorClass }} me-1">{{ $role }}
+                                        </small>
+                                    @empty
+                                        <span class="text-muted small">Tanpa Role</span>
+                                    @endforelse
                                 </div>
                             </div>
                         </a>

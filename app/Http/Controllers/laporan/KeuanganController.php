@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\laporan;
 
 use App\Http\Controllers\Controller;
-use App\Models\Pemasukan;
-use App\Models\Penjualan;
-use App\Models\Pengeluaran;
+use App\Models\Income;
+use App\Models\Sale;
+use App\Models\Expense;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -26,26 +26,26 @@ class KeuanganController extends Controller
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->format('Y-m-d'));
 
         // 2. Ambil data ringkasan dalam rentang tanggal yang ditentukan
-        $totalPemasukan = Pemasukan::whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
-        $totalPengeluaran = Pengeluaran::whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
-        $labaRugi = $totalPemasukan - $totalPengeluaran;
-        $totalTransaksi = Pemasukan::whereBetween('tanggal', [$startDate, $endDate])->count()
-            + Pengeluaran::whereBetween('tanggal', [$startDate, $endDate])->count();
+        $totalIncome = Income::whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
+        $totalExpense = Expense::whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
+        $labaRugi = $totalIncome - $totalExpense;
+        $totalTransaksi = Income::whereBetween('tanggal', [$startDate, $endDate])->count()
+            + Expense::whereBetween('tanggal', [$startDate, $endDate])->count();
 
-        // 3. Ambil transaksi terbaru (gabungan pemasukan & pengeluaran)
-        $pemasukans = Pemasukan::with('kategori_transaksi')
-            ->select('id', 'tanggal', 'keterangan', 'jumlah', 'kategori_transaksi_id', DB::raw("'pemasukan' as type"));
+        // 3. Ambil transaksi terbaru (gabungan income & expense)
+        $incomes = Income::with('transaction_category')
+            ->select('id', 'tanggal', 'keterangan', 'jumlah', 'transaction_category_id', DB::raw("'income' as type"));
 
-        $pengeluarans = Pengeluaran::with('kategori_transaksi')
-            ->select('id', 'tanggal', 'keterangan', 'jumlah', 'kategori_transaksi_id', DB::raw("'pengeluaran' as type"));
+        $expenses = Expense::with('transaction_category')
+            ->select('id', 'tanggal', 'keterangan', 'jumlah', 'transaction_category_id', DB::raw("'expense' as type"));
 
         // Gabungkan, urutkan, dan batasi hasilnya
-        $recentTransactions = $pemasukans->union($pengeluarans)->latest('tanggal')
+        $recentTransactions = $incomes->union($expenses)->latest('tanggal')
             ->limit(10)
             ->get();
 
         // 4. Siapkan data untuk grafik
-        $pemasukanPerHari = Pemasukan::whereBetween('tanggal', [$startDate, $endDate])
+        $incomePerHari = Income::whereBetween('tanggal', [$startDate, $endDate])
             ->groupBy('date')
             ->orderBy('date', 'ASC')
             ->get([
@@ -54,7 +54,7 @@ class KeuanganController extends Controller
             ])
             ->pluck('total', 'date');
 
-        $pengeluaranPerHari = Pengeluaran::whereBetween('tanggal', [$startDate, $endDate])
+        $expensePerHari = Expense::whereBetween('tanggal', [$startDate, $endDate])
             ->groupBy('date')
             ->orderBy('date', 'ASC')
             ->get([
@@ -65,20 +65,20 @@ class KeuanganController extends Controller
 
         $period = CarbonPeriod::create($startDate, $endDate);
         $chartLabels = collect($period)->map(fn($date) => $date->isoFormat('D MMM'));
-        $pemasukanData = collect($period)->map(fn($date) => $pemasukanPerHari[$date->format('Y-m-d')] ?? 0);
-        $pengeluaranData = collect($period)->map(fn($date) => $pengeluaranPerHari[$date->format('Y-m-d')] ?? 0);
+        $incomeData = collect($period)->map(fn($date) => $incomePerHari[$date->format('Y-m-d')] ?? 0);
+        $expenseData = collect($period)->map(fn($date) => $expensePerHari[$date->format('Y-m-d')] ?? 0);
 
         // 5. Ambil invoice penjualan terbaru
-        $recentInvoices = Penjualan::with('pelanggan')
+        $recentInvoices = Sale::with('pelanggan')
             ->latest()
             ->limit(5)
             ->get();
 
         // 6. Kirim semua data ke view
-        return view('dashboard.keuangan.index', [
+        return view('content.keuangan.index', [
             'title' => 'Administrasi Keuangan',
-            'totalPemasukan' => $totalPemasukan,
-            'totalPengeluaran' => $totalPengeluaran,
+            'totalIncome' => $totalIncome,
+            'totalExpense' => $totalExpense,
             'labaRugi' => $labaRugi,
             'totalTransaksi' => $totalTransaksi,
             'recentTransactions' => $recentTransactions,
@@ -87,8 +87,8 @@ class KeuanganController extends Controller
             'endDate' => $endDate,
             'chartData' => [
                 'labels' => $chartLabels,
-                'pemasukan' => $pemasukanData,
-                'pengeluaran' => $pengeluaranData,
+                'income' => $incomeData,
+                'expense' => $expenseData,
             ],
         ]);
     }

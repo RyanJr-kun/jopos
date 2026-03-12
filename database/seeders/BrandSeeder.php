@@ -20,27 +20,82 @@ class BrandSeeder extends Seeder
         // Daftar merek yang relevan dengan toko komputer & elektronik
         $brands = [
             // Laptop & PC
-            'Dell', 'HP', 'Lenovo', 'Apple', 'Asus', 'Acer', 'MSI', 'Razer', 'Microsoft',
+            'Dell',
+            'HP',
+            'Lenovo',
+            'Apple',
+            'Asus',
+            'Acer',
+            'MSI',
+            'Razer',
+            'Microsoft',
 
             // Komponen PC (CPU, GPU, Motherboard)
-            'Intel', 'AMD', 'NVIDIA', 'Gigabyte', 'ASRock', 'Sapphire', 'Zotac', 'Palit', 'EVGA',
+            'Intel',
+            'AMD',
+            'NVIDIA',
+            'Gigabyte',
+            'ASRock',
+            'Sapphire',
+            'Zotac',
+            'Palit',
+            'EVGA',
 
             // Komponen PC (RAM, Storage, PSU)
-            'Corsair', 'G.Skill', 'Kingston', 'HyperX', 'Crucial', 'TeamGroup', 'Seagate',
-            'Western Digital', 'Samsung', 'SanDisk', 'ADATA', 'Cooler Master', 'Seasonic',
-            'Thermaltake', 'NZXT', 'Noctua', 'be quiet!',
+            'Corsair',
+            'G.Skill',
+            'Kingston',
+            'HyperX',
+            'Crucial',
+            'TeamGroup',
+            'Seagate',
+            'Western Digital',
+            'Samsung',
+            'SanDisk',
+            'ADATA',
+            'Cooler Master',
+            'Seasonic',
+            'Thermaltake',
+            'NZXT',
+            'Noctua',
+            'be quiet!',
 
             // Periferal (Monitor, Keyboard, Mouse)
-            'Logitech', 'SteelSeries', 'Keychron', 'BenQ', 'LG', 'ViewSonic', 'AOC', 'Fantech', 'Rexus',
+            'Logitech',
+            'SteelSeries',
+            'Keychron',
+            'BenQ',
+            'LG',
+            'ViewSonic',
+            'AOC',
+            'Fantech',
+            'Rexus',
 
             // Printer & Audio
-            'Canon', 'Epson', 'Brother', 'Sony', 'JBL', 'Sennheiser', 'Bose', 'Harman Kardon',
+            'Canon',
+            'Epson',
+            'Brother',
+            'Sony',
+            'JBL',
+            'Sennheiser',
+            'Bose',
+            'Harman Kardon',
 
             // Jaringan
-            'TP-Link', 'D-Link', 'Linksys', 'Netgear', 'Ubiquiti', 'Mikrotik',
+            'TP-Link',
+            'D-Link',
+            'Linksys',
+            'Netgear',
+            'Ubiquiti',
+            'Mikrotik',
 
             // Smartphone & TV
-            'Xiaomi', 'Oppo', 'Vivo', 'Google', 'TCL', 'Philips',
+            'Xiaomi',
+            'Oppo',
+            'Vivo',
+            'Google',
+            'TCL',
+            'Philips',
         ];
 
         // Urutkan merek berdasarkan abjad untuk kerapian
@@ -48,7 +103,7 @@ class BrandSeeder extends Seeder
 
         foreach ($brands as $brand) {
             Brand::create([
-                'nama' => $brand,
+                'name' => $brand,
                 'slug' => Str::slug($brand),
             ]);
         }

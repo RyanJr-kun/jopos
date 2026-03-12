@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\dashboard;
 
 use App\Http\Controllers\Controller;
-use App\Models\Produk;
-use App\Models\Pemasok;
-use App\Models\Pelanggan;
-use App\Models\Pembelian;
-use App\Models\Pengeluaran;
-use App\Models\Penjualan;
+use App\Models\Product;
+use App\Models\Supplier;
+use App\Models\Customer;
+use App\Models\Purchase;
+use App\Models\Expense;
+use App\Models\Sale;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -30,17 +30,17 @@ class DashboardController extends Controller
         $endCarbon = Carbon::parse($endDate);
         $daysDifference = $endCarbon->diffInDays($startCarbon);
 
-        // Tentukan periode sebelumnya dengan durasi yang sama
+        // Tentukan periode sebelumnya dengan duration yang sama
         $previousStartDate = $startCarbon->copy()->subDays($daysDifference + 1);
         $previousEndDate = $endCarbon->copy()->subDays($daysDifference + 1);
 
         // 1. Pendapatan Periode Ini vs Periode Sebelumnya
-        $pendapatanPeriodeIni = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->where('status_pembayaran', '!=', 'Dibatalkan')->sum('total_akhir');
-        $pendapatanPeriodeLalu = Penjualan::whereBetween('tanggal_penjualan', [$previousStartDate, $previousEndDate])->where('status_pembayaran', '!=', 'Dibatalkan')->sum('total_akhir');
+        $pendapatanPeriodeIni = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])->where('status_pembayaran', '!=', 'Dibatalkan')->sum('total_akhir');
+        $pendapatanPeriodeLalu = Sale::whereBetween('tanggal_penjualan', [$previousStartDate, $previousEndDate])->where('status_pembayaran', '!=', 'Dibatalkan')->sum('total_akhir');
 
         // 2. Transaksi Periode Ini vs Periode Sebelumnya
-        $transaksiPeriodeIni = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->where('status_pembayaran', '!=', 'Dibatalkan')->count();
-        $transaksiPeriodeLalu = Penjualan::whereBetween('tanggal_penjualan', [$previousStartDate, $previousEndDate])->where('status_pembayaran', '!=', 'Dibatalkan')->count();
+        $transaksiPeriodeIni = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])->where('status_pembayaran', '!=', 'Dibatalkan')->count();
+        $transaksiPeriodeLalu = Sale::whereBetween('tanggal_penjualan', [$previousStartDate, $previousEndDate])->where('status_pembayaran', '!=', 'Dibatalkan')->count();
 
         // 3. Hitung persentase perubahan (untuk pendapatan dan transaksi)
         $persentasePendapatan = 0;
@@ -59,54 +59,54 @@ class DashboardController extends Controller
 
         // --- DATA UNTUK STATS CARDS ---
 
-        // 4. Produk dengan Stok Rendah (berdasarkan stok minimum per produk)
-        $lowStockQuery = Produk::whereColumn('qty', '<=', 'stok_minimum');
+        // 4. Product dengan Stock Rendah (berdasarkan stok minimum per produk)
+        $lowStockQuery = Product::whereColumn('qty', '<=', 'stok_minimum');
         $stokRendahCount = (clone $lowStockQuery)->count();
-        $produkStokRendah = $lowStockQuery->orderBy('qty', 'asc')->limit(5)->get();
+        $produkStockRendah = $lowStockQuery->orderBy('qty', 'asc')->limit(5)->get();
 
-        // 5. Total Penjualan & Pembelian Berdasarkan Periode
-        $totalPenjualanPeriode = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])
+        // 5. Total Sale & Purchase Berdasarkan Periode
+        $totalSalePeriode = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])
             ->where('status_pembayaran', '!=', 'Dibatalkan')
             ->sum('total_akhir');
 
-        $totalPembelianPeriode = Pembelian::whereBetween('tanggal_pembelian', [$startDate, $endDate])
+        $totalPurchasePeriode = Purchase::whereBetween('tanggal_pembelian', [$startDate, $endDate])
             ->where('status_pembayaran', '!=', 'Dibatalkan')
             ->sum('total_akhir');
 
-        // Total Pengeluaran Berdasarkan Periode
-        $totalPengeluaranPeriode = Pengeluaran::whereBetween('tanggal', [$startDate, $endDate])
+        // Total Expense Berdasarkan Periode
+        $totalExpensePeriode = Expense::whereBetween('tanggal', [$startDate, $endDate])
             ->sum('jumlah');
 
-        // Hitung Harga Pokok Penjualan (HPP / COGS) Berdasarkan Periode
-        $cogsPeriode = DB::table('item_penjualans')
-            ->join('penjualans', 'item_penjualans.penjualan_id', '=', 'penjualans.id')
-            ->join('produks', 'item_penjualans.produk_id', '=', 'produks.id')
-            ->whereBetween('penjualans.tanggal_penjualan', [$startDate, $endDate])
-            ->where('penjualans.status_pembayaran', '!=', 'Dibatalkan')
-            ->sum(DB::raw('item_penjualans.jumlah * produks.harga_beli'));
+        // Hitung Harga Pokok Sale (HPP / COGS) Berdasarkan Periode
+        $cogsPeriode = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->whereBetween('sales.tanggal_penjualan', [$startDate, $endDate])
+            ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
+            ->sum(DB::raw('sale_items.jumlah * products.harga_beli'));
 
-        // Hitung Laba Bersih Berdasarkan Periode (Pendapatan - HPP - Pengeluaran)
-        $labaBersihPeriode = $totalPenjualanPeriode - $cogsPeriode - $totalPengeluaranPeriode;
+        // Hitung Laba Bersih Berdasarkan Periode (Pendapatan - HPP - Expense)
+        $labaBersihPeriode = $totalSalePeriode - $cogsPeriode - $totalExpensePeriode;
 
 
-        // Total Retur Penjualan & Pembelian Berdasarkan Periode
-        $totalReturPenjualanPeriode = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])
+        // Total Retur Sale & Purchase Berdasarkan Periode
+        $totalReturSalePeriode = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])
             ->where('status_pembayaran', 'Dibatalkan')
             ->sum('total_akhir');
 
-        $totalReturPembelianPeriode = Pembelian::whereBetween('tanggal_pembelian', [$startDate, $endDate])
+        $totalReturPurchasePeriode = Purchase::whereBetween('tanggal_pembelian', [$startDate, $endDate])
             ->where('status_pembayaran', 'Dibatalkan')
             ->sum('total_akhir');
 
-        $totalPelanggan = Pelanggan::count();
-        $totalPemasok = Pemasok::count();
-        $totalOrder = Penjualan::count();
-        $totalPembelian = Pembelian::count();
+        $totalCustomer = Customer::count();
+        $totalSupplier = Supplier::count();
+        $totalOrder = Sale::count();
+        $totalPurchase = Purchase::count();
 
 
 
         // --- DATA UNTUK GRAFIK PENJUALAN (30 HARI TERAKHIR) ---
-        $salesData = Penjualan::select(
+        $salesData = Sale::select(
             DB::raw('DATE(tanggal_penjualan) as tanggal'),
             DB::raw('SUM(total_akhir) as total')
         )
@@ -124,40 +124,40 @@ class DashboardController extends Controller
 
         // --- DATA UNTUK PRODUK TERLARIS (BERDASARKAN PERIODE) ---
         // 1. Dapatkan produk terlaris periode ini beserta jumlah terjual dan harga jualnya
-        $currentMonthSales = DB::table('item_penjualans')
-            ->join('produks', 'item_penjualans.produk_id', '=', 'produks.id')
-            ->join('penjualans', 'item_penjualans.penjualan_id', '=', 'penjualans.id')
+        $currentMonthSales = DB::table('sale_items')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->select(
-                'produks.id as produk_id',
-                'produks.nama_produk',
-                'produks.img_produk',
-                'produks.harga_jual',
-                DB::raw('SUM(item_penjualans.jumlah) as total_terjual_current_month')
+                'products.id as product_id',
+                'products.name_produk',
+                'products.img_produk',
+                'products.harga_jual',
+                DB::raw('SUM(sale_items.jumlah) as total_terjual_current_month')
             )
-            ->whereBetween('penjualans.tanggal_penjualan', [$startDate, $endDate])
-            ->where('penjualans.status_pembayaran', '!=', 'Dibatalkan')
-            ->groupBy('produks.id', 'produks.nama_produk', 'produks.img_produk', 'produks.harga_jual')
+            ->whereBetween('sales.tanggal_penjualan', [$startDate, $endDate])
+            ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
+            ->groupBy('products.id', 'products.name_produk', 'products.img_produk', 'products.harga_jual')
             ->orderBy('total_terjual_current_month', 'desc')
             ->limit(5)
             ->get();
 
         // 2. Dapatkan penjualan bulan sebelumnya untuk produk-produk terlaris ini
-        $previousMonthSales = DB::table('item_penjualans')
-            ->join('penjualans', 'item_penjualans.penjualan_id', '=', 'penjualans.id')
+        $previousMonthSales = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->select(
-                'item_penjualans.produk_id',
-                DB::raw('SUM(item_penjualans.jumlah) as total_terjual_previous_month')
+                'sale_items.product_id',
+                DB::raw('SUM(sale_items.jumlah) as total_terjual_previous_month')
             )
-            ->whereIn('item_penjualans.produk_id', $currentMonthSales->pluck('produk_id'))
-            ->whereBetween('penjualans.tanggal_penjualan', [$previousStartDate, $previousEndDate])
-            ->where('penjualans.status_pembayaran', '!=', 'Dibatalkan')
-            ->groupBy('item_penjualans.produk_id')
+            ->whereIn('sale_items.product_id', $currentMonthSales->pluck('product_id'))
+            ->whereBetween('sales.tanggal_penjualan', [$previousStartDate, $previousEndDate])
+            ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
+            ->groupBy('sale_items.product_id')
             ->get()
-            ->keyBy('produk_id');
+            ->keyBy('product_id');
 
         // 3. Gabungkan data dan hitung persentase kenaikan
         $produkTerlaris = $currentMonthSales->map(function ($product) use ($previousMonthSales) {
-            $previousSales = $previousMonthSales->get($product->produk_id);
+            $previousSales = $previousMonthSales->get($product->product_id);
             $totalTerjualPreviousMonth = $previousSales ? $previousSales->total_terjual_previous_month : 0;
 
             $percentageIncrease = 0;
@@ -168,48 +168,48 @@ class DashboardController extends Controller
             }
 
             $product->percentage_increase = $percentageIncrease;
-            $product->total_terjual = $product->total_terjual_current_month; // Sesuaikan nama variabel untuk blade
+            $product->total_terjual = $product->total_terjual_current_month; // Sesuaikan name variabel untuk blade
             return $product;
         });
 
         // --- DATA UNTUK PELANGGAN TERBAIK (BERDASARKAN PERIODE) ---
-        $pelangganTerbaik = Penjualan::join('pelanggans', 'penjualans.pelanggan_id', '=', 'pelanggans.id')
+        $pelangganTerbaik = Sale::join('customers', 'sales.customer_id', '=', 'customers.id')
             ->select(
-                'pelanggans.nama',
-                DB::raw('COUNT(penjualans.id) as total_orders'),
-                DB::raw('SUM(penjualans.total_akhir) as total_spent')
+                'customers.name',
+                DB::raw('COUNT(sales.id) as total_orders'),
+                DB::raw('SUM(sales.total_akhir) as total_spent')
             )
-            ->whereBetween('penjualans.tanggal_penjualan', [$startDate, $endDate])
-            ->where('penjualans.status_pembayaran', '!=', 'Dibatalkan')
-            ->whereNotNull('penjualans.pelanggan_id') // Pastikan pelanggan ada
-            ->where('pelanggans.nama', '!=', 'Pelanggan Umum') // Abaikan pelanggan umum
-            ->groupBy('pelanggans.id', 'pelanggans.nama')
+            ->whereBetween('sales.tanggal_penjualan', [$startDate, $endDate])
+            ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
+            ->whereNotNull('sales.customer_id') // Pastikan pelanggan ada
+            ->where('customers.name', '!=', 'Customer Umum') // Abaikan pelanggan umum
+            ->groupBy('customers.id', 'customers.name')
             ->orderBy('total_spent', 'desc')
             ->limit(5)
             ->get();
 
-        $recentSales = Penjualan::with('pelanggan')
+        $recentSales = Sale::with('pelanggan')
             ->latest('tanggal_penjualan')
             ->take(11)
             ->get();
 
-        $recentPurchases = Pembelian::with('pemasok')
+        $recentPurchases = Purchase::with('pemasok')
             ->latest('tanggal_pembelian')
             ->take(11)
             ->get();
 
         // --- DATA UNTUK GRAFIK KATEGORI TERLARIS (BERDASARKAN PERIODE) ---
-        $categorySalesData = DB::table('item_penjualans')
-            ->join('produks', 'item_penjualans.produk_id', '=', 'produks.id')
-            ->join('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id')
-            ->join('penjualans', 'item_penjualans.penjualan_id', '=', 'penjualans.id')
+        $categorySalesData = DB::table('sale_items')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->select(
-                'kategori_produks.nama as category_name',
-                DB::raw('SUM(item_penjualans.jumlah) as total_sold')
+                'categories.name as category_name',
+                DB::raw('SUM(sale_items.jumlah) as total_sold')
             )
-            ->whereBetween('penjualans.tanggal_penjualan', [$startDate, $endDate])
-            ->where('penjualans.status_pembayaran', '!=', 'Dibatalkan')
-            ->groupBy('kategori_produks.nama')
+            ->whereBetween('sales.tanggal_penjualan', [$startDate, $endDate])
+            ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
+            ->groupBy('categories.name')
             ->orderBy('total_sold', 'desc')
             ->limit(5) // Ambil 5 kategori teratas
             ->get();
@@ -218,7 +218,7 @@ class DashboardController extends Controller
         $categoryChartData = $categorySalesData->pluck('total_sold');
 
 
-        return view('dashboard.index', [
+        return view('content.dashboard.index', [
             'title' => 'Dashboard',
             'startDate' => $startDate,
             'endDate' => $endDate,
@@ -226,24 +226,24 @@ class DashboardController extends Controller
             'persentasePendapatan' => $persentasePendapatan,
             'transaksiPeriodeIni' => $transaksiPeriodeIni,
             'persentaseTransaksi' => $persentaseTransaksi,
-            'totalPenjualanPeriode' => $totalPenjualanPeriode,
-            'totalPembelianPeriode' => $totalPembelianPeriode,
-            'totalPengeluaranPeriode' => $totalPengeluaranPeriode,
+            'totalSalePeriode' => $totalSalePeriode,
+            'totalPurchasePeriode' => $totalPurchasePeriode,
+            'totalExpensePeriode' => $totalExpensePeriode,
             'labaBersihPeriode' => $labaBersihPeriode,
-            'totalReturPenjualanPeriode' => $totalReturPenjualanPeriode,
-            'totalReturPembelianPeriode' => $totalReturPembelianPeriode,
+            'totalReturSalePeriode' => $totalReturSalePeriode,
+            'totalReturPurchasePeriode' => $totalReturPurchasePeriode,
             'stokRendahCount' => $stokRendahCount,
             'salesChartLabels' => $salesChartLabels,
             'salesChartData' => $salesChartData,
             'produkTerlaris' => $produkTerlaris,
-            'produkStokRendah' => $produkStokRendah,
+            'produkStockRendah' => $produkStockRendah,
             'pelangganTerbaik' => $pelangganTerbaik,
             'recentSales' => $recentSales,
             'recentPurchases' => $recentPurchases,
-            'totalPelanggan' => $totalPelanggan,
-            'totalPemasok' => $totalPemasok,
+            'totalCustomer' => $totalCustomer,
+            'totalSupplier' => $totalSupplier,
             'totalOrder' => $totalOrder,
-            'totalPembelian' => $totalPembelian,
+            'totalPurchase' => $totalPurchase,
             'categoryChartLabels' => $categoryChartLabels,
             'categoryChartData' => $categoryChartData,
         ]);

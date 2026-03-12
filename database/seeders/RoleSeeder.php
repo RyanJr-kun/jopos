@@ -2,15 +2,15 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Spatie\Permission\Models\Role;
 
 class RoleSeeder extends Seeder
 {
-     public function run(): void
+    public function run()
     {
-        Role::firstOrCreate(['nama' => 'admin']);
-        Role::firstOrCreate(['nama' => 'kasir']);
+        // Membuat role dasar
+        Role::create(['name' => 'admin']);
+        Role::create(['name' => 'cashier']);
     }
 }

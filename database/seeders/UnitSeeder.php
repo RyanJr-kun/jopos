@@ -19,29 +19,29 @@ class UnitSeeder extends Seeder
 
         $units = [
             // Satuan Umum & Kemasan
-            ['nama' => 'Pieces', 'singkat' => 'Pcs'],
-            ['nama' => 'Unit', 'singkat' => 'Unit'],
-            ['nama' => 'Set', 'singkat' => 'Set'],
-            ['nama' => 'Box', 'singkat' => 'Box'],
-            ['nama' => 'Dus', 'singkat' => 'Dus'],
-            ['nama' => 'Pack', 'singkat' => 'Pack'],
-            ['nama' => 'Roll', 'singkat' => 'Roll'],
-            ['nama' => 'Lembar', 'singkat' => 'Lembar'],
+            ['name' => 'Pieces', 'singkat' => 'Pcs'],
+            ['name' => 'Unit', 'singkat' => 'Unit'],
+            ['name' => 'Set', 'singkat' => 'Set'],
+            ['name' => 'Box', 'singkat' => 'Box'],
+            ['name' => 'Dus', 'singkat' => 'Dus'],
+            ['name' => 'Pack', 'singkat' => 'Pack'],
+            ['name' => 'Roll', 'singkat' => 'Roll'],
+            ['name' => 'Lembar', 'singkat' => 'Lembar'],
 
             // Satuan Ukuran Fisik
-            ['nama' => 'Milimeter', 'singkat' => 'mm'],
-            ['nama' => 'Sentimeter', 'singkat' => 'cm'],
-            ['nama' => 'Meter', 'singkat' => 'm'],
-            ['nama' => 'Inci', 'singkat' => 'Inch'],
-            ['nama' => 'Gram', 'singkat' => 'g'],
-            ['nama' => 'Kilogram', 'singkat' => 'kg'],
+            ['name' => 'Milimeter', 'singkat' => 'mm'],
+            ['name' => 'Sentimeter', 'singkat' => 'cm'],
+            ['name' => 'Meter', 'singkat' => 'm'],
+            ['name' => 'Inci', 'singkat' => 'Inch'],
+            ['name' => 'Gram', 'singkat' => 'g'],
+            ['name' => 'Kilogram', 'singkat' => 'kg'],
         ];
 
         // Looping untuk memasukkan data ke database
         foreach ($units as $unit) {
             Unit::create([
-                'nama' => $unit['nama'],
-                'slug' => Str::slug($unit['nama'], '-'),
+                'name' => $unit['name'],
+                'slug' => Str::slug($unit['name'], '-'),
                 'singkat' => $unit['singkat'],
             ]);
         }

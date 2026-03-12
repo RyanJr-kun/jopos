@@ -17,7 +17,7 @@ class BannerController extends Controller
      */
     public function index()
     {
-        return view('dashboard.banner.index', [
+        return view('content.banner.index', [
             'title' => 'Manajemen Banner',
             'banners' => Banner::orderBy('posisi')->orderBy('urutan')->get(),
             'positions' => BannerPosition::cases(),

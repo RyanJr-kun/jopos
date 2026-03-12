@@ -29,17 +29,16 @@
             </li>
 
             {{-- penjualan --}}
-            <li class="nav-item">@php $isPenjualanActive = request()->routeIs('penjualan.*', 'pelanggan.*'); @endphp
-                <a data-bs-toggle="collapse" href="#penjualan" class="nav-link {{ $isPenjualanActive ? 'active' : '' }}"
-                    aria-controls="penjualan" role="button"
-                    aria-expanded="{{ $isPenjualanActive ? 'true' : 'false' }}">
+            <li class="nav-item">@php $isSaleActive = request()->routeIs('penjualan.*', 'pelanggan.*'); @endphp
+                <a data-bs-toggle="collapse" href="#penjualan" class="nav-link {{ $isSaleActive ? 'active' : '' }}"
+                    aria-controls="penjualan" role="button" aria-expanded="{{ $isSaleActive ? 'true' : 'false' }}">
                     <div
                         class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="bx bx-bag-dash text-dark text-sm opacity-10"></i>
                     </div>
-                    <span class="nav-link-text ms-1">Penjualan</span>
+                    <span class="nav-link-text ms-1">Sale</span>
                 </a>
-                <div class="collapse {{ $isPenjualanActive ? 'show' : '' }}" id="penjualan">
+                <div class="collapse {{ $isSaleActive ? 'show' : '' }}" id="penjualan">
                     <ul class="nav ms-4">
                         <li class="nav-item ">
                             <a class="nav-link {{ request()->routeIs('penjualan.create') ? 'active' : '' }}"
@@ -51,13 +50,13 @@
                             <a class="nav-link {{ request()->routeIs('penjualan.index', 'penjualan.show') ? 'active' : '' }}"
                                 href="{{ route('penjualan.index') }}">
 
-                                <span class="sidenav-normal"> Invoice Penjualan </span>
+                                <span class="sidenav-normal"> Invoice Sale </span>
                             </a>
                         </li>
                         <li class="nav-item ">
                             <a class="nav-link {{ request()->routeIs('pelanggan.*') ? 'active' : '' }}"
                                 href="{{ route('pelanggan.index') }}">
-                                <span class="sidenav-normal"> Pelanggan </span>
+                                <span class="sidenav-normal"> Customer </span>
                             </a>
                         </li>
                     </ul>
@@ -67,17 +66,17 @@
 
             @can('is-admin')
                 {{-- pembelian --}}
-                <li class="nav-item">@php $isPembelianActive = request()->routeIs('pembelian.*', 'pemasok.*'); @endphp
-                    <a data-bs-toggle="collapse" href="#pembelian"
-                        class="nav-link {{ $isPembelianActive ? 'active' : '' }}" aria-controls="pembelian" role="button"
-                        aria-expanded="{{ $isPembelianActive ? 'true' : 'false' }}">
+                <li class="nav-item">@php $isPurchaseActive = request()->routeIs('pembelian.*', 'pemasok.*'); @endphp
+                    <a data-bs-toggle="collapse" href="#pembelian" class="nav-link {{ $isPurchaseActive ? 'active' : '' }}"
+                        aria-controls="pembelian" role="button"
+                        aria-expanded="{{ $isPurchaseActive ? 'true' : 'false' }}">
                         <div
                             class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                             <i class="bx bx-bag-plus-fill text-dark text-sm opacity-10"></i>
                         </div>
-                        <span class="nav-link-text ms-1">Pembelian</span>
+                        <span class="nav-link-text ms-1">Purchase</span>
                     </a>
-                    <div class="collapse {{ $isPembelianActive ? 'show' : '' }}" id="pembelian">
+                    <div class="collapse {{ $isPurchaseActive ? 'show' : '' }}" id="pembelian">
                         <ul class="nav ms-4">
                             <li class="nav-item ">
                                 <a class="nav-link {{ request()->routeIs('pembelian.create') ? 'active' : '' }}"
@@ -88,13 +87,13 @@
                             <li class="nav-item ">
                                 <a class="nav-link {{ request()->routeIs('pembelian.index', 'pembelian.show') ? 'active' : '' }}"
                                     href="{{ route('pembelian.index') }}">
-                                    <span class="sidenav-normal"> Invoice Pembelian </span>
+                                    <span class="sidenav-normal"> Invoice Purchase </span>
                                 </a>
                             </li>
                             <li class="nav-item ">
                                 <a class="nav-link {{ request()->routeIs('pemasok.*') ? 'active' : '' }}"
                                     href="{{ route('pemasok.index') }}">
-                                    <span class="sidenav-normal"> Pemasok </span>
+                                    <span class="sidenav-normal"> Supplier </span>
                                 </a>
                             </li>
                         </ul>
@@ -104,7 +103,7 @@
 
             <hr class="horizontal dark my-2">
             <li class="nav-item">
-                <p class="ps-4 mb-0 text-uppercase text-xs font-weight-bolder">Inventaris & Produk</p>
+                <p class="ps-4 mb-0 text-uppercase text-xs font-weight-bolder">Inventaris & Product</p>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('produk.*') ? 'active' : '' }} "
@@ -113,7 +112,7 @@
                         class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="bx bx-box-fill text-dark text-sm opacity-10"></i>
                     </div>
-                    <span class="nav-link-text ms-1">Produk</span>
+                    <span class="nav-link-text ms-1">Product</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -123,7 +122,7 @@
                         class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="bx bx-bookmarks text-dark text-sm opacity-10"></i>
                     </div>
-                    <span class="nav-link-text ms-1">Kategori Produk</span>
+                    <span class="nav-link-text ms-1">Kategori Product</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -153,7 +152,7 @@
                         class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="bx bx-award-fill text-dark text-sm opacity-10"></i>
                     </div>
-                    <span class="nav-link-text ms-1">Garansi</span>
+                    <span class="nav-link-text ms-1">Warrantie</span>
                 </a>
             </li>
 
@@ -174,20 +173,20 @@
                         class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="bx bx-boxes text-dark text-sm opacity-10"></i>
                     </div>
-                    <span class="nav-link-text ms-1">Penyesuaian Stok</span>
+                    <span class="nav-link-text ms-1">Penyesuaian Stock</span>
                 </a>
             </li>
-            <li class="nav-item">@php $isStokOpnameActive = request()->routeIs('stok-opname.*'); @endphp
+            <li class="nav-item">@php $isStockTakeActive = request()->routeIs('stok-opname.*'); @endphp
                 <a data-bs-toggle="collapse" href="#stokOpname"
-                    class="nav-link {{ $isStokOpnameActive ? 'active' : '' }}" aria-controls="stokOpname"
-                    role="button" aria-expanded="{{ $isStokOpnameActive ? 'true' : 'false' }}">
+                    class="nav-link {{ $isStockTakeActive ? 'active' : '' }}" aria-controls="stokOpname"
+                    role="button" aria-expanded="{{ $isStockTakeActive ? 'true' : 'false' }}">
                     <div
                         class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="bx bx-menu-button-wide text-dark text-sm opacity-10"></i>
                     </div>
-                    <span class="nav-link-text ms-1">Stok Opname</span>
+                    <span class="nav-link-text ms-1">Stock Opname</span>
                 </a>
-                <div class="collapse {{ $isStokOpnameActive ? 'show' : '' }}" id="stokOpname">
+                <div class="collapse {{ $isStockTakeActive ? 'show' : '' }}" id="stokOpname">
                     <ul class="nav ms-4">
                         <li class="nav-item ">
                             <a class="nav-link {{ request()->routeIs('stok-opname.index') ? 'active' : '' }}"
@@ -212,13 +211,13 @@
                         class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="bx bx-graph-down-arrow text-dark text-sm opacity-10"></i>
                     </div>
-                    <span class="nav-link-text ms-1">Stok Rendah</span>
+                    <span class="nav-link-text ms-1">Stock Rendah</span>
                 </a>
             </li>
             <hr class="horizontal dark my-2">
 
             <li class="nav-item">
-                <p class="ps-4 mb-0 text-uppercase text-xs font-weight-bolder">Branding & Promo</p>
+                <p class="ps-4 mb-0 text-uppercase text-xs font-weight-bolder">Branding & Promotion</p>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('promo.*') ? 'active' : '' }} "
@@ -227,7 +226,7 @@
                         class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="bx bx-percent text-dark text-sm opacity-10"></i>
                     </div>
-                    <span class="nav-link-text ms-1">Promo & Diskon</span>
+                    <span class="nav-link-text ms-1">Promotion & Diskon</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -247,17 +246,16 @@
             <li class="nav-item">
                 <p class="ps-4 mb-0 text-uppercase text-xs font-weight-bolder">Keuangan dan Laporan</p>
             </li>
-            <li class="nav-item">@php $isPemasukanActive = request()->routeIs('keuangan', 'pemasukan.*', 'kategoritransaksi.*', 'pengeluaran.*'); @endphp
-                <a data-bs-toggle="collapse" href="#Pemasukan"
-                    class="nav-link {{ $isPemasukanActive ? 'active' : '' }}" aria-controls="Pemasukan"
-                    role="button" aria-expanded="{{ $isPemasukanActive ? 'true' : 'false' }}">
+            <li class="nav-item">@php $isIncomeActive = request()->routeIs('keuangan', 'income.*', 'kategoritransaksi.*', 'expense.*'); @endphp
+                <a data-bs-toggle="collapse" href="#Income" class="nav-link {{ $isIncomeActive ? 'active' : '' }}"
+                    aria-controls="Income" role="button" aria-expanded="{{ $isIncomeActive ? 'true' : 'false' }}">
                     <div
                         class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="bx bx-cash-coin text-dark text-sm opacity-10"></i>
                     </div>
                     <span class="nav-link-text ms-1">Administrasi</span>
                 </a>
-                <div class="collapse {{ $isPemasukanActive ? 'show' : '' }}" id="Pemasukan">
+                <div class="collapse {{ $isIncomeActive ? 'show' : '' }}" id="Income">
                     <ul class="nav ms-4">
                         <li class="nav-item ">
                             <a class="nav-link {{ request()->routeIs('keuangan') ? 'active' : '' }}"
@@ -266,15 +264,15 @@
                             </a>
                         </li>
                         <li class="nav-item ">
-                            <a class="nav-link {{ request()->routeIs('pemasukan.*') ? 'active' : '' }}"
-                                href="{{ route('pemasukan.index') }}">
-                                <span class="sidenav-normal">Pemasukan</span>
+                            <a class="nav-link {{ request()->routeIs('income.*') ? 'active' : '' }}"
+                                href="{{ route('income.index') }}">
+                                <span class="sidenav-normal">Income</span>
                             </a>
                         </li>
                         <li class="nav-item ">
-                            <a class="nav-link {{ request()->routeIs('pengeluaran.*') ? 'active' : '' }}"
-                                href="{{ route('pengeluaran.index') }}">
-                                <span class="sidenav-normal">Pengeluaran</span>
+                            <a class="nav-link {{ request()->routeIs('expense.*') ? 'active' : '' }}"
+                                href="{{ route('expense.index') }}">
+                                <span class="sidenav-normal">Expense</span>
                             </a>
                         </li>
                         <li class="nav-item ">
@@ -301,20 +299,20 @@
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('laporan.inventaris') ? 'active' : '' }}"
                                 href="{{ route('laporan.inventaris') }}">
-                                <span class="sidenav-normal"> Pergerakan Stok</span>
+                                <span class="sidenav-normal"> Pergerakan Stock</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('laporan.penjualan') ? 'active' : '' }}"
                                 href="{{ route('laporan.penjualan') }}">
-                                <span class="sidenav-normal"> Laporan Penjualan </span>
+                                <span class="sidenav-normal"> Laporan Sale </span>
                             </a>
                         </li>
                         @can('is-admin')
                             <li class="nav-item ">
                                 <a class="nav-link {{ request()->routeIs('laporan.pembelian') ? 'active' : '' }}"
                                     href="{{ route('laporan.pembelian') }}">
-                                    <span class="sidenav-normal">Laporan Pembelian</span>
+                                    <span class="sidenav-normal">Laporan Purchase</span>
                                 </a>
                             </li>
                             <li class="nav-item ">

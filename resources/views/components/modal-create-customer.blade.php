@@ -1,11 +1,7 @@
-@props([
-    'id',
-    'action',
-    'title' => 'Buat Pelanggan Baru',
-    'formId' => 'createCustomerForm'
-])
+@props(['id', 'action', 'title' => 'Buat Customer Baru', 'formId' => 'createCustomerForm'])
 
-<div class="modal fade" id="{{ $id }}" tabindex="-1" aria-labelledby="{{ $id }}Label" aria-hidden="true">
+<div class="modal fade" id="{{ $id }}" tabindex="-1" aria-labelledby="{{ $id }}Label"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -17,18 +13,21 @@
                 <form id="{{ $formId }}" action="{{ $action }}" method="post">
                     @csrf
                     <div class="mb-3">
-                        <label for="{{ $id }}_nama" class="form-label">Nama Pelanggan</label>
-                        <input id="{{ $id }}_nama" name="nama" type="text" class="form-control" required>
-                        <div class="invalid-feedback" id="{{ $id }}_nama_error"></div>
+                        <label for="{{ $id }}_name" class="form-label">Nama Customer</label>
+                        <input id="{{ $id }}_name" name="name" type="text" class="form-control"
+                            required>
+                        <div class="invalid-feedback" id="{{ $id }}_name_error"></div>
                     </div>
                     <div class="mb-3">
                         <label for="{{ $id }}_kontak" class="form-label">Nomor Telepon</label>
-                        <input id="{{ $id }}_kontak" name="kontak" type="text" class="form-control" required>
+                        <input id="{{ $id }}_kontak" name="kontak" type="text" class="form-control"
+                            required>
                         <div class="invalid-feedback" id="{{ $id }}_kontak_error"></div>
                     </div>
                     <div class="mb-3">
                         <label for="{{ $id }}_email" class="form-label">Email (Opsional)</label>
-                        <input id="{{ $id }}_email" name="email" type="email" class="form-control" placeholder="example@gmail.com">
+                        <input id="{{ $id }}_email" name="email" type="email" class="form-control"
+                            placeholder="example@gmail.com">
                         <div class="invalid-feedback" id="{{ $id }}_email_error"></div>
                     </div>
                     <div class="mb-3">

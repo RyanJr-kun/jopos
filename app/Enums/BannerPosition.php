@@ -10,12 +10,12 @@ enum BannerPosition: string
     case BESTSELLER     = 'bestseller';
 
     // 💡 Pro Tip: Anda bisa menambahkan helper function di sini jika perlu,
-    // misalnya untuk mendapatkan daftar nama yang lebih ramah untuk dropdown.
+    // misalnya untuk mendapatkan daftar name yang lebih ramah untuk dropdown.
     public function getLabel(): string
     {
         return match ($this) {
             self::MAIN_CAROUSEL => 'Main Carousel',
-            self::PROMO_VERTIKAL => 'Promo Vertikal',
+            self::PROMO_VERTIKAL => 'Promotion Vertikal',
             self::BESTSELLER => 'Bestseller',
         };
     }

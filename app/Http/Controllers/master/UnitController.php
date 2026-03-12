@@ -18,10 +18,10 @@ class UnitController extends Controller
     public function index(Request $request)
     {
         $statuses = Unit::select('status')->distinct()->pluck('status');
-        $query = Unit::withCount('produks')->latest();
+        $query = Unit::withCount('products')->latest();
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where('nama', 'LIKE', "%{$search}%");
+            $query->where('name', 'LIKE', "%{$search}%");
         }
         if ($request->filled('status')) {
             $statusValue = $request->input('status') === 'Aktif' ? 1 : 0;
@@ -30,9 +30,9 @@ class UnitController extends Controller
 
         $units = $query->paginate(15)->withQueryString();
         if ($request->ajax()) {
-            return view('dashboard.produk._unit_table', compact('units'))->render();
+            return view('content.produk._unit_table', compact('units'))->render();
         }
-        return view('dashboard.produk.unit', [
+        return view('content.produk.unit', [
             'title' => 'Units',
             'units' => $units,
             'statuses' => $statuses,
@@ -53,7 +53,7 @@ class UnitController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'nama' => 'required|max:255|unique:units',
+            'name' => 'required|max:255|unique:units',
             'slug' => 'required|max:255|unique:units',
             'singkat' => 'required|max:255|unique:units',
             'status' => 'nullable|boolean',
@@ -93,7 +93,7 @@ class UnitController extends Controller
     {
         $rules = [
 
-            'nama' => ['required', 'max:255', Rule::unique('units')->ignore($unit->id)],
+            'name' => ['required', 'max:255', Rule::unique('units')->ignore($unit->id)],
             'slug' => ['required', 'max:255', Rule::unique('units')->ignore($unit->id)],
             'singkat' => ['required', 'max:255', Rule::unique('units')->ignore($unit->id)],
             'status' => 'nullable|boolean',
@@ -112,7 +112,7 @@ class UnitController extends Controller
      */
     public function destroy(Unit $unit)
     {
-        if ($unit->produks()->count() > 0) {
+        if ($unit->products()->count() > 0) {
             Alert::error('Gagal', 'Unit tidak dapat dihapus karena masih memiliki produk terkait!');
             return back();
         }
@@ -123,7 +123,7 @@ class UnitController extends Controller
 
     public function chekSlug(Request $request)
     {
-        $slug = SlugService::createSlug(Unit::class, 'slug', $request->nama);
+        $slug = SlugService::createSlug(Unit::class, 'slug', $request->name);
         return response()->json(['slug' => $slug]);
     }
 }

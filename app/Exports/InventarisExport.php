@@ -34,7 +34,7 @@ class InventarisExport implements FromCollection, WithHeadings, WithMapping, Wit
         return [
             'Tanggal',
             'SKU',
-            'Nama Produk',
+            'Nama Product',
             'Tipe Gerakan',
             'Referensi',
             'Masuk',
@@ -53,7 +53,7 @@ class InventarisExport implements FromCollection, WithHeadings, WithMapping, Wit
         return [
             Carbon::parse($item->tanggal)->format('d-m-Y H:i'),
             $item->sku ?? '-',
-            $item->nama_produk ?? 'Produk Dihapus',
+            $item->name_produk ?? 'Product Dihapus',
             $item->tipe_gerakan,
             $item->referensi,
             $item->jumlah_masuk > 0 ? $item->jumlah_masuk : '0',

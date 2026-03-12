@@ -32,7 +32,7 @@
             <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mt-3">
                 <h6 class="text-uppercase mb-4 font-weight-bold text-info">Tautan Cepat</h6>
                 <p><a href="{{ url('/') }}" class="footer-link">Beranda</a></p>
-                <p><a href="{{ route('market.produk') }}" class="footer-link">Produk</a></p>
+                <p><a href="{{ route('market.produk') }}" class="footer-link">Product</a></p>
                 <p><a href="{{ route('market.layanan') }}" class="footer-link">Tentang Kami</a></p>
                 <p><a href="{{ route('market.tentang') }}" class="footer-link">Kontak</a></p>
             </div>
@@ -43,7 +43,7 @@
                 @if (isset($bestSellingCategories) && $bestSellingCategories->isNotEmpty())
                     @foreach ($bestSellingCategories as $kategori)
                         <p><a href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}"
-                                class="footer-link">{{ $kategori->nama }}</a></p>
+                                class="footer-link">{{ $kategori->name }}</a></p>
                     @endforeach
                 @else
                     <p class="small text-muted">Kategori belum tersedia.</p>

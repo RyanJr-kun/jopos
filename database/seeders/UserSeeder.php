@@ -11,15 +11,17 @@ class UserSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-     public function run(): void
+    public function run(): void
     {
         // Membuat user Admin secara spesifik
-        User::create([
-            'nama' => 'Administrator',
+        $admin = User::create([
+            'name' => 'Administrator',
             'username' => 'admin',
             'email' => 'admin@gmail.com',
             'password' => Hash::make('admin'),
-            'role_id' => 1, // 1 = Admin
         ]);
+
+        // 2. Tugaskan role menggunakan Spatie
+        $admin->assignRole('admin');
     }
 }

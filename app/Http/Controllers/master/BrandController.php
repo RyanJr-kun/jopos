@@ -20,10 +20,10 @@ class BrandController extends Controller
     public function index(Request $request)
     {
         $statuses = Brand::select('status')->distinct()->pluck('status');
-        $query = Brand::withCount('produks')->latest();
+        $query = Brand::withCount('products')->latest();
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where('nama', 'LIKE', "%{$search}%");
+            $query->where('name', 'LIKE', "%{$search}%");
         }
         if ($request->filled('status')) {
             $statusValue = $request->input('status') === 'Aktif' ? 1 : 0;
@@ -32,10 +32,10 @@ class BrandController extends Controller
 
         $brands = $query->paginate(15)->withQueryString();
         if ($request->ajax()) {
-            return view('dashboard.produk._brand_table', compact('brands'))->render();
+            return view('content.produk._brand_table', compact('brands'))->render();
         }
 
-        return view('dashboard.produk.brand', [
+        return view('content.produk.brand', [
             'title' => 'Data Brand',
             'brands' => $brands,
             'statuses' => $statuses,
@@ -59,7 +59,7 @@ class BrandController extends Controller
     {
         $validatedData = $request->validate([
             'img_brand' => 'nullable|string|starts_with:tmp/',
-            'nama' => 'required|max:255|unique:brands',
+            'name' => 'required|max:255|unique:brands',
             'slug' => 'required|max:255|unique:brands',
             'status' => 'nullable|boolean',
         ]);
@@ -86,7 +86,7 @@ class BrandController extends Controller
         // Cek jika request adalah AJAX
         if ($request->wantsJson()) {
             // Muat relasi dan format tanggal untuk konsistensi
-            $brand->loadCount('produks');
+            $brand->loadCount('products');
             $brand->created_at_formatted = $brand->created_at->translatedFormat('d M Y');
 
             return response()->json([
@@ -126,7 +126,7 @@ class BrandController extends Controller
     {
         $rules = [
             'img_brand' => 'nullable|string',
-            'nama' => ['required', 'max:255', Rule::unique('brands')->ignore($brand->id)],
+            'name' => ['required', 'max:255', Rule::unique('brands')->ignore($brand->id)],
             'slug' => ['required', 'max:255', Rule::unique('brands')->ignore($brand->id)],
             'status' => 'nullable|boolean',
         ];
@@ -162,7 +162,7 @@ class BrandController extends Controller
         $brand->update($validatedData);
 
         if ($request->wantsJson()) {
-            $brand->loadCount('produks');
+            $brand->loadCount('products');
             $brand->created_at_formatted = $brand->created_at->translatedFormat('d M Y');
 
             return response()->json([
@@ -181,7 +181,7 @@ class BrandController extends Controller
      */
     public function destroy(Brand $brand)
     {
-        if ($brand->produks()->exists()) {
+        if ($brand->products()->exists()) {
             $message = 'Brand tidak dapat dihapus karena masih memiliki produk terkait!';
             if (request()->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 422);
@@ -206,7 +206,7 @@ class BrandController extends Controller
 
     public function chekSlug(Request $request)
     {
-        $slug = SlugService::createSlug(Brand::class, 'slug', $request->nama);
+        $slug = SlugService::createSlug(Brand::class, 'slug', $request->name);
         return response()->json(['slug' => $slug]);
     }
 

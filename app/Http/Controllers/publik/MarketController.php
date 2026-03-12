@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 
 use App\Enums\BannerPosition;
 use App\Models\Banner;
-use App\Models\Promo;
-use App\Models\Produk;
-use App\Models\KategoriProduk;
-use App\Models\ProfilToko;
+use App\Models\Promotion;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\StoreSetting;
 use Illuminate\Support\Facades\DB;
 
 class MarketController extends Controller
@@ -22,7 +22,7 @@ class MarketController extends Controller
     public function index()
     {
         // Ambil produk terbaru dengan eager loading untuk performa
-        $produks = Produk::with(['kategori_produk', 'unit', 'brand', 'promos'])
+        $products = Product::with(['category', 'unit', 'brand', 'promotions'])
             ->latest()
             ->paginate(10);
 
@@ -32,7 +32,7 @@ class MarketController extends Controller
             ->orderBy('urutan')
             ->get();
 
-        // Ambil banner yang aktif untuk Promo Vertikal, urutkan berdasarkan urutan
+        // Ambil banner yang aktif untuk Promotion Vertikal, urutkan berdasarkan urutan
         $promoVertikalBanners = Banner::where('is_active', true)
             ->where('posisi', BannerPosition::PROMO_VERTIKAL)
             ->orderBy('urutan')
@@ -45,53 +45,53 @@ class MarketController extends Controller
             ->get();
 
         // Ambil promo yang aktif dan sedang berjalan saat ini
-        $promos = Promo::where('status', true)
+        $promotions = Promotion::where('status', true)
             ->where('tanggal_mulai', '<=', now())
             ->where('tanggal_berakhir', '>=', now())
             ->latest()
             ->get();
 
         // Ambil kategori produk yang memiliki produk untuk ditampilkan di menu header.
-        $kategorisForMenu = KategoriProduk::withCount('produks')
-            ->whereHas('produks')
-            ->orderBy('nama')
+        $kategorisForMenu = Category::withCount('products')
+            ->whereHas('products')
+            ->orderBy('name')
             ->get();
 
         // Ambil 6 produk terlaris sepanjang waktu
-        $produkTerlaris = Produk::with(['unit'])
-            ->select('produks.*', DB::raw('SUM(item_penjualans.jumlah) as total_terjual'))
-            ->join('item_penjualans', 'produks.id', '=', 'item_penjualans.produk_id')
-            ->join('penjualans', 'item_penjualans.penjualan_id', '=', 'penjualans.id')
-            ->where('penjualans.status_pembayaran', '!=', 'Dibatalkan')
+        $produkTerlaris = Product::with(['unit'])
+            ->select('products.*', DB::raw('SUM(sale_items.jumlah) as total_terjual'))
+            ->join('sale_items', 'products.id', '=', 'sale_items.product_id')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
             // PERBAIKAN: Tambahkan semua kolom yang dipilih ke GROUP BY untuk kompatibilitas dengan mode ONLY_FULL_GROUP_BY
             ->groupBy(
-                'produks.id',
-                'produks.nama_produk',
-                'produks.slug',
-                'produks.barcode',
-                'produks.sku',
-                'produks.kategori_produk_id',
-                'produks.brand_id',
-                'produks.unit_id',
-                'produks.deskripsi',
-                'produks.harga_jual',
-                'produks.harga_beli',
-                'produks.qty',
-                'produks.garansi_id',
-                'produks.stok_minimum',
-                'produks.pajak_id',
-                'produks.img_produk',
-                'produks.wajib_seri',
-                'produks.user_id',
-                'produks.created_at',
-                'produks.updated_at'
+                'products.id',
+                'products.name_produk',
+                'products.slug',
+                'products.barcode',
+                'products.sku',
+                'products.category_id',
+                'products.brand_id',
+                'products.unit_id',
+                'products.description',
+                'products.harga_jual',
+                'products.harga_beli',
+                'products.qty',
+                'products.warrantie_id',
+                'products.stok_minimum',
+                'products.taxe_id',
+                'products.img_produk',
+                'products.wajib_seri',
+                'products.user_id',
+                'products.created_at',
+                'products.updated_at'
             )
             ->orderByDesc('total_terjual')
             ->limit(6)
             ->get();
 
-        $produkPromo = Produk::with(['unit', 'promos'])
-            ->whereHas('promos', function ($query) {
+        $produkPromotion = Product::with(['unit', 'promotions'])
+            ->whereHas('promotions', function ($query) {
                 $query->where('status', true)
                     ->where('tanggal_mulai', '<=', now())
                     ->where('tanggal_berakhir', '>=', now());
@@ -100,16 +100,16 @@ class MarketController extends Controller
             ->limit(8)
             ->get();
 
-        return view('market.beranda', [
+        return view('content.market.beranda', [
             'title' => 'Beranda',
-            'produks' => $produks,
+            'products' => $products,
             'mainBanners' => $mainBanners,
             'promoVertikalBanners' => $promoVertikalBanners,
             'bestsellerBanners' => $bestsellerBanners,
             'produkTerlaris' => $produkTerlaris,
-            'promos' => $promos,
+            'promotions' => $promotions,
             'kategoris' => $kategorisForMenu, // Kirim data kategori ke view
-            'produkPromo' => $produkPromo
+            'produkPromotion' => $produkPromotion
         ]);
     }
 
@@ -121,11 +121,11 @@ class MarketController extends Controller
 
     public function produk(\Illuminate\Http\Request $request)
     {
-        $query = Produk::with(['kategori_produk', 'unit', 'brand', 'promos']);
+        $query = Product::with(['category', 'unit', 'brand', 'promotions']);
 
         // Filter berdasarkan Kategori (dari slug)
         if ($request->filled('kategori')) {
-            $query->whereHas('kategori_produk', function ($q) use ($request) {
+            $query->whereHas('category', function ($q) use ($request) {
                 $q->where('slug', $request->kategori);
             });
         }
@@ -134,7 +134,7 @@ class MarketController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('nama_produk', 'like', "%{$search}%")
+                $q->where('name_produk', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%");
             });
         }
@@ -151,15 +151,15 @@ class MarketController extends Controller
                 $query->latest(); // Default: terbaru
         }
 
-        $produks = $query->paginate(12)->withQueryString();
-        $kategorisForFilter = KategoriProduk::whereHas('produks')->orderBy('nama')->get();
+        $products = $query->paginate(12)->withQueryString();
+        $kategorisForFilter = Category::whereHas('products')->orderBy('name')->get();
 
         // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
         if ($request->ajax()) {
-            return view('market._produk_list', compact('produks'))->render();
+            return view('content.market._produk_list', compact('products'))->render();
         }
 
-        return view('market.produk', compact('produks', 'kategorisForFilter'));
+        return view('content.market.produk', compact('products', 'kategorisForFilter'));
     }
 
     /**
@@ -171,22 +171,22 @@ class MarketController extends Controller
     public function produkDetail($slug)
     {
         // PERBAIKAN: Eager load semua relasi yang mungkin ditampilkan di halaman detail.
-        $produk = Produk::with(['kategori_produk', 'brand', 'unit', 'garansi', 'pajak', 'user'])
+        $produk = Product::with(['category', 'brand', 'unit', 'garansi', 'pajak', 'user'])
             ->where('slug', $slug)
             ->firstOrFail();
-        $produkSerupa = Produk::with('unit', 'promos')
-            ->where('kategori_produk_id', $produk->kategori_produk_id)
+        $produkSerupa = Product::with('unit', 'promotions')
+            ->where('category_id', $produk->category_id)
             ->where('id', '!=', $produk->id)
             ->inRandomOrder()
             ->limit(5)
             ->get();
 
 
-        return view('market.produkdetail', compact('produk', 'produkSerupa'));
+        return view('content.market.produkdetail', compact('produk', 'produkSerupa'));
     }
     public function layanan()
     {
-        return view('market.layanan', [
+        return view('content.market.layanan', [
             'title' => 'Tentang Kami',
             'title' => 'Layanan Kami',
         ]);
@@ -194,9 +194,9 @@ class MarketController extends Controller
 
     public function tentang()
     {
-        $profil = ProfilToko::first();
+        $profil = StoreSetting::first();
 
-        return view('market.tentang', [
+        return view('content.market.tentang', [
             'title' => 'Tentang Kami',
             'profils' => $profil
         ]);
@@ -213,15 +213,15 @@ class MarketController extends Controller
         $query = $request->input('query');
 
         if (empty($query)) {
-            return response()->json(['produks' => [], 'total' => 0]);
+            return response()->json(['products' => [], 'total' => 0]);
         }
 
-        $produks = Produk::with(['kategori_produk', 'brand'])
-            ->where('nama_produk', 'LIKE', "%{$query}%")
+        $products = Product::with(['category', 'brand'])
+            ->where('name_produk', 'LIKE', "%{$query}%")
             ->orWhere('sku', 'LIKE', "%{$query}%")
             ->limit(5) // Batasi hasil untuk live search
             ->get();
 
-        return response()->json(['produks' => $produks, 'total' => $produks->count()]);
+        return response()->json(['products' => $products, 'total' => $products->count()]);
     }
 }

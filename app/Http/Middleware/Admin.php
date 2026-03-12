@@ -17,12 +17,9 @@ class Admin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $role_id = $request->user()->role_id;
-        $adminId = Role::where('nama','admin')->first()->id;
-
-        if ($role_id != $adminId) {
-            Alert::error('Gagal','Anda Tidak Memiliki Akses Ke Halaman Ini!');
-            return redirect()->route('dashboard');
+        // Gunakan fungsi bawaan Spatie: hasRole()
+        if (! $request->user()->hasRole('admin')) {
+            return redirect()->route('dashboard')->with('error', 'Anda Tidak Memiliki Akses Ke Halaman Ini!');
         }
         return $next($request);
     }

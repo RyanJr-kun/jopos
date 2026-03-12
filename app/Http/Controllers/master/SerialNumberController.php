@@ -4,7 +4,7 @@ namespace App\Http\Controllers\master;
 
 use App\Http\Controllers\Controller;
 
-use App\Models\Produk;
+use App\Models\Product;
 use App\Models\SerialNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,10 +22,10 @@ class SerialNumberController extends Controller
         // Jika ada slug dari URL, cari produknya
         if ($produk_slug) {
             // PERBAIKAN: Gunakan withCount untuk efisiensi query saat menghitung SN di view.
-            $produkDipilih = Produk::withCount('serialNumbers')->where('slug', $produk_slug)->first();
+            $produkDipilih = Product::withCount('serialNumbers')->where('slug', $produk_slug)->first();
             // Jika produk ditemukan, langsung filter daftar SN untuk produk tersebut
             if ($produkDipilih) {
-                $query->where('produk_id', $produkDipilih->id);
+                $query->where('product_id', $produkDipilih->id);
             }
         }
 
@@ -35,8 +35,8 @@ class SerialNumberController extends Controller
         }
 
         // Filter produk dari dropdown akan menimpa filter dari slug jika digunakan
-        if ($request->filled('produk_id')) {
-            $query->where('produk_id', $request->produk_id);
+        if ($request->filled('product_id')) {
+            $query->where('product_id', $request->product_id);
         }
 
         if ($request->filled('status')) {
@@ -44,22 +44,22 @@ class SerialNumberController extends Controller
         }
 
         $serialNumbers = $query->paginate(15)->withQueryString();
-        $produks = Produk::where('wajib_seri', true)->orderBy('nama_produk')->get();
+        $products = Product::where('wajib_seri', true)->orderBy('name_produk')->get();
 
-        return view('dashboard.inventaris.serial-number', [
+        return view('content.inventaris.serial-number', [
             'title' => 'Manajemen Nomor Seri',
             'serialNumbers' => $serialNumbers,
-            'produks' => $produks,
+            'products' => $products,
             'produkDipilih' => $produkDipilih, // Kirim produk yang dipilih ke view
         ]);
     }
 
     public function getProductInfo(Request $request)
     {
-        $request->validate(['produk_id' => 'required|exists:produks,id']);
-        $produk = Produk::find($request->produk_id);
+        $request->validate(['product_id' => 'required|exists:products,id']);
+        $produk = Product::find($request->product_id);
         $stokTercatat = $produk->qty;
-        $snTerdaftar = SerialNumber::where('produk_id', $request->produk_id)->count();
+        $snTerdaftar = SerialNumber::where('product_id', $request->product_id)->count();
         return response()->json([
             'stok_tercatat' => $stokTercatat,
             'sn_terdaftar' => $snTerdaftar
@@ -75,7 +75,7 @@ class SerialNumberController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'produk_id' => 'required|exists:produks,id',
+            'product_id' => 'required|exists:products,id',
             'serial_numbers' => 'required|array|min:1',
             'serial_numbers.*' => [
                 'required',
@@ -83,7 +83,7 @@ class SerialNumberController extends Controller
                 'distinct', // Ensures no duplicates in the submitted list
                 // Ensures the serial number is unique for this specific product
                 Rule::unique('serial_numbers', 'nomor_seri')->where(function ($query) use ($request) {
-                    return $query->where('produk_id', $request->produk_id);
+                    return $query->where('product_id', $request->product_id);
                 }),
             ],
         ], [
@@ -105,7 +105,7 @@ class SerialNumberController extends Controller
 
         foreach ($validated['serial_numbers'] as $serial) {
             $serialsToInsert[] = [
-                'produk_id' => $validated['produk_id'],
+                'product_id' => $validated['product_id'],
                 'nomor_seri' => $serial,
                 'status' => 'Tersedia', // Set default status
                 'created_at' => $now,
@@ -125,13 +125,13 @@ class SerialNumberController extends Controller
     {
         // --- PERBAIKAN: Tambahkan Validasi ---
         $validated = $request->validate([
-            'produk_id' => 'required|exists:produks,id',
+            'product_id' => 'required|exists:products,id',
             'serial_numbers' => 'required|array|min:1',
-            // Pastikan setiap nomor seri unik di tabel untuk produk_id yang sama
+            // Pastikan setiap nomor seri unik di tabel untuk product_id yang sama
             'serial_numbers.*' => [
                 'required',
                 'distinct',
-                Rule::unique('serial_numbers', 'nomor_seri')->where('produk_id', $request->produk_id),
+                Rule::unique('serial_numbers', 'nomor_seri')->where('product_id', $request->product_id),
             ],
         ], [
             'serial_numbers.*.required' => 'Nomor seri tidak boleh kosong.',
@@ -141,14 +141,14 @@ class SerialNumberController extends Controller
 
         DB::beginTransaction();
         try {
-            $productId = $validated['produk_id'];
+            $productId = $validated['product_id'];
             $serialNumbers = $validated['serial_numbers'];
             $now = now();
             $dataToInsert = [];
 
             foreach ($serialNumbers as $sn) {
                 $dataToInsert[] = [
-                    'produk_id' => $productId,
+                    'product_id' => $productId,
                     'nomor_seri' => $sn,
                     'status' => 'Tersedia',
                     'created_at' => $now,
@@ -178,16 +178,16 @@ class SerialNumberController extends Controller
      * Mengambil informasi detail produk untuk halaman manajemen Serial Number.
      * Didesain untuk dipanggil via AJAX.
      *
-     * @param  \App\Models\Produk  $produk
+     * @param  \App\Models\Product  $produk
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getProductInfoForSerial($produk_id)
+    public function getProductInfoForSerial($product_id)
     {
-        $produk = Produk::find($produk_id);
+        $produk = Product::find($product_id);
 
         // Jika produk tidak ditemukan, kirim respons JSON yang jelas, bukan 404.
         if (!$produk) {
-            return response()->json(['message' => 'Produk tidak ditemukan.'], 404);
+            return response()->json(['message' => 'Product tidak ditemukan.'], 404);
         }
 
         // Hitung SN yang masih dianggap sebagai aset (bukan terjual atau hilang)
@@ -209,7 +209,7 @@ class SerialNumberController extends Controller
             'serial_number' => [
                 'required',
                 // Pastikan unik untuk produk yang sama, kecuali untuk dirinya sendiri
-                Rule::unique('serial_numbers', 'nomor_seri')->where('produk_id', $serialNumber->produk_id)->ignore($serialNumber->id),
+                Rule::unique('serial_numbers', 'nomor_seri')->where('product_id', $serialNumber->product_id)->ignore($serialNumber->id),
             ],
             // Batasi status yang bisa diubah. 'Terjual' tidak bisa diubah dari sini
             // karena seharusnya diatur oleh transaksi penjualan.
@@ -285,7 +285,7 @@ class SerialNumberController extends Controller
         }
     }
 
-    public function getByProduct($produk_id)
+    public function getByProduct($product_id)
     {
         // Pastikan ini adalah request AJAX untuk keamanan
         if (!request()->ajax()) {
@@ -293,14 +293,14 @@ class SerialNumberController extends Controller
         }
         try {
             // PERBAIKAN: Cari produk secara manual berdasarkan ID
-            $produk = Produk::find($produk_id);
+            $produk = Product::find($product_id);
 
             // Jika produk tidak ditemukan, kirim respons yang jelas, bukan 404
             if (!$produk) {
-                return response()->json(['error' => 'Produk tidak ditemukan.'], 404);
+                return response()->json(['error' => 'Product tidak ditemukan.'], 404);
             }
 
-            $serialNumbers = SerialNumber::where('produk_id', $produk_id)
+            $serialNumbers = SerialNumber::where('product_id', $product_id)
                 ->where('status', 'Tersedia')
                 ->pluck('nomor_seri'); // Ambil hanya kolom nomor_seri
 

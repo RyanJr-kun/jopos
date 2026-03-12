@@ -90,12 +90,31 @@
                                                 <img src="{{ asset('storage/' . auth()->user()->img_user) }}" alt="Profile"
                                                     class="avatar avatar-sm rounded-circle cursor-pointer">
                                             @else
-                                                <img src="{{ asset('assets/img/user.webp') }}" class="avatar avatar-sm me-3"
-                                                    alt="Gambar user default">
+                                                <div class="avatar avatar-online">
+                                                    <span
+                                                        class="avatar-initial rounded-circle bg-label-primary">{{ substr(Auth::user()->name, 0, 2) }}</span>
+                                                </div>
                                             @endif
-                                            <div class="ms-2">
-                                                <p class="mb-0 text-xs fw-bolder">{{ auth()->user()->username }}</p>
-                                                <p class="text-xs text-secondary">{{ auth()->user()->role->nama }}</p>
+                                            <div class="grow">
+                                                <h6 class="mb-0">{{ Auth::user()->name ?? 'user' }}</h6>
+                                                @php
+                                                    $roleColors = [
+                                                        'admin' => 'danger',
+                                                        'kasir' => 'primary',
+                                                        'teknisi' => 'success',
+                                                        'pelayan' => 'info',
+                                                        'Magang' => 'warning',
+                                                        'Manajer' => 'dark',
+                                                    ];
+                                                @endphp
+                                                @forelse(Auth::user()->getRoleNames() as $role)
+                                                    @php $colorClass = $roleColors[strtolower($role)] ?? 'primary'; @endphp
+                                                    <small
+                                                        class="badge py-1 bg-label-{{ $colorClass }} me-1">{{ $role }}
+                                                    </small>
+                                                @empty
+                                                    <span class="text-muted small">Tanpa Role</span>
+                                                @endforelse
                                             </div>
                                         </li>
                                         <li class="d-md-none d-block">
@@ -214,7 +233,7 @@
                                         <div class="d-flex py-1">
                                             <div class="my-auto"><img src="${product.img_url}" class="avatar avatar-sm me-3" alt="Product image"></div>
                                             <div class="d-flex flex-column justify-content-center">
-                                                <h6 class="text-sm font-weight-normal mb-1">${product.nama_produk}</h6>
+                                                <h6 class="text-sm font-weight-normal mb-1">${product.name_produk}</h6>
                                                 <p class="text-xs text-secondary mb-0">
                                                     <i class="bx bx-upc-scan me-1"></i> Butuh <span class="text-danger fw-bold">${product.needed}</span> SN
                                                 </p>
@@ -233,7 +252,7 @@
                     }
                     hasNotifications = true;
                     notificationList.insertAdjacentHTML('beforeend',
-                        `<li class="dropdown-header text-xs text-uppercase fw-bolder">Stok Rendah (${lowStockData.count})</li>`
+                        `<li class="dropdown-header text-xs text-uppercase fw-bolder">Stock Rendah (${lowStockData.count})</li>`
                     );
                     lowStockData.products.forEach(product => {
                         const listItem = `
@@ -242,7 +261,7 @@
                                         <div class="d-flex py-1">
                                             <div class="my-auto"><img src="${product.img_url}" class="avatar avatar-sm me-3" alt="Product image"></div>
                                             <div class="d-flex flex-column justify-content-center">
-                                                <h6 class="text-sm font-weight-normal mb-1">${product.nama_produk}</h6>
+                                                <h6 class="text-sm font-weight-normal mb-1">${product.name_produk}</h6>
                                                 <p class="text-xs text-secondary mb-0">
                                                     <i class="bx bx-box-seam-fill me-1"></i> Sisa <span class="text-danger fw-bold">${product.qty}</span> (Min: ${product.stok_minimum})
                                                 </p>
@@ -252,7 +271,7 @@
                                 </li>`;
                         notificationList.insertAdjacentHTML('beforeend', listItem);
                     });
-                    // --- PERUBAHAN: Link "Lihat Semua Stok Rendah" dihilangkan dari sini ---
+                    // --- PERUBAHAN: Link "Lihat Semua Stock Rendah" dihilangkan dari sini ---
                 }
 
                 if (hasNotifications) {

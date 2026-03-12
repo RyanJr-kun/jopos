@@ -11,11 +11,11 @@ class SerialNumber extends Model
 
     public function produk(): BelongsTo
     {
-        return $this->belongsTo(Produk::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function penjualan(): BelongsTo
     {
-        return $this->belongsTo(Penjualan::class);
+        return $this->belongsTo(Sale::class);
     }
 }

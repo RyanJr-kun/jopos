@@ -18,7 +18,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        return view('dashboard.user.index', [
+        return view('content.user.index', [
             'title' => 'Users',
             'users' => User::latest()->paginate(10),
             'roles' => Role::all()
@@ -30,7 +30,7 @@ class UserController extends Controller
      */
     public function create(Request $request)
     {
-        return view('dashboard.user.create', [
+        return view('content.user.create', [
             'roles' => Role::all()
         ]);
     }
@@ -41,7 +41,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'nama' => 'required|max:255',
+            'name' => 'required|max:255',
             'username' => 'required|min:3|max:255|unique:users',
             'email' => 'required|email:dns|unique:users',
             'password' => 'required|min:5|max:255',
@@ -84,7 +84,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('dashboard.user.edit', [
+        return view('content.user.edit', [
             'user' => $user,
             'roles' => Role::all()
         ]);
@@ -102,7 +102,7 @@ class UserController extends Controller
         }
 
         $rules = [
-            'nama' => 'required|max:255',
+            'name' => 'required|max:255',
             'username' => ['required', 'min:3', 'max:255', Rule::unique('users')->ignore($user->id)],
             'email' => ['required', 'email:dns', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|min:5|max:255',

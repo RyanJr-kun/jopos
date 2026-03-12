@@ -14,10 +14,10 @@
                     <div class="app-brand justify-content-center">
                         <a href="{{ url('/') }}" class="app-brand-link gap-2 mb-3">
                             <span class="app-brand-logo demo">@include('_partials.macros')</span>
-                            <span class="app-brand-text demo text-heading fw-bold">prima</span>
+                            <span class="app-brand-text demo text-heading fw-bold">jopos</span>
                         </a>
                     </div>
-                    <p class="mb-4">Silakan login menggunakan akun SI-AKAD Anda.</p>
+                    <p class="mb-4">Selamat datang .</p>
 
                     @if ($errors->any())
                         <div class="alert alert-danger mb-3">

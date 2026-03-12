@@ -4,18 +4,18 @@ namespace App\Http\Controllers\laporan;
 
 use App\Http\Controllers\Controller;
 
-use App\Models\Produk;
-use App\Models\Pemasok;
-use App\Models\Pemasukan;
-use App\Models\Pelanggan;
-use App\Models\Pembelian;
-use App\Models\Penjualan;
-use App\Models\ProfilToko;
-use App\Models\Pengeluaran;
+use App\Models\Product;
+use App\Models\Supplier;
+use App\Models\Income;
+use App\Models\Customer;
+use App\Models\Purchase;
+use App\Models\Sale;
+use App\Models\StoreSetting;
+use App\Models\Expense;
 use Illuminate\Http\Request;
 use App\Exports\LabaRugiExport;
-use App\Exports\PembelianExport;
-use App\Exports\PenjualanExport;
+use App\Exports\PurchaseExport;
+use App\Exports\SaleExport;
 use App\Exports\InventarisExport;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -32,96 +32,96 @@ class LaporanController extends Controller
      */
     public function inventaris(Request $request)
     {
-        // Query 1: Pembelian (Stok Masuk)
-        $pembelian = DB::table('pembelian_details')
-            ->join('pembelians', 'pembelian_details.pembelian_id', '=', 'pembelians.id')
-            ->join('produks', 'pembelian_details.produk_id', '=', 'produks.id')
-            ->where('pembelians.status_barang', 'Diterima')
+        // Query 1: Purchase (Stock Masuk)
+        $pembelian = DB::table('purchase_items')
+            ->join('purchases', 'purchase_items.purchase_id', '=', 'purchases.id')
+            ->join('products', 'purchase_items.product_id', '=', 'products.id')
+            ->where('purchases.status_barang', 'Diterima')
             ->select(
-                'pembelians.tanggal_pembelian as tanggal',
-                'produks.id as produk_id',
-                'produks.nama_produk',
-                'produks.sku',
-                DB::raw("'Pembelian' as tipe_gerakan"),
-                'pembelians.referensi',
-                'pembelian_details.qty as jumlah_masuk', // FIX: Menggunakan kolom 'qty'
+                'purchases.tanggal_pembelian as tanggal',
+                'products.id as product_id',
+                'products.name_produk',
+                'products.sku',
+                DB::raw("'Purchase' as tipe_gerakan"),
+                'purchases.referensi',
+                'purchase_items.qty as jumlah_masuk', // FIX: Menggunakan kolom 'qty'
                 DB::raw("0 as jumlah_keluar"),
-                'pembelians.catatan as keterangan',
+                'purchases.catatan as keterangan',
                 DB::raw("'pembelian.show' as route_name"),
-                'pembelians.referensi as referensi_id'
+                'purchases.referensi as referensi_id'
             );
 
-        // Query 2: Penjualan (Stok Keluar)
-        $penjualan = DB::table('item_penjualans')
-            ->join('penjualans', 'item_penjualans.penjualan_id', '=', 'penjualans.id')
-            ->join('produks', 'item_penjualans.produk_id', '=', 'produks.id')
-            ->where('penjualans.status_pembayaran', '!=', 'Dibatalkan')
+        // Query 2: Sale (Stock Keluar)
+        $penjualan = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
             ->select(
-                'penjualans.tanggal_penjualan as tanggal',
-                'produks.id as produk_id',
-                'produks.nama_produk',
-                'produks.sku',
-                DB::raw("'Penjualan' as tipe_gerakan"),
-                'penjualans.referensi',
+                'sales.tanggal_penjualan as tanggal',
+                'products.id as product_id',
+                'products.name_produk',
+                'products.sku',
+                DB::raw("'Sale' as tipe_gerakan"),
+                'sales.referensi',
                 DB::raw("0 as jumlah_masuk"),
-                'item_penjualans.jumlah as jumlah_keluar',
-                'penjualans.catatan as keterangan',
+                'sale_items.jumlah as jumlah_keluar',
+                'sales.catatan as keterangan',
                 DB::raw("'penjualan.show' as route_name"),
-                'penjualans.referensi as referensi_id'
+                'sales.referensi as referensi_id'
             );
 
-        // Query 3: Stok Opname (Masuk/Keluar)
-        $opname = DB::table('stok_opname_details')
-            ->join('stok_opnames', 'stok_opname_details.stok_opname_id', '=', 'stok_opnames.id')
-            ->join('produks', 'stok_opname_details.produk_id', '=', 'produks.id')
-            ->where('stok_opname_details.selisih', '!=', 0)
+        // Query 3: Stock Opname (Masuk/Keluar)
+        $opname = DB::table('stock_take_items')
+            ->join('stock_takes', 'stock_take_items.stock_take_id', '=', 'stock_takes.id')
+            ->join('products', 'stock_take_items.product_id', '=', 'products.id')
+            ->where('stock_take_items.selisih', '!=', 0)
             ->select(
-                'stok_opnames.tanggal_opname as tanggal',
-                'produks.id as produk_id',
-                'produks.nama_produk',
-                'produks.sku',
-                DB::raw("'Stok Opname' as tipe_gerakan"),
-                'stok_opnames.kode_opname as referensi',
-                DB::raw("CASE WHEN stok_opname_details.selisih > 0 THEN stok_opname_details.selisih ELSE 0 END as jumlah_masuk"),
-                DB::raw("CASE WHEN stok_opname_details.selisih < 0 THEN ABS(stok_opname_details.selisih) ELSE 0 END as jumlah_keluar"),
-                'stok_opname_details.keterangan',
+                'stock_takes.tanggal_opname as tanggal',
+                'products.id as product_id',
+                'products.name_produk',
+                'products.sku',
+                DB::raw("'Stock Opname' as tipe_gerakan"),
+                'stock_takes.kode_opname as referensi',
+                DB::raw("CASE WHEN stock_take_items.selisih > 0 THEN stock_take_items.selisih ELSE 0 END as jumlah_masuk"),
+                DB::raw("CASE WHEN stock_take_items.selisih < 0 THEN ABS(stock_take_items.selisih) ELSE 0 END as jumlah_keluar"),
+                'stock_take_items.keterangan',
                 DB::raw("'stok-opname.show' as route_name"),
-                'stok_opnames.kode_opname as referensi_id'
+                'stock_takes.kode_opname as referensi_id'
             );
 
-        // Query 4: Penyesuaian Stok (Masuk/Keluar)
-        $penyesuaian = DB::table('stok_penyesuaian_details')
-            ->join('stok_penyesuaians', 'stok_penyesuaian_details.stok_penyesuaian_id', '=', 'stok_penyesuaians.id')
-            ->join('produks', 'stok_penyesuaian_details.produk_id', '=', 'produks.id')
+        // Query 4: Penyesuaian Stock (Masuk/Keluar)
+        $penyesuaian = DB::table('stock_adjustment_items')
+            ->join('stock_adjustments', 'stock_adjustment_items.stock_adjustment_id', '=', 'stock_adjustments.id')
+            ->join('products', 'stock_adjustment_items.product_id', '=', 'products.id')
             ->select(
-                'stok_penyesuaians.tanggal_penyesuaian as tanggal',
-                'produks.id as produk_id',
-                'produks.nama_produk',
-                'produks.sku',
+                'stock_adjustments.tanggal_penyesuaian as tanggal',
+                'products.id as product_id',
+                'products.name_produk',
+                'products.sku',
                 DB::raw("'Penyesuaian' as tipe_gerakan"),
-                'stok_penyesuaians.kode_penyesuaian as referensi',
-                DB::raw("CASE WHEN stok_penyesuaian_details.tipe = 'IN' THEN stok_penyesuaian_details.jumlah ELSE 0 END as jumlah_masuk"),
-                DB::raw("CASE WHEN stok_penyesuaian_details.tipe = 'OUT' THEN stok_penyesuaian_details.jumlah ELSE 0 END as jumlah_keluar"),
-                'stok_penyesuaian_details.alasan as keterangan',
+                'stock_adjustments.kode_penyesuaian as referensi',
+                DB::raw("CASE WHEN stock_adjustment_items.tipe = 'IN' THEN stock_adjustment_items.jumlah ELSE 0 END as jumlah_masuk"),
+                DB::raw("CASE WHEN stock_adjustment_items.tipe = 'OUT' THEN stock_adjustment_items.jumlah ELSE 0 END as jumlah_keluar"),
+                'stock_adjustment_items.alasan as keterangan',
                 DB::raw("'stok-penyesuaian.show' as route_name"),
-                'stok_penyesuaians.kode_penyesuaian as referensi_id' // FIX: Gunakan kode_penyesuaian agar URL konsisten
+                'stock_adjustments.kode_penyesuaian as referensi_id' // FIX: Gunakan kode_penyesuaian agar URL konsisten
             );
 
         // Gabungkan semua query
         $unionQuery = $penyesuaian->unionAll($opname)->unionAll($penjualan)->unionAll($pembelian);
 
         // Buat query baru dari hasil union untuk bisa diurutkan dan difilter
-        $query = DB::query()->fromSub($unionQuery, 'pergerakan_inventaris');
+        $query = DB::query()->fromSub($unionQuery, 'stock_movements');
 
         // Terapkan filter
-        if ($request->filled('produk_id')) {
-            $query->where('pergerakan_inventaris.produk_id', $request->produk_id);
+        if ($request->filled('product_id')) {
+            $query->where('stock_movements.product_id', $request->product_id);
         }
         if ($request->filled('tipe_gerakan')) {
-            $query->where('pergerakan_inventaris.tipe_gerakan', $request->tipe_gerakan);
+            $query->where('stock_movements.tipe_gerakan', $request->tipe_gerakan);
         }
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('pergerakan_inventaris.tanggal', [$request->start_date, $request->end_date]);
+            $query->whereBetween('stock_movements.tanggal', [$request->start_date, $request->end_date]);
         }
 
         // Clone query untuk menghitung total sebelum paginasi
@@ -131,17 +131,17 @@ class LaporanController extends Controller
         // Urutkan dan lakukan paginasi
         $pergerakan = $query->orderBy('tanggal', 'desc')->paginate(50)->withQueryString();
 
-        return view('dashboard.laporan.laporan-inventaris', [
+        return view('content.laporan.laporan-inventaris', [
             'title' => 'Laporan Pergerakan Inventaris',
             'pergerakan' => $pergerakan,
             'summary' => (object) [
-                'total_produk' => Produk::count(),
-                'total_stok' => Produk::sum('qty'),
+                'total_produk' => Product::count(),
+                'total_stok' => Product::sum('qty'),
                 'total_masuk' => $summary->total_masuk ?? 0,
                 'total_keluar' => $summary->total_keluar ?? 0,
             ],
-            'produks' => Produk::orderBy('nama_produk')->get(['id', 'nama_produk']),
-            'tipe_gerakan_options' => ['Pembelian', 'Penjualan', 'Stok Opname', 'Penyesuaian'],
+            'products' => Product::orderBy('name_produk')->get(['id', 'name_produk']),
+            'tipe_gerakan_options' => ['Purchase', 'Sale', 'Stock Opname', 'Penyesuaian'],
         ]);
     }
 
@@ -153,93 +153,93 @@ class LaporanController extends Controller
      */
     public function exportInventaris(Request $request) // PERUBAHAN
     {
-        $profilToko = ProfilToko::first();
+        $profilToko = StoreSetting::first();
         $type = $request->query('type', 'xlsx');
 
         // --- REUSEABLE QUERY LOGIC ---
         $baseQuery = function (Request $request) {
-            // Query 1: Pembelian (Stok Masuk)
-            $pembelian = DB::table('pembelian_details')
-                ->join('pembelians', 'pembelian_details.pembelian_id', '=', 'pembelians.id')
-                ->join('produks', 'pembelian_details.produk_id', '=', 'produks.id')
-                ->where('pembelians.status_barang', 'Diterima')
+            // Query 1: Purchase (Stock Masuk)
+            $pembelian = DB::table('purchase_items')
+                ->join('purchases', 'purchase_items.purchase_id', '=', 'purchases.id')
+                ->join('products', 'purchase_items.product_id', '=', 'products.id')
+                ->where('purchases.status_barang', 'Diterima')
                 ->select(
-                    'pembelians.tanggal_pembelian as tanggal',
-                    'produks.id as produk_id',
-                    'produks.nama_produk',
-                    'produks.sku',
-                    DB::raw("'Pembelian' as tipe_gerakan"),
-                    'pembelians.referensi',
-                    'pembelian_details.qty as jumlah_masuk',
+                    'purchases.tanggal_pembelian as tanggal',
+                    'products.id as product_id',
+                    'products.name_produk',
+                    'products.sku',
+                    DB::raw("'Purchase' as tipe_gerakan"),
+                    'purchases.referensi',
+                    'purchase_items.qty as jumlah_masuk',
                     DB::raw("0 as jumlah_keluar"),
-                    'pembelians.catatan as keterangan'
+                    'purchases.catatan as keterangan'
                 );
 
-            // Query 2: Penjualan (Stok Keluar)
-            $penjualan = DB::table('item_penjualans')
-                ->join('penjualans', 'item_penjualans.penjualan_id', '=', 'penjualans.id')
-                ->join('produks', 'item_penjualans.produk_id', '=', 'produks.id')
-                ->where('penjualans.status_pembayaran', '!=', 'Dibatalkan')
+            // Query 2: Sale (Stock Keluar)
+            $penjualan = DB::table('sale_items')
+                ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                ->join('products', 'sale_items.product_id', '=', 'products.id')
+                ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
                 ->select(
-                    'penjualans.tanggal_penjualan as tanggal',
-                    'produks.id as produk_id',
-                    'produks.nama_produk',
-                    'produks.sku',
-                    DB::raw("'Penjualan' as tipe_gerakan"),
-                    'penjualans.referensi',
+                    'sales.tanggal_penjualan as tanggal',
+                    'products.id as product_id',
+                    'products.name_produk',
+                    'products.sku',
+                    DB::raw("'Sale' as tipe_gerakan"),
+                    'sales.referensi',
                     DB::raw("0 as jumlah_masuk"),
-                    'item_penjualans.jumlah as jumlah_keluar',
-                    'penjualans.catatan as keterangan'
+                    'sale_items.jumlah as jumlah_keluar',
+                    'sales.catatan as keterangan'
                 );
 
-            // Query 3: Stok Opname (Masuk/Keluar)
-            $opname = DB::table('stok_opname_details')
-                ->join('stok_opnames', 'stok_opname_details.stok_opname_id', '=', 'stok_opnames.id')
-                ->join('produks', 'stok_opname_details.produk_id', '=', 'produks.id')
-                ->where('stok_opname_details.selisih', '!=', 0)
+            // Query 3: Stock Opname (Masuk/Keluar)
+            $opname = DB::table('stock_take_items')
+                ->join('stock_takes', 'stock_take_items.stock_take_id', '=', 'stock_takes.id')
+                ->join('products', 'stock_take_items.product_id', '=', 'products.id')
+                ->where('stock_take_items.selisih', '!=', 0)
                 ->select(
-                    'stok_opnames.tanggal_opname as tanggal',
-                    'produks.id as produk_id',
-                    'produks.nama_produk',
-                    'produks.sku',
-                    DB::raw("'Stok Opname' as tipe_gerakan"),
-                    'stok_opnames.kode_opname as referensi',
-                    DB::raw("CASE WHEN stok_opname_details.selisih > 0 THEN stok_opname_details.selisih ELSE 0 END as jumlah_masuk"),
-                    DB::raw("CASE WHEN stok_opname_details.selisih < 0 THEN ABS(stok_opname_details.selisih) ELSE 0 END as jumlah_keluar"),
-                    'stok_opname_details.keterangan'
+                    'stock_takes.tanggal_opname as tanggal',
+                    'products.id as product_id',
+                    'products.name_produk',
+                    'products.sku',
+                    DB::raw("'Stock Opname' as tipe_gerakan"),
+                    'stock_takes.kode_opname as referensi',
+                    DB::raw("CASE WHEN stock_take_items.selisih > 0 THEN stock_take_items.selisih ELSE 0 END as jumlah_masuk"),
+                    DB::raw("CASE WHEN stock_take_items.selisih < 0 THEN ABS(stock_take_items.selisih) ELSE 0 END as jumlah_keluar"),
+                    'stock_take_items.keterangan'
                 );
 
-            // Query 4: Penyesuaian Stok (Masuk/Keluar)
-            $penyesuaian = DB::table('stok_penyesuaian_details')
-                ->join('stok_penyesuaians', 'stok_penyesuaian_details.stok_penyesuaian_id', '=', 'stok_penyesuaians.id')
-                ->join('produks', 'stok_penyesuaian_details.produk_id', '=', 'produks.id')
+            // Query 4: Penyesuaian Stock (Masuk/Keluar)
+            $penyesuaian = DB::table('stock_adjustment_items')
+                ->join('stock_adjustments', 'stock_adjustment_items.stock_adjustment_id', '=', 'stock_adjustments.id')
+                ->join('products', 'stock_adjustment_items.product_id', '=', 'products.id')
                 ->select(
-                    'stok_penyesuaians.tanggal_penyesuaian as tanggal',
-                    'produks.id as produk_id',
-                    'produks.nama_produk',
-                    'produks.sku',
+                    'stock_adjustments.tanggal_penyesuaian as tanggal',
+                    'products.id as product_id',
+                    'products.name_produk',
+                    'products.sku',
                     DB::raw("'Penyesuaian' as tipe_gerakan"),
-                    'stok_penyesuaians.kode_penyesuaian as referensi',
-                    DB::raw("CASE WHEN stok_penyesuaian_details.tipe = 'IN' THEN stok_penyesuaian_details.jumlah ELSE 0 END as jumlah_masuk"),
-                    DB::raw("CASE WHEN stok_penyesuaian_details.tipe = 'OUT' THEN stok_penyesuaian_details.jumlah ELSE 0 END as jumlah_keluar"),
-                    'stok_penyesuaian_details.alasan as keterangan'
+                    'stock_adjustments.kode_penyesuaian as referensi',
+                    DB::raw("CASE WHEN stock_adjustment_items.tipe = 'IN' THEN stock_adjustment_items.jumlah ELSE 0 END as jumlah_masuk"),
+                    DB::raw("CASE WHEN stock_adjustment_items.tipe = 'OUT' THEN stock_adjustment_items.jumlah ELSE 0 END as jumlah_keluar"),
+                    'stock_adjustment_items.alasan as keterangan'
                 );
 
             // Gabungkan semua query
             $unionQuery = $penyesuaian->unionAll($opname)->unionAll($penjualan)->unionAll($pembelian);
 
             // Buat query baru dari hasil union untuk bisa diurutkan dan difilter
-            $query = DB::query()->fromSub($unionQuery, 'pergerakan_inventaris');
+            $query = DB::query()->fromSub($unionQuery, 'stock_movements');
 
             // Terapkan filter
-            if ($request->filled('produk_id')) {
-                $query->where('pergerakan_inventaris.produk_id', $request->produk_id);
+            if ($request->filled('product_id')) {
+                $query->where('stock_movements.product_id', $request->product_id);
             }
             if ($request->filled('tipe_gerakan')) {
-                $query->where('pergerakan_inventaris.tipe_gerakan', $request->tipe_gerakan);
+                $query->where('stock_movements.tipe_gerakan', $request->tipe_gerakan);
             }
             if ($request->filled('start_date') && $request->filled('end_date')) {
-                $query->whereBetween('pergerakan_inventaris.tanggal', [$request->start_date, $request->end_date]);
+                $query->whereBetween('stock_movements.tanggal', [$request->start_date, $request->end_date]);
             }
             return $query;
         };
@@ -263,7 +263,7 @@ class LaporanController extends Controller
         $fileName = 'laporan-inventaris-' . now()->format('Y-m-d_H-i-s') . '.' . $type;
 
         if ($type === 'pdf') {
-            $pdf = Pdf::loadView('dashboard.laporan.pdf.export-inventaris', $data);
+            $pdf = Pdf::loadView('content.laporan.pdf.export-inventaris', $data);
             return $pdf->download($fileName);
         }
 
@@ -278,12 +278,12 @@ class LaporanController extends Controller
      */
     public function pembelian(Request $request)
     {
-        $query = Pembelian::with(['pemasok', 'user'])
+        $query = Purchase::with(['pemasok', 'user'])
             ->latest('tanggal_pembelian'); // ->select() tidak diperlukan, Eloquent akan memilih semua kolom secara default.
 
         // Terapkan filter
-        if ($request->filled('pemasok_id')) {
-            $query->where('pemasok_id', $request->pemasok_id);
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->supplier_id);
         }
         if ($request->filled('status_pembayaran')) {
             $query->where('status_pembayaran', $request->status_pembayaran);
@@ -307,19 +307,19 @@ class LaporanController extends Controller
         // Hitung total produk yang diterima dari transaksi yang sudah difilter
         $totals->total_products_received = $totalItemsQuery
             ->where('status_barang', 'Diterima') // Hanya hitung yang statusnya diterima
-            ->join('pembelian_details', 'pembelians.id', '=', 'pembelian_details.pembelian_id')
-            ->sum('pembelian_details.qty');
+            ->join('purchase_items', 'purchases.id', '=', 'purchase_items.purchase_id')
+            ->sum('purchase_items.qty');
 
         // Hitung total hutang (opsional, jika masih ingin digunakan di tempat lain)
         $totals->total_due = $totalQuery->sum(DB::raw('total_akhir - jumlah_dibayar'));
 
         // Lakukan paginasi
-        $pembelians = $query->paginate(50)->withQueryString();
+        $purchases = $query->paginate(50)->withQueryString();
 
-        return view('dashboard.laporan.laporan-pembelian', [
-            'title' => 'Laporan Pembelian',
-            'pembelians' => $pembelians,
-            'pemasoks' => Pemasok::orderBy('nama')->get(['id', 'nama']),
+        return view('content.laporan.laporan-pembelian', [
+            'title' => 'Laporan Purchase',
+            'purchases' => $purchases,
+            'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
             'statusPembayaranOptions' => ['Lunas', 'Belum Lunas', 'Dibatalkan'],
             'statusBarangOptions' => ['Diterima', 'Belum Diterima', 'Dibatalkan'],
             'totals' => $totals,
@@ -332,18 +332,18 @@ class LaporanController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
-    public function exportPembelian(Request $request)
+    public function exportPurchase(Request $request)
     {
-        $profilToko = ProfilToko::first();
+        $profilToko = StoreSetting::first();
         $type = $request->query('type', 'xlsx');
 
         // Gunakan query yang sama dengan method pembelian() untuk konsistensi filter
-        $query = Pembelian::with(['pemasok', 'user'])
+        $query = Purchase::with(['pemasok', 'user'])
             ->latest('tanggal_pembelian');
 
         // Terapkan filter
-        if ($request->filled('pemasok_id')) {
-            $query->where('pemasok_id', $request->pemasok_id);
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->supplier_id);
         }
         if ($request->filled('status_pembayaran')) {
             $query->where('status_pembayaran', $request->status_pembayaran);
@@ -356,24 +356,24 @@ class LaporanController extends Controller
         }
 
         // Ambil semua data yang cocok tanpa paginasi
-        $pembelians = $query->get();
+        $purchases = $query->get();
 
         // Siapkan data untuk diteruskan ke view/export class
         $data = [
-            'title' => 'Laporan Pembelian',
+            'title' => 'Laporan Purchase',
             'profilToko' => $profilToko,
-            'startDate' => $request->input('start_date', $pembelians->min('tanggal_pembelian')),
-            'endDate' => $request->input('end_date', $pembelians->max('tanggal_pembelian')),
-            'pembelians' => $pembelians,
+            'startDate' => $request->input('start_date', $purchases->min('tanggal_pembelian')),
+            'endDate' => $request->input('end_date', $purchases->max('tanggal_pembelian')),
+            'purchases' => $purchases,
         ];
 
         $fileName = 'laporan-pembelian-' . now()->format('Y-m-d_H-i-s') . '.' . $type;
 
         if ($type === 'pdf') {
-            $pdf = Pdf::loadView('dashboard.laporan.pdf.export-pembelian', $data);
+            $pdf = Pdf::loadView('content.laporan.pdf.export-pembelian', $data);
             return $pdf->download($fileName);
         }
-        return Excel::download(new PembelianExport($pembelians), $fileName, ExcelFormats::XLSX);
+        return Excel::download(new PurchaseExport($purchases), $fileName, ExcelFormats::XLSX);
     }
     /**
      * Menampilkan laporan penjualan.
@@ -383,12 +383,12 @@ class LaporanController extends Controller
      */
     public function penjualan(Request $request)
     {
-        $query = Penjualan::with(['pelanggan', 'user'])
+        $query = Sale::with(['pelanggan', 'user'])
             ->latest('tanggal_penjualan'); // ->select() tidak diperlukan, Eloquent akan memilih semua kolom secara default.
 
         // Terapkan filter
-        if ($request->filled('pelanggan_id')) {
-            $query->where('pelanggan_id', $request->pelanggan_id);
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
         }
         if ($request->filled('status_pembayaran')) {
             $query->where('status_pembayaran', $request->status_pembayaran);
@@ -407,15 +407,15 @@ class LaporanController extends Controller
         ')->first();
 
         // Hitung total item terjual dari transaksi yang sudah difilter
-        $totals->total_products_sold = $totalItemsQuery->join('item_penjualans', 'penjualans.id', '=', 'item_penjualans.penjualan_id')->sum('item_penjualans.jumlah');
+        $totals->total_products_sold = $totalItemsQuery->join('sale_items', 'sales.id', '=', 'sale_items.sale_id')->sum('sale_items.jumlah');
 
         // Lakukan paginasi
-        $penjualans = $query->paginate(50)->withQueryString();
+        $sales = $query->paginate(50)->withQueryString();
 
-        return view('dashboard.laporan.laporan-penjualan', [
-            'title' => 'Laporan Penjualan',
-            'penjualans' => $penjualans,
-            'pelanggans' => Pelanggan::orderBy('nama')->get(['id', 'nama']),
+        return view('content.laporan.laporan-penjualan', [
+            'title' => 'Laporan Sale',
+            'sales' => $sales,
+            'customers' => Customer::orderBy('name')->get(['id', 'name']),
             'statusPembayaranOptions' => ['Lunas', 'Belum Lunas', 'Dibatalkan'],
             'totals' => $totals,
         ]);
@@ -427,18 +427,18 @@ class LaporanController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
-    public function exportPenjualan(Request $request)
+    public function exportSale(Request $request)
     {
-        $profilToko = ProfilToko::first();
+        $profilToko = StoreSetting::first();
         $type = $request->query('type', 'xlsx');
 
         // Gunakan query yang sama dengan method penjualan() untuk konsistensi filter
-        $query = Penjualan::with(['pelanggan', 'user'])
+        $query = Sale::with(['pelanggan', 'user'])
             ->latest('tanggal_penjualan');
 
         // Terapkan filter
-        if ($request->filled('pelanggan_id')) {
-            $query->where('pelanggan_id', $request->pelanggan_id);
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
         }
         if ($request->filled('status_pembayaran')) {
             $query->where('status_pembayaran', $request->status_pembayaran);
@@ -448,23 +448,23 @@ class LaporanController extends Controller
         }
 
         // Ambil semua data yang cocok tanpa paginasi
-        $penjualans = $query->get();
+        $sales = $query->get();
 
         // Hitung total berdasarkan data yang sudah difilter
-        $grand_total = $penjualans->sum('total_akhir');
-        $total_paid = $penjualans->sum('jumlah_dibayar');
-        $total_due = $penjualans->sum('sisa_pembayaran');
+        $grand_total = $sales->sum('total_akhir');
+        $total_paid = $sales->sum('jumlah_dibayar');
+        $total_due = $sales->sum('sisa_pembayaran');
 
         // Tentukan tanggal default jika tidak ada filter
-        $startDate = $request->input('start_date', $penjualans->min('tanggal_penjualan') ?? now()->startOfMonth()->toDateString());
-        $endDate = $request->input('end_date', $penjualans->max('tanggal_penjualan') ?? now()->endOfMonth()->toDateString());
+        $startDate = $request->input('start_date', $sales->min('tanggal_penjualan') ?? now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', $sales->max('tanggal_penjualan') ?? now()->endOfMonth()->toDateString());
 
         $data = [
-            'title' => 'Laporan Penjualan',
+            'title' => 'Laporan Sale',
             'profilToko' => $profilToko,
             'startDate' => $startDate,
             'endDate' => $endDate,
-            'penjualans' => $penjualans,
+            'sales' => $sales,
             'totals' => (object) [
                 'grand_total' => $grand_total,
                 'total_paid' => $total_paid,
@@ -475,11 +475,11 @@ class LaporanController extends Controller
         $fileName = 'laporan-penjualan-' . now()->format('Y-m-d_H-i-s') . '.' . $type;
 
         if ($type === 'pdf') {
-            $pdf = Pdf::loadView('dashboard.laporan.pdf.export-penjualan', $data);
+            $pdf = Pdf::loadView('content.laporan.pdf.export-penjualan', $data);
             return $pdf->download($fileName);
         }
 
-        return Excel::download(new PenjualanExport($penjualans), $fileName, ExcelFormats::XLSX);
+        return Excel::download(new SaleExport($sales), $fileName, ExcelFormats::XLSX);
     }
 
     /**
@@ -494,29 +494,29 @@ class LaporanController extends Controller
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->endOfMonth()->toDateString());
 
-        // 2. Hitung Total Pendapatan dari Penjualan (yang tidak dibatalkan)
-        $totalRevenue = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])
+        // 2. Hitung Total Pendapatan dari Sale (yang tidak dibatalkan)
+        $totalRevenue = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])
             ->where('status_pembayaran', '!=', 'Dibatalkan')
             ->sum('total_akhir');
 
-        // Tambahan: Hitung Total Pendapatan Lain-lain dari tabel Pemasukan
-        $totalOtherIncome = Pemasukan::whereBetween('tanggal', [$startDate, $endDate])
+        // Tambahan: Hitung Total Pendapatan Lain-lain dari tabel Income
+        $totalOtherIncome = Income::whereBetween('tanggal', [$startDate, $endDate])
             ->sum('jumlah');
 
-        // 3. Hitung Harga Pokok Penjualan (HPP / COGS)
+        // 3. Hitung Harga Pokok Sale (HPP / COGS)
         // HPP = Jumlah barang terjual * harga beli produk
-        $cogs = DB::table('item_penjualans')
-            ->join('penjualans', 'item_penjualans.penjualan_id', '=', 'penjualans.id')
-            ->join('produks', 'item_penjualans.produk_id', '=', 'produks.id')
-            ->whereBetween('penjualans.tanggal_penjualan', [$startDate, $endDate])
-            ->where('penjualans.status_pembayaran', '!=', 'Dibatalkan')
-            ->sum(DB::raw('item_penjualans.jumlah * produks.harga_beli'));
+        $cogs = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->whereBetween('sales.tanggal_penjualan', [$startDate, $endDate])
+            ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
+            ->sum(DB::raw('sale_items.jumlah * products.harga_beli'));
 
         // 4. Hitung Laba Kotor (Pendapatan - HPP)
         $grossProfit = $totalRevenue - $cogs;
 
-        // 5. Hitung Total Beban Operasional dari tabel pengeluaran
-        $totalExpenses = Pengeluaran::whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
+        // 5. Hitung Total Beban Operasional dari tabel expense
+        $totalExpenses = Expense::whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
 
         // 6. Hitung Laba Bersih (Laba Kotor - Beban Operasional)
         $netProfit = $grossProfit + $totalOtherIncome - $totalExpenses;
@@ -531,23 +531,23 @@ class LaporanController extends Controller
             $monthEnd = $date->endOfMonth()->toDateString();
 
             // Pendapatan bulan ini
-            $monthlyRevenue = Penjualan::whereBetween('tanggal_penjualan', [$monthStart, $monthEnd])
+            $monthlyRevenue = Sale::whereBetween('tanggal_penjualan', [$monthStart, $monthEnd])
                 ->where('status_pembayaran', '!=', 'Dibatalkan')
                 ->sum('total_akhir');
 
             // HPP bulan ini
-            $monthlyCogs = DB::table('item_penjualans')
-                ->join('penjualans', 'item_penjualans.penjualan_id', '=', 'penjualans.id')
-                ->join('produks', 'item_penjualans.produk_id', '=', 'produks.id')
-                ->whereBetween('penjualans.tanggal_penjualan', [$monthStart, $monthEnd])
-                ->where('penjualans.status_pembayaran', '!=', 'Dibatalkan')
-                ->sum(DB::raw('item_penjualans.jumlah * produks.harga_beli'));
+            $monthlyCogs = DB::table('sale_items')
+                ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                ->join('products', 'sale_items.product_id', '=', 'products.id')
+                ->whereBetween('sales.tanggal_penjualan', [$monthStart, $monthEnd])
+                ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
+                ->sum(DB::raw('sale_items.jumlah * products.harga_beli'));
 
-            // Pemasukan lain-lain bulan ini
-            $monthlyOtherIncome = Pemasukan::whereBetween('tanggal', [$monthStart, $monthEnd])->sum('jumlah');
+            // Income lain-lain bulan ini
+            $monthlyOtherIncome = Income::whereBetween('tanggal', [$monthStart, $monthEnd])->sum('jumlah');
 
             // Beban bulan ini
-            $monthlyExpenses = Pengeluaran::whereBetween('tanggal', [$monthStart, $monthEnd])->sum('jumlah');
+            $monthlyExpenses = Expense::whereBetween('tanggal', [$monthStart, $monthEnd])->sum('jumlah');
 
             // Laba bersih bulan ini
             $monthlyGrossProfit = $monthlyRevenue - $monthlyCogs;
@@ -558,7 +558,7 @@ class LaporanController extends Controller
             $chartNetProfits[] = $monthlyNetProfit;
         }
 
-        return view('dashboard.laporan.laporan-laba-rugi', [
+        return view('content.laporan.laporan-laba-rugi', [
             'title' => 'Laporan Laba Rugi',
             'startDate' => $startDate,
             'endDate' => $endDate,
@@ -581,39 +581,39 @@ class LaporanController extends Controller
      */
     public function exportLabaRugi(Request $request)
     {
-        $profilToko = ProfilToko::first();
+        $profilToko = StoreSetting::first();
         // 1. Atur rentang tanggal dari request
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->endOfMonth()->toDateString());
 
         // 2. Hitung Total Pendapatan
-        $totalRevenue = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])
+        $totalRevenue = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])
             ->where('status_pembayaran', '!=', 'Dibatalkan')
             ->sum('total_akhir');
 
         // Tambahan: Hitung Total Pendapatan Lain-lain
-        $totalOtherIncome = Pemasukan::whereBetween('tanggal', [$startDate, $endDate])
+        $totalOtherIncome = Income::whereBetween('tanggal', [$startDate, $endDate])
             ->sum('jumlah');
 
         // 3. Hitung HPP
-        $cogs = DB::table('item_penjualans')
-            ->join('penjualans', 'item_penjualans.penjualan_id', '=', 'penjualans.id')
-            ->join('produks', 'item_penjualans.produk_id', '=', 'produks.id')
-            ->whereBetween('penjualans.tanggal_penjualan', [$startDate, $endDate])
-            ->where('penjualans.status_pembayaran', '!=', 'Dibatalkan')
-            ->sum(DB::raw('item_penjualans.jumlah * produks.harga_beli'));
+        $cogs = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->whereBetween('sales.tanggal_penjualan', [$startDate, $endDate])
+            ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
+            ->sum(DB::raw('sale_items.jumlah * products.harga_beli'));
 
         // 4. Hitung Laba Kotor
         $grossProfit = $totalRevenue - $cogs;
 
         // 5. Hitung Total Beban
-        $totalExpenses = Pengeluaran::whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
+        $totalExpenses = Expense::whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
 
         // 6. Hitung Laba Bersih
         $netProfit = $grossProfit + $totalOtherIncome - $totalExpenses;
 
         // 7. Siapkan data untuk view PDF
-        $pdf = Pdf::loadView('dashboard.laporan.pdf.export-laba', [
+        $pdf = Pdf::loadView('content.laporan.pdf.export-laba', [
             'title' => 'Laporan Laba Rugi',
             'profilToko' => $profilToko,
             'startDate' => $startDate,
