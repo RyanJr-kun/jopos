@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('units', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 100)->unique();
-            $table->string('slug', 100)->unique();
-            $table->string('singkat', 100)->unique();
-            $table->boolean('status')->default(true);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('units')) {
+            Schema::create('units', function (Blueprint $table) {
+                $table->id();
+                $table->string('name', 100)->unique();
+                $table->string('slug', 100)->unique();
+                $table->string('singkat', 100)->unique();
+                $table->boolean('status')->default(true);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

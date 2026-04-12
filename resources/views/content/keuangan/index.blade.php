@@ -5,18 +5,6 @@
 @section('vendor-style')
     {{-- Tambahkan style khusus jika diperlukan --}}
 @endsection
-{{-- breadcrumb --}}
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Dashboard', 'url' => route('dashboard')],
-            ['name' => 'Administrasi Keuangan', 'url' => route('keuangan')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
-
 {{-- Bagian Ringkasan Keuangan --}}
 <div class="row g-3">
     <div class="col-12">
@@ -102,9 +90,9 @@
             <div class="card-header pb-0 pt-3 bg-transparent">
                 <h6 class="text-capitalize">Grafik Keuangan</h6>
                 <p class="text-sm mb-0">
-                    <i class="fa fa-arrow-up text-success"></i>
+                    <i class="bx bx-arrow-up text-success"></i>
                     <span class="font-weight-bold">Income</span> vs
-                    <i class="fa fa-arrow-down text-danger"></i>
+                    <i class="bx bx-arrow-down text-danger"></i>
                     <span class="font-weight-bold">Expense</span>
                 </p>
             </div>

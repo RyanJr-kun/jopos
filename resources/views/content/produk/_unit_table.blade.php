@@ -30,9 +30,9 @@
 
                     <td class="align-middle text-center text-sm">
                         @if ($unit->status)
-                            <span class="badge badge-success">Aktif</span>
+                            <span class="badge bg-label-success">Aktif</span>
                         @else
-                            <span class="badge badge-secondary">Tidak Aktif</span>
+                            <span class="badge bg-label-secondary">Tidak Aktif</span>
                         @endif
                     </td>
 
@@ -40,7 +40,7 @@
                         <a href="#" class="text-dark fw-bold px-3 text-xs" data-bs-toggle="modal"
                             data-bs-target="#editModal" data-url="{{ route('unit.getjson', $unit->slug) }}"
                             data-update-url="{{ route('unit.update', $unit->slug) }}" title="Edit Satuan">
-                            <i class="bx bx-pencil-square text-dark text-sm opacity-10"></i>
+                            <i class="bx bx-edit text-dark text-sm opacity-10"></i>
                         </a>
                         <a href="#" class="text-dark delete-btn" data-bs-toggle="modal"
                             data-bs-target="#deleteConfirmationModal" data-unit-slug="{{ $unit->slug }}"

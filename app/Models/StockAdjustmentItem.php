@@ -40,8 +40,8 @@ class StockAdjustmentItem extends Model
     {
         return Attribute::make(
             get: fn() => $this->tipe === 'IN'
-                ? '<span class="badge badge-sm badge-success">Masuk</span>'
-                : '<span class="badge badge-sm badge-danger">Keluar</span>',
+                ? '<span class="badge badge-sm bg-label-success">Masuk</span>'
+                : '<span class="badge badge-sm bg-label-danger">Keluar</span>',
         );
     }
 

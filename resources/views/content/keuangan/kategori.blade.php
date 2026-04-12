@@ -5,17 +5,6 @@
 @section('vendor-style')
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 @endsection
-{{-- breadcrumb --}}
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Administrasi', 'url' => route('keuangan')],
-            ['name' => 'Manajemen Kategori', 'url' => route('kategoritransaksi.index')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="container-fluid p-3 ">
     <div class="card rounded-2">
         <div class="card-header pb-0 px-3 pt-2 mb-3">
@@ -27,7 +16,7 @@
                 <div class="ms-md-auto mt-2">
                     {{-- triger-modal-create --}}
                     <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#import">
-                        <i class="fa fa-plus fixed-plugin-button-nav cursor-pointer pe-2"></i> Kategori
+                        <i class="bx bx-plus fixed-plugin-button-nav cursor-pointer pe-2"></i> Kategori
                     </button>
                 </div>
             </div>
@@ -221,7 +210,6 @@
 @section('page-script')
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // --- INISIALISASI QUILL DENGAN CHARACTER COUNTER ---
@@ -379,8 +367,7 @@
                         },
                         error: function() {
                             $('#kategori-table-container').css('opacity', 1);
-                            Swal.fire('Gagal', 'Gagal memuat data. Silakan coba lagi.',
-                                'error');
+                            window.showToast('error', 'Gagal memuat data. Silakan coba lagi.');
                         }
                     });
                 }

@@ -3,26 +3,41 @@
 namespace App\Http\Controllers\authentications;
 
 use App\Http\Controllers\Controller;
-use App\Models\Role;
+use Spatie\Permission\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use RealRashid\SweetAlert\Facades\Alert;
 
 class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('content.user.index', [
-            'title' => 'Users',
-            'users' => User::latest()->paginate(10),
-            'roles' => Role::all()
-        ]);
+        $query = User::with('roles')->orderBy('id', 'DESC');
+
+        // filter pencarian name, nidn, username.
+        if ($request->filled('q')) {
+            $search = $request->q;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('nidn', 'LIKE', "%{$search}%")
+                    ->orWhere('username', 'LIKE', "%{$search}%");
+            });
+        }
+
+        //filter select role
+        if ($request->filled('role')) {
+            $query->role($request->role);
+        }
+
+        $data = $query->get(); // ambil semua data query
+        $roles = Role::pluck('name', 'name')->all();
+
+        return view('content.user.index', compact('data', 'roles'));
     }
 
     /**
@@ -67,8 +82,7 @@ class UserController extends Controller
         $validatedData['password'] = bcrypt($validatedData['password']);
 
         User::create($validatedData);
-        Alert::success('Berhasil', 'User Baru Berhasil Ditambahkan.');
-        return redirect()->route('users.index');
+        return redirect()->route('users.index')->with('success', 'User Baru Berhasil Ditambahkan.');
     }
 
     /**
@@ -97,8 +111,7 @@ class UserController extends Controller
     {
         // Cek jika pengguna yang sedang login mencoba mengubah role-nya sendiri
         if (Auth::id() === $user->id && $request->input('role_id') != $user->role_id) {
-            Alert::warning('Aksi Ditolak', 'Anda tidak dapat mengubah role Anda sendiri.');
-            return back()->withInput();
+            return back()->withInput()->with('warning', 'Anda tidak dapat mengubah role Anda sendiri.');
         }
 
         $rules = [
@@ -145,8 +158,7 @@ class UserController extends Controller
             unset($validatedData['password']);
         }
         $user->update($validatedData);
-        Alert::success('Berhasil', 'Data Pengguna Berhasil Diperbarui.');
-        return redirect()->route('users.index');
+        return redirect()->route('users.index')->with('success', 'Data Pengguna Berhasil Diperbarui.');
     }
 
     /**
@@ -158,8 +170,7 @@ class UserController extends Controller
             Storage::disk('public')->delete($user->img_user);
         }
         $user->delete();
-        Alert::success('Berhasil', 'Data Pengguna Berhasil Dihapus.');
-        return redirect()->route('users.index');
+        return redirect()->route('users.index')->with('success', 'Data Pengguna Berhasil Dihapus.');
     }
 
     /**

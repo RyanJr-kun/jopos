@@ -31,7 +31,7 @@
                     </td>
                     <td class="align-middle text-center">
                         <span
-                            class="badge badge-sm {{ $item->status_barang == 'Diterima' ? 'badge-success' : ($item->status_barang == 'Dibatalkan' ? 'badge-danger' : 'badge-warning') }}">
+                            class="badge badge-sm {{ $item->status_barang == 'Diterima' ? 'bg-label-success' : ($item->status_barang == 'Dibatalkan' ? 'bg-label-danger' : 'bg-label-warning') }}">
                             {{ $item->status_barang }}
                         </span>
                     </td>
@@ -53,11 +53,11 @@
                         @php
                             $statusClass = '';
                             if ($item->status_pembayaran == 'Lunas') {
-                                $statusClass = 'badge-success';
+                                $statusClass = 'bg-label-success';
                             } elseif ($item->status_pembayaran == 'Belum Lunas') {
-                                $statusClass = 'badge-warning';
+                                $statusClass = 'bg-label-warning';
                             } elseif ($item->status_pembayaran == 'Dibatalkan') {
-                                $statusClass = 'badge-danger';
+                                $statusClass = 'bg-label-danger';
                             }
                         @endphp
                         <span class="badge badge-sm {{ $statusClass }}">
@@ -81,18 +81,18 @@
                         <a href="{{ route('pembelian.show', $item->referensi) }}"
                             class="text-secondary font-weight-bold text-xs px-2" data-bs-toggle="tooltip"
                             data-bs-placement="top" title="Lihat Detail">
-                            <i class="fa fa-eye text-dark text-sm opacity-10"></i>
+                            <i class="bx bx-eye text-dark text-sm opacity-10"></i>
                         </a>
                         <a href="{{ route('pembelian.edit', $item->referensi) }}" class="text-dark mx-3"
                             data-toggle="tooltip" data-original-title="Edit pembelian">
-                            <i class="fa fa-pen-to-square text-dark text-sm opacity-10"></i>
+                            <i class="bx bx-edit text-dark text-sm opacity-10"></i>
                         </a>
                         {{-- Tombol Hapus diubah menjadi Batalkan --}}
                         <a href="#"
                             class="text-dark font-weight-bold text-xs @if ($item->status_pembayaran == 'Dibatalkan') disabled @endif"
                             data-bs-toggle="modal" data-bs-target="#cancelConfirmationModal"
                             data-pembelian-referensi="{{ $item->referensi }}" title="Batalkan Transaksi">
-                            <i class="fa fa-ban text-sm opacity-10"></i>
+                            <i class="bx bx-ban text-sm opacity-10"></i>
                         </a>
                     </td>
                 </tr>

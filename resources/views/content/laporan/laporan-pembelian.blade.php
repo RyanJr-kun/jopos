@@ -8,16 +8,6 @@
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 @endsection
 
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Laporan', 'url' => '#'],
-            ['name' => 'Laporan Purchase', 'url' => route('laporan.pembelian')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="container-fluid p-3">
     {{-- Summary Cards --}}
     <div class="row mb-4">
@@ -183,11 +173,11 @@
                                 </td>
                                 <td class="text-center">
                                     <span
-                                        class="badge badge-sm badge-{{ ['Lunas' => 'success', 'Belum Lunas' => 'warning', 'Jatuh Tempo' => 'danger'][$pembelian->status_pembayaran] ?? 'secondary' }}">{{ $pembelian->status_pembayaran }}</span>
+                                        class="badge badge-sm bg-label-{{ ['Lunas' => 'success', 'Belum Lunas' => 'warning', 'Jatuh Tempo' => 'danger'][$pembelian->status_pembayaran] ?? 'secondary' }}">{{ $pembelian->status_pembayaran }}</span>
                                 </td>
                                 <td class="text-center">
                                     <span
-                                        class="badge badge-sm badge-{{ ['Diterima' => 'success', 'Dikirim' => 'info', 'Dipesan' => 'primary', 'Dibatalkan' => 'secondary'][$pembelian->status_barang] ?? 'light' }}">{{ $pembelian->status_barang }}</span>
+                                        class="badge badge-sm bg-label-{{ ['Diterima' => 'success', 'Dikirim' => 'info', 'Dipesan' => 'primary', 'Dibatalkan' => 'secondary'][$pembelian->status_barang] ?? 'light' }}">{{ $pembelian->status_barang }}</span>
                                 </td>
                                 <td class="text-end">
                                     <p class="text-sm font-weight-bold mb-0">@money($pembelian->total_akhir)</p>

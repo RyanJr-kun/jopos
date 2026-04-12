@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 
 use Illuminate\Validation\Rule; // Import Rule untuk validasi unique saat update
 use App\Models\Supplier;
-use RealRashid\SweetAlert\Facades\Alert;
+
 use Illuminate\Http\Request;
 
 class SupplierController extends Controller
@@ -82,8 +82,7 @@ class SupplierController extends Controller
         }
 
         // Redirect standar jika bukan AJAX
-        Alert::success('Berhasil', 'Supplier baru berhasil ditambahkan!');
-        return redirect('/pemasok');
+        return redirect('/pemasok')->with('success', 'Supplier baru berhasil ditambahkan!');
     }
 
     /**
@@ -131,8 +130,7 @@ class SupplierController extends Controller
         $validatedData['status'] = $request->has('status');
 
         $pemasok->update($validatedData);
-        Alert::success('Berhasil', 'Data pemasok berhasil diperbarui!');
-        return redirect('/pemasok');
+        return redirect('/pemasok')->with('success', 'Data pemasok berhasil diperbarui!');
     }
 
     /**
@@ -141,12 +139,10 @@ class SupplierController extends Controller
     public function destroy(Supplier $pemasok)
     {
         // if ($pemasok->purchases()->exists()) {
-        //     Alert::error('Gagal', 'Supplier tidak dapat dihapus karena masih memiliki transaksi pembelian terkait!');
-        //     return back();
+        //     return back()->with('error', 'Supplier tidak dapat dihapus karena masih memiliki transaksi pembelian terkait!');
         // }
 
         $pemasok->delete();
-        Alert::success('Berhasil', 'Supplier berhasil dihapus!');
-        return redirect('/pemasok');
+        return redirect('/pemasok')->with('success', 'Supplier berhasil dihapus!');
     }
 }

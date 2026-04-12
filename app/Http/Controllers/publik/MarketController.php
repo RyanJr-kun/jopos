@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\publik;
 
-use App\Http\Controllers\Controller;
-
 use App\Enums\BannerPosition;
+use App\Http\Controllers\Controller;
 use App\Models\Banner;
-use App\Models\Promotion;
-use App\Models\Product;
 use App\Models\Category;
-use App\Models\StoreSetting;
+use App\Models\Product;
+use App\Models\Promotion;
+use App\Models\Stores;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class MarketController extends Controller
 {
@@ -66,7 +66,7 @@ class MarketController extends Controller
             // PERBAIKAN: Tambahkan semua kolom yang dipilih ke GROUP BY untuk kompatibilitas dengan mode ONLY_FULL_GROUP_BY
             ->groupBy(
                 'products.id',
-                'products.name_produk',
+                'products.name_product',
                 'products.slug',
                 'products.barcode',
                 'products.sku',
@@ -134,7 +134,7 @@ class MarketController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name_produk', 'like', "%{$search}%")
+                $q->where('name_product', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%");
             });
         }
@@ -192,16 +192,37 @@ class MarketController extends Controller
         ]);
     }
 
-    public function tentang()
+    public function tentang(Request $request)
     {
-        $profil = StoreSetting::first();
+        // Mulai query
+        $query = Stores::query();
 
-        return view('content.market.tentang', [
-            'title' => 'Tentang Kami',
-            'profils' => $profil
-        ]);
+        // 1. Filter Pencarian berdasarkan Nama Toko
+        if ($request->filled('search')) {
+            $query->where('name_toko', 'like', '%' . $request->search . '%');
+        }
+
+        // 2. Filter Select berdasarkan Daerah
+        if ($request->filled('daerah')) {
+            $query->where('daerah', $request->daerah);
+        }
+
+        // Eksekusi query
+        $profils = $query->get();
+
+        // 3. Jika Request berasal dari AJAX
+        if ($request->ajax()) {
+            // Kembalikan data dalam bentuk JSON berisi potongan HTML dan jumlah data
+            return response()->json([
+                // Render file blade partial dan ubah jadi string HTML
+                'html' => view('content.market._list_toko', compact('profils'))->render(),
+                'count' => $profils->count()
+            ]);
+        }
+
+        // 4. Jika Request biasa (Load halaman pertama kali)
+        return view('content.market.tentang', compact('profils'));
     }
-
     /**
      * Menangani permintaan live search dari header.
      *
@@ -216,11 +237,32 @@ class MarketController extends Controller
             return response()->json(['products' => [], 'total' => 0]);
         }
 
-        $products = Product::with(['category', 'brand'])
-            ->where('name_produk', 'LIKE', "%{$query}%")
-            ->orWhere('sku', 'LIKE', "%{$query}%")
-            ->limit(5) // Batasi hasil untuk live search
-            ->get();
+        $products = Product::with(['category', 'brand', 'promotions'])
+            ->where(function ($q) use ($query) {
+                $q->where('name_product', 'LIKE', "%{$query}%")
+                    ->orWhere('sku', 'LIKE', "%{$query}%");
+            })
+            ->limit(5)
+            ->get()
+            ->map(function ($product) {
+                // Find an active promotion for this product, if any
+                $activePromo = $product->promotions
+                    ->where('status', true)
+                    ->where('tanggal_mulai', '<=', now())
+                    ->where('tanggal_berakhir', '>=', now())
+                    ->first();
+
+                // Compute harga_diskon based on promotion type
+                if ($activePromo) {
+                    $product->harga_diskon = $activePromo->type === 'percentage'
+                        ? $product->harga_jual - ($product->harga_jual * $activePromo->nilai_diskon / 100)
+                        : $product->harga_jual - $activePromo->nilai_diskon;
+                } else {
+                    $product->harga_diskon = null;
+                }
+
+                return $product;
+            });
 
         return response()->json(['products' => $products, 'total' => $products->count()]);
     }

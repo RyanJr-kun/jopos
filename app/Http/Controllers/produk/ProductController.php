@@ -15,7 +15,6 @@ use App\Models\Category;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use RealRashid\SweetAlert\Facades\Alert;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
 
 class ProductController extends Controller
@@ -35,7 +34,7 @@ class ProductController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('name_produk', 'like', "%{$search}%")
+                $q->where('name_product', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%")
                     ->orWhere('barcode', 'like', "%{$search}%");
             });
@@ -80,7 +79,7 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'name_produk' => 'required|string|max:255',
+            'name_product' => 'required|string|max:255',
             'slug' => 'required|string|unique:products,slug',
             'barcode' => 'nullable|string|unique:products,barcode',
             'sku' => 'required|string|unique:products,sku',
@@ -119,8 +118,7 @@ class ProductController extends Controller
         unset($validatedData['kategori'], $validatedData['brand'], $validatedData['unit'], $validatedData['garansi'], $validatedData['pajak']);
 
         Product::create($validatedData);
-        Alert::success('Berhasil', 'Product Baru Berhasil Ditambahkan.');
-        return redirect()->route('produk.index');
+        return redirect()->route('produk.index')->with('success', 'Product Baru Berhasil Ditambahkan.');
     }
 
     /**
@@ -154,7 +152,7 @@ class ProductController extends Controller
     public function update(Request $request, Product $produk)
     {
         $rules = [
-            'name_produk' => 'required|string|max:255',
+            'name_product' => 'required|string|max:255',
             'kategori' => 'required|exists:categories,id',
             'brand' => 'required|exists:brands,id',
             'unit' => 'required|exists:units,id',
@@ -205,8 +203,7 @@ class ProductController extends Controller
         unset($validatedData['kategori'], $validatedData['brand'], $validatedData['unit'], $validatedData['garansi'], $validatedData['pajak']);
 
         $produk->update($validatedData);
-        Alert::success('Berhasil', 'Data Product Berhasil Diperbarui.');
-        return redirect()->route('produk.index');
+        return redirect()->route('produk.index')->with('success', 'Data Product Berhasil Diperbarui.');
     }
 
     /**
@@ -221,8 +218,7 @@ class ProductController extends Controller
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => $message], 422);
                 }
-                Alert::error('Gagal', $message);
-                return back();
+                return back()->with('error', $message);
             }
 
             // Hapus serial number terkait jika ada
@@ -245,21 +241,19 @@ class ProductController extends Controller
             }
 
             // Respons standar jika bukan AJAX
-            Alert::success('Berhasil', 'Product berhasil dihapus');
-            return redirect()->route('produk.index');
+            return redirect()->route('produk.index')->with('success', 'Product berhasil dihapus');
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 // Sertakan pesan error untuk debugging di sisi client jika perlu
                 return response()->json(['success' => false, 'message' => 'Gagal menghapus produk: ' . $e->getMessage()], 500);
             }
-            Alert::error('Gagal', 'Terjadi kesalahan saat menghapus produk.');
-            return back();
+            return back()->with('error', 'Terjadi kesalahan saat menghapus produk.');
         }
     }
 
     public function checkSlug(Request $request)
     {
-        $slug = SlugService::createSlug(Product::class, 'slug', $request->name_produk);
+        $slug = SlugService::createSlug(Product::class, 'slug', $request->name_product);
         return response()->json(['slug' => $slug]);
     }
 
@@ -303,7 +297,7 @@ class ProductController extends Controller
 
         // Filter berdasarkan kata kunci pencarian
         if ($search) {
-            $query->where('name_produk', 'LIKE', '%' . $search . '%');
+            $query->where('name_product', 'LIKE', '%' . $search . '%');
         }
 
         // Filter berdasarkan flag 'wajib_seri' jika ada di request
@@ -352,7 +346,7 @@ class ProductController extends Controller
         $lowStockProducts = Product::whereColumn('qty', '<=', 'stok_minimum')
             ->orderBy('qty', 'asc')
             ->take(5)
-            ->get(['id', 'name_produk', 'slug', 'qty', 'stok_minimum', 'img_produk']);
+            ->get(['id', 'name_product', 'slug', 'qty', 'stok_minimum', 'img_produk']);
 
         $lowStockCount = Product::whereColumn('qty', '<=', 'stok_minimum')->count();
 
@@ -360,7 +354,7 @@ class ProductController extends Controller
             'count' => $lowStockCount,
             'products' => $lowStockProducts->map(function ($produk) {
                 return [
-                    'name_produk' => \Illuminate\Support\Str::limit($produk->name_produk, 30),
+                    'name_product' => \Illuminate\Support\Str::limit($produk->name_product, 30),
                     'qty' => $produk->qty,
                     'stok_minimum' => $produk->stok_minimum,
                     'img_url' => $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.webp'),
@@ -396,7 +390,7 @@ class ProductController extends Controller
             'products' => $productsNeedingSerials->map(function ($produk) {
                 $needed = $produk->qty - $produk->sn_tercatat_count;
                 return [
-                    'name_produk' => \Illuminate\Support\Str::limit($produk->name_produk, 30),
+                    'name_product' => \Illuminate\Support\Str::limit($produk->name_product, 30),
                     'needed' => $needed,
                     'img_url' => $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.webp'),
                     'url' => route('serialNumber.index', ['produk_slug' => $produk->slug])
@@ -450,7 +444,7 @@ class ProductController extends Controller
 
         // Filter berdasarkan pencarian name produk
         if ($request->filled('search')) {
-            $query->where('name_produk', 'like', '%' . $request->search . '%');
+            $query->where('name_product', 'like', '%' . $request->search . '%');
         }
 
         // Filter berdasarkan kategori

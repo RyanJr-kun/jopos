@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stock_takes', function (Blueprint $table) {
-            $table->id();
-            $table->string('kode_opname')->unique();
-            $table->dateTime('tanggal_opname');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->text('catatan')->nullable();
-            $table->enum('status', ['Selesai', 'Draft'])->default('Selesai');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('stock_takes')) {
+            Schema::create('stock_takes', function (Blueprint $table) {
+                $table->id();
+                $table->string('kode_opname')->unique();
+                $table->dateTime('tanggal_opname');
+                $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+                $table->text('catatan')->nullable();
+                $table->enum('status', ['Selesai', 'Draft'])->default('Selesai');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

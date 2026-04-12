@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use RealRashid\SweetAlert\Facades\Alert;
 
 class StockTakeController extends Controller
 {
@@ -23,7 +22,7 @@ class StockTakeController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('name_produk', 'like', "%{$search}%")
+                $q->where('name_product', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%");
             });
         }
@@ -81,8 +80,7 @@ class StockTakeController extends Controller
 
         // Jika tidak ada item yang berubah, kembali dengan pesan info
         if (empty($itemsToProcess)) {
-            Alert::info('Informasi', 'Tidak ada perubahan stok yang perlu disimpan.');
-            return redirect()->route('stok-opname.index');
+            return redirect()->route('stok-opname.index')->with('info', 'Tidak ada perubahan stok yang perlu disimpan.');
         }
 
         // 3. Gunakan Database Transaction untuk memastikan integritas data
@@ -113,11 +111,9 @@ class StockTakeController extends Controller
                 }
             });
 
-            Alert::success('Berhasil', 'Hasil stok opname berhasil disimpan dan stok produk telah diperbarui.');
-            return redirect()->route('stok-opname.index');
+            return redirect()->route('stok-opname.index')->with('success', 'Hasil stok opname berhasil disimpan dan stok produk telah diperbarui.');
         } catch (\Exception $e) {
-            Alert::error('Gagal', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
-            return back()->withInput();
+            return back()->withInput()->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
         }
     }
 

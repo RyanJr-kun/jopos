@@ -7,18 +7,6 @@
     <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
     <link href="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.css" rel="stylesheet">
 @endsection
-@section('breadcrumb')
-    @php
-        // Definisikan item breadcrumb dalam bentuk array
-        $breadcrumbItems = [
-            ['name' => 'Page', 'url' => '/dashboard'],
-            ['name' => 'Setting', 'url' => '#'],
-            ['name' => 'Profile Toko', 'url' => route('pengaturan.profil-toko.edit')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="container-fluid p-3">
     <div class="card rounded-2">
         <div class="card-body">

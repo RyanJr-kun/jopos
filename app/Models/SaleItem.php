@@ -15,13 +15,13 @@ class SaleItem extends Model
         return $this->belongsTo(Sale::class);
     }
 
-    public function produk(): BelongsTo
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
     public function serialNumbers(): HasMany
     {
-        return $this->hasMany(SerialNumber::class);
+        return $this->hasMany(SerialNumber::class, 'item_sale_id');
     }
 }

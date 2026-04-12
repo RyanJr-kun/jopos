@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Income;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use RealRashid\SweetAlert\Facades\Alert;
 use App\Models\TransactionCategory;
 use Illuminate\Support\Facades\Auth;
 
@@ -107,8 +106,7 @@ class IncomeController extends Controller
         $validateData['user_id'] = Auth::id();
 
         Income::create($validateData);
-        Alert::success('Berhasil', 'Income baru berhasil ditambahkan!');
-        return redirect()->route('income.index');
+        return redirect()->route('income.index')->with('success', 'Income baru berhasil ditambahkan!');
     }
 
     /**
@@ -150,8 +148,7 @@ class IncomeController extends Controller
         $validateData['user_id'] = Auth::id();
 
         $income->update($validateData);
-        Alert::success('Berhasil', 'Income Berhasil Diperbarui!');
-        return redirect()->route('income.index');
+        return redirect()->route('income.index')->with('success', 'Income Berhasil Diperbarui!');
     }
 
     /**
@@ -160,7 +157,6 @@ class IncomeController extends Controller
     public function destroy(Income $income)
     {
         $income->delete();
-        Alert::success('Berhasil', 'Income Berhasil Dihapus!');
-        return redirect()->route('income.index');
+        return redirect()->route('income.index')->with('success', 'Income Berhasil Dihapus!');
     }
 }

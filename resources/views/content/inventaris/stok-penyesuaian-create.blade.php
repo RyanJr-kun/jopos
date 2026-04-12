@@ -9,18 +9,6 @@
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 @endsection
 
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Dashboard', 'url' => '/dashboard'],
-            ['name' => 'Inventaris', 'url' => '#'],
-            ['name' => 'Riwayat Penyesuaian', 'url' => route('stok-penyesuaian.index')],
-            ['name' => 'Buat Penyesuaian', 'url' => '#'],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="container-fluid p-3">
     <form action="{{ route('stok-penyesuaian.store') }}" method="POST" id="adjustmentForm">
         @csrf
@@ -104,7 +92,6 @@
 @section('page-script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
             let itemCounter = 0;
@@ -129,8 +116,8 @@
                         return {
                             results: data.data.map(item => ({
                                 id: item.id,
-                                text: `${item.name_produk} (Stock: ${item.qty})`,
-                                name_produk: item.name_produk,
+                                text: `${item.name_product} (Stock: ${item.qty})`,
+                                name_product: item.name_product,
                                 sku: item.sku,
                                 img_url: item.img_produk ?
                                     `{{ asset('storage/') }}/${item.img_produk}` :
@@ -155,7 +142,7 @@
                     `<div class='select2-result-repository d-flex clearfix'>
                         <div class='select2-result-repository__avatar'><img src='${produk.img_url}' class='avatar avatar-sm me-3' /></div>
                         <div class='select2-result-repository__meta'>
-                            <div class='select2-result-repository__title'>${produk.name_produk}</div>
+                            <div class='select2-result-repository__title'>${produk.name_product}</div>
                             <div class='select2-result-repository__description text-xs'>SKU: ${produk.sku}</div>
                         </div>
                     </div>`
@@ -181,26 +168,26 @@
 
                 // Validasi
                 if (!selectedProduct || !selectedProduct.id) {
-                    Swal.fire('Peringatan', 'Silakan pilih produk terlebih dahulu.', 'warning');
+                    window.showToast('warning', 'Silakan pilih produk terlebih dahulu.');
                     return;
                 }
                 if (isNaN(qty) || qty < 1) {
-                    Swal.fire('Peringatan', 'Jumlah harus berupa angka dan minimal 1.', 'warning');
+                    window.showToast('warning', 'Jumlah harus berupa angka dan minimal 1.');
                     return;
                 }
                 if (reason === '') {
-                    Swal.fire('Peringatan', 'Alasan penyesuaian harus diisi.', 'warning');
+                    window.showToast('warning', 'Alasan penyesuaian harus diisi.');
                     return;
                 }
                 if (addedProducts.has(selectedProduct.id.toString())) {
-                    Swal.fire('Peringatan', 'Product ini sudah ada dalam daftar.', 'warning');
+                    window.showToast('warning', 'Product ini sudah ada dalam daftar.');
                     return;
                 }
 
                 // Tambahkan item ke tabel
                 const typeBadge = type === 'IN' ?
-                    '<span class="badge badge-sm badge-success">Masuk</span>' :
-                    '<span class="badge badge-sm badge-danger">Keluar</span>';
+                    '<span class="badge badge-sm bg-label-success">Masuk</span>' :
+                    '<span class="badge badge-sm bg-label-danger">Keluar</span>';
 
                 const newRow = `
                     <tr class="adjustment-item-row" data-product-id="${selectedProduct.id}">
@@ -210,7 +197,7 @@
                                     <img src="${selectedProduct.img_url}" class="avatar avatar-sm me-3" alt="product image">
                                 </div>
                                 <div class="d-flex flex-column justify-content-center">
-                                    <h6 class="mb-0 text-sm">${selectedProduct.name_produk}</h6>
+                                    <h6 class="mb-0 text-sm">${selectedProduct.name_product}</h6>
                                     <p class="text-xs text-secondary mb-0">${selectedProduct.sku}</p>
                                 </div>
                             </div>

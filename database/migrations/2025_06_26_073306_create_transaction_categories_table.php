@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transaction_categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 100)->unique();
-            $table->string('slug', 100)->unique();
-            $table->enum('type', ['income', 'expense']);
-            $table->text('description')->nullable();
-            $table->boolean('status')->default(true);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('transaction_categories')) {
+            Schema::create('transaction_categories', function (Blueprint $table) {
+                $table->id();
+                $table->string('name', 100)->unique();
+                $table->string('slug', 100)->unique();
+                $table->enum('type', ['income', 'expense']);
+                $table->text('description')->nullable();
+                $table->boolean('status')->default(true);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

@@ -35,11 +35,11 @@
                         @php
                             $statusClass = '';
                             if ($item->status_pembayaran === 'Lunas') {
-                                $statusClass = 'badge-success';
+                                $statusClass = 'bg-label-success';
                             } elseif ($item->status_pembayaran === 'Belum Lunas') {
-                                $statusClass = 'badge-danger';
+                                $statusClass = 'bg-label-danger';
                             } elseif ($item->status_pembayaran === 'Dibatalkan') {
-                                $statusClass = 'badge-warning';
+                                $statusClass = 'bg-label-warning';
                             }
                         @endphp
                         <span
@@ -60,17 +60,17 @@
                     <td class="align-middle text-center">
                         <a href="{{ route('penjualan.show', $item->referensi) }}" class="text-dark fw-bold text-sm px-2"
                             data-bs-toggle="tooltip" data-bs-placement="top" title="Lihat Detail">
-                            <i class="fa fa-eye "></i>
+                            <i class="bx bx-eye "></i>
                         </a>
                         <a href="{{ route('penjualan.edit', $item->referensi) }}"
                             class="text-dark fw-bold text-sm px-2"data-bs-toggle="tooltip" data-bs-placement="top"
                             title="Edit Transaksi">
-                            <i class="fa fa-pen-to-square"></i>
+                            <i class="bx bx-edit"></i>
                         </a>
                         <a href="#" class="text-dark fw-bold text-sm px-2" data-bs-toggle="modal"
                             data-bs-target="#cancelConfirmationModal" data-invoice-number="{{ $item->referensi }}"
                             title="Batalkan Transaksi">
-                            <i class="fa fa-ban"></i>
+                            <i class="bx bx-ban"></i>
                         </a>
                     </td>
                 </tr>

@@ -20,7 +20,7 @@ class Product extends Model
     {
         return [
             'slug' => [
-                'source' => 'name_produk'
+                'source' => 'name_product'
             ]
         ];
     }
@@ -76,7 +76,7 @@ class Product extends Model
     }
     public function serialNumbers(): HasMany
     {
-        return $this->hasMany(SerialNumber::class);
+        return $this->hasMany(SerialNumber::class, 'item_sale_id');
     }
     public function latestPurchaseItem()
     {

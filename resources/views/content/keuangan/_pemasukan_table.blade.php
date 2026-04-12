@@ -57,7 +57,7 @@
                         <a href="#" class="text-dark fw-bold px-3 text-xs" data-bs-toggle="modal"
                             data-bs-target="#editModal" data-url="{{ route('income.getjson', $income->referensi) }}"
                             data-update-url="{{ route('income.update', $income->referensi) }}" title="Edit income">
-                            <i class="bx bx-pencil-square text-dark text-sm opacity-10"></i>
+                            <i class="bx bx-edit text-dark text-sm opacity-10"></i>
                         </a>
                         <a href="#" class="text-dark delete-income-btn me-md-4" data-bs-toggle="modal"
                             data-bs-target="#deleteConfirmationModal" data-income-referensi="{{ $income->referensi }}"

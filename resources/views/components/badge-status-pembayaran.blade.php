@@ -4,21 +4,21 @@
     $badgeClass = '';
     switch ($status) {
         case 'Lunas':
-            $badgeClass = 'badge-success';
+            $badgeClass = 'bg-label-success';
             break;
         case 'Belum Lunas':
-            $badgeClass = 'badge-warning';
+            $badgeClass = 'bg-label-warning';
             break;
         case 'Dibatalkan':
-            $badgeClass = 'badge-danger';
+            $badgeClass = 'bg-label-danger';
             break;
         case 'Lunas Sebagian':
-            $badgeClass = 'badge-info';
+            $badgeClass = 'bg-label-info';
             break;
         default:
-            $badgeClass = 'badge-secondary';
+            $badgeClass = 'bg-label-secondary';
             break;
     }
 @endphp
 
-<span class="badge badge-sm {{ $badgeClass }}">{{ $status }}</span>
+<span class="badge bg-label-sm {{ $badgeClass }}">{{ $status }}</span>

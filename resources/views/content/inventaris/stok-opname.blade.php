@@ -33,18 +33,6 @@
         }
     </style>
 @endsection
-{{-- breadcrumb --}}
-@section('breadcrumb')
-    @php
-        // Asumsi route 'stok-opname.index' sudah ada
-        $breadcrumbItems = [
-            ['name' => 'Dashboard', 'url' => '/dashboard'],
-            ['name' => 'Stock Opname', 'url' => route('stok-opname.index')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="container-fluid p-3">
     {{-- Asumsi controller akan mengirimkan variabel $products dan $kategoris --}}
     @php
@@ -121,7 +109,7 @@
                                                     class="avatar avatar-sm me-3" alt="product image">
                                             </div>
                                             <div class="d-flex flex-column justify-content-center">
-                                                <h6 class="mb-0 text-sm">{{ $produk->name_produk }}</h6>
+                                                <h6 class="mb-0 text-sm">{{ $produk->name_product }}</h6>
                                                 <p class="text-xs text-secondary mb-0">
                                                     {{ $produk->sku ?: 'SKU tidak ada' }}</p>
                                             </div>

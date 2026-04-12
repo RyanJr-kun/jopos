@@ -9,7 +9,6 @@ use App\Models\StockAdjustment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use RealRashid\SweetAlert\Facades\Alert;
 
 class StockAdjustmentController extends Controller
 {
@@ -101,11 +100,9 @@ class StockAdjustmentController extends Controller
                 }
             });
 
-            Alert::success('Berhasil', 'Penyesuaian stok berhasil disimpan.');
-            return redirect()->route('stok-penyesuaian.index');
+            return redirect()->route('stok-penyesuaian.index')->with('success', 'Penyesuaian stok berhasil disimpan.');
         } catch (\Exception $e) {
-            Alert::error('Gagal', 'Terjadi kesalahan: ' . $e->getMessage());
-            return back()->withInput();
+            return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -179,11 +176,9 @@ class StockAdjustmentController extends Controller
                 $stok_penyesuaian->delete();
             });
 
-            Alert::success('Berhasil', 'Penyesuaian stok berhasil dibatalkan dan stok produk telah dikembalikan.');
-            return redirect()->route('stok-penyesuaian.index');
+            return redirect()->route('stok-penyesuaian.index')->with('success', 'Penyesuaian stok berhasil dibatalkan dan stok produk telah dikembalikan.');
         } catch (\Exception $e) {
-            Alert::error('Gagal', 'Terjadi kesalahan saat membatalkan penyesuaian: ' . $e->getMessage());
-            return back();
+            return back()->with('error', 'Terjadi kesalahan saat membatalkan penyesuaian: ' . $e->getMessage());
         }
     }
 }

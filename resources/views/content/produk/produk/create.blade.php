@@ -20,18 +20,6 @@
     <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
 @endsection
 
-@section('breadcrumb')
-    @php
-        // Definisikan item breadcrumb dalam bentuk array
-        $breadcrumbItems = [
-            ['name' => 'Page', 'url' => '/dashboard'],
-            ['name' => 'Manajemen Product', 'url' => route('produk.index')],
-            ['name' => 'Buat Product Baru', 'url' => '#'],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 {{-- Form Isian --}}
 <form id="addform" method="post" action="{{ route('produk.store') }} " enctype="multipart/form-data">
     @csrf
@@ -42,10 +30,10 @@
         <div class="card-body px-4 pt-0">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="name_produk" class="form-label">Nama Product <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control @error('name_produk') is-invalid @enderror"
-                        id="name_produk" name="name_produk" value="{{ old('name_produk') }}" required autofocus>
-                    @error('name_produk')
+                    <label for="name_product" class="form-label">Nama Product <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control @error('name_product') is-invalid @enderror"
+                        id="name_product" name="name_product" value="{{ old('name_product') }}" required autofocus>
+                    @error('name_product')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
@@ -250,12 +238,12 @@
 @section('page-script')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const nameInput = document.querySelector('#name_produk');
+        const nameInput = document.querySelector('#name_product');
         const slugInput = document.querySelector('#slug');
 
         if (nameInput && slugInput) {
             nameInput.addEventListener('change', function() {
-                fetch(`/produk/checkSlug?name_produk=${nameInput.value}`)
+                fetch(`/produk/checkSlug?name_product=${nameInput.value}`)
                     .then(response => response.json())
                     .then(data => slugInput.value = data.slug);
             });

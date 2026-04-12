@@ -8,7 +8,6 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
-use RealRashid\SweetAlert\Facades\Alert;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
 
 
@@ -92,8 +91,7 @@ class CategoryController extends Controller
         }
 
         // Respons standar jika bukan AJAX
-        Alert::success('Berhasil', 'Kategori Baru Berhasil Ditambahkan.');
-        return redirect()->route('kategoriproduk.index');
+        return redirect()->route('kategoriproduk.index')->with('success', 'Kategori Baru Berhasil Ditambahkan.');
     }
 
     /**
@@ -171,8 +169,7 @@ class CategoryController extends Controller
             ]);
         }
 
-        Alert::success('Berhasil', 'Data Kategori Product Berhasil Diperbarui.');
-        return redirect()->route('kategoriproduk.index');
+        return redirect()->route('kategoriproduk.index')->with('success', 'Data Kategori Product Berhasil Diperbarui.');
     }
 
     /**
@@ -185,8 +182,7 @@ class CategoryController extends Controller
             if (request()->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 422);
             }
-            Alert::error('Gagal', $message);
-            return back();
+            return back()->with('error', $message);
         }
 
         if ($kategoriproduk->img_kategori) {
@@ -199,8 +195,7 @@ class CategoryController extends Controller
             return response()->json(['success' => true, 'message' => 'Data Kategori Product Berhasil Dihapus.']);
         }
 
-        Alert::success('Berhasil', 'Data Kategori Product Berhasil Dihapus.');
-        return redirect()->route('kategoriproduk.index');
+        return redirect()->route('kategoriproduk.index')->with('success', 'Data Kategori Product Berhasil Dihapus.');
     }
 
     public function chekSlug(Request $request)

@@ -10,7 +10,7 @@ use App\Models\Income;
 use App\Models\Customer;
 use App\Models\Purchase;
 use App\Models\Sale;
-use App\Models\StoreSetting;
+use App\Models\Stores;
 use App\Models\Expense;
 use Illuminate\Http\Request;
 use App\Exports\LabaRugiExport;
@@ -40,7 +40,7 @@ class LaporanController extends Controller
             ->select(
                 'purchases.tanggal_pembelian as tanggal',
                 'products.id as product_id',
-                'products.name_produk',
+                'products.name_product',
                 'products.sku',
                 DB::raw("'Purchase' as tipe_gerakan"),
                 'purchases.referensi',
@@ -59,7 +59,7 @@ class LaporanController extends Controller
             ->select(
                 'sales.tanggal_penjualan as tanggal',
                 'products.id as product_id',
-                'products.name_produk',
+                'products.name_product',
                 'products.sku',
                 DB::raw("'Sale' as tipe_gerakan"),
                 'sales.referensi',
@@ -78,7 +78,7 @@ class LaporanController extends Controller
             ->select(
                 'stock_takes.tanggal_opname as tanggal',
                 'products.id as product_id',
-                'products.name_produk',
+                'products.name_product',
                 'products.sku',
                 DB::raw("'Stock Opname' as tipe_gerakan"),
                 'stock_takes.kode_opname as referensi',
@@ -96,7 +96,7 @@ class LaporanController extends Controller
             ->select(
                 'stock_adjustments.tanggal_penyesuaian as tanggal',
                 'products.id as product_id',
-                'products.name_produk',
+                'products.name_product',
                 'products.sku',
                 DB::raw("'Penyesuaian' as tipe_gerakan"),
                 'stock_adjustments.kode_penyesuaian as referensi',
@@ -140,7 +140,7 @@ class LaporanController extends Controller
                 'total_masuk' => $summary->total_masuk ?? 0,
                 'total_keluar' => $summary->total_keluar ?? 0,
             ],
-            'products' => Product::orderBy('name_produk')->get(['id', 'name_produk']),
+            'products' => Product::orderBy('name_product')->get(['id', 'name_product']),
             'tipe_gerakan_options' => ['Purchase', 'Sale', 'Stock Opname', 'Penyesuaian'],
         ]);
     }
@@ -153,7 +153,7 @@ class LaporanController extends Controller
      */
     public function exportInventaris(Request $request) // PERUBAHAN
     {
-        $profilToko = StoreSetting::first();
+        $profilToko = Stores::first();
         $type = $request->query('type', 'xlsx');
 
         // --- REUSEABLE QUERY LOGIC ---
@@ -166,7 +166,7 @@ class LaporanController extends Controller
                 ->select(
                     'purchases.tanggal_pembelian as tanggal',
                     'products.id as product_id',
-                    'products.name_produk',
+                    'products.name_product',
                     'products.sku',
                     DB::raw("'Purchase' as tipe_gerakan"),
                     'purchases.referensi',
@@ -183,7 +183,7 @@ class LaporanController extends Controller
                 ->select(
                     'sales.tanggal_penjualan as tanggal',
                     'products.id as product_id',
-                    'products.name_produk',
+                    'products.name_product',
                     'products.sku',
                     DB::raw("'Sale' as tipe_gerakan"),
                     'sales.referensi',
@@ -200,7 +200,7 @@ class LaporanController extends Controller
                 ->select(
                     'stock_takes.tanggal_opname as tanggal',
                     'products.id as product_id',
-                    'products.name_produk',
+                    'products.name_product',
                     'products.sku',
                     DB::raw("'Stock Opname' as tipe_gerakan"),
                     'stock_takes.kode_opname as referensi',
@@ -216,7 +216,7 @@ class LaporanController extends Controller
                 ->select(
                     'stock_adjustments.tanggal_penyesuaian as tanggal',
                     'products.id as product_id',
-                    'products.name_produk',
+                    'products.name_product',
                     'products.sku',
                     DB::raw("'Penyesuaian' as tipe_gerakan"),
                     'stock_adjustments.kode_penyesuaian as referensi',
@@ -334,7 +334,7 @@ class LaporanController extends Controller
      */
     public function exportPurchase(Request $request)
     {
-        $profilToko = StoreSetting::first();
+        $profilToko = Stores::first();
         $type = $request->query('type', 'xlsx');
 
         // Gunakan query yang sama dengan method pembelian() untuk konsistensi filter
@@ -429,7 +429,7 @@ class LaporanController extends Controller
      */
     public function exportSale(Request $request)
     {
-        $profilToko = StoreSetting::first();
+        $profilToko = Stores::first();
         $type = $request->query('type', 'xlsx');
 
         // Gunakan query yang sama dengan method penjualan() untuk konsistensi filter
@@ -581,7 +581,7 @@ class LaporanController extends Controller
      */
     public function exportLabaRugi(Request $request)
     {
-        $profilToko = StoreSetting::first();
+        $profilToko = Stores::first();
         // 1. Atur rentang tanggal dari request
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->endOfMonth()->toDateString());

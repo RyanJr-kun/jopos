@@ -2,143 +2,129 @@
 
 @section('title', 'Cards basic - UI elements')
 @section('content')
-    {{-- breadcrumb --}}
-@section('breadcrumb')
-    @php
-        // Definisikan item breadcrumb dalam bentuk array
-        $breadcrumbItems = [
-            ['name' => 'Page', 'url' => '#'],
-            ['name' => 'Manajemen Supplier', 'url' => route('pemasok.index')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
-
-<div class="container-fluid p-3">
-    <div class="card rounded-2">
-        <div class="card-header pb-0 px-3 pt-2 mb-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-n1">List Supplier</h6>
-                    <p class="text-sm mb-0">Kelola data pemasokmu.</p>
-                </div>
-                <div class="ms-md-auto mt-2">
-                    {{-- triger-modal-create --}}
-                    <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#createModal">
-                        <i class="fa fa-plus fixed-plugin-button-nav cursor-pointer pe-2"></i>Supplier
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="card-body px-0 pt-0 pb-2">
-            <div class="filter-container">
-                <div class="row g-3 align-items-center justify-content-between">
-                    <div class="col-5 col-lg-3 ms-3">
-                        <input type="text" name="search" id="searchInput" class="form-control"
-                            placeholder="Cari Supplier..." value="{{ request('search') }}">
+    <div class="container-fluid p-3">
+        <div class="card rounded-2">
+            <div class="card-header pb-0 px-3 pt-2 mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-n1">List Supplier</h6>
+                        <p class="text-sm mb-0">Kelola data pemasokmu.</p>
                     </div>
-                    <div class="col-5 col-lg-2 me-3">
-                        <select name="status" id="statusFilter" class="form-select">
-                            <option value="">Semua Status</option>
-                            <option value="1" @selected(request('status') == '1')>Aktif</option>
-                            <option value="0" @selected(request('status') == '0')>Tidak Aktif</option>
-                        </select>
+                    <div class="ms-md-auto mt-2">
+                        {{-- triger-modal-create --}}
+                        <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#createModal">
+                            <i class="bx bx-plus fixed-plugin-button-nav cursor-pointer pe-2"></i>Supplier
+                        </button>
                     </div>
                 </div>
             </div>
-            <div id="pemasok-table-container">
-                @include('content.pembelian._pemasok_table')
-            </div>
-        </div>
-    </div>
-    {{-- modal-create --}}
-    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n3">
-                    <h6 class="modal-title">Tambah Supplier Baru</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+            <div class="card-body px-0 pt-0 pb-2">
+                <div class="filter-container">
+                    <div class="row g-3 align-items-center justify-content-between">
+                        <div class="col-5 col-lg-3 ms-3">
+                            <input type="text" name="search" id="searchInput" class="form-control"
+                                placeholder="Cari Supplier..." value="{{ request('search') }}">
+                        </div>
+                        <div class="col-5 col-lg-2 me-3">
+                            <select name="status" id="statusFilter" class="form-select">
+                                <option value="">Semua Status</option>
+                                <option value="1" @selected(request('status') == '1')>Aktif</option>
+                                <option value="0" @selected(request('status') == '0')>Tidak Aktif</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    {{-- PERBAIKAN: Form ini sekarang akan melakukan submit standar (full page refresh) --}}
-                    <form action="{{ route('pemasok.store') }}" method="post">
-                        @csrf
-                        <x-pemasok-form-fields />
-                        <div class="justify-content-end form-check form-switch form-check-reverse my-2">
-                            <label class="me-auto fw-bold form-check-label" for="status">Status</label>
-                            <input id="status" class="form-check-input" type="checkbox" name="status" value="1"
-                                checked>
-                        </div>
-                        <div class="modal-footer border-0 pb-0">
-                            <button type="submit" class="btn btn-outline-info btn-sm">Buat Supplier</button>
-                            <button type="button" class="btn btn-danger btn-sm"
-                                data-bs-dismiss="modal">Batalkan</button>
-                        </div>
-                    </form>
+                <div id="pemasok-table-container">
+                    @include('content.pembelian._pemasok_table')
                 </div>
             </div>
         </div>
-    </div>
-
-    {{-- modal edit --}}
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n3">
-                    <h6 class="modal-title" id="editModalLabel">Edit Supplier</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editSupplierForm" method="post">
-                        @method('put')
-                        @csrf
-                        <x-pemasok-form-fields prefix="edit_" :pemasok="new \App\Models\Supplier()" />
-                        <div class="justify-content-end form-check form-switch form-check-reverse mt-3">
-                            <label class="me-auto form-check-label" for="edit_status">Status</label>
-                            <input id="edit_status" class="form-check-input" type="checkbox" name="status"
-                                value="1">
-                        </div>
-                        <div class="modal-footer border-0 pb-0">
-                            <button type="submit" class="btn btn-outline-info btn-sm">Simpan Perubahan</button>
-                            <button type="button" class="btn btn-danger btn-sm"
-                                data-bs-dismiss="modal">Batalkan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- modal delete --}}
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center mt-3 mx-n5">
-                    <i class="bx bx-trash fa-2x text-danger mb-3"></i>
-                    <p class="mb-0">Apakah Anda yakin ingin menghapus pemasok ini?</p>
-                    <h6 class="mt-2" id="pemasokNameToDelete"></h6>
-                    <div class="mt-4">
-                        <form id="deleteSupplierForm" method="POST" action="#">
-                            @method('delete')
+        {{-- modal-create --}}
+        <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 mb-n3">
+                        <h6 class="modal-title">Tambah Supplier Baru</h6>
+                        <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {{-- PERBAIKAN: Form ini sekarang akan melakukan submit standar (full page refresh) --}}
+                        <form action="{{ route('pemasok.store') }}" method="post">
                             @csrf
-                            <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
-                                data-bs-dismiss="modal">Batal</button>
+                            <x-pemasok-form-fields />
+                            <div class="justify-content-end form-check form-switch form-check-reverse my-2">
+                                <label class="me-auto fw-bold form-check-label" for="status">Status</label>
+                                <input id="status" class="form-check-input" type="checkbox" name="status" value="1"
+                                    checked>
+                            </div>
+                            <div class="modal-footer border-0 pb-0">
+                                <button type="submit" class="btn btn-outline-info btn-sm">Buat Supplier</button>
+                                <button type="button" class="btn btn-danger btn-sm"
+                                    data-bs-dismiss="modal">Batalkan</button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
+
+        {{-- modal edit --}}
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 mb-n3">
+                        <h6 class="modal-title" id="editModalLabel">Edit Supplier</h6>
+                        <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editSupplierForm" method="post">
+                            @method('put')
+                            @csrf
+                            <x-pemasok-form-fields prefix="edit_" :pemasok="new \App\Models\Supplier()" />
+                            <div class="justify-content-end form-check form-switch form-check-reverse mt-3">
+                                <label class="me-auto form-check-label" for="edit_status">Status</label>
+                                <input id="edit_status" class="form-check-input" type="checkbox" name="status"
+                                    value="1">
+                            </div>
+                            <div class="modal-footer border-0 pb-0">
+                                <button type="submit" class="btn btn-outline-info btn-sm">Simpan Perubahan</button>
+                                <button type="button" class="btn btn-danger btn-sm"
+                                    data-bs-dismiss="modal">Batalkan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- modal delete --}}
+        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center mt-3 mx-n5">
+                        <i class="bx bx-trash fa-2x text-danger mb-3"></i>
+                        <p class="mb-0">Apakah Anda yakin ingin menghapus pemasok ini?</p>
+                        <h6 class="mt-2" id="pemasokNameToDelete"></h6>
+                        <div class="mt-4">
+                            <form id="deleteSupplierForm" method="POST" action="#">
+                                @method('delete')
+                                @csrf
+                                <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
+                                    data-bs-dismiss="modal">Batal</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
 @section('page-script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // --- MODAL EDIT ---
@@ -233,8 +219,7 @@
                         },
                         error: function() {
                             $('#pemasok-table-container').css('opacity', 1);
-                            Swal.fire('Gagal', 'Gagal memuat data. Silakan coba lagi.',
-                                'error');
+                            window.showToast('error', 'Gagal memuat data. Silakan coba lagi.');
                         }
                     });
                 }

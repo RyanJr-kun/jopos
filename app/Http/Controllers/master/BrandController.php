@@ -8,7 +8,6 @@ use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
-use RealRashid\SweetAlert\Facades\Alert;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
 
 
@@ -97,8 +96,7 @@ class BrandController extends Controller
         }
 
         // Respons standar jika bukan AJAX
-        Alert::success('Berhasil', 'Brand Baru Berhasil Ditambahkan.');
-        return redirect()->route('brand.index');
+        return redirect()->route('brand.index')->with('success', 'Brand Baru Berhasil Ditambahkan.');
     }
     public function show(Brand $brand)
     {
@@ -172,8 +170,7 @@ class BrandController extends Controller
             ]);
         }
 
-        Alert::success('Berhasil', 'Data Brand Berhasil Diperbarui.');
-        return redirect()->route('brand.index');
+        return redirect()->route('brand.index')->with('success', 'Data Brand Berhasil Diperbarui.');
     }
 
     /**
@@ -186,8 +183,7 @@ class BrandController extends Controller
             if (request()->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 422);
             }
-            Alert::error('Gagal', $message);
-            return back();
+            return back()->with('error', $message);
         }
 
         if ($brand->img_brand) {
@@ -200,8 +196,7 @@ class BrandController extends Controller
             return response()->json(['success' => true, 'message' => 'Data Brand Berhasil Dihapus.']);
         }
 
-        Alert::success('Berhasil', 'Data Brand Berhasil Dihapus.');
-        return redirect()->route('brand.index');
+        return redirect()->route('brand.index')->with('success', 'Data Brand Berhasil Dihapus.');
     }
 
     public function chekSlug(Request $request)

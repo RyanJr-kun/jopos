@@ -11,21 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('incomes', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('transaction_category_id')->constrained('transaction_categories')->onDelete('restrict');
-            $table->dateTime('tanggal');
-            $table->decimal('jumlah', 15, 0);
-            $table->string('referensi')->nullable()->unique();
-            $table->string('keterangan');
-            $table->text('description')->nullable();
-            $table->foreignId('user_id')->constrained('users');
-            $table->timestamps();
+        if (!Schema::hasTable('incomes')) {
+            Schema::create('incomes', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('transaction_category_id')->constrained('transaction_categories')->onDelete('restrict');
+                $table->dateTime('tanggal');
+                $table->decimal('jumlah', 15, 0);
+                $table->string('referensi')->nullable()->unique();
+                $table->string('keterangan');
+                $table->text('description')->nullable();
+                $table->foreignId('user_id')->constrained('users');
+                $table->timestamps();
 
-            $table->index('transaction_category_id');
-            $table->index('tanggal');
-            $table->index('user_id');
-        });
+                $table->index('transaction_category_id');
+                $table->index('tanggal');
+                $table->index('user_id');
+            });
+        }
     }
 
     /**

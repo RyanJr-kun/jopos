@@ -8,16 +8,6 @@
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 @endsection
 
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Laporan', 'url' => '#'],
-            ['name' => 'Pergerakan Inventaris', 'url' => route('laporan.inventaris')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="container-fluid p-3">
     {{-- Summary Cards --}}
     <div class="row g-3 mb-4">
@@ -123,7 +113,7 @@
                                 <option value="">Semua Product</option>
                                 @foreach ($products as $produk)
                                     <option value="{{ $produk->id }}" @selected(request('product_id') == $produk->id)>
-                                        {{ $produk->name_produk }}</option>
+                                        {{ $produk->name_product }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -180,12 +170,12 @@
                                 </td>
                                 <td>
                                     <p class="text-sm font-weight-bold mb-0">
-                                        {{ $item->name_produk ?? 'Product Dihapus' }}</p>
+                                        {{ $item->name_product ?? 'Product Dihapus' }}</p>
                                     <p class="text-xs text-secondary mb-0">{{ $item->sku ?? '-' }}</p>
                                 </td>
                                 <td>
                                     <span
-                                        class="badge badge-sm badge-{{ [
+                                        class="badge badge-sm bg-label-{{ [
                                             'Purchase' => 'success',
                                             'Sale' => 'info',
                                             'Retur Sale' => 'dark',

@@ -19,18 +19,6 @@
         }
     </style>
 @endsection
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Dashboard', 'url' => '/dashboard'],
-            ['name' => 'Stock Opname', 'url' => route('stok-opname.index')],
-            ['name' => 'Riwayat', 'url' => route('stok-opname.history')],
-            ['name' => 'Detail ' . $stokOpname->kode_opname, 'url' => '#'],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="container-fluid p-3">
     <div class="card rounded-2 mb-4">
         <div class="card-header pb-0 px-3 pt-2 mb-3">
@@ -59,7 +47,7 @@
                     <p class="text-sm mb-1"><strong class="text-dark">Dilakukan oleh:</strong>
                         {{ $stokOpname->user->username ?? 'N/A' }}</p>
                     <p class="text-sm mb-1"><strong class="text-dark">Status:</strong> <span
-                            class="badge badge-sm badge-success">{{ $stokOpname->status }}</span></p>
+                            class="badge badge-sm bg-label-success">{{ $stokOpname->status }}</span></p>
                 </div>
                 <div class="col-md-4">
                     <p class="text-sm mb-1"><strong class="text-dark">Catatan Umum:</strong></p>
@@ -97,7 +85,7 @@
                                         </div>
                                         <div class="d-flex flex-column justify-content-center">
                                             <h6 class="mb-0 text-sm">
-                                                {{ $detail->produk->name_produk ?? 'Product Dihapus' }}</h6>
+                                                {{ $detail->produk->name_product ?? 'Product Dihapus' }}</h6>
                                             <p class="text-xs text-secondary mb-0">{{ $detail->produk->sku ?? 'N/A' }}
                                             </p>
                                         </div>

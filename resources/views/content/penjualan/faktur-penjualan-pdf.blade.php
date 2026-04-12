@@ -168,7 +168,7 @@ use Carbon\Carbon;
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
                         <td>
-                            {{ $item->produk->name_produk ?? 'Product Dihapus' }}
+                            {{ $item->produk->name_product ?? 'Product Dihapus' }}
                             @if ($item->serialNumbers->isNotEmpty())
                                 <div style="font-size: 9px; color: #555; margin-top: 4px;">
                                     <strong>SN:</strong> {{ $item->serialNumbers->pluck('nomor_seri')->join(', ') }}

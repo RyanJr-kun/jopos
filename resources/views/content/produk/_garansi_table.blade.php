@@ -24,16 +24,16 @@
                     </td>
                     <td class="align-middle text-center text-sm">
                         @if ($garansi->status)
-                            <span class="badge badge-success">Aktif</span>
+                            <span class="badge bg-label-success">Aktif</span>
                         @else
-                            <span class="badge badge-secondary">Tidak Aktif</span>
+                            <span class="badge bg-label-secondary">Tidak Aktif</span>
                         @endif
                     </td>
                     <td class="align-middle">
                         <a href="#" class="text-dark fw-bold px-3 text-xs" data-bs-toggle="modal"
                             data-bs-target="#editModal" data-url="{{ route('garansi.getjson', $garansi->slug) }}"
                             data-update-url="{{ route('garansi.update', $garansi->slug) }}" title="Edit garansi">
-                            <i class="bx bx-pencil-square text-dark text-sm opacity-10"></i>
+                            <i class="bx bx-edit text-dark text-sm opacity-10"></i>
                         </a>
                         <a href="#" class="text-dark delete-user-btn" data-bs-toggle="modal"
                             data-bs-target="#deleteConfirmationModal" data-garansi-slug="{{ $garansi->slug }}"

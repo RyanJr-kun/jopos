@@ -107,7 +107,7 @@ Route::middleware(['auth'])->group(function () {
     //transaksi penjualan
     Route::get('/penjualan/history/today', [SaleController::class, 'getTodayHistory'])->name('penjualan.history.today');
     Route::get('/penjualan/get-products', [SaleController::class, 'getProductsForCashier'])->name('penjualan.get-products');
-    Route::resource('/penjualan', SaleController::class);
+    Route::resource('/penjualan', SaleController::class)->except('destroy');
     Route::get('/penjualan/{penjualan}/json', [SaleController::class, 'getjson'])->name('penjualan.getjson');
     Route::get('/pelanggan/{pelanggan}/json', [CustomerController::class, 'getjson'])->name('pelanggan.getjson');
     Route::get('/penjualan/{penjualan:referensi}/thermal', [SaleController::class, 'printThermal'])->name('penjualan.thermal');

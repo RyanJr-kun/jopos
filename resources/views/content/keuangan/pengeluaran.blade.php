@@ -5,17 +5,6 @@
 @section('vendor-style')
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 @endsection
-{{-- breadcrumb --}}
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Page', 'url' => '/dashboard'],
-            ['name' => 'Data Expense', 'url' => route('expense.index')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="container-fluid p-3 ">
     <div class="card rounded-2">
         <div class="card-header pb-0 px-3 pt-2 mb-3">
@@ -29,7 +18,7 @@
                 <div class="ms-md-auto mt-2">
                     {{-- triger-modal-create --}}
                     <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#createModal">
-                        <i class="fa fa-plus fixed-plugin-button-nav cursor-pointer pe-2"></i> Expense
+                        <i class="bx bx-plus fixed-plugin-button-nav cursor-pointer pe-2"></i> Expense
                     </button>
                 </div>
             </div>
@@ -278,7 +267,6 @@
 @section('page-script')
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // --- INISIALISASI QUILL ---
@@ -365,7 +353,7 @@
                         .then(data => {
                             // Memuat relasi dari controller sudah memastikan data ini ada
                             const kategoriNama = data.transaction_category?.name ||
-                            'Tidak ada kategori';
+                                'Tidak ada kategori';
 
                             document.getElementById('view_referensi').textContent = data.referensi ||
                                 '-';
@@ -435,8 +423,7 @@
                         },
                         error: function() {
                             $('#expense-table-container').css('opacity', 1);
-                            Swal.fire('Gagal', 'Gagal memuat data. Silakan coba lagi.',
-                                'error');
+                            window.showToast('error', 'Gagal memuat data. Silakan coba lagi.');
                         }
                     });
                 }

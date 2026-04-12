@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('suppliers', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 255);
-            $table->string('perusahaan', 255);
-            $table->string('kontak', 20)->unique();
-            $table->string('email')->unique()->nullable();
-            $table->text('alamat')->nullable();
-            $table->text('note')->nullable();
-            $table->boolean('status')->default(true);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('suppliers')) {
+            Schema::create('suppliers', function (Blueprint $table) {
+                $table->id();
+                $table->string('name', 255);
+                $table->string('perusahaan', 255);
+                $table->string('kontak', 20)->unique();
+                $table->string('email')->unique()->nullable();
+                $table->text('alamat')->nullable();
+                $table->text('note')->nullable();
+                $table->boolean('status')->default(true);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

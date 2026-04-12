@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\TransactionCategory;
 use Illuminate\Support\Facades\Auth;
-use RealRashid\SweetAlert\Facades\Alert;
 
 class ExpenseController extends Controller
 {
@@ -108,8 +107,7 @@ class ExpenseController extends Controller
         $validateData['user_id'] = Auth::id();
 
         Expense::create($validateData);
-        Alert::success('Berhasil', 'Expense baru berhasil ditambahkan!');
-        return redirect()->route('expense.index');
+        return redirect()->route('expense.index')->with('success', 'Expense baru berhasil ditambahkan!');
     }
 
     /**
@@ -151,8 +149,7 @@ class ExpenseController extends Controller
         $validateData['user_id'] = Auth::id();
 
         $expense->update($validateData);
-        Alert::success('Berhasil', 'Expense Berhasil Diperbarui!');
-        return redirect()->route('expense.index');
+        return redirect()->route('expense.index')->with('success', 'Expense Berhasil Diperbarui!');
     }
 
     /**
@@ -161,7 +158,6 @@ class ExpenseController extends Controller
     public function destroy(Expense $expense)
     {
         $expense->delete();
-        Alert::success('Berhasil', 'Expense Berhasil Dihapus!');
-        return redirect()->route('expense.index');
+        return redirect()->route('expense.index')->with('success', 'Expense Berhasil Dihapus!');
     }
 }

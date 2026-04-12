@@ -12,13 +12,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('warranties', function (Blueprint $table) {
-            DB::table('warranties')
-                ->where('duration', '>', 0)
-                ->update([
-                    'duration' => DB::raw('duration * 30')
-                ]);
-        });
+        if (!Schema::hasColumn('warranties', 'duration')) {
+
+            Schema::table('warranties', function (Blueprint $table) {
+                DB::table('warranties')
+                    ->where('duration', '>', 0)
+                    ->update([
+                        'duration' => DB::raw('duration * 30')
+                    ]);
+            });
+        }
     }
 
     /**

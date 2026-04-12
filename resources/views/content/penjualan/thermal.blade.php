@@ -145,7 +145,7 @@
                 @foreach ($penjualan->items as $item)
                     <tr class="item-row">
                         <td colspan="2">
-                            {{ $item->produk->name_produk ?? 'Product Dihapus' }}
+                            {{ $item->produk->name_product ?? 'Product Dihapus' }}
                             @if ($item->serialNumbers->isNotEmpty())
                                 <br>SN: {{ $item->serialNumbers->pluck('nomor_seri')->join(', ') }}
                             @endif

@@ -125,7 +125,7 @@
                 @forelse ($pergerakan as $item)
                     <tr>
                         <td>{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d M Y, H:i') }}</td>
-                        <td>{{ $item->name_produk ?? 'Product Dihapus' }} <br><small>SKU:
+                        <td>{{ $item->name_product ?? 'Product Dihapus' }} <br><small>SKU:
                                 {{ $item->sku ?? '-' }}</small>
                         </td>
                         <td>{{ $item->tipe_gerakan }}</td>

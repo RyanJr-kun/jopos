@@ -5,19 +5,6 @@
 @section('vendor-style')
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 @endsection
-{{-- breadcrumb --}}
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Page', 'url' => '/dashboard'],
-            ['name' => 'Data Income', 'url' => route('income.index')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
-
-
 <div class="container-fluid p-3 ">
     <div class="card rounded-2">
         <div class="card-header pb-0 px-3 pt-2 mb-3">
@@ -31,7 +18,7 @@
                 <div class="ms-md-auto mt-2">
                     {{-- triger-modal-create --}}
                     <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#createModal">
-                        <i class="fa fa-plus cursor-pointer pe-2"></i> Income
+                        <i class="bx bx-plus cursor-pointer pe-2"></i> Income
                     </button>
                 </div>
             </div>

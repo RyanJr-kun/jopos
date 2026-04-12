@@ -5,7 +5,6 @@ namespace App\Http\Controllers\master;
 use App\Http\Controllers\Controller;
 use App\Models\TransactionCategory;
 use Illuminate\Http\Request;
-use RealRashid\SweetAlert\Facades\Alert;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
 use Illuminate\Validation\Rule;
 
@@ -77,8 +76,7 @@ class TransactionCategoryController extends Controller
         ];
 
         TransactionCategory::create($dataToStore);
-        Alert::success('Berhasil', 'Kategori Transaksi Baru Berhasil Ditambahkan!');
-        return redirect()->route('kategoritransaksi.index');
+        return redirect()->route('kategoritransaksi.index')->with('success', 'Kategori Transaksi Baru Berhasil Ditambahkan!');
     }
 
     /**
@@ -123,8 +121,7 @@ class TransactionCategoryController extends Controller
             'status' => $request->has('status')
         ];
         $kategoritransaksi->update($dataToUpdate);
-        Alert::success('Berhasil', 'Kategori Transaksi Berhasil Diperbarui!');
-        return redirect()->route('kategoritransaksi.index');
+        return redirect()->route('kategoritransaksi.index')->with('success', 'Kategori Transaksi Berhasil Diperbarui!');
     }
 
     /**
@@ -133,12 +130,10 @@ class TransactionCategoryController extends Controller
     public function destroy(TransactionCategory $kategoritransaksi)
     {
         if ($kategoritransaksi->transaksis()->count() > 0) {
-            Alert::error('Gagal', 'Kategori Transaksi Tidak Dapat Dihapus Karena Masih Memiliki Transaksi Terkait!');
-            return back();
+            return back()->with('error', 'Kategori Transaksi Tidak Dapat Dihapus Karena Masih Memiliki Transaksi Terkait!');
         }
         $kategoritransaksi->delete();
-        Alert::success('Berhasil', 'Kategori Transaksi Berhasil Dihapus!');
-        return redirect()->route('kategoritransaksi.index');
+        return redirect()->route('kategoritransaksi.index')->with('success', 'Kategori Transaksi Berhasil Dihapus!');
     }
 
     public function chekSlug(Request $request)

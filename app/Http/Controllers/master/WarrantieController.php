@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Warrantie;
 use Illuminate\Http\Request;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
-use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Validation\Rule;
 
 class WarrantieController extends Controller
@@ -107,8 +106,7 @@ class WarrantieController extends Controller
         }
 
         // Fallback untuk non-AJAX request
-        Alert::success('Berhasil', 'Warrantie Baru Berhasil Ditambahkan.');
-        return redirect()->route('garansi.index');
+        return redirect()->route('garansi.index')->with('success', 'Warrantie Baru Berhasil Ditambahkan.');
     }
 
     /**
@@ -185,8 +183,7 @@ class WarrantieController extends Controller
             ]);
         }
 
-        Alert::success('Berhasil', 'Warrantie Berhasil Diperbarui.');
-        return redirect()->route('garansi.index');
+        return redirect()->route('garansi.index')->with('success', 'Warrantie Berhasil Diperbarui.');
     }
 
 
@@ -196,12 +193,10 @@ class WarrantieController extends Controller
     public function destroy(Warrantie $garansi)
     {
         if ($garansi->products()->count() > 0) {
-            Alert::error('Gagal', 'Warrantie tidak dapat dihapus karena masih memiliki produk terkait!');
-            return back();
+            return back()->with('error', 'Warrantie tidak dapat dihapus karena masih memiliki produk terkait!');
         }
         $garansi->delete();
-        Alert::success('Berhasil', 'Warrantie Berhasil Dihapus.');
-        return redirect()->route('garansi.index');
+        return redirect()->route('garansi.index')->with('success', 'Warrantie Berhasil Dihapus.');
     }
 
     public function chekSlug(Request $request)

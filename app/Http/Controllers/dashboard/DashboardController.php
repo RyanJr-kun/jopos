@@ -129,14 +129,14 @@ class DashboardController extends Controller
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->select(
                 'products.id as product_id',
-                'products.name_produk',
+                'products.name_product',
                 'products.img_produk',
                 'products.harga_jual',
                 DB::raw('SUM(sale_items.jumlah) as total_terjual_current_month')
             )
             ->whereBetween('sales.tanggal_penjualan', [$startDate, $endDate])
             ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
-            ->groupBy('products.id', 'products.name_produk', 'products.img_produk', 'products.harga_jual')
+            ->groupBy('products.id', 'products.name_product', 'products.img_produk', 'products.harga_jual')
             ->orderBy('total_terjual_current_month', 'desc')
             ->limit(5)
             ->get();

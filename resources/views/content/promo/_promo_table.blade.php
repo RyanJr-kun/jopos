@@ -56,9 +56,9 @@
                     </td>
                     <td class="align-middle text-center text-sm" id="status-container-{{ $promo->id }}">
                         @if ($promo->status)
-                            <span class="badge badge-success">Aktif</span>
+                            <span class="badge bg-label-success">Aktif</span>
                         @else
-                            <span class="badge badge-secondary">Tidak Aktif</span>
+                            <span class="badge bg-label-secondary">Tidak Aktif</span>
                         @endif
                     </td>
                     <td class="align-middle">
@@ -68,7 +68,7 @@
                         </a>
                         <a href="{{ route('promo.edit', $promo->id) }}" class="text-dark fw-bold px-2 text-xs"
                             title="Edit Promotion">
-                            <i class="bx bx-pencil-square text-dark text-sm opacity-10"></i>
+                            <i class="bx bx-edit text-dark text-sm opacity-10"></i>
                         </a>
                         <a href="#" class="text-dark delete-btn px-2" data-bs-toggle="modal"
                             data-bs-target="#deleteConfirmationModal" data-promo-id="{{ $promo->id }}"

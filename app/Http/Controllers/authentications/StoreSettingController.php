@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\authentications;
 
 use App\Http\Controllers\Controller;
-use App\Models\StoreSetting;
+use App\Models\Stores;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use RealRashid\SweetAlert\Facades\Alert;
 
 class StoreSettingController extends Controller
 {
@@ -17,17 +16,8 @@ class StoreSettingController extends Controller
      */
     public function edit()
     {
-        // Menggunakan firstOrCreate untuk memastikan selalu ada data profil
-        // dengan id = 1. Jika tidak ada, record baru akan dibuat dengan nilai default.
-        $profil = StoreSetting::firstOrCreate(
-            ['id' => 1],
-            ['name_toko' => 'Nama Toko Anda'] // Nilai default jika record baru dibuat
-        );
-
-        return view('dashboard.profil-toko', [
-            'title' => 'Pengaturan Profil Toko',
-            'profil' => $profil,
-        ]);
+        $profils = Stores::all();
+        return view('content.dashboard.profil-toko', compact('profils'));
     }
 
     /**
@@ -48,7 +38,7 @@ class StoreSettingController extends Controller
         ]);
 
         // Cari profil toko, yang seharusnya selalu ada dengan id = 1
-        $profil = StoreSetting::find(1);
+        $profil = Stores::find(1);
 
         // Handle upload logo dari FilePond
         if ($request->filled('logo')) {
@@ -80,8 +70,7 @@ class StoreSettingController extends Controller
         // Update data profil
         $profil->update($validatedData);
 
-        Alert::success('Berhasil', 'Profil toko berhasil diperbarui.');
-        return redirect()->route('pengaturan.profil-toko.edit');
+        return redirect()->route('content.dashboard.profil-toko')->with('success', 'Profil toko berhasil diperbarui.');
     }
 
     /**

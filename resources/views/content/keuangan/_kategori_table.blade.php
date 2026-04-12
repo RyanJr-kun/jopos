@@ -18,9 +18,9 @@
 
                     <td>
                         @if ($kategori->type == 'income')
-                            <span class="badge badge-success text-capitalize">{{ $kategori->type }}</span>
+                            <span class="badge bg-label-success text-capitalize">{{ $kategori->type }}</span>
                         @elseif ($kategori->type == 'expense')
-                            <span class="badge badge-warning text-capitalize">{{ $kategori->type }}</span>
+                            <span class="badge bg-label-warning text-capitalize">{{ $kategori->type }}</span>
                         @endif
                     </td>
 
@@ -31,9 +31,9 @@
 
                     <td class="align-middle text-center text-sm">
                         @if ($kategori->status)
-                            <span class="badge badge-success">Aktif</span>
+                            <span class="badge bg-label-success">Aktif</span>
                         @else
-                            <span class="badge badge-secondary">Tidak Aktif</span>
+                            <span class="badge bg-label-secondary">Tidak Aktif</span>
                         @endif
                     </td>
 
@@ -43,7 +43,7 @@
                             data-url="{{ route('kategoritransaksi.getjson', $kategori->slug) }}"
                             data-update-url="{{ route('kategoritransaksi.update', $kategori->slug) }}"
                             title="Edit kategori">
-                            <i class="bx bx-pencil-square text-dark text-sm opacity-10"></i>
+                            <i class="bx bx-edit text-dark text-sm opacity-10"></i>
                         </a>
                         <a href="#" class="text-dark delete-user-btn me-md-4" data-bs-toggle="modal"
                             data-bs-target="#deleteConfirmationModal" data-kategori-slug="{{ $kategori->slug }}"

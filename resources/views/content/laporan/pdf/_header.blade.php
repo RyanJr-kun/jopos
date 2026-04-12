@@ -1,7 +1,7 @@
 {{--
     Komponen Header PDF Tiga Kolom
     Menerima:
-    - $profilToko: Model StoreSetting
+    - $profilToko: Model Stores
     - $title: Judul Laporan (string)
     - $startDate: Tanggal Mulai (string)
     - $endDate: Tanggal Selesai (string)

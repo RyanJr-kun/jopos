@@ -7,7 +7,6 @@ use App\Enums\BannerPosition;
 use App\Models\Banner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Validation\Rules\Enum;
 
 class BannerController extends Controller

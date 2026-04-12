@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use RealRashid\SweetAlert\Facades\Alert;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
 
 class UnitController extends Controller
@@ -62,8 +61,7 @@ class UnitController extends Controller
         $validatedData['status'] = $request->has('status');
 
         Unit::create($validatedData);
-        Alert::success('Berhasil', 'Unit Baru Berhasil Ditambahkan.');
-        return redirect()->route('unit.index');
+        return redirect()->route('unit.index')->with('success', 'Unit Baru Berhasil Ditambahkan.');
     }
 
     /**
@@ -103,8 +101,7 @@ class UnitController extends Controller
         $validatedData['status'] = $request->has('status');
 
         $unit->update($validatedData);
-        Alert::success('Berhasil', 'Data Unit Berhasil Diperbarui.');
-        return redirect()->route('unit.index');
+        return redirect()->route('unit.index')->with('success', 'Data Unit Berhasil Diperbarui.');
     }
 
     /**
@@ -113,12 +110,10 @@ class UnitController extends Controller
     public function destroy(Unit $unit)
     {
         if ($unit->products()->count() > 0) {
-            Alert::error('Gagal', 'Unit tidak dapat dihapus karena masih memiliki produk terkait!');
-            return back();
+            return back()->with('error', 'Unit tidak dapat dihapus karena masih memiliki produk terkait!');
         }
         $unit->delete();
-        Alert::success('Berhasil', 'Data Unit Berhasil Dihapus.');
-        return redirect()->route('unit.index');
+        return redirect()->route('unit.index')->with('success', 'Data Unit Berhasil Dihapus.');
     }
 
     public function chekSlug(Request $request)

@@ -187,7 +187,7 @@
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
                         <td>
-                            {{ $detail->produk->name_produk ?? 'Product Dihapus' }}
+                            {{ $detail->produk->name_product ?? 'Product Dihapus' }}
                         </td>
                         <td class="text-center">{{ $detail->qty }}</td>
                         <td class="text-end">@money($detail->harga_beli)</td>

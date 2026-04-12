@@ -8,18 +8,6 @@
     <link href="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.css" rel="stylesheet">
 @endsection
 
-@section('breadcrumb')
-    @php
-        // Definisikan item breadcrumb dalam bentuk array
-        $breadcrumbItems = [
-            ['name' => 'Page', 'url' => '/dashboard'],
-            ['name' => 'Manajemen User', 'url' => route('users.index')],
-            ['name' => 'Buat User Baru', 'url' => '#'],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="card rounded-2 m-3">
     <div class="card-body">
         <form action="{{ route('users.store') }}" method="post" enctype="multipart/form-data">

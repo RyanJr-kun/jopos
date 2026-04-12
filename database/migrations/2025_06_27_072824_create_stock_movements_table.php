@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stock_movements', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('product_id')->constrained('products');
-            $table->integer('jumlah'); // positif (masuk) atau negatif (keluar)
-            $table->enum('tipe', ['PEMBELIAN', 'PENJUALAN', 'PENYESUAIAN', 'RETUR_JUAL', 'RETUR_BELI']);
-            $table->text('keterangan')->nullable();
-            $table->foreignId('user_id')->nullable()->constrained('users');
-            $table->unsignedBigInteger('referensi_id')->nullable();
-            $table->string('referensi_tipe')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('stock_movements')) {
+            Schema::create('stock_movements', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('product_id')->constrained('products');
+                $table->integer('jumlah'); // positif (masuk) atau negatif (keluar)
+                $table->enum('tipe', ['PEMBELIAN', 'PENJUALAN', 'PENYESUAIAN', 'RETUR_JUAL', 'RETUR_BELI']);
+                $table->text('keterangan')->nullable();
+                $table->foreignId('user_id')->nullable()->constrained('users');
+                $table->unsignedBigInteger('referensi_id')->nullable();
+                $table->string('referensi_tipe')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

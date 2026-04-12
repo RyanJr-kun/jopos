@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Promotion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Validation\Rule;
 
 class PromotionController extends Controller
@@ -82,8 +81,7 @@ class PromotionController extends Controller
             $promo->products()->sync($request->products);
         }
 
-        Alert::success('Berhasil', 'Promotion baru berhasil ditambahkan!');
-        return redirect()->route('promo.index');
+        return redirect()->route('promo.index')->with('success', 'Promotion baru berhasil ditambahkan!');
     }
 
     /**
@@ -135,8 +133,7 @@ class PromotionController extends Controller
 
         $promo->products()->sync($request->products ?? []);
 
-        Alert::success('Berhasil', 'Promotion berhasil diperbarui!');
-        return redirect()->route('promo.index');
+        return redirect()->route('promo.index')->with('success', 'Promotion berhasil diperbarui!');
     }
 
     /**
@@ -146,11 +143,9 @@ class PromotionController extends Controller
     {
         try {
             $promo->delete();
-            Alert::success('Berhasil', 'Promotion berhasil dihapus!');
-            return redirect()->route('promo.index');
+            return redirect()->route('promo.index')->with('success', 'Promotion berhasil dihapus!');
         } catch (\Exception $e) {
-            Alert::error('Gagal', 'Terjadi kesalahan saat menghapus promo: ' . $e->getMessage());
-            return back();
+            return back()->with('error', 'Terjadi kesalahan saat menghapus promo: ' . $e->getMessage());
         }
     }
 

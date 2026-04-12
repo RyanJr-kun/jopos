@@ -1,12 +1,17 @@
 $light-blue: #4a90e2;
-$dark-blue: #2f4f7e;
+$dark-blue: #053172;
 $solid-blue: #0d6efd;
 $black: #0b0b0b;
+$red: #770101;
+$light-red: #ff2032;
+$blue-g: #000f94;
 
 .bg-gradient-blue {
-    background-color: $light-blue; /* Fallback untuk browser lama */
+    background-color: $light-blue;
+    /* Fallback untuk browser lama */
     background-image: linear-gradient(90deg, $light-blue, $dark-blue);
 }
+
 .bg-blue {
     background-color: $dark-blue;
 }
@@ -15,11 +20,50 @@ $black: #0b0b0b;
     color: $solid-blue;
 }
 
-.text-gradient-blue {
+.tg-blue {
     background: linear-gradient(135deg, $light-blue, $dark-blue);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+}
+
+.tg-blue-v2 {
+    background: linear-gradient(135deg, $blue-g, $solid-blue);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.tg-red {
+    background: linear-gradient(135deg, $red, $light-red);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.tg-red-blue {
+    background: linear-gradient(135deg, $light-red, $solid-blue, $light-red);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: textGlowFlow 3s linear infinite, glowPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes textGlowFlow {
+    to {
+        background-position: 200% center;
+    }
+}
+
+@keyframes glowPulse {
+    from {
+        filter: drop-shadow(0 0 3px rgba($light-red, 0.4));
+    }
+
+    to {
+        filter: drop-shadow(0 0 12px rgba($solid-blue, 0.7));
+    }
 }
 
 .fs-12px {
@@ -42,41 +86,6 @@ $black: #0b0b0b;
     color: $black;
 }
 
-.badge {
-    display: inline-block;
-    // Asumsi variabel ini sudah ada di file Anda
-    padding: $badge-padding-y $badge-padding-x;
-    font-size: $badge-font-size;
-    font-weight: $badge-font-weight;
-    line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-    border-radius: $badge-border-radius;
-}
-
-// 2. Generate semua class modifier dengan gaya "soft"
-@each $color, $value in $theme-colors {
-    .badge-#{$color} {
-        // Background: Warna asli dengan opacity 70%
-        background-color: rgba($value, 0.2);
-
-        // Text: Warna asli dengan opacity 100% (solid)
-        // Aturan ini sekarang akan diterapkan tanpa konflik.
-        color: $value;
-    }
-}
-
-// 3. Penyesuaian khusus untuk varian terang (agar tidak hilang di background putih)
-.badge-light {
-    background-color: rgba($gray-400, 0.2);
-    color: $gray-700;
-}
-
-.badge-white {
-    background-color: rgba($gray-300, 0.5);
-    color: $gray-800;
-}
 
 /* Kustomisasi agar editor Quill terlihat seperti form-control Bootstrap */
 
@@ -132,11 +141,15 @@ $black: #0b0b0b;
     /* Cukup sembunyikan elemen tanpa animasi */
     display: none !important;
 }
+
 @media (max-width: 767.98px) {
+
     /* Target mobile devices */
     .product-list-container {
-        max-height: 80vh; /* Batasi tinggi kontainer produk di mobile */
-        overflow-y: auto; /* Aktifkan scroll vertikal */
+        max-height: 80vh;
+        /* Batasi tinggi kontainer produk di mobile */
+        overflow-y: auto;
+        /* Aktifkan scroll vertikal */
     }
 }
 
@@ -178,6 +191,7 @@ $black: #0b0b0b;
         opacity: 0;
         transform: scale(0.5);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -191,6 +205,7 @@ $black: #0b0b0b;
 */
 .btn-reset-cart {
     transition: all 0.2s ease-in-out;
+
     &:hover {
         transform: rotate(-45deg);
     }
@@ -216,24 +231,31 @@ $black: #0b0b0b;
     &.bi-xs {
         font-size: 0.75rem !important;
     }
+
     &.bi-sm {
         font-size: 0.875rem !important;
     }
+
     &.bi-lg {
         font-size: 1.25rem !important;
     }
+
     &.bi-xl {
         font-size: 1.5rem !important;
     }
+
     &.bi-2x {
         font-size: 2rem !important;
     }
+
     &.bi-3x {
         font-size: 3rem !important;
     }
+
     &.bi-4x {
         font-size: 4rem !important;
     }
+
     &.bi-5x {
         font-size: 5rem !important;
     }
@@ -246,24 +268,25 @@ $black: #0b0b0b;
 */
 .nav-link-animated {
     position: relative;
-    transition: color 0.3s ease-in-out;
+    transition: color 0.2s ease-in-out;
 
     &::after {
         content: "";
         position: absolute;
         width: 100%;
-        height: 2px;
+        height: 1px;
         bottom: 0;
         left: 0;
-        background-color: var(--bs-primary);
+        background-color: #0004eb;
         transform: scaleX(0);
         transform-origin: bottom left;
-        transition: transform 0.3s ease-in-out;
+        transition: transform 0.2s ease-in-out;
     }
 
     &:hover {
-        color: var(--bs-primary) !important;
+        color: #0400ec !important;
     }
+
     &:hover::after {
         transform: scaleX(1);
     }
@@ -275,6 +298,32 @@ $black: #0b0b0b;
 *
 */
 .footer-market {
+    position: relative;
+    border-radius: 40px 40px 0 0;
+    background: linear-gradient(135deg, #8B0000, #00008B);
+    overflow: hidden;
+    z-index: 1;
+
+    // Grid Overlay on the left/right fading to center
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        // White grid pattern with 30% opacity
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+        background-size: 30px 30px;
+        // Mask the grid to only appear on left/right, fading to zero at 30% inward
+        -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 1) 100%);
+        mask-image: linear-gradient(90deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 1) 100%);
+        z-index: -1;
+    }
+
     .footer-link {
         color: rgba(255, 255, 255, 0.7);
         text-decoration: none;
@@ -290,16 +339,17 @@ $black: #0b0b0b;
             display: block;
             margin-top: 2px;
             right: 0;
-            background: var(--bs-info);
+            background: var(--bs-white);
             transition: width 0.3s ease;
         }
 
         &:hover {
             color: #ffffff;
+
             &::after {
                 width: 100%;
                 left: 0;
-                background-color: var(--bs-info);
+                background-color: var(--bs-white);
             }
         }
     }
@@ -328,12 +378,19 @@ $black: #0b0b0b;
         &.social-facebook:hover {
             background-color: #1877F2;
         }
+
         &.social-instagram:hover {
             background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
         }
+
+        &.social-tokopedia:hover {
+            background-color: #03AC0E;
+        }
+
         &.social-youtube:hover {
             background-color: #FF0000;
         }
+
         &.social-tiktok:hover {
             background-color: #000000;
         }
@@ -341,6 +398,7 @@ $black: #0b0b0b;
 }
 
 @media (min-width: 992px) {
+
     // Hanya berlaku di layar besar (lg dan di atasnya)
     .dropdown-hover-market {
         .dropdown-menu {
@@ -348,19 +406,16 @@ $black: #0b0b0b;
             display: block;
             opacity: 0;
             visibility: hidden;
-            transform: translateY(
-                -10px
-            ); // 1. Mulai dari posisi 10px lebih atas
+            transform: translateY(-10px); // 1. Mulai dari posisi 10px lebih atas
             pointer-events: none; // Mencegah interaksi saat menu tersembunyi
             transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s; // 2. Atur transisi yang lebih halus
         }
-        &:hover > .dropdown-menu {
+
+        &:hover>.dropdown-menu {
             // Tampilkan menu saat parent di-hover
             opacity: 1;
             visibility: visible;
-            transform: translateY(
-                0
-            ); // 3. Kembali ke posisi normal (efek slide-down)
+            transform: translateY(0); // 3. Kembali ke posisi normal (efek slide-down)
             pointer-events: auto; // Izinkan kembali interaksi saat menu terlihat
         }
     }
@@ -444,11 +499,9 @@ $black: #0b0b0b;
         opacity: 0;
         transform: translateY(100%); // Mulai dari bawah, di luar container
         transition: opacity 0.3s ease, transform 0.3s ease;
-        background: linear-gradient(
-            to top,
-            rgba(0, 0, 0, 0.468) 0%,
-            rgba(0, 0, 0, 0) 100%
-        ); // Gradient agar teks terbaca
+        background: linear-gradient(to top,
+                rgba(0, 0, 0, 0.468) 0%,
+                rgba(0, 0, 0, 0) 100%); // Gradient agar teks terbaca
     }
 
     &:hover {
@@ -481,28 +534,25 @@ $black: #0b0b0b;
     margin-bottom: 0.75rem;
 }
 
-/* Untuk Market/Website */
-.product-card-img-container {
-    position: relative;
+/* Transisi halus saat header berubah warna */
+.transition-all {
+    transition: all 0.3s ease-in-out;
 }
 
-.product-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 10;
+/* Efek Glassmorphism (Aktif saat di-scroll) */
+.glass-header-active {
+    background: rgba(255, 255, 255, 0.85) !important;
+    /* Latar belakang putih transparan */
+    backdrop-filter: blur(10px);
+    /* Efek blur di belakangnya */
+    -webkit-backdrop-filter: blur(10px);
+    /* Dukungan Safari */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+    /* Bayangan halus di bawah header */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Untuk Halaman POS (agar tidak terlalu besar) */
-.product-badge-pos {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    z-index: 10;
+.section-py {
+    padding-block: 3rem;
+    padding-inline: 0px;
 }
-
-.product-badge-pos .badge {
-    font-size: 0.65rem; /* Ukuran font lebih kecil */
-    padding: 0.2em 0.4em;
-}
-

@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('customers', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 255);
-            $table->string('kontak', 20)->unique()->nullable();
-            $table->string('email')->unique()->nullable();
-            $table->text('alamat')->nullable();
-            $table->boolean('status')->default(true);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('customers')) {
+            Schema::create('customers', function (Blueprint $table) {
+                $table->id();
+                $table->string('name', 255);
+                $table->string('kontak', 20)->unique()->nullable();
+                $table->string('email')->unique()->nullable();
+                $table->text('alamat')->nullable();
+                $table->boolean('status')->default(true);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

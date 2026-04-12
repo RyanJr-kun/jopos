@@ -82,4 +82,14 @@ class User extends Authenticatable
   {
     return 'username';
   }
+
+  /**
+   * Get formatted role names
+   *
+   * @return string
+   */
+  public function getRolesName(): string
+  {
+    return $this->getRoleNames()->implode(', ');
+  }
 }

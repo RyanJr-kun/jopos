@@ -20,14 +20,14 @@
                             <div>
                                 @if ($products->img_produk)
                                     <img src="{{ asset('storage/' . $products->img_produk) }}"
-                                        class="avatar avatar-lg me-3" alt="{{ $products->name_produk }}">
+                                        class="avatar avatar-lg me-3" alt="{{ $products->name_product }}">
                                 @else
                                     <img src="{{ asset('assets/img/produk.png') }}" class="avatar avatar-lg me-3"
                                         alt="Gambar produk default">
                                 @endif
                             </div>
                             <div class="d-flex flex-column justify-content-start">
-                                <h6 class="mb-0 text-sm">{{ $products->name_produk }}</h6>
+                                <h6 class="mb-0 text-sm">{{ $products->name_product }}</h6>
                                 <p title="SKU" class="text-xs fw-bold mb-0">SKU : {{ $products->sku }}
                                 </p>
                                 <p title="Barcode" class="text-xs fw-bold mb-0">Barcode : {{ $products->barcode }}
@@ -71,15 +71,15 @@
                     <td class="align-middle pe-3">
                         <a href="{{ route('produk.show', $products->slug) }}" class="text-dark" data-toggle="tooltip"
                             data-original-title="Detail produk">
-                            <i class="fa fa-eye text-dark text-sm opacity-10"></i>
+                            <i class="bx bx-eye text-dark text-sm opacity-10"></i>
                         </a>
                         <a href="{{ route('produk.edit', $products->slug) }}" class="text-dark mx-3"
                             data-toggle="tooltip" data-original-title="Edit produk">
-                            <i class="fa fa-pen-to-square text-dark text-sm opacity-10"></i>
+                            <i class="bx bx-edit text-dark text-sm opacity-10"></i>
                         </a>
                         <a href="#" class="text-dark delete-product-btn" data-bs-toggle="modal"
                             data-bs-target="#deleteConfirmationModal" data-product-slug="{{ $products->slug }}"
-                            data-product-name="{{ $products->name_produk }}" title="Hapus produk">
+                            data-product-name="{{ $products->name_product }}" title="Hapus produk">
                             <i class="bx bx-trash text-dark text-sm opacity-10"></i>
                         </a>
                     </td>

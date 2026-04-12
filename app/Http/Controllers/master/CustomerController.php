@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 
 use App\Models\Customer;
 use Illuminate\Http\Request;
-use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
@@ -86,8 +85,7 @@ class CustomerController extends Controller
             ], 201);
         }
 
-        Alert::success('Berhasil', 'pelanggan baru berhasil ditambahkan!');
-        return redirect()->route('pelanggan.index');
+        return redirect()->route('pelanggan.index')->with('success', 'pelanggan baru berhasil ditambahkan!');
     }
 
     /**
@@ -135,8 +133,7 @@ class CustomerController extends Controller
             ]);
         }
 
-        Alert::success('Berhasil', 'Data pelanggan berhasil diperbarui!');
-        return redirect()->route('pelanggan.index');
+        return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil diperbarui!');
     }
 
     /**
@@ -151,8 +148,7 @@ class CustomerController extends Controller
                     'message' => 'Customer tidak dapat dihapus karena masih memiliki transaksi penjualan terkait!'
                 ], 422); // 422 Unprocessable Entity
             }
-            Alert::error('Gagal', 'Customer tidak dapat dihapus karena masih memiliki transaksi penjualan terkait!');
-            return back();
+            return back()->with('error', 'Customer tidak dapat dihapus karena masih memiliki transaksi penjualan terkait!');
         }
 
         $pelanggan->delete();
@@ -164,7 +160,6 @@ class CustomerController extends Controller
             ]);
         }
 
-        Alert::success('Berhasil', 'Customer berhasil dihapus!');
-        return redirect()->route('pelanggan.index');
+        return redirect()->route('pelanggan.index')->with('success', 'Customer berhasil dihapus!');
     }
 }

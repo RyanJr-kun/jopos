@@ -8,15 +8,6 @@
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 @endsection
 
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Laporan', 'url' => '#'],
-            ['name' => 'Laporan Sale', 'url' => route('laporan.penjualan')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
 <div class="container-fluid p-3">
     {{-- Summary Cards --}}
     <div class="row mb-4">
@@ -170,7 +161,7 @@
                                 </td>
                                 <td class="text-center">
                                     <span
-                                        class="badge badge-sm badge-{{ ['Lunas' => 'success', 'Belum Lunas' => 'warning', 'Dibatalkan' => 'danger'][$penjualan->status_pembayaran] ?? 'light' }}">{{ $penjualan->status_pembayaran }}</span>
+                                        class="badge badge-sm bg-label-{{ ['Lunas' => 'success', 'Belum Lunas' => 'warning', 'Dibatalkan' => 'danger'][$penjualan->status_pembayaran] ?? 'light' }}">{{ $penjualan->status_pembayaran }}</span>
                                 </td>
                                 <td class="text-end">
                                     <p class="text-sm font-weight-bold mb-0">@money($penjualan->total_akhir)</p>

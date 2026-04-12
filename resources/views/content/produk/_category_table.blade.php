@@ -37,9 +37,9 @@
                     </td>
                     <td class="align-middle text-center text-sm">
                         @if ($kategori->status)
-                            <span class="badge badge-success">Aktif</span>
+                            <span class="badge bg-label-success">Aktif</span>
                         @else
-                            <span class="badge badge-secondary">Tidak Aktif</span>
+                            <span class="badge bg-label-secondary">Tidak Aktif</span>
                         @endif
                     </td>
                     <td class="align-middle">
@@ -47,7 +47,7 @@
                             data-bs-target="#editModal"
                             data-url="{{ route('kategoriproduk.getjson', $kategori->slug) }}"
                             data-update-url="{{ route('kategoriproduk.update', $kategori->slug) }}"
-                            title="Edit kategori"><i class="bx bx-pencil-square text-dark text-sm opacity-10"></i></a>
+                            title="Edit kategori"><i class="bx bx-edit text-dark text-sm opacity-10"></i></a>
                         <a href="#" class="text-dark delete-btn" data-bs-toggle="modal"
                             data-bs-target="#deleteConfirmationModal" data-kategori-slug="{{ $kategori->slug }}"
                             data-kategori-name="{{ $kategori->name }}" title="Hapus kategori"><i

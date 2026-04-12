@@ -11,8 +11,8 @@ use App\Models\Taxe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use RealRashid\SweetAlert\Facades\Alert;
-use App\Models\StoreSetting;
+
+use App\Models\Stores;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class PurchaseController extends Controller
@@ -212,8 +212,7 @@ class PurchaseController extends Controller
                 return $pembelian;
             });
 
-            Alert::success('Berhasil', 'Transaksi pembelian berhasil disimpan.');
-            return redirect()->route('pembelian.index');
+            return redirect()->route('pembelian.index')->with('success', 'Transaksi pembelian berhasil disimpan.');
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
@@ -226,7 +225,7 @@ class PurchaseController extends Controller
     {
         // Eager load relasi untuk efisiensi query dan menghindari N+1 problem
         $pembelian->load('pemasok', 'user', 'details.produk');
-        $profilToko = StoreSetting::first();
+        $profilToko = Stores::first();
 
         return view('content.pembelian.show', [
             'title' => 'Detail Purchase: ' . $pembelian->referensi,
@@ -278,9 +277,9 @@ class PurchaseController extends Controller
                             'sisa_hutang' => 0
                         ]);
                     });
-                    Alert::success('Berhasil', 'Transaksi berhasil dibatalkan dan stok telah dikembalikan.');
+                    session()->flash('success', 'Transaksi berhasil dibatalkan dan stok telah dikembalikan.');
                 } catch (\Exception $e) {
-                    Alert::error('Gagal', 'Gagal membatalkan transaksi: ' . $e->getMessage());
+                    session()->flash('error', 'Gagal membatalkan transaksi: ' . $e->getMessage());
                 }
             }
             return redirect()->route('pembelian.index');
@@ -411,8 +410,7 @@ class PurchaseController extends Controller
                 }
             });
 
-            Alert::success('Berhasil', 'Transaksi pembelian berhasil diperbarui.');
-            return redirect()->route('pembelian.index');
+            return redirect()->route('pembelian.index')->with('success', 'Transaksi pembelian berhasil diperbarui.');
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Gagal memperbarui transaksi: ' . $e->getMessage());
         }
@@ -433,11 +431,9 @@ class PurchaseController extends Controller
         //         }
         //         $pembelian->delete(); // Ini akan menghapus detail juga karena relasi cascade
         //     });
-        //     Alert::success('Berhasil', 'Transaksi pembelian berhasil dihapus.');
-        //     return redirect()->route('pembelian.index');
+        //     return redirect()->route('pembelian.index')->with('success', 'Transaksi pembelian berhasil dihapus.');
         // } catch (\Exception $e) {
-        //     Alert::error('Gagal', 'Gagal menghapus transaksi: ' . $e->getMessage());
-        //     return back();
+        //     return back()->with('error', 'Gagal menghapus transaksi: ' . $e->getMessage());
         // }
     }
 
@@ -445,7 +441,7 @@ class PurchaseController extends Controller
     {
         // Eager load relasi yang dibutuhkan
         $pembelian->load('pemasok', 'details.produk');
-        $profilToko = StoreSetting::first();
+        $profilToko = Stores::first();
 
         return view('content.pembelian.thermal', compact('pembelian', 'profilToko'));
     }
@@ -457,7 +453,7 @@ class PurchaseController extends Controller
     {
         // Eager load relasi untuk efisiensi
         $pembelian->load('pemasok', 'user', 'details.produk', 'details.pajak');
-        $profilToko = StoreSetting::first();
+        $profilToko = Stores::first();
 
         // Data yang akan dikirim ke view
         $data = [

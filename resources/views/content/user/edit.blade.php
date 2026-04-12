@@ -10,16 +10,6 @@
     <link href="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.css" rel="stylesheet">
 @endsection
 
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Dashboard', 'url' => '/dashboard'],
-            ['name' => 'Manajemen User', 'url' => route('users.index')],
-            ['name' => 'Edit User', 'url' => '#'],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
 <div class="container-fluid p-3">
     <div class="card rounded-2">
         <div class="card-body p-4">

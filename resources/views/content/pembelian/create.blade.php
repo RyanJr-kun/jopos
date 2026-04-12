@@ -9,17 +9,6 @@
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 @endsection
 
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Page', 'url' => '#'],
-            ['name' => 'Invoice', 'url' => route('pembelian.index')],
-            ['name' => 'Buat Transaksi Purchase', 'url' => route('pembelian.create')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <form action="{{ route('pembelian.store') }}" method="post" id="form-pembelian">
     @csrf
     <div class="container-fluid p-3">
@@ -329,7 +318,6 @@
 @section('page-script')
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
@@ -406,7 +394,7 @@
                                 item) { // <-- PERBAIKAN: Akses array 'data' di dalam respons
                                 return {
                                     id: item.id,
-                                    text: item.name_produk,
+                                    text: item.name_product,
                                     img_produk: item.img_produk,
                                     qty: item.qty,
                                     harga_beli: item.harga_beli,
@@ -483,7 +471,7 @@
                                 <td>
                                     <div class="d-flex">
                                         <button type="button" class="btn btn-link text-info p-0 m-0 me-2 btn-edit" title="Edit Item">
-                                            <i class="bx bx-pencil-square"></i>
+                                            <i class="bx bx-edit"></i>
                                         </button>
                                         <button type="button" class="btn btn-link text-danger p-0 m-0 btn-remove" title="Hapus Item">
                                             <i class="bx bx-trash"></i>
@@ -684,139 +672,128 @@
 
                 if (bayar < totalAkhir && statusBayar === 'Lunas') {
                     e.preventDefault();
-                    Swal.fire('Peringatan',
-                        'Pembayaran kurang dari total akhir. Mohon ubah status pembayaran Anda atau lunasi pembayaran.',
-                        'warning');
+                    window.showToast('warning',
+                        'Pembayaran kurang dari total akhir. Mohon ubah status pembayaran Anda atau lunasi pembayaran.'
+                        );
                     return;
                 }
 
                 // Validasi baru: Jika pembayaran sudah lunas, status harus 'Lunas'
                 if (statusBayar === 'Belum Lunas' && bayar >= totalAkhir) {
                     e.preventDefault();
-                    Swal.fire('Peringatan',
-                        'Pembayaran sudah lunas. Mohon ubah status pembayaran menjadi "Lunas".',
-                        'warning');
+                    window.showToast('warning',
+                        'Pembayaran sudah lunas. Mohon ubah status pembayaran menjadi "Lunas".');
                     return;
                 }
 
                 const itemCount = $("#table-pembelian tbody tr").length;
                 if (itemCount === 0) {
                     e.preventDefault(); // Mencegah form untuk submit
-                    Swal.fire('Peringatan',
-                        'Harap tambahkan minimal satu produk ke dalam daftar pembelian.', 'warning');
+                    window.showToast('warning',
+                        'Harap tambahkan minimal satu produk ke dalam daftar pembelian.');
                 }
             });
         });
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Inisialisasi Quill untuk catatan
-            if (document.getElementById('quill-editor-catatan')) {
-                const hiddenInputCatatan = document.getElementById('catatan');
-                const quillCatatan = new Quill('#quill-editor-catatan', {
-                    theme: 'snow',
-                    placeholder: 'Tulis catatan pembelian di sini...',
-                });
+                    // Inisialisasi Quill untuk catatan
+                    if (document.getElementById('quill-editor-catatan')) {
+                        const hiddenInputCatatan = document.getElementById('catatan');
+                        const quillCatatan = new Quill('#quill-editor-catatan', {
+                            theme: 'snow',
+                            placeholder: 'Tulis catatan pembelian di sini...',
+                        });
 
-                quillCatatan.on('text-change', function() {
-                    hiddenInputCatatan.value = quillCatatan.root.innerHTML;
-                });
+                        quillCatatan.on('text-change', function() {
+                            hiddenInputCatatan.value = quillCatatan.root.innerHTML;
+                        });
 
-                // Jika ada old value, set ke editor
-                if (hiddenInputCatatan.value) {
-                    quillCatatan.root.innerHTML = hiddenInputCatatan.value;
-                }
-            }
-
-            //create-pemasok
-            const createSupplierForm = document.getElementById('createSupplierForm');
-            const pemasokSelect = document.getElementById('Supplier');
-            const createSupplierModal = new bootstrap.Modal(document.getElementById('createSupplierModal'));
-
-            createSupplierForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                const formData = new FormData(this);
-
-                // Reset pesan error sebelumnya
-                this.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-                this.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
-
-                fetch(this.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json',
-                        },
-                        body: formData
-                    })
-                    .then(response => {
-                        // Cek jika ada error validasi dari server
-                        if (response.status === 422) {
-                            return response.json().then(data => {
-                                // lemparkan error agar ditangkap oleh .catch()
-                                throw {
-                                    errors: data.errors
-                                };
-                            });
+                        // Jika ada old value, set ke editor
+                        if (hiddenInputCatatan.value) {
+                            quillCatatan.root.innerHTML = hiddenInputCatatan.value;
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.success) {
-                            const newOption = new Option(data.data.name, data.data.id, true, true);
-                            pemasokSelect.appendChild(newOption);
-                            pemasokSelect.dispatchEvent(new Event('change'));
+                    }
 
-                            createSupplierForm.reset();
-                            createSupplierModal.hide();
+                    //create-pemasok
+                    const createSupplierForm = document.getElementById('createSupplierForm');
+                    const pemasokSelect = document.getElementById('Supplier');
+                    const createSupplierModal = new bootstrap.Modal(document.getElementById('createSupplierModal'));
 
-                            // --- GANTI alert() DENGAN SWEETALERT ---
-                            if (typeof Swal !== 'undefined') {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Berhasil!',
-                                    text: data.message,
-                                    showConfirmButton: false,
-                                    timer: 1500
-                                });
-                            } else {
-                                alert(data.message);
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        if (error.errors) {
-                            // Tampilkan error validasi
-                            Object.keys(error.errors).forEach(key => {
-                                const input = createSupplierForm.querySelector(
-                                    `[name="${key}"]`);
-                                if (input) {
-                                    input.classList.add('is-invalid');
-                                    // Cari elemen .invalid-feedback yang merupakan sibling dari input
-                                    const errorFeedback = input.nextElementSibling;
-                                    if (errorFeedback && errorFeedback.classList.contains(
-                                            'invalid-feedback')) {
-                                        errorFeedback.textContent = error.errors[key][0];
-                                    }
+                    createSupplierForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+
+                        const formData = new FormData(this);
+
+                        // Reset pesan error sebelumnya
+                        this.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                        this.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+
+                        fetch(this.action, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json',
+                                },
+                                body: formData
+                            })
+                            .then(response => {
+                                // Cek jika ada error validasi dari server
+                                if (response.status === 422) {
+                                    return response.json().then(data => {
+                                        // lemparkan error agar ditangkap oleh .catch()
+                                        throw {
+                                            errors: data.errors
+                                        };
+                                    });
                                 }
-                            });
-                        } else {
-                            console.error('Error:', error);
-                            // Tampilkan notifikasi error umum dengan SweetAlert
-                            if (typeof Swal !== 'undefined') {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Oops...',
-                                    text: 'Terjadi kesalahan. Silakan coba lagi.'
+                                return response.json();
+                            })
+                            .then(data => {
+                                    if (data.success) {
+                                        const newOption = new Option(data.data.name, data.data.id, true, true);
+                                        pemasokSelect.appendChild(newOption);
+                                        pemasokSelect.dispatchEvent(new Event('change'));
+
+                                        createSupplierForm.reset();
+                                        createSupplierModal.hide();
+
+                                        // --- GANTI alert() DENGAN SWEETALERT ---
+                                        if (typeof Swal !== 'undefined') {
+                                            window.showToast('success', data.message);
+                                            else {
+                                                alert(data.message);
+                                            }
+                                        }
+                                    })
+                                .catch(error => {
+                                        if (error.errors) {
+                                            // Tampilkan error validasi
+                                            Object.keys(error.errors).forEach(key => {
+                                                const input = createSupplierForm.querySelector(
+                                                    `[name="${key}"]`);
+                                                if (input) {
+                                                    input.classList.add('is-invalid');
+                                                    // Cari elemen .invalid-feedback yang merupakan sibling dari input
+                                                    const errorFeedback = input.nextElementSibling;
+                                                    if (errorFeedback && errorFeedback.classList.contains(
+                                                            'invalid-feedback')) {
+                                                        errorFeedback.textContent = error.errors[key][0];
+                                                    }
+                                                }
+                                            });
+                                        } else {
+                                            console.error('Error:', error);
+                                            // Tampilkan notifikasi error umum dengan SweetAlert
+                                            if (typeof Swal !== 'undefined') {
+                                                window.showToast('error', 'Terjadi kesalahan. Silakan coba lagi.');
+                                                else {
+                                                    alert('Terjadi kesalahan. Silakan coba lagi.');
+                                                }
+                                            }
+                                        });
                                 });
-                            } else {
-                                alert('Terjadi kesalahan. Silakan coba lagi.');
-                            }
-                        }
                     });
-            });
-        });
     </script>
 @endsection
 @endsection

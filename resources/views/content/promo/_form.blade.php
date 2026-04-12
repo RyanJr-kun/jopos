@@ -90,7 +90,7 @@
             @endphp
             @if (!empty($selectedProductIds))
                 @foreach (App\Models\Product::whereIn('id', $selectedProductIds)->get() as $produk)
-                    <option value="{{ $produk->id }}" selected>{{ $produk->name_produk }}</option>
+                    <option value="{{ $produk->id }}" selected>{{ $produk->name_product }}</option>
                 @endforeach
             @endif
         </select>
@@ -173,7 +173,7 @@
                         return {
                             results: data.data.map(item => ({
                                 id: item.id,
-                                text: item.name_produk,
+                                text: item.name_product,
                                 img_produk: item.img_produk,
                                 harga_jual: item.harga_jual
                             })),

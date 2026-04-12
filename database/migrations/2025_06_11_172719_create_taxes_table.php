@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('taxes', function (Blueprint $table) {
-            $table->id();
-            $table->string('name_taxe', 100)->unique();
-            $table->decimal('rate', 5, 0);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('taxes')) {
+            Schema::create('taxes', function (Blueprint $table) {
+                $table->id();
+                $table->string('name_taxe', 100);
+                $table->decimal('rate', 5, 0);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

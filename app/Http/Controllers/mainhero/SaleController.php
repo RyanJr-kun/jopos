@@ -7,17 +7,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Taxe;
 use App\Models\Product;
 use App\Models\Customer;
-use App\Models\StoreSetting;
+use App\Models\Stores;
 use App\Models\Sale;
 use Illuminate\Http\Request;
 use App\Models\Category;
-// BARU: Import model SerialNumber
 use App\Models\SerialNumber;
 use Illuminate\Support\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use RealRashid\SweetAlert\Facades\Alert;
+
 
 class SaleController extends Controller
 {
@@ -31,6 +30,7 @@ class SaleController extends Controller
 
         // Mulai query builder
         $query = Sale::with(['pelanggan', 'user'])->latest();
+
 
         // Terapkan filter pencarian jika ada input 'search'
         if ($request->filled('search')) {
@@ -47,6 +47,13 @@ class SaleController extends Controller
         if ($request->filled('status')) {
             $query->where('status_pembayaran', $request->input('status'));
         }
+        // Setelah filter search & status yang sudah ada
+        $query->when(request('date_from') && request('date_to'), function ($q) {
+            $q->whereBetween('created_at', [
+                request('date_from') . ' 00:00:00',
+                request('date_to')   . ' 23:59:59',
+            ]);
+        });
 
         $penjualan = $query->paginate(15)->withQueryString();
 
@@ -70,9 +77,9 @@ class SaleController extends Controller
     {
 
         // PERBAIKAN: Eager load relasi untuk efisiensi dan ketersediaan data di view
-        $products = Product::with(['category', 'unit', 'pajak', 'promotions'])
+        $products = Product::with(['categories', 'units', 'taxes', 'promotions'])
             ->where('qty', '>', 0)
-            ->orderBy('name_produk')
+            ->orderBy('name_product')
             ->get();
         $customers = Customer::where('status', 1)->orderBy('name')->get();
         $kategoris = Category::where('status', 1)->orderBy('name')->get();
@@ -114,6 +121,12 @@ class SaleController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge([
+            'jumlah_dibayar' => preg_replace('/[^0-9]/', '', $request->input('jumlah_dibayar', 0)),
+            'service' => preg_replace('/[^0-9]/', '', $request->input('service', 0)),
+            'ongkir' => preg_replace('/[^0-9]/', '', $request->input('ongkir', 0)),
+            'diskon' => preg_replace('/[^0-9]/', '', $request->input('diskon', 0)),
+        ]);
         // 1. Validasi data yang masuk
         // Disesuaikan untuk menerima semua input dari form kasir
         $validatedData = $request->validate([
@@ -138,10 +151,10 @@ class SaleController extends Controller
         try {
             // Ambil data pajak yang relevan dalam satu query untuk efisiensi
             $pajakIds = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
-            $taxes = Taxe::whereIn('id', $pajakIds)->get()->keyBy('id');
+            $taxesData = Taxe::whereIn('id', $pajakIds)->get()->keyBy('id');
 
             // Memulai Database Transaction
-            $penjualan = DB::transaction(function () use ($validatedData, $taxes) {
+            $penjualan = DB::transaction(function () use ($validatedData, $taxesData) {
                 // 2. Ambil semua produk yang dibutuhkan dalam satu query untuk menghindari N+1
                 $produkIds = collect($validatedData['items'])->pluck('product_id');
                 // DIUBAH: Menggunakan with() untuk eager load relasi wajib_seri jika ada
@@ -156,14 +169,14 @@ class SaleController extends Controller
                     // Pastikan produk ada dan stok mencukupi (validasi tambahan)
                     if (!$produk || $produk->qty < $itemData['jumlah']) {
                         // Rollback transaksi dan kirim pesan error
-                        throw new \Exception("Stock untuk produk '{$produk->name_produk}' tidak mencukupi.");
+                        throw new \Exception("Stock untuk produk '{$produk->name_product}' tidak mencukupi.");
                     }
 
                     // Cek apakah produk ini wajib menggunakan nomor seri
                     if ($produk->wajib_seri) {
                         // Jika wajib, pastikan array 'serial_numbers' ada dan jumlahnya cocok
                         if (!isset($itemData['serial_numbers']) || count($itemData['serial_numbers']) !== (int)$itemData['jumlah']) {
-                            throw new \Exception("Jumlah nomor seri untuk produk '{$produk->name_produk}' tidak sesuai dengan kuantitas pembelian.");
+                            throw new \Exception("Jumlah nomor seri untuk produk '{$produk->name_product}' tidak sesuai dengan kuantitas pembelian.");
                         }
 
                         // Verifikasi bahwa semua nomor seri yang dikirim valid, tersedia, dan milik produk yang benar
@@ -173,23 +186,24 @@ class SaleController extends Controller
                             ->count();
 
                         if ($snCount !== (int)$itemData['jumlah']) {
-                            throw new \Exception("Satu atau lebih nomor seri untuk '{$produk->name_produk}' tidak valid atau tidak tersedia.");
+                            throw new \Exception("Satu atau lebih nomor seri untuk '{$produk->name_product}' tidak valid atau tidak tersedia.");
                         }
                     }
 
-                    // LOGIKA BARU: Harga jual dianggap sudah termasuk pajak
                     $harga_jual_total_item = $itemData['harga_jual'] * $itemData['jumlah'];
+
+                    // 1. Kurangi diskon terlebih dahulu!
+                    $harga_setelah_diskon = $harga_jual_total_item - $itemData['diskon'];
+
                     $taxe_id = $itemData['taxe_id'] ?? null;
-                    $pajak_rate = $taxe_id ? ($taxes->get($taxe_id)->rate ?? 0) : 0;
+                    $pajak_rate = $taxe_id ? ($taxesData->get($taxe_id)->rate ?? 0) : 0;
 
-                    // Hitung DPP (Dasar Pengenaan Taxe) dan Taxe dari harga jual inklusif
-                    $dpp_item = $harga_jual_total_item / (1 + ($pajak_rate / 100));
-                    $pajak_amount_item = $harga_jual_total_item - $dpp_item;
+                    // 2. Hitung DPP dan Pajak dari harga yang SUDAH didiskon
+                    $dpp_item = $harga_setelah_diskon / (1 + ($pajak_rate / 100));
+                    $pajak_amount_item = $harga_setelah_diskon - $dpp_item;
 
-                    // PERBAIKAN: Diskon item mengurangi DPP, sama seperti di method update()
-                    $dpp_item_setelah_diskon = $dpp_item - $itemData['diskon'];
-
-                    $subtotal_dpp_keseluruhan += $dpp_item_setelah_diskon;
+                    // 3. Tambahkan ke total global
+                    $subtotal_dpp_keseluruhan += $dpp_item;
                     $total_pajak_item += $pajak_amount_item;
                 }
 
@@ -227,16 +241,18 @@ class SaleController extends Controller
                 foreach ($validatedData['items'] as $itemData) {
                     $produk = $products->get($itemData['product_id']);
 
-                    // LOGIKA BARU: Hitung ulang DPP dan Taxe per item untuk disimpan
                     $harga_jual_total_item = $itemData['harga_jual'] * $itemData['jumlah'];
-                    $taxe_id = $itemData['taxe_id'] ?? null;
-                    $pajak_rate = $taxe_id ? ($taxes->get($taxe_id)->rate ?? 0) : 0;
-                    $dpp_item = $harga_jual_total_item / (1 + ($pajak_rate / 100));
-                    $pajak_amount_item = $harga_jual_total_item - $dpp_item;
 
-                    // Subtotal item sekarang adalah DPP dikurangi diskon item
-                    $subtotal_item_final = $dpp_item - $itemData['diskon'];
-                    // DIUBAH: Simpan item yang dibuat ke variabel $penjualanItem
+                    // --- PERBAIKAN DI SINI ---
+                    $harga_setelah_diskon = $harga_jual_total_item - $itemData['diskon'];
+
+                    $taxe_id = $itemData['taxe_id'] ?? null;
+                    $pajak_rate = $taxe_id ? ($taxesData->get($taxe_id)->rate ?? 0) : 0;
+
+                    // Hitung dari harga_setelah_diskon
+                    $dpp_item = $harga_setelah_diskon / (1 + ($pajak_rate / 100));
+                    $pajak_amount_item = $harga_setelah_diskon - $dpp_item;
+
                     $penjualanItem = $penjualan->items()->create([
                         'product_id' => $produk->id,
                         'jumlah' => $itemData['jumlah'],
@@ -244,7 +260,7 @@ class SaleController extends Controller
                         'diskon_item' => $itemData['diskon'],
                         'taxe_id' => $taxe_id,
                         'pajak_item' => $pajak_amount_item,
-                        'subtotal' => $subtotal_item_final, // Simpan subtotal (DPP - diskon)
+                        'subtotal' => $dpp_item, // Subtotal sudah benar (DPP yang didiskon)
                     ]);
 
                     // Kurangi stok produk hanya jika transaksi tidak dibatalkan
@@ -267,12 +283,10 @@ class SaleController extends Controller
             });
 
             // 5. Redirect ke halaman faktur jika berhasil
-            Alert::success('Berhasil', 'Transaksi berhasil disimpan!');
-            return redirect()->route('penjualan.show', $penjualan->referensi);
+            return redirect()->route('penjualan.show', $penjualan->referensi)->with('success', 'Transaksi berhasil disimpan!');
         } catch (\Exception $e) {
             // Redirect kembali dengan pesan error jika transaksi gagal
-            Alert::error('Gagal', 'Terjadi kesalahan saat menyimpan transaksi: ' . $e->getMessage());
-            return back()->withInput();
+            return back()->withInput()->with('error', 'Terjadi kesalahan saat menyimpan transaksi: ' . $e->getMessage());
         }
     }
 
@@ -282,8 +296,8 @@ class SaleController extends Controller
     public function show(Sale $penjualan)
     {
         // Eager load relasi untuk menghindari N+1 problem
-        $penjualan->load('items.produk', 'items.serialNumbers', 'pelanggan', 'user');
-        $profilToko = StoreSetting::first();
+        $penjualan->load('items.product', 'items.serialNumbers', 'pelanggan', 'user');
+        $profilToko = Stores::first();
 
         return view('content.penjualan.show', [
             'title' => 'Faktur Sale: ' . $penjualan->referensi,
@@ -298,7 +312,7 @@ class SaleController extends Controller
     public function edit(Sale $penjualan)
     {
         // Eager load relasi untuk efisiensi
-        $penjualan->load('items.produk', 'pelanggan', 'user');
+        $penjualan->load('items.product', 'pelanggan', 'user');
 
         // Ambil data yang dibutuhkan untuk form, mirip seperti method create()
         $customers = Customer::where('status', 1)->orderBy('name')->get();
@@ -336,12 +350,12 @@ class SaleController extends Controller
                         }
                         $penjualan->update(['status_pembayaran' => 'Dibatalkan']);
                     });
-                    Alert::success('Berhasil', 'Transaksi berhasil dibatalkan dan stok telah dikembalikan.');
+                    session()->flash('success', 'Transaksi berhasil dibatalkan dan stok telah dikembalikan.');
                 } catch (\Exception $e) {
-                    Alert::error('Gagal', 'Gagal membatalkan transaksi: ' . $e->getMessage());
+                    session()->flash('error', 'Gagal membatalkan transaksi: ' . $e->getMessage());
                 }
             } else {
-                Alert::info('Info', 'Transaksi ini sudah dalam status Dibatalkan.');
+                session()->flash('info', 'Transaksi ini sudah dalam status Dibatalkan.');
             }
             return redirect()->route('penjualan.index');
         }
@@ -387,7 +401,7 @@ class SaleController extends Controller
 
                 // 3. Kumpulkan semua nomor seri BARU dari request.
                 $newSerialNumbers = collect($validatedData['items'])
-                    ->where('serial_numbers')
+                    ->filter(fn($item) => !empty($item['serial_numbers']))
                     ->pluck('serial_numbers')
                     ->flatten()
                     ->all();
@@ -444,13 +458,13 @@ class SaleController extends Controller
                         $produk = $products->get($itemData['product_id']);
                         $stokTersedia = $produkQtysSaatIni->get($itemData['product_id'], 0);
                         if (!$produk || $stokTersedia < $itemData['jumlah']) {
-                            throw new \Exception("Stock untuk produk '{$produk->name_produk}' tidak mencukupi (tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']}).");
+                            throw new \Exception("Stock untuk produk '{$produk->name_product}' tidak mencukupi (tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']}).");
                         }
 
                         // Validasi ulang nomor seri yang dikirim
                         if ($produk->wajib_seri) {
                             if (!isset($itemData['serial_numbers']) || count($itemData['serial_numbers']) !== (int)$itemData['jumlah']) {
-                                throw new \Exception("Jumlah nomor seri untuk produk '{$produk->name_produk}' tidak sesuai dengan kuantitas.");
+                                throw new \Exception("Jumlah nomor seri untuk produk '{$produk->name_product}' tidak sesuai dengan kuantitas.");
                             }
                             // Verifikasi bahwa SN yang dikirim valid (Tersedia ATAU sudah terikat dengan transaksi ini sebelumnya)
                             $validSnCount = SerialNumber::where('product_id', $produk->id)
@@ -458,7 +472,7 @@ class SaleController extends Controller
                                 ->where(fn($q) => $q->where('status', 'Tersedia')->orWhereIn('nomor_seri', $oldSerialNumbers))
                                 ->count();
                             if ($validSnCount !== (int)$itemData['jumlah']) {
-                                throw new \Exception("Satu atau lebih nomor seri untuk '{$produk->name_produk}' tidak valid atau sudah terjual di transaksi lain.");
+                                throw new \Exception("Satu atau lebih nomor seri untuk '{$produk->name_product}' tidak valid atau sudah terjual di transaksi lain.");
                             }
                         }
                     }
@@ -478,24 +492,26 @@ class SaleController extends Controller
                     // Logika perhitungan di sini disesuaikan dengan method store() (pajak inklusif)
                     // untuk konsistensi.
                     $harga_jual_total_item = $itemData['harga_jual'] * $itemData['jumlah'];
+
+                    // 1. Kurangi diskon terlebih dahulu!
+                    $harga_setelah_diskon = $harga_jual_total_item - $itemData['diskon'];
+
                     $taxe_id = $itemData['taxe_id'] ?? null;
                     $pajak_rate = $taxe_id ? ($taxesData->get($taxe_id)->rate ?? 0) : 0;
 
-                    // Hitung DPP (Dasar Pengenaan Taxe) dan Taxe dari harga jual inklusif
-                    $dpp_item = $harga_jual_total_item / (1 + ($pajak_rate / 100));
-                    $pajak_amount_item = $harga_jual_total_item - $dpp_item;
+                    // 2. Hitung DPP dan Pajak dari harga yang SUDAH didiskon
+                    $dpp_item = $harga_setelah_diskon / (1 + ($pajak_rate / 100));
+                    $pajak_amount_item = $harga_setelah_diskon - $dpp_item;
 
-                    // Diskon item mengurangi DPP
-                    $dpp_item_setelah_diskon = $dpp_item - $itemData['diskon'];
-
-                    $subtotal_dpp += $dpp_item_setelah_diskon;
-                    $total_pajak_keseluruhan += $pajak_amount_item;
+                    // 3. Tambahkan ke total global
+                    $subtotal_dpp_keseluruhan += $dpp_item;
+                    $total_pajak_item += $pajak_amount_item;
                 }
 
                 $service = (float)($validatedData['service'] ?? 0);
                 $ongkir = (float)($validatedData['ongkir'] ?? 0);
                 $diskon_global = (float)($validatedData['diskon'] ?? 0);
-                $total_akhir = ($subtotal_dpp + $total_pajak_keseluruhan + $service + $ongkir) - $diskon_global;
+                $total_akhir = ($subtotal_dpp_keseluruhan + $total_pajak_item + $service + $ongkir) - $diskon_global;
                 $jumlah_dibayar = (float) $validatedData['jumlah_dibayar'];
                 $kembalian = $jumlah_dibayar - $total_akhir;
 
@@ -522,15 +538,18 @@ class SaleController extends Controller
 
                 // c. Buat kembali item penjualan berdasarkan data baru
                 foreach ($validatedData['items'] as $index => $itemData) {
-                    // Hitung ulang DPP dan Taxe per item untuk disimpan
+
                     $harga_jual_total_item = (float)$itemData['harga_jual'] * (int)$itemData['jumlah'];
+
+                    // --- PERBAIKAN DI SINI ---
+                    $harga_setelah_diskon = $harga_jual_total_item - $itemData['diskon'];
+
                     $taxe_id = $itemData['taxe_id'] ?? null;
                     $pajak_rate = $taxe_id ? ($taxesData->get($taxe_id)->rate ?? 0) : 0;
-                    $dpp_item = $harga_jual_total_item / (1 + ($pajak_rate / 100));
-                    $pajak_amount_item = $harga_jual_total_item - $dpp_item;
 
-                    // Subtotal item adalah DPP dikurangi diskon item
-                    $subtotal_item_final = $dpp_item - $itemData['diskon'];
+                    // Hitung dari harga_setelah_diskon
+                    $dpp_item = $harga_setelah_diskon / (1 + ($pajak_rate / 100));
+                    $pajak_amount_item = $harga_setelah_diskon - $dpp_item;
 
                     $newItem = $penjualan->items()->create([
                         'product_id' => $itemData['product_id'],
@@ -539,7 +558,7 @@ class SaleController extends Controller
                         'diskon_item' => $itemData['diskon'],
                         'taxe_id' => $taxe_id,
                         'pajak_item' => $pajak_amount_item,
-                        'subtotal' => $subtotal_item_final,
+                        'subtotal' => $dpp_item, // Subtotal sudah benar (DPP yang didiskon)
                     ]);
 
                     // Update status nomor seri yang BARU menjadi 'Terjual' dan kaitkan dengan item baru
@@ -553,44 +572,12 @@ class SaleController extends Controller
                     }
                 }
 
-                return $penjualan->load('items.produk', 'pelanggan', 'user');
+                return $penjualan->load('items.product', 'pelanggan', 'user');
             });
-            Alert::success('Berhasil', 'Transaksi berhasil diperbarui.');
-            return redirect()->route('penjualan.show', $penjualan->referensi);
+            return redirect()->route('penjualan.show', $penjualan->referensi)->with('success', 'Transaksi berhasil diperbarui.');
         } catch (\Exception $e) {
-            Alert::error('Gagal', 'Gagal memperbarui transaksi: ' . $e->getMessage());
-            return back()->withInput();
+            return back()->withInput()->with('error', 'Gagal memperbarui transaksi: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Sale $penjualan)
-    {
-        // try {
-        //     DB::transaction(function () use ($penjualan) {
-        //         // 1. Kembalikan stok untuk setiap item, HANYA JIKA statusnya BUKAN 'Dibatalkan'.
-        //         // Jika sudah 'Dibatalkan', stok sudah dikembalikan sebelumnya.
-        //         if ($penjualan->status_pembayaran !== 'Dibatalkan') {
-        //             foreach ($penjualan->items as $item) {
-        //                 Product::where('id', $item->product_id)->increment('qty', $item->jumlah);
-        //             }
-        //         }
-
-        //         // 2. Hapus item terkait secara eksplisit untuk memastikan tidak ada data yatim jika cascade delete tidak diset
-        //         $penjualan->items()->delete();
-        //         // 3. Hapus data penjualan utama setelah item dihapus
-        //         $penjualan->delete();
-        //     });
-
-        //     Alert::success('Berhasil', 'Transaksi penjualan berhasil dihapus dan stok telah dikembalikan.');
-        //     return redirect()->route('penjualan.index');
-
-        // } catch (\Exception $e) {
-        //     Alert::error('Gagal', 'Terjadi kesalahan saat menghapus transaksi: ' . $e->getMessage());
-        //     return back();
-        // }
     }
 
     /**
@@ -599,8 +586,8 @@ class SaleController extends Controller
     public function generatePdf(Sale $penjualan)
     {
         // Eager load relasi untuk efisiensi
-        $penjualan->load('pelanggan', 'user', 'items.produk', 'items.serialNumbers');
-        $profilToko = StoreSetting::first();
+        $penjualan->load('pelanggan', 'user', 'items.product', 'items.serialNumbers');
+        $profilToko = Stores::first();
 
         // Data yang akan dikirim ke view
         $data = [
@@ -612,9 +599,6 @@ class SaleController extends Controller
         $pdf = Pdf::loadView('content.penjualan.faktur-penjualan-pdf', $data);
         return $pdf->stream('faktur-penjualan-' . $penjualan->referensi . '.pdf');
     }
-
-
-
 
     public function getTodayHistory(Request $request)
     {
@@ -648,8 +632,8 @@ class SaleController extends Controller
     public function printThermal(Sale $penjualan)
     {
         // Eager load relasi yang dibutuhkan untuk efisiensi
-        $penjualan->load('pelanggan', 'user', 'items.produk', 'items.serialNumbers');
-        $profilToko = StoreSetting::first();
+        $penjualan->load('pelanggan', 'user', 'items.product', 'items.serialNumbers');
+        $profilToko = Stores::first();
 
         return view('content.penjualan.thermal', compact('penjualan', 'profilToko'));
     }

@@ -2,17 +2,6 @@
 
 @section('title', 'Cards basic - UI elements')
 @section('content')
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Page', 'url' => '#'],
-            ['name' => 'Manajemen Promotion & Diskon', 'url' => route('promo.index')],
-            ['name' => 'Edit Promotion', 'url' => '#'],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="container-fluid p-3">
     <div class="card rounded-2">
         <div class="card-header pb-0 px-3 pt-2 mb-3">

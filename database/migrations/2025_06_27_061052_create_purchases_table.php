@@ -11,27 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('purchases', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('supplier_id')->constrained('suppliers');
-            $table->string('referensi', 50)->unique();
-            $table->dateTime('tanggal_pembelian');
-            $table->decimal('subtotal', 15, 0);
-            $table->decimal('diskon', 15, 0)->default(0);
-            $table->decimal('pajak', 15, 0)->default(0);
-            $table->decimal('ongkir', 15, 0)->default(0);
-            $table->decimal('total_akhir', 15, 0);
-            $table->decimal('jumlah_dibayar', 15, 0)->default(0);
-            $table->decimal('sisa_hutang', 15, 0)->default(0);
-            $table->enum('status_barang', ['Diterima', 'Belum Diterima', 'Dibatalkan'])->default('Diterima');
-            $table->enum('status_pembayaran', ['Lunas', 'Belum Lunas', 'Dibatalkan'])->default('Lunas');
-            $table->text('catatan')->nullable();
-            $table->timestamps();
+        if (!Schema::hasTable('purchases')) {
+            Schema::create('purchases', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('users');
+                $table->foreignId('supplier_id')->constrained('suppliers');
+                $table->string('referensi', 50)->unique();
+                $table->dateTime('tanggal_pembelian');
+                $table->decimal('subtotal', 15, 0);
+                $table->decimal('diskon', 15, 0)->default(0);
+                $table->decimal('pajak', 15, 0)->default(0);
+                $table->decimal('ongkir', 15, 0)->default(0);
+                $table->decimal('total_akhir', 15, 0);
+                $table->decimal('jumlah_dibayar', 15, 0)->default(0);
+                $table->decimal('sisa_hutang', 15, 0)->default(0);
+                $table->enum('status_barang', ['Diterima', 'Belum Diterima', 'Dibatalkan'])->default('Diterima');
+                $table->enum('status_pembayaran', ['Lunas', 'Belum Lunas', 'Dibatalkan'])->default('Lunas');
+                $table->text('catatan')->nullable();
+                $table->timestamps();
 
-            $table->index('tanggal_pembelian');
-            $table->index('user_id');
-        });
+                $table->index('tanggal_pembelian');
+                $table->index('user_id');
+            });
+        }
     }
 
     /**

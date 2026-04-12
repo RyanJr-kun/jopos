@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stock_adjustment_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('stock_adjustment_id')->constrained('stock_adjustments')->onDelete('cascade');
-            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->enum('tipe', ['IN', 'OUT']);
-            $table->integer('jumlah');
-            $table->integer('stok_sebelum');
-            $table->integer('stok_setelah');
-            $table->string('alasan');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('stock_adjustment_items')) {
+            Schema::create('stock_adjustment_items', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('stock_adjustment_id')->constrained('stock_adjustments')->onDelete('cascade');
+                $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+                $table->enum('tipe', ['IN', 'OUT']);
+                $table->integer('jumlah');
+                $table->integer('stok_sebelum');
+                $table->integer('stok_setelah');
+                $table->string('alasan');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

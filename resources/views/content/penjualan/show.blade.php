@@ -28,24 +28,13 @@
     </style>
 @endsection
 
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Dashboard', 'url' => '/dashboard'],
-            ['name' => 'Daftar Invoice Sale', 'url' => route('penjualan.index')],
-            ['name' => 'Detail Sale', 'url' => '#'],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="container-fluid py-4">
     <div class="card rounded-2 printable-area">
         <div class="card-header d-flex justify-content-between align-items-center pb-0">
             <h5 class="mb-2 fw-bolder mb-md-0">Detail Sale</h5>
             <div class="no-print">
                 <a href="{{ url()->previous() }}" class="btn btn-sm btn-outline-secondary mb-0">
-                    <i class="bx bx-arrow-left me-1"></i> Kembali
+                    <i class="bx bx-arrow-back me-1"></i> Kembali
                 </a>
                 {{-- Tambahkan route ke thermal print jika ada --}}
                 <a href="{{ route('penjualan.thermal', $penjualan->referensi) }}" target="_blank"
@@ -95,7 +84,7 @@
                             <span>{{ $penjualan->metode_pembayaran }}</span>
                         </p>
                         <p class="text-sm mb-2 d-flex justify-content-between"><strong>Status Bayar:</strong> <span
-                                class="badge badge-sm {{ $penjualan->status_pembayaran == 'Lunas' ? 'badge-success' : ($penjualan->status_pembayaran == 'Belum Lunas' ? 'badge-warning' : 'badge-danger') }}">{{ $penjualan->status_pembayaran }}</span>
+                                class="badge badge-sm {{ $penjualan->status_pembayaran == 'Lunas' ? 'bg-label-success' : ($penjualan->status_pembayaran == 'Belum Lunas' ? 'bg-label-warning' : 'bg-label-danger') }}">{{ $penjualan->status_pembayaran }}</span>
                         </p>
                         <hr class="horizontal dark my-2">
                         <p class="text-sm mb-0 d-flex justify-content-between"><strong>Dibuat Oleh:</strong>
@@ -124,7 +113,7 @@
                             <tr>
                                 <td class="text-center text-sm">{{ $loop->iteration }}</td>
                                 <td class="text-sm">
-                                    {{ $item->produk->name_produk ?? 'Product Dihapus' }}
+                                    {{ $item->product->name_product ?? 'Product Dihapus' }}
                                     @if ($item->serialNumbers->isNotEmpty())
                                         <div class="text-muted text-sm">
                                             <strong>SN:</strong>

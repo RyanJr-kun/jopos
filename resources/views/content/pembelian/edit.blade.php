@@ -9,17 +9,6 @@
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 @endsection
 
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Page', 'url' => '#'],
-            ['name' => 'Daftar Invoice Purchase', 'url' => route('pembelian.index')],
-            ['name' => 'Edit Invoice', 'url' => '#'],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <form action="{{ route('pembelian.update', $pembelian->referensi) }}" method="post" id="form-pembelian-edit">
     @method('PUT')
     @csrf
@@ -117,8 +106,8 @@
                                             <div class="d-flex align-items-center">
                                                 <img src="{{ $detail->produk->img_produk ? asset('storage/' . $detail->produk->img_produk) : asset('assets/img/produk.webp') }}"
                                                     class="avatar avatar-sm me-3"
-                                                    alt="{{ $detail->produk->name_produk }}">
-                                                <h6 class="mb-0 text-sm item-name">{{ $detail->produk->name_produk }}
+                                                    alt="{{ $detail->produk->name_product }}">
+                                                <h6 class="mb-0 text-sm item-name">{{ $detail->produk->name_product }}
                                                 </h6>
                                             </div>
                                         </td>
@@ -139,7 +128,7 @@
                                             <div class="d-flex">
                                                 <button type="button"
                                                     class="btn btn-link text-info p-0 m-0 me-2 btn-edit"
-                                                    title="Edit Item"><i class="bx bx-pencil-square"></i></button>
+                                                    title="Edit Item"><i class="bx bx-edit"></i></button>
                                                 <button type="button"
                                                     class="btn btn-link text-danger p-0 m-0 btn-remove"
                                                     title="Hapus Item"><i class="bx bx-trash"></i></button>
@@ -301,8 +290,6 @@
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
         $(document).ready(function() {
             // --- UTILITIES ---
@@ -368,7 +355,7 @@
                             results: data.data.map(function(item) {
                                 return {
                                     id: item.id,
-                                    text: item.name_produk,
+                                    text: item.name_product,
                                     img_produk: item.img_produk,
                                     qty: item.qty,
                                     harga_beli: item.harga_beli,
@@ -393,8 +380,7 @@
                 const qty = $("#qty").val();
 
                 if (!selectedData || !selectedData.id || !qty || parseInt(qty) <= 0) {
-                    Swal.fire('Peringatan', 'Harap pilih produk dan tentukan jumlah yang valid.',
-                        'warning');
+                    window.showToast('warning', 'Harap pilih produk dan tentukan jumlah yang valid.');
                     return;
                 }
 
@@ -444,7 +430,7 @@
                             <td>
                                 <div class="d-flex">
                                     <button type="button" class="btn btn-link text-info p-0 m-0 me-2 btn-edit" title="Edit Item">
-                                        <i class="bx bx-pencil-square"></i>
+                                        <i class="bx bx-edit"></i>
                                     </button>
                                     <button type="button" class="btn btn-link text-danger p-0 m-0 btn-remove" title="Hapus Item">
                                         <i class="bx bx-trash"></i>
@@ -614,24 +600,23 @@
 
                 if (bayar < totalAkhir && statusBayar === 'Lunas') {
                     e.preventDefault();
-                    Swal.fire('Peringatan',
-                        'Pembayaran kurang dari total akhir. Mohon ubah status pembayaran Anda atau lunasi pembayaran.',
-                        'warning');
+                    window.showToast('warning',
+                        'Pembayaran kurang dari total akhir. Mohon ubah status pembayaran Anda atau lunasi pembayaran.'
+                        );
                     return;
                 }
 
                 // Validasi baru: Jika pembayaran lunas, status tidak boleh 'Belum Lunas'
                 if (statusBayar === 'Belum Lunas' && bayar >= totalAkhir) {
                     e.preventDefault();
-                    Swal.fire('Peringatan',
-                        'Pembayaran sudah lunas. Mohon ubah status pembayaran menjadi "Lunas".',
-                        'warning');
+                    window.showToast('warning',
+                        'Pembayaran sudah lunas. Mohon ubah status pembayaran menjadi "Lunas".');
                     return;
                 }
 
                 if ($("#table-pembelian tbody tr").length === 0) {
                     e.preventDefault();
-                    Swal.fire('Peringatan', 'Harap tambahkan minimal satu produk.', 'warning');
+                    window.showToast('warning', 'Harap tambahkan minimal satu produk.');
                 }
             });
 

@@ -1,6 +1,6 @@
 <x-marketLayout>
     {{-- Breadcrumb --}}
-    <div class="bg-light py-3">
+    <div class="bg-white ms-3 py-3">
         <div class="container">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
@@ -12,7 +12,7 @@
                                 href="{{ route('market.produk', ['kategori' => $produk->category->slug]) }}"
                                 class="text-decoration-none">{{ $produk->category->name }}</a></li>
                     @endif
-                    <li class="breadcrumb-item active" aria-current="page">{{ $produk->name_produk }}</li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ $produk->name_product }}</li>
                 </ol>
             </nav>
         </div>
@@ -24,7 +24,7 @@
                 <div class="mb-3">
                     <img id="main-product-image"
                         src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
-                        class="img-fluid rounded-3 w-100" alt="{{ $produk->name_produk }}"
+                        class="img-fluid rounded-3 w-100" alt="{{ $produk->name_product }}"
                         style="max-height: 500px; object-fit: contain;">
                 </div>
             </div>
@@ -32,13 +32,13 @@
                 <div class="d-flex align-items-center gap-2 mb-2">
                     @if ($produk->category)
                         <a href="{{ route('market.produk', ['kategori' => $produk->category->slug]) }}"
-                            class="badge badge-primary">{{ $produk->category->name }}</a>
+                            class="badge bg-label-primary">{{ $produk->category->name }}</a>
                     @endif
                     @if ($produk->brand)
-                        <span class="badge badge-primary">{{ $produk->brand->name }}</span>
+                        <span class="badge bg-label-primary">{{ $produk->brand->name }}</span>
                     @endif
                 </div>
-                <h2 class="fw-bold display-6">{{ $produk->name_produk }}</h2>
+                <h2 class="fw-bold display-6">{{ $produk->name_product }}</h2>
                 <div class="fs-3 my-3">
                     @if ($produk->harga_diskon)
                         <span
@@ -51,11 +51,11 @@
                 </div>
                 <div class="d-flex align-items-center mb-2">
                     @if ($produk->qty > 0)
-                        <span class="badge badge-success rounded-pill me-3"><i class="bx bx-check-circle me-1"></i>
+                        <span class="badge bg-label-success rounded-pill me-3"><i class="bx bx-check-circle me-1"></i>
                             Stock
                             Tersedia</span>
                     @else
-                        <span class="badge badge-danger rounded-pill me-3"><i class="bx bx-x-circle me-1"></i> Stock
+                        <span class="badge bg-label-danger rounded-pill me-3"><i class="bx bx-x-circle me-1"></i> Stock
                             Habis</span>
                     @endif
                     <span class="text-muted small">( Tersedia: {{ $produk->qty ?? '-' }}
@@ -69,7 +69,7 @@
                 @endif
                 <div class="d-flex align-items-center gap-3 mt-4 pt-2 border-top">
                     @if ($produk->qty > 0)
-                        <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_produk }}"
+                        <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
                             target="_blank" class="btn btn-primary" {{ $produk->qty <= 0 ? 'disabled' : '' }}>
                             <i class="bx bx-whatsapp me-1"></i> Belanja Sekarang
                         </a>
@@ -103,11 +103,11 @@
                                 <div class="product-card-img-container">
                                     <a href="{{ route('market.produk.detail', ['slug' => $item->slug]) }}">
                                         <img src="{{ $item->img_produk ? asset('storage/' . $item->img_produk) : asset('assets/img/produk.png') }}"
-                                            loading="lazy" class="card-img-top" alt="{{ $item->name_produk }}">
+                                            loading="lazy" class="card-img-top" alt="{{ $item->name_product }}">
                                     </a>
                                     <div class="product-card-actions">
                                         @if ($item->qty > 0)
-                                            <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_produk }}"
+                                            <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
                                                 target="_blank" class="btn btn-dark w-100 "
                                                 {{ $produk->qty <= 0 ? 'disabled' : '' }}>
                                                 <i class="bx bx-whatsapp me-1"></i> Pesan via WA
@@ -121,7 +121,7 @@
                                     <a href="{{ route('market.produk.detail', ['slug' => $item->slug]) }}"
                                         class="text-decoration-none text-dark text-hover-primary">
                                         <p class="card-title fw-bold text-truncate mb-1"
-                                            title="{{ $item->name_produk }}">{{ $item->name_produk }}</p>
+                                            title="{{ $item->name_product }}">{{ $item->name_product }}</p>
                                     </a>
                                     @if ($item->harga_diskon)
                                         <div class="d-flex flex-wrap">

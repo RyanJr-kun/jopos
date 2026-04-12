@@ -145,7 +145,7 @@
                 @foreach ($pembelian->details as $detail)
                     <tr class="item-row">
                         <td colspan="2">
-                            {{ $detail->produk->name_produk ?? 'Product Dihapus' }}
+                            {{ $detail->produk->name_product ?? 'Product Dihapus' }}
                         </td>
                     </tr>
                     <tr class="detail-row">

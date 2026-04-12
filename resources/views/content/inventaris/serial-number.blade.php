@@ -7,17 +7,6 @@
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 @endsection
-{{-- breadcrumb --}}
-@section('breadcrumb')
-    @php
-        $breadcrumbItems = [
-            ['name' => 'Inventaris', 'url' => '#'],
-            ['name' => 'Manajemen Nomor Seri', 'url' => route('serialNumber.index')],
-        ];
-    @endphp
-    <x-breadcrumb :items="$breadcrumbItems" />
-@endsection
-
 <div class="container-fluid p-3">
     {{-- Card 1: Form Pendaftaran Nomor Seri --}}
     <div class="card rounded-2 mb-4">
@@ -115,7 +104,7 @@
                             <option value="">Semua Product</option>
                             @foreach ($products as $produk)
                                 <option value="{{ $produk->id }}" @selected(request('product_id') == $produk->id)>
-                                    {{ $produk->name_produk }}</option>
+                                    {{ $produk->name_product }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -154,12 +143,12 @@
                                     <div class="d-flex ms-2 px-2 py-1 align-items-center">
                                         @if ($sn->produk->img_produk)
                                             <img src="{{ asset('storage/' . $sn->produk->img_produk) }}"
-                                                class="avatar avatar-sm me-3" alt="{{ $sn->produk->name_produk }}">
+                                                class="avatar avatar-sm me-3" alt="{{ $sn->produk->name_product }}">
                                         @else
                                             <img src="{{ asset('assets/img/produk.webp') }}"
                                                 class="avatar avatar-sm me-3" alt="Gambar produk default">
                                         @endif
-                                        <h6 class="mb-0 text-sm">{{ $sn->produk->name_produk }}</h6>
+                                        <h6 class="mb-0 text-sm">{{ $sn->produk->name_product }}</h6>
                                     </div>
                                 </td>
                                 <td>
@@ -170,16 +159,16 @@
                                         $statusClass = '';
                                         switch ($sn->status) {
                                             case 'Tersedia':
-                                                $statusClass = 'badge-success';
+                                                $statusClass = 'bg-label-success';
                                                 break;
                                             case 'Terjual':
-                                                $statusClass = 'badge-info';
+                                                $statusClass = 'bg-label-info';
                                                 break;
                                             case 'Rusak':
-                                                $statusClass = 'badge-danger';
+                                                $statusClass = 'bg-label-danger';
                                                 break;
                                             case 'Hilang':
-                                                $statusClass = 'badge-warning';
+                                                $statusClass = 'bg-label-warning';
                                                 break;
                                         }
                                     @endphp
@@ -204,7 +193,7 @@
                                     <button type="button" class="btn btn-link text-dark p-0 m-0 btn-edit"
                                         data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
                                         data-status="{{ $sn->status }}" title="Edit SN">
-                                        <i class="bx bx-pencil-square bi-sm text-dark text-sm opacity-10"></i>
+                                        <i class="bx bx-edit bi-sm text-dark text-sm opacity-10"></i>
                                     </button>
                                     <button type="button" class="btn btn-link text-danger p-0 m-0 ms-2 btn-delete"
                                         data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
@@ -290,7 +279,6 @@
 @section('page-script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
 
@@ -307,7 +295,7 @@
 
             // --- UTILITY FUNCTIONS ---
             function showSuccess(message) {
-                Swal.fire('Berhasil', message, 'success').then(() => location.reload());
+                window.showToast('success', message);.then(() => location.reload());
             }
 
             function showError(message, errors = {}) {
@@ -315,7 +303,7 @@
                 if (Object.keys(errors).length > 0) {
                     errorText = Object.values(errors).flat()[0];
                 }
-                Swal.fire('Gagal', errorText, 'error');
+                window.showToast('error', errorText);
             }
 
             // --- FUNGSI UTAMA (SUMBER KEBENARAN TUNGGAL) ---
@@ -419,7 +407,7 @@
                         return {
                             results: data.data.map(item => ({
                                 id: item.id,
-                                text: item.name_produk,
+                                text: item.name_product,
                                 slug: item.slug,
                                 qty: item.qty,
                                 img_produk: item.img_produk
@@ -447,11 +435,11 @@
 
                 const sisaButuh = (selectedProductData.qty - selectedProductData.sn_count) - tempSerials.size;
                 if (sisaButuh <= 0) {
-                    Swal.fire('Batas Tercapai', 'Jumlah nomor seri yang ditambahkan sudah mencukupi.', 'warning');
+                    window.showToast('warning', 'Jumlah nomor seri yang ditambahkan sudah mencukupi.');
                     return;
                 }
                 if (tempSerials.has(serialValue)) {
-                    Swal.fire('Duplikat', 'Nomor seri sudah ada di dalam daftar.', 'warning');
+                    window.showToast('warning', 'Nomor seri sudah ada di dalam daftar.');
                     return;
                 }
 
@@ -507,7 +495,7 @@
 
             // --- LOGIKA AWAL SAAT HALAMAN DIMUAT ---
             @if ($produkDipilih)
-                var produkOption = new Option("{{ $produkDipilih->name_produk }}", "{{ $produkDipilih->id }}",
+                var produkOption = new Option("{{ $produkDipilih->name_product }}", "{{ $produkDipilih->id }}",
                     true, true);
                 $('#select-produk').append(produkOption).trigger('change');
                 updateProductInfo("{{ $produkDipilih->id }}", "{{ $produkDipilih->slug }}");
