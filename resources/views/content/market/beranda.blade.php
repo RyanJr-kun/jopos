@@ -6,10 +6,12 @@
 @section('title', 'Beranda - JO Computer')
 
 @section('vendor-style')
+    @vite('resources/assets/vendor/libs/swiper/swiper.scss')
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 @endsection
 
 @section('vendor-script')
+    @vite('resources/assets/vendor/libs/swiper/swiper.js')
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 @endsection
 
@@ -23,41 +25,23 @@
             @if ($mainBanners->isNotEmpty())
                 <div class="row g-3">
 
-                    <div class="col-lg-9 col-md-12" data-aos="fade-up" data-aos-delay="200">
-                        <div id="heroCarousel" class="carousel slide h-100" data-bs-ride="carousel">
-                            <div class="carousel-indicators">
-                                @foreach ($mainBanners as $key => $banner)
-                                    <button type="button" data-bs-target="#heroCarousel"
-                                        data-bs-slide-to="{{ $key }}" class="{{ $loop->first ? 'active' : '' }}"
-                                        aria-current="{{ $loop->first ? 'true' : 'false' }}"
-                                        aria-label="Slide {{ $key + 1 }}"></button>
-                                @endforeach
-                            </div>
-                            <div class="carousel-inner rounded-3 h-100 shadow-sm">
+                    <div class="col-lg-9 col-md-12">
+                        <div class="swiper myHeroSwiper h-100 rounded-3 shadow-sm">
+                            <div class="swiper-wrapper">
                                 @foreach ($mainBanners as $banner)
-                                    <div class="carousel-item h-100 {{ $loop->first ? 'active' : '' }}"
-                                        data-bs-interval="5000">
+                                    <div class="swiper-slide h-100">
                                         <a href="{{ $banner->url_tujuan ?? '#' }}">
-                                            <img src="{{ asset('storage/' . $banner->img_banner) }}" loading="eager"
-                                                fetchpriority="high" decoding="async" class="d-block w-100 h-100"
-                                                style="object-fit: cover;" alt="{{ $banner->judul ?? 'Banner' }}">
+                                            <img src="{{ asset('storage/' . $banner->img_banner) }}"
+                                                class="d-block w-100 h-100" style="object-fit: cover;">
                                         </a>
                                     </div>
                                 @endforeach
                             </div>
-                            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel"
-                                data-bs-slide="prev">
-                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                <span class="visually-hidden">Previous</span>
-                            </button>
-                            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel"
-                                data-bs-slide="next">
-                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                <span class="visually-hidden">Next</span>
-                            </button>
+                            <div class="swiper-button-next"></div>
+                            <div class="swiper-button-prev"></div>
+
                         </div>
                     </div>
-
                     <div class="col-lg-3 col-md-12" data-aos="fade-up" data-aos-delay="400">
                         <div class="row g-3 h-100">
 
@@ -114,7 +98,6 @@
     </section>
 
     {{-- Features Section --}}
-
     <section id="landingFeatures" class="section-py bg-white">
         <div class="container" data-aos="fade-up" data-aos-delay="300">
             <div class="text-center mb-4">
@@ -191,178 +174,180 @@
                 <h3 class="fw-bolder tg-blue-v2 mb-0">JELAJAHI KATEGORI</h3>
             </div>
             <div class="position-relative category-scroll-wrapper">
-                <div id="category-scroll-container" class="d-flex gap-3 overflow-hidden">
-                    @foreach ($kategoris as $kategori)
-                        <div class="category-item" style="flex: 0 0 auto; width: 120px;" data-aos="fade-up"
-                            data-aos-delay="400">
-                            <a href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}"
-                                class="text-decoration-none text-dark ">
-                                <div class="card category-card bg-light border mx-2 mb-2 overflow-hidden">
-                                    <img src="{{ $kategori->img_kategori ? asset('storage/' . $kategori->img_kategori) : asset('assets/img/produk.png') }}"
-                                        class="card-img-top" alt="{{ $kategori->name }}">
-                                </div>
-                                <div class="card-body p-2 text-center">
-                                    <h6 class="card-title fw-bold text-truncate mb-1" title="{{ $kategori->name }}">
-                                        {{ $kategori->name }}</h6>
-                                    <p class="card-text text-muted small">{{ $kategori->products_count }} Product</p>
-                                </div>
-                            </a>
-                        </div>
-                    @endforeach
+                <div class="swiper myCategorySwiper">
+                    <div class="swiper-wrapper">
+                        @foreach ($kategoris as $kategori)
+                            <div class="swiper-slide border-none" data-aos="fade-up" data-aos-delay="400">
+                                <a href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}"
+                                    class="text-decoration-none text-dark">
+                                    <div class="card category-card bg-light border mx-2 mb-2 overflow-hidden">
+                                        <img src="{{ $kategori->img_kategori ? asset('storage/' . $kategori->img_kategori) : asset('assets/img/produk.png') }}"
+                                            class="card-img-top" alt="{{ $kategori->name }}">
+                                    </div>
+                                    <div class="card-body p-2 text-center">
+                                        <h6 class="card-title fw-bold text-truncate mb-1" title="{{ $kategori->name }}">
+                                            {{ $kategori->name }}</h6>
+                                        {{-- <p class="card-text text-muted small">{{ $kategori->products_count }} Product</p> --}}
+                                    </div>
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    {{-- Tombol navigasi --}}
+                    <div class="swiper-button-prev category-nav-btn"></div>
+                    <div class="swiper-button-next category-nav-btn"></div>
                 </div>
-                <button id="category-scroll-prev" class="btn btn-light rounded-circle category-scroll-btn prev"
-                    aria-label="Kategori Sebelumnya">
-                    <i class="bx bx-arrow-left"></i>
-                </button>
-                <button id="category-scroll-next" class="btn btn-light rounded-circle category-scroll-btn next"
-                    aria-label="Kategori Berikutnya">
-                    <i class="bx bx-arrow-right"></i>
-                </button>
             </div>
         </div>
     </section>
 
-    <section id="promotions" class="section-py">
-        <div class="container">
-            @if ($promoVertikalBanners->isNotEmpty())
-
+    {{-- ================================================================
+     SECTION: PROMO TERBATAS
+     Tampil jika: ada banner ATAU ada produk promo
+     ================================================================ --}}
+    @if ($promoVertikalBanners->isNotEmpty() || $produkPromotion->isNotEmpty())
+        <section id="promotions" class="section-py">
+            <div class="container">
                 <h3 class="text-center mb-4 fw-bold" data-aos="fade-up" data-aos-delay="300">Promo Terbatas</h3>
                 <div class="row g-4">
-                    <div class="col-lg-4 d-none d-lg-block">
-                        <div id="promoVertikalCarousel" class="carousel slide" data-bs-ride="carousel">
-                            <div class="carousel-inner rounded-3">
-                                @foreach ($promoVertikalBanners as $banner)
-                                    <div class="carousel-item {{ $loop->first ? 'active' : '' }}" data-bs-interval="7000"
-                                        data-aos="fade-up" data-aos-delay="400">
-                                        <a href="{{ $banner->url_tujuan ?? '#' }}">
-                                            <img src="{{ asset('storage/' . $banner->img_banner) }}" loading="lazy"
-                                                width="120px" height="720px" class="d-block w-100"
-                                                alt="{{ $banner->judul ?? 'Promotion' }}">
-                                        </a>
+
+                    {{-- Kolom Banner Vertikal — hanya muncul di lg ke atas dan jika ada banner --}}
+                    @if ($promoVertikalBanners->isNotEmpty())
+                        <div class="col-lg-4 d-none d-lg-block">
+                            <div class="swiper myPromoVertikalSwiper h-100 rounded-3 overflow-hidden">
+                                <div class="swiper-wrapper">
+                                    @foreach ($promoVertikalBanners as $banner)
+                                        <div class="swiper-slide" data-aos="fade-up" data-aos-delay="400">
+                                            <a href="{{ $banner->url_tujuan ?? '#' }}">
+                                                <img src="{{ asset('storage/' . $banner->img_banner) }}" loading="lazy"
+                                                    class="d-block w-100 h-100" style="object-fit: cover;"
+                                                    alt="{{ $banner->judul ?? 'Promotion' }}">
+                                            </a>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Kolom Produk Promo --}}
+                    <div class="{{ $promoVertikalBanners->isNotEmpty() ? 'col-lg-8' : 'col-12' }}">
+                        @if ($produkPromotion->isNotEmpty())
+                            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-3 g-3">
+                                @foreach ($produkPromotion as $produk)
+                                    <div class="col" data-aos="fade-up" data-aos-delay="600">
+                                        <div class="card product-card overflow-hidden">
+                                            <div class="product-card-img-container">
+                                                <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
+                                                    <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
+                                                        loading="lazy" class="card-img-top"
+                                                        alt="{{ $produk->name_product }}">
+                                                    @if ($produk->qty < 1)
+                                                        <div class="product-badge">
+                                                            <span class="badge bg-label-danger">Stock Habis</span>
+                                                        </div>
+                                                    @elseif($produk->promotions->isNotEmpty() && ($promo = $produk->promotions->first()))
+                                                        <div class="product-badge">
+                                                            @if ($promo->type == 'percentage')
+                                                                <span
+                                                                    class="badge bg-label-danger">{{ (int) $promo->nilai_diskon }}%
+                                                                    OFF</span>
+                                                            @else
+                                                                <span class="badge bg-label-info">PROMO</span>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                </a>
+                                                <div class="product-card-actions">
+                                                    @if ($produk->qty > 0)
+                                                        <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
+                                                            target="_blank" class="btn btn-dark w-100">
+                                                            <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
+                                                        </a>
+                                                    @else
+                                                        <button type="button" class="btn btn-dark w-100">Stock
+                                                            Habis</button>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-body py-2">
+                                            <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}"
+                                                class="text-decoration-none text-dark text-hover-primary">
+                                                <p class="card-title fw-bold text-truncate"
+                                                    title="{{ $produk->name_product }}">
+                                                    {{ $produk->name_product }}</p>
+                                            </a>
+                                            @if ($produk->harga_diskon)
+                                                <div class="d-md-flex">
+                                                    <p class="text-sm text-muted text-decoration-line-through mb-0">
+                                                        {{ $produk->harga_formatted }}</p>
+                                                    <p class="text-sm text-dark mb-0 ms-md-2">
+                                                        {{ 'Rp ' . number_format($produk->harga_diskon, 0, ',', '.') }}</p>
+                                                </div>
+                                            @else
+                                                <p class="text-sm text-dark mb-0">{{ $produk->harga_formatted }}</p>
+                                            @endif
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
-                        </div>
+                        @else
+                            {{-- Ada banner tapi tidak ada produk promo --}}
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <p class="text-muted text-center">Saat ini belum ada produk promo.</p>
+                            </div>
+                        @endif
                     </div>
 
-                    {{-- Kolom untuk 4 produk promo --}}
-                    <div class="col-lg-8">
-                        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-3 g-3">
-                            {{-- Loop untuk produk promo --}}
-                            @forelse ($produkPromotion as $produk)
-                                <div class="col" data-aos="fade-up" data-aos-delay="600">
-                                    <div class="card product-card overflow-hidden">
-                                        <div class="product-card-img-container">
-                                            <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                                                <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
-                                                    loading="lazy" class="card-img-top"
-                                                    alt="{{ $produk->name_product }}">
-                                                {{-- Badge Promotion --}}
-                                                @if ($produk->qty < 1)
-                                                    <div class="product-badge">
-                                                        <span class="badge bg-label-danger">Stock Habis</span>
-                                                    </div>
-                                                @elseif($produk->promotions->isNotEmpty() && ($promo = $produk->promotions->first()))
-                                                    <div class="product-badge">
-                                                        @if ($promo->type == 'percentage')
-                                                            <span
-                                                                class="badge bg-label-danger">{{ (int) $promo->nilai_diskon }}%
-                                                                OFF</span>
-                                                        @else
-                                                            <span class="badge bg-label-info">PROMO</span>
-                                                        @endif
-                                                    </div>
-                                                @endif
-                                            </a>
-                                            <div class="product-card-actions">
-                                                @if ($produk->qty > 0)
-                                                    <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                                                        target="_blank" class="btn btn-dark w-100">
-                                                        <i class="bx bx-whatsapp me-1"></i> Pesan via WA
-                                                    </a>
-                                                @else
-                                                    <button type="button" class="btn btn-dark w-100">Stock Habis</button>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="card-body py-2">
-                                        <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}"
-                                            class="text-decoration-none text-dark text-hover-primary">
-                                            <p class="card-title fw-bold text-truncate"
-                                                title="{{ $produk->name_product }}">
-                                                {{ $produk->name_product }}</p>
-                                        </a>
-                                        @if ($produk->harga_diskon)
-                                            <div class="d-md-flex">
-                                                <p class="text-sm text-muted text-decoration-line-through mb-0">
-                                                    {{ $produk->harga_formatted }}</p>
-                                                <p class="text-sm text-dark mb-0 ms-md-2">
-                                                    {{ 'Rp ' . number_format($produk->harga_diskon, 0, ',', '.') }}</p>
-                                            </div>
-                                        @else
-                                            <p class="text-sm text-dark mb-0">{{ $produk->harga_formatted }}</p>
-                                        @endif
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="col-12" data-aos="fade-up" data-aos-delay="300">
-                                    <p class="text-muted text-center">Saat ini belum ada produk promo.</p>
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
                 </div>
+            </div>
+        </section>
+    @endif
 
-            @endif
-        </div>
-    </section>
 
-    <section id="best-seller" class="section-py">
-        <div class="container">
-            @if ($bestsellerBanners->isNotEmpty())
+    {{-- ================================================================
+     SECTION: BEST SELLER
+     Tampil jika: ada banner ATAU ada produk terlaris
+     ================================================================ --}}
+    @if ($bestsellerBanners->isNotEmpty() || $produkTerlaris->isNotEmpty())
+        <section id="best-seller" class="section-py">
+            <div class="container">
+
                 <div class="d-flex align-items-center mb-4" data-aos="fade-up" data-aos-delay="200">
                     <h4 class="fw-bolder tg-br mb-0">BEST SELLER</h4>
                 </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div id="bestsellerCarousel" class="carousel slide" data-bs-ride="carousel">
-                            <div class="carousel-indicators">
-                                @foreach ($bestsellerBanners as $key => $banner)
-                                    <button type="button" data-bs-target="#bestsellerCarousel"
-                                        data-bs-slide-to="{{ $key }}"
-                                        class="{{ $loop->first ? 'active' : '' }}"
-                                        aria-current="{{ $loop->first ? 'true' : 'false' }}"
-                                        aria-label="Slide {{ $key + 1 }}"></button>
-                                @endforeach
+
+                {{-- Banner Bestseller (Swiper) — hanya tampil jika ada banner --}}
+                @if ($bestsellerBanners->isNotEmpty())
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="swiper myBestsellerSwiper rounded-3 shadow-sm" data-aos="fade-up"
+                                data-aos-delay="400">
+                                <div class="swiper-wrapper">
+                                    @foreach ($bestsellerBanners as $banner)
+                                        <div class="swiper-slide">
+                                            <a href="{{ $banner->url_tujuan ?? '#' }}">
+                                                <img src="{{ asset('storage/' . $banner->img_banner) }}" loading="lazy"
+                                                    class="d-block w-100 h-100" style="object-fit: cover;"
+                                                    alt="{{ $banner->judul ?? 'Bestseller Banner' }}">
+                                            </a>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="swiper-pagination"></div>
+                                <div class="swiper-button-prev"></div>
+                                <div class="swiper-button-next"></div>
                             </div>
-                            <div class="carousel-inner rounded-3 shadow-sm" data-aos="fade-up" data-aos-delay="400">
-                                @foreach ($bestsellerBanners as $banner)
-                                    <div class="carousel-item {{ $loop->first ? 'active' : '' }}">
-                                        <a href="{{ $banner->url_tujuan ?? '#' }}">
-                                            <img src="{{ asset('storage/' . $banner->img_banner) }}" loading="lazy"
-                                                class="d-block w-100 h-100"
-                                                alt="{{ $banner->judul ?? 'Bestseller Banner' }}">
-                                        </a>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <button class="carousel-control-prev" type="button" data-bs-target="#bestsellerCarousel"
-                                data-bs-slide="prev">
-                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                <span class="visually-hidden">Previous</span>
-                            </button>
-                            <button class="carousel-control-next" type="button" data-bs-target="#bestsellerCarousel"
-                                data-bs-slide="next">
-                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                <span class="visually-hidden">Next</span>
-                            </button>
                         </div>
                     </div>
-                </div>
-                {{-- Loop untuk 6 produk terlaris --}}
+                @endif
+
+                {{-- Grid Produk Terlaris — tampil jika ada produk --}}
                 @if ($produkTerlaris->isNotEmpty())
-                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3 mt-4">
+                    <div
+                        class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3 {{ $bestsellerBanners->isNotEmpty() ? 'mt-0' : 'mt-2' }}">
                         @foreach ($produkTerlaris as $produk)
                             <div class="col" data-aos="fade-up" data-aos-delay="300">
                                 <div class="card product-card overflow-hidden">
@@ -370,7 +355,6 @@
                                         <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                                             <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
                                                 loading="lazy" class="card-img-top" alt="{{ $produk->name_product }}">
-                                            {{-- Badge Populer --}}
                                             <div class="product-badge">
                                                 <span class="badge bg-label-warning">Populer</span>
                                             </div>
@@ -379,7 +363,7 @@
                                             @if ($produk->qty > 0)
                                                 <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
                                                     target="_blank" class="btn btn-dark w-100">
-                                                    <i class="bx bx-whatsapp me-1"></i> Pesan via WA
+                                                    <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
                                                 </a>
                                             @else
                                                 <button type="button" class="btn btn-dark w-100">Stock Habis</button>
@@ -410,9 +394,10 @@
                         @endforeach
                     </div>
                 @endif
-            @endif
-        </div>
-    </section>
+
+            </div>
+        </section>
+    @endif
 
     <section id="product" class="section-py">
         <div class="container">
@@ -448,7 +433,7 @@
                                     @if ($produk->qty > 0)
                                         <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
                                             target="_blank" class="btn btn-dark w-100">
-                                            <i class="bx bx-whatsapp me-1"></i> Pesan via WA
+                                            <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
                                         </a>
                                     @else
                                         <button type="button" class="btn btn-dark w-100">Stock Habis</button>
@@ -494,45 +479,118 @@
             once: true,
         });
     </script>
+    {{-- Tambahkan script ini di @section('page-script') --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const container = document.getElementById('category-scroll-container');
-            const prevBtn = document.getElementById('category-scroll-prev');
-            const nextBtn = document.getElementById('category-scroll-next');
+            if (typeof Swiper === 'undefined') return;
 
-            // Atur transisi scroll pada kontainer kategori untuk animasi yang halus
-            container.style.scrollBehavior = 'smooth';
+            // ---------------------------------------------------------
+            // 1. Hero Swiper (sudah ada sebelumnya)
+            // ---------------------------------------------------------
+            if (document.querySelector('.myHeroSwiper')) {
+                new Swiper('.myHeroSwiper', {
+                    loop: true,
+                    autoplay: {
+                        delay: 5000,
+                        disableOnInteraction: false
+                    },
+                    pagination: {
+                        el: '.myHeroSwiper .swiper-pagination',
+                        clickable: true
+                    },
+                    navigation: {
+                        nextEl: '.myHeroSwiper .swiper-button-next',
+                        prevEl: '.myHeroSwiper .swiper-button-prev',
+                    },
+                    effect: 'fade',
+                    fadeEffect: {
+                        crossFade: true
+                    },
+                });
+            }
 
-            // Scroll sejauh lebar satu item kategori
-            const scrollAmount = () => {
-                const firstItem = container.querySelector('.category-item');
-                // Lebar item + gap
-                return firstItem ? firstItem.offsetWidth + parseInt(getComputedStyle(container).gap) : 216;
-            };
+            // ---------------------------------------------------------
+            // 2. Kategori Swiper
+            // ---------------------------------------------------------
+            if (document.querySelector('.myCategorySwiper')) {
+                new Swiper('.myCategorySwiper', {
+                    slidesPerView: 2,
+                    spaceBetween: 0,
+                    loop: true,
+                    autoplay: {
+                        delay: 2500,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true,
+                    },
+                    navigation: {
+                        nextEl: '.myCategorySwiper .swiper-button-next',
+                        prevEl: '.myCategorySwiper .swiper-button-prev',
+                    },
+                    speed: 600,
+                    grabCursor: true,
+                    breakpoints: {
+                        480: {
+                            slidesPerView: 3
+                        },
+                        768: {
+                            slidesPerView: 4
+                        },
+                        992: {
+                            slidesPerView: 6
+                        },
+                        1200: {
+                            slidesPerView: 7
+                        },
+                    },
+                });
+            }
 
-            let autoScrollInterval;
+            // ---------------------------------------------------------
+            // 3. Promo Vertikal Swiper — autoplay, no nav, loop
+            // ---------------------------------------------------------
+            if (document.querySelector('.myPromoVertikalSwiper')) {
+                new Swiper('.myPromoVertikalSwiper', {
+                    loop: true,
+                    direction: 'vertical', // geser vertikal agar kesan berbeda
+                    autoplay: {
+                        delay: 7000,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true,
+                    },
+                    effect: 'fade',
+                    fadeEffect: {
+                        crossFade: true
+                    },
+                    speed: 800,
+                });
+            }
 
-            const startAutoScroll = () => {
-                autoScrollInterval = setInterval(() => {
-                    // Jika sudah di ujung, kembali ke awal
-                    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 1) {
-                        container.scrollLeft = 0;
-                    } else {
-                        container.scrollLeft += scrollAmount();
-                    }
-                }, 3000); // Geser setiap 3 detik
-            };
-
-            const stopAutoScroll = () => clearInterval(autoScrollInterval);
-
-            prevBtn.addEventListener('click', () => container.scrollLeft -= scrollAmount());
-            nextBtn.addEventListener('click', () => container.scrollLeft += scrollAmount());
-
-            // Mulai auto-scroll saat halaman dimuat
-            startAutoScroll();
-            // Hentikan auto-scroll saat mouse masuk ke area, dan mulai lagi saat keluar
-            container.parentElement.addEventListener('mouseenter', stopAutoScroll);
-            container.parentElement.addEventListener('mouseleave', startAutoScroll);
+            // ---------------------------------------------------------
+            // 4. Bestseller Banner Swiper — autoplay, nav + pagination
+            // ---------------------------------------------------------
+            if (document.querySelector('.myBestsellerSwiper')) {
+                new Swiper('.myBestsellerSwiper', {
+                    loop: true,
+                    autoplay: {
+                        delay: 6000,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true,
+                    },
+                    pagination: {
+                        el: '.myBestsellerSwiper .swiper-pagination',
+                        clickable: true,
+                    },
+                    navigation: {
+                        nextEl: '.myBestsellerSwiper .swiper-button-next',
+                        prevEl: '.myBestsellerSwiper .swiper-button-prev',
+                    },
+                    effect: 'fade',
+                    fadeEffect: {
+                        crossFade: true
+                    },
+                    speed: 700,
+                });
+            }
         });
     </script>
 @endsection

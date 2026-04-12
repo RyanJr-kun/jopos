@@ -1,4 +1,22 @@
-<x-marketLayout>
+@isset($pageConfigs)
+    {!! Helper::updatePageConfig($pageConfigs) !!}
+@endisset
+
+@extends('layouts/commonMaster')
+@section('title', 'Beranda - JO Computer')
+
+@section('vendor-style')
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+@endsection
+
+@section('vendor-script')
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+@endsection
+
+@section('layoutContent')
+
+    @yield('content')
+    <x-marketHeader></x-marketHeader>
     {{-- Breadcrumb --}}
     <div class="bg-white ms-3 py-3">
         <div class="container">
@@ -6,7 +24,8 @@
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ url('/') }}" class="text-decoration-none">Beranda</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('market.produk') }}"
-                            class="text-decoration-none">Product</a></li>
+                            class="text-decoration-none">Product</a>
+                    </li>
                     @if ($produk->category)
                         <li class="breadcrumb-item"><a
                                 href="{{ route('market.produk', ['kategori' => $produk->category->slug]) }}"
@@ -41,8 +60,7 @@
                 <h2 class="fw-bold display-6">{{ $produk->name_product }}</h2>
                 <div class="fs-3 my-3">
                     @if ($produk->harga_diskon)
-                        <span
-                            class="text-muted text-decoration-line-through me-2">{{ $produk->harga_formatted }}</span>
+                        <span class="text-muted text-decoration-line-through me-2">{{ $produk->harga_formatted }}</span>
                         <span
                             class="fw-bold text-danger">{{ 'Rp ' . number_format($produk->harga_diskon, 0, ',', '.') }}</span>
                     @else
@@ -120,8 +138,8 @@
                                 <div class="card-body py-2">
                                     <a href="{{ route('market.produk.detail', ['slug' => $item->slug]) }}"
                                         class="text-decoration-none text-dark text-hover-primary">
-                                        <p class="card-title fw-bold text-truncate mb-1"
-                                            title="{{ $item->name_product }}">{{ $item->name_product }}</p>
+                                        <p class="card-title fw-bold text-truncate mb-1" title="{{ $item->name_product }}">
+                                            {{ $item->name_product }}</p>
                                     </a>
                                     @if ($item->harga_diskon)
                                         <div class="d-flex flex-wrap">
@@ -141,4 +159,13 @@
             </div>
         </div>
     @endif
-</x-marketLayout>
+@endsection
+
+@section('page-script')
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true,
+        });
+    </script>
+@endsection

@@ -26,6 +26,7 @@
         "jquery": "^3.7.1",
         "sass-embedded": "^1.93.3",
         "select2": "^4.1.0-rc.0",
-        "sweetalert2": "^11.26.21"
+        "sweetalert2": "^11.26.21",
+        "swiper": "^12.1.3"
     }
 }

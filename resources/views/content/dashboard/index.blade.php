@@ -7,7 +7,6 @@
 @endsection
 
 @section('content')
-
     <div class="row g-3">
         <div class="col-xxl-8">
             <div class="card">
@@ -602,165 +601,165 @@
         </div>
     </div>
 
-    @section('page-script')
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-        <script src="{{ asset('assets/js copy/plugins/Chart.extension.js') }}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                // Inisialisasi Flatpickr
-                flatpickr(".flatpickr-date", {
-                    dateFormat: "Y-m-d",
-                    allowInput: true
-                });
-                // Pie Chart untuk Kategori Terlaris
-                const categoryCtx = document.getElementById("category-pie-chart");
-                if (categoryCtx) {
-                    const categoryLabels = {!! json_encode($categoryChartLabels) !!};
-                    const categoryData = {!! json_encode($categoryChartData) !!};
+@endsection
+@section('page-script')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="{{ asset('assets/js copy/plugins/Chart.extension.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Inisialisasi Flatpickr
+            flatpickr(".flatpickr-date", {
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+            // Pie Chart untuk Kategori Terlaris
+            const categoryCtx = document.getElementById("category-pie-chart");
+            if (categoryCtx) {
+                const categoryLabels = {!! json_encode($categoryChartLabels) !!};
+                const categoryData = {!! json_encode($categoryChartData) !!};
 
-                    if (categoryLabels.length > 0) {
-                        new Chart(categoryCtx, {
-                            type: 'pie',
-                            data: {
-                                labels: categoryLabels,
-                                datasets: [{
-                                    label: 'Jumlah Terjual',
-                                    data: categoryData,
-                                    backgroundColor: [
-                                        'rgba(94, 114, 228, 0.8)', // Primary
-                                        'rgba(45, 206, 137, 0.8)', // Success
-                                        'rgba(251, 99, 64, 0.8)', // Warning
-                                        'rgba(23, 162, 184, 0.8)', // Info
-                                        'rgba(245, 54, 92, 0.8)', // Danger
-                                    ],
-                                    borderColor: '#fff',
-                                    borderWidth: 2
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        position: 'bottom',
-                                        labels: {
-                                            color: '#6c757d',
-                                            padding: 15,
-                                            font: {
-                                                size: 11,
-                                                family: "Open Sans",
-                                            }
+                if (categoryLabels.length > 0) {
+                    new Chart(categoryCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: categoryLabels,
+                            datasets: [{
+                                label: 'Jumlah Terjual',
+                                data: categoryData,
+                                backgroundColor: [
+                                    'rgba(94, 114, 228, 0.8)', // Primary
+                                    'rgba(45, 206, 137, 0.8)', // Success
+                                    'rgba(251, 99, 64, 0.8)', // Warning
+                                    'rgba(23, 162, 184, 0.8)', // Info
+                                    'rgba(245, 54, 92, 0.8)', // Danger
+                                ],
+                                borderColor: '#fff',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#6c757d',
+                                        padding: 15,
+                                        font: {
+                                            size: 11,
+                                            family: "Open Sans",
                                         }
                                     }
                                 }
                             }
-                        });
-                    }
+                        }
+                    });
                 }
-            });
-        </script>
-        <script>
-            var ctx1 = document.getElementById("chart-line").getContext("2d");
+            }
+        });
+    </script>
+    <script>
+        var ctx1 = document.getElementById("chart-line").getContext("2d");
 
-            var gradientStroke1 = ctx1.createLinearGradient(0, 230, 0, 50);
+        var gradientStroke1 = ctx1.createLinearGradient(0, 230, 0, 50);
 
-            gradientStroke1.addColorStop(1, 'rgba(94, 114, 228, 0.2)');
-            gradientStroke1.addColorStop(0.2, 'rgba(94, 114, 228, 0.0)');
-            gradientStroke1.addColorStop(0, 'rgba(94, 114, 228, 0)');
+        gradientStroke1.addColorStop(1, 'rgba(94, 114, 228, 0.2)');
+        gradientStroke1.addColorStop(0.2, 'rgba(94, 114, 228, 0.0)');
+        gradientStroke1.addColorStop(0, 'rgba(94, 114, 228, 0)');
 
-            new Chart(ctx1, {
-                type: "line", // Mengubah tipe chart menjadi 'line'
-                data: {
-                    labels: {!! json_encode($salesChartLabels) !!},
-                    datasets: [{
-                        label: "Pendapatan",
-                        tension: 0.4,
-                        borderWidth: 3,
-                        pointRadius: 0,
-                        borderColor: "#5e72e4",
-                        backgroundColor: gradientStroke1, // Menggunakan gradient untuk background
-                        fill: true,
-                        data: {!! json_encode($salesChartData) !!}
-                    }],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false,
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed.y !== null) {
-                                        label += new Intl.NumberFormat('id-ID', {
-                                            style: 'currency',
-                                            currency: 'IDR'
-                                        }).format(context.parsed.y);
-                                    }
-                                    return label;
+        new Chart(ctx1, {
+            type: "line", // Mengubah tipe chart menjadi 'line'
+            data: {
+                labels: {!! json_encode($salesChartLabels) !!},
+                datasets: [{
+                    label: "Pendapatan",
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    borderColor: "#5e72e4",
+                    backgroundColor: gradientStroke1, // Menggunakan gradient untuk background
+                    fill: true,
+                    data: {!! json_encode($salesChartData) !!}
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
                                 }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('id-ID', {
+                                        style: 'currency',
+                                        currency: 'IDR'
+                                    }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                scales: {
+                    y: {
+                        grid: {
+                            drawBorder: false,
+                            display: true,
+                            drawOnChartArea: true,
+                            drawTicks: false,
+                            borderDash: [5, 5]
+                        },
+                        ticks: {
+                            maxTicksLimit: 6, // Batasi jumlah tick/label pada sumbu Y
+                            display: true,
+                            padding: 10,
+                            color: '#6c757d',
+                            font: {
+                                size: 11,
+                                family: "Open Sans",
+                                style: 'normal',
+                                lineHeight: 2
+                            },
+                            callback: function(value, index, values) {
+                                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
                             }
                         }
                     },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index',
-                    },
-                    scales: {
-                        y: {
-                            grid: {
-                                drawBorder: false,
-                                display: true,
-                                drawOnChartArea: true,
-                                drawTicks: false,
-                                borderDash: [5, 5]
-                            },
-                            ticks: {
-                                maxTicksLimit: 6, // Batasi jumlah tick/label pada sumbu Y
-                                display: true,
-                                padding: 10,
-                                color: '#6c757d',
-                                font: {
-                                    size: 11,
-                                    family: "Open Sans",
-                                    style: 'normal',
-                                    lineHeight: 2
-                                },
-                                callback: function(value, index, values) {
-                                    return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
-                                }
-                            }
+                    x: {
+                        grid: {
+                            drawBorder: false,
+                            display: false,
+                            drawOnChartArea: false,
+                            drawTicks: false,
+                            borderDash: [5, 5]
                         },
-                        x: {
-                            grid: {
-                                drawBorder: false,
-                                display: false,
-                                drawOnChartArea: false,
-                                drawTicks: false,
-                                borderDash: [5, 5]
+                        ticks: {
+                            display: true,
+                            color: '#6c757d',
+                            padding: 20,
+                            font: {
+                                size: 11,
+                                family: "Open Sans",
+                                style: 'normal',
+                                lineHeight: 2
                             },
-                            ticks: {
-                                display: true,
-                                color: '#6c757d',
-                                padding: 20,
-                                font: {
-                                    size: 11,
-                                    family: "Open Sans",
-                                    style: 'normal',
-                                    lineHeight: 2
-                                },
-                            }
-                        },
+                        }
                     },
                 },
-            });
-        </script>
-    @endsection
+            },
+        });
+    </script>
 @endsection
