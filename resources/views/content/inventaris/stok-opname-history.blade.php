@@ -18,7 +18,7 @@
                 </div>
             </div>
             <div class="card-body px-0 pt-0 pb-2">
-                <div class="filter-container p-3">
+                <div class=" p-3">
                     <form action="{{ route('stok-opname.history') }}" method="GET">
                         <div class="row g-3 align-items-center">
                             <div class="col-md-4">

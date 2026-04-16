@@ -22,6 +22,7 @@ return new class extends Migration
                 $table->decimal('max_diskon', 15, 0)->nullable();
                 $table->dateTime('tanggal_mulai');
                 $table->dateTime('tanggal_berakhir');
+                $table->boolean('is_all_products')->default(false);
                 $table->boolean('status')->default(true);
                 $table->text('description')->nullable();
                 $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');

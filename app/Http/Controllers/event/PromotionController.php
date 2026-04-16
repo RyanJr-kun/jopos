@@ -57,31 +57,61 @@ class PromotionController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:promotions,code',
-            'type' => 'required|in:percentage,fixed',
-            'nilai_diskon' => 'required|numeric|min:0',
-            'min_pembelian' => 'nullable|numeric|min:0',
-            'max_diskon' => 'nullable|numeric|min:0',
-            'tanggal_mulai' => 'required|date',
-            'tanggal_berakhir' => 'required|date|after_or_equal:tanggal_mulai',
-            'products' => 'nullable|array',
-            'products.*' => 'exists:products,id',
-            'status' => 'nullable|boolean',
-            'description' => 'nullable|string',
+            'name'             => 'required|string|max:255',
+            'code'             => 'nullable|string|max:50|unique:promotions,code',
+            'type'             => 'required|in:percentage,fixed',
 
+            // Jika tipe persentase, nilai_diskon max 100
+            'nilai_diskon'     => [
+                'required',
+                'numeric',
+                'min:0',
+                $request->input('type') === 'percentage' ? 'max:100' : 'max:999999999',
+            ],
+
+            'min_pembelian'    => 'nullable|numeric|min:0',
+
+            // max_diskon hanya relevan & divalidasi jika tipe persentase
+            'max_diskon'       => $request->input('type') === 'percentage'
+                ? 'nullable|numeric|min:0'
+                : 'nullable',
+
+            'tanggal_mulai'    => 'required|date',
+            'tanggal_berakhir' => 'required|date|after_or_equal:tanggal_mulai',
+
+            'is_all_products'  => 'nullable|boolean',
+
+            // products hanya divalidasi jika is_all_products TIDAK dicentang
+            'products'         => $request->boolean('is_all_products')
+                ? 'nullable'
+                : 'nullable|array',
+            'products.*'       => 'exists:products,id',
+
+            'status'           => 'nullable|boolean',
+            'description'      => 'nullable|string',
         ]);
 
-        $validatedData['user_id'] = Auth::id();
-        $validatedData['status'] = $request->has('status');
+        $validatedData['user_id']         = Auth::id();
+        $validatedData['status']          = $request->has('status');
+        $validatedData['is_all_products'] = $request->has('is_all_products');
+
+        // Bersihkan max_diskon jika tipe bukan persentase
+        if ($request->input('type') !== 'percentage') {
+            $validatedData['max_diskon'] = null;
+        }
 
         $promo = Promotion::create($validatedData);
 
-        if ($request->has('products')) {
-            $promo->products()->sync($request->products);
+        // Sync produk hanya jika bukan "semua produk"
+        if (!$validatedData['is_all_products']) {
+            $promo->products()->sync($request->products ?? []);
+        } else {
+            // Kosongkan relasi produk jika berlaku untuk semua
+            $promo->products()->detach();
         }
 
-        return redirect()->route('promo.index')->with('success', 'Promotion baru berhasil ditambahkan!');
+        return redirect()->route('promo.index')
+            ->with('success', 'Promotion baru berhasil ditambahkan!');
     }
 
     /**
@@ -112,28 +142,60 @@ class PromotionController extends Controller
     public function update(Request $request, Promotion $promo)
     {
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => ['nullable', 'string', 'max:50', Rule::unique('promotions', 'code')->ignore($promo->id)],
-            'type' => 'required|in:percentage,fixed',
-            'nilai_diskon' => 'required|numeric|min:0',
-            'min_pembelian' => 'nullable|numeric|min:0',
-            'max_diskon' => 'nullable|numeric|min:0',
-            'tanggal_mulai' => 'required|date',
+            'name'             => 'required|string|max:255',
+            'code'             => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique('promotions', 'code')->ignore($promo->id),
+            ],
+            'type'             => 'required|in:percentage,fixed',
+
+            'nilai_diskon'     => [
+                'required',
+                'numeric',
+                'min:0',
+                $request->input('type') === 'percentage' ? 'max:100' : 'max:999999999',
+            ],
+
+            'min_pembelian'    => 'nullable|numeric|min:0',
+
+            'max_diskon'       => $request->input('type') === 'percentage'
+                ? 'nullable|numeric|min:0'
+                : 'nullable',
+
+            'tanggal_mulai'    => 'required|date',
             'tanggal_berakhir' => 'required|date|after_or_equal:tanggal_mulai',
-            'products' => 'nullable|array',
-            'products.*' => 'exists:products,id',
-            'status' => 'nullable|boolean',
-            'description' => 'nullable|string',
+
+            'is_all_products'  => 'nullable|boolean',
+
+            'products'         => $request->boolean('is_all_products')
+                ? 'nullable'
+                : 'nullable|array',
+            'products.*'       => 'exists:products,id',
+
+            'status'           => 'nullable|boolean',
+            'description'      => 'nullable|string',
         ]);
 
-        $validatedData['user_id'] = Auth::id();
-        $validatedData['status'] = $request->has('status');
+        $validatedData['user_id']         = Auth::id();
+        $validatedData['status']          = $request->has('status');
+        $validatedData['is_all_products'] = $request->has('is_all_products');
+
+        if ($request->input('type') !== 'percentage') {
+            $validatedData['max_diskon'] = null;
+        }
 
         $promo->update($validatedData);
 
-        $promo->products()->sync($request->products ?? []);
+        if (!$validatedData['is_all_products']) {
+            $promo->products()->sync($request->products ?? []);
+        } else {
+            $promo->products()->detach();
+        }
 
-        return redirect()->route('promo.index')->with('success', 'Promotion berhasil diperbarui!');
+        return redirect()->route('promo.index')
+            ->with('success', 'Promotion berhasil diperbarui!');
     }
 
     /**
@@ -143,7 +205,8 @@ class PromotionController extends Controller
     {
         try {
             $promo->delete();
-            return redirect()->route('promo.index')->with('success', 'Promotion berhasil dihapus!');
+            return redirect()->route('promo.index')
+                ->with('success', 'Promotion berhasil dihapus!');
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan saat menghapus promo: ' . $e->getMessage());
         }
@@ -163,51 +226,44 @@ class PromotionController extends Controller
     public function validateCode(Request $request)
     {
         $request->validate([
-            'code' => 'required|string',
+            'code'     => 'required|string',
             'subtotal' => 'required|numeric|min:0',
         ]);
 
         $kodePromotion = $request->input('code');
-        $subtotal = $request->input('subtotal');
+        $subtotal      = $request->input('subtotal');
 
         $promo = Promotion::where('code', $kodePromotion)->first();
 
-        // Cek 1: Kode promo tidak ditemukan
         if (!$promo) {
             return response()->json(['success' => false, 'message' => 'Kode promo tidak ditemukan.'], 404);
         }
 
-        // Cek 2: Promotion tidak aktif
         if (!$promo->status) {
             return response()->json(['success' => false, 'message' => 'Promotion sudah tidak aktif.'], 422);
         }
 
-        // Cek 3: Tanggal promo belum/sudah lewat
         $now = now();
         if ($now->isBefore($promo->tanggal_mulai) || $now->isAfter($promo->tanggal_berakhir)) {
             return response()->json(['success' => false, 'message' => 'Promotion tidak berlaku pada tanggal ini.'], 422);
         }
 
-        // Cek 4: Minimum pembelian tidak tercapai
         if ($promo->min_pembelian && $subtotal < $promo->min_pembelian) {
-            $minPurchaseFormatted = 'Rp ' . number_format($promo->min_pembelian, 0, ',', '.');
-            return response()->json(['success' => false, 'message' => "Minimum pembelian untuk promo ini adalah {$minPurchaseFormatted}."], 422);
+            $minFormatted = 'Rp ' . number_format($promo->min_pembelian, 0, ',', '.');
+            return response()->json([
+                'success' => false,
+                'message' => "Minimum pembelian untuk promo ini adalah {$minFormatted}.",
+            ], 422);
         }
 
-        // Jika semua validasi lolos, kembalikan data promo
         return response()->json(['success' => true, 'promo' => $promo]);
     }
 
     /**
      * Update the status of a promo via AJAX.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Promotion  $promo
-     * @return \Illuminate\Http\JsonResponse
      */
     public function updateStatus(Request $request, Promotion $promo)
     {
-        // Hanya update jika statusnya saat ini aktif
         if ($promo->status) {
             $promo->status = false;
             $promo->save();
@@ -217,7 +273,7 @@ class PromotionController extends Controller
 
         return response()->json([
             'success' => false,
-            'message' => 'Status promo sudah tidak aktif.'
-        ], 409); // 409 Conflict
+            'message' => 'Status promo sudah tidak aktif.',
+        ], 409);
     }
 }

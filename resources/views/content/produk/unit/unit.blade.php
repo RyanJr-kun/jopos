@@ -19,7 +19,7 @@
                 </div>
             </div>
             <div class="card-body px-0 pt-0 pb-2">
-                <div class="filter-container">
+                <div class="">
                     <div class="row g-3 align-items-center justify-content-between">
                         <!-- Filter Pencarian Satuan -->
                         <div class="col-5 col-lg-3 ms-3">
@@ -39,7 +39,7 @@
                 {{-- Container untuk tabel yang akan di-update oleh AJAX --}}
                 <div id="unit-table-container">
                     {{-- Memuat tabel parsial untuk tampilan awal --}}
-                    @include('content.produk._unit_table', ['units' => $units])
+                    @include('content.produk.unit._unit_table', ['units' => $units])
                 </div>
             </div>
         </div>

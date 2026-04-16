@@ -28,7 +28,6 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            {{-- [SNEAT] Ganti text-uppercase text-secondary text-xs fw-bolder text-dark -> text-nowrap --}}
                             <th class="text-nowrap">Gambar & Judul</th>
                             <th class="text-nowrap ps-2">Link Tujuan</th>
                             <th class="text-nowrap ps-2">Posisi</th>

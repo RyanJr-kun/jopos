@@ -18,7 +18,7 @@
             </div>
             <div class="card-body pt-0">
                 {{-- Filter Section --}}
-                <div class="filter-container p-3 border-bottom mb-4">
+                <div class=" p-3 border-bottom mb-4">
                     <form action="{{ route('laporan.laba-rugi') }}" method="GET">
                         <div class="row g-3 align-items-end">
                             <div class="col-md-3">
@@ -314,7 +314,7 @@
                         e.preventDefault();
 
                         // Ambil nilai filter saat ini dari form
-                        const form = document.querySelector('.filter-container form');
+                        const form = document.querySelector('. form');
                         const params = new URLSearchParams(new FormData(form)).toString();
 
                         // Bangun URL untuk ekspor

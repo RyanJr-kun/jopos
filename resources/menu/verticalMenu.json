@@ -9,7 +9,10 @@
     {
       "name": "penjualan",
       "icon": "menu-icon icon-base bx bx-shop",
-      "slug": ["penjualan","pelanggan"],
+      "slug": [
+        "penjualan",
+        "pelanggan"
+      ],
       "submenu": [
         {
           "url": "penjualan/create",
@@ -27,11 +30,14 @@
           "slug": "pelanggan.index"
         }
       ]
-    }, 
+    },
     {
       "name": "Purchase",
       "icon": "menu-icon icon-base bx bx-shop-buy",
-      "slug": ["pembelian","pemasok"],
+      "slug": [
+        "pembelian",
+        "pemasok"
+      ],
       "submenu": [
         {
           "url": "pembelian/create",
@@ -56,36 +62,21 @@
       "icon": "menu-icon icon-base bx bx-product",
       "slug": "produk.index",
       "badge": [
-            "label-primary fs-tiny",
-            "NEW"
-          ]
+        "label-primary fs-tiny",
+        "NEW"
+      ]
     },
     {
       "menuHeader": "Product"
     },
     {
+      "url": "kategoriproduk?type=utama",
       "name": "Kategori Product",
       "icon": "menu-icon icon-base bx bx-badge-2",
-      "slug": "kategoriproduk",
+      "slug": "kategoriproduk.index",
       "badge": [
-            "label-primary fs-tiny",
-            "1"
-          ],
-      "submenu": [
-        {
-          "url": "kategoriproduk",
-          "name": "Utama",
-          "slug": "kategoriproduk.index"
-        },
-        {
-          "url": "kategoriproduk",
-          "name": "Sub kategori",
-          "slug": "kategoriproduk.index",
-          "badge": [
-            "label-primary fs-tiny",
-            "New"
-          ]
-        }
+        "label-primary fs-tiny",
+        "new"
       ]
     },
     {
@@ -112,9 +103,9 @@
       "icon": "menu-icon icon-base bx bx-product",
       "slug": "produk.index",
       "badge": [
-            "label-primary fs-tiny",
-            "MC"
-          ]
+        "label-primary fs-tiny",
+        "MC"
+      ]
     },
     {
       "url": "serialNumber",
@@ -167,14 +158,18 @@
       "icon": "menu-icon icon-base bx bx-images",
       "slug": "banner.index"
     },
-    
     {
       "menuHeader": "Keuangan & Laporan"
     },
     {
       "name": "Administrasi",
       "icon": "menu-icon icon-base bx bx-money-2",
-      "slug": ["keuangan", "income", "expense", "kategori"],
+      "slug": [
+        "keuangan",
+        "income",
+        "expense",
+        "kategori"
+      ],
       "submenu": [
         {
           "url": "keuangan",
@@ -198,7 +193,7 @@
         }
       ]
     },
-     {
+    {
       "name": "Laporan",
       "icon": "menu-icon icon-base bx bx-report",
       "slug": "laporan",

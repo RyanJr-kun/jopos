@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('judul')->nullable();
             $table->string('img_banner');
             $table->string('url_tujuan')->nullable();
-            $table->string('posisi')->default(BannerPosition::MAIN_CAROUSEL->value);
+            $table->string('posisi')->default(BannerPosition::MAIN->value);
             $table->boolean('is_active')->default(true);
             $table->integer('urutan')->default(0);
             $table->timestamps();

@@ -86,7 +86,7 @@
         </div>
         <div class="card-body px-0 pt-0 pb-2">
             {{-- Filter Section --}}
-            <div class="filter-container p-3 border-bottom">
+            <div class=" p-3 border-bottom">
                 <form action="{{ route('laporan.penjualan') }}" method="GET">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-4">
@@ -207,7 +207,7 @@
                 const exportType = this.id === 'exportXlsx' ? 'xlsx' : 'pdf';
 
                 // Ambil nilai filter saat ini dari form
-                const form = document.querySelector('.filter-container form');
+                const form = document.querySelector('. form');
                 const params = new URLSearchParams(new FormData(form)).toString();
 
                 // Bangun URL untuk ekspor

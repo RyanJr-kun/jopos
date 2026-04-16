@@ -16,10 +16,10 @@
 @section('layoutContent')
 
     @yield('content')
-    <x-marketHeader></x-marketHeader>
+    <x-market-header :kategoris="$kategoris"></x-market-header>
     {{-- Breadcrumb --}}
-    <div class="bg-white py-3 ms-3">
-        <div class="container">
+    <div class="bg-white py-3">
+        <div class="container-market">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ url('/') }}" class="text-decoration-none">Beranda</a></li>
@@ -31,7 +31,7 @@
 
     <!-- Section: Integritas Layanan -->
     <section id="layanan" class="section-py">
-        <div class="container">
+        <div class="container-market">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
                     <img src="https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=1964"
@@ -57,7 +57,7 @@
     <!-- Section: Layanan Unggulan -->
     <section id="layanan-unggulan" class="section-py">
         <div class="bg-light py-5">
-            <div class="container">
+            <div class="container-market">
                 <div class="text-center mb-5" data-aos="fade-up" data-aos-delay="200">
                     <h2 class="fw-bolder">Solusi Teknologi Terpadu</h2>
                     <p class="lead text-muted">Dari perakitan hingga purna jual, kami siap membantu.</p>
@@ -104,9 +104,9 @@
 
     <!-- Section: FAQ -->
     <section id="faq" class="section-py">
-        <div class="container">
+        <div class="container-market">
             <div class="accordion-1" data-aos="fade-up">
-                <div class="container">
+                <div class="container-market">
                     <div class="row my-5">
                         <div class="col-md-6 mx-auto text-center">
                             <h2>Pertanyaan yang Sering Diajukan</h2>
@@ -261,12 +261,12 @@
 
     <!-- Section: Call to Action -->
     <section id="actionCall" class="section-py">
-        <div class="container" data-aos="fade-up">
+        <div class="container-market" data-aos="fade-up">
             <div class="p-5 text-center bg-body-tertiary rounded-3">
                 <!-- <div class="feature-icon-small d-inline-flex align-items-center justify-content-center text-bg-success bg-gradient fs-2 rounded-3"
-                                            style="width: 3rem; height: 3rem;">
-                                            <i class="bx bxl-whatsapp icon-xl text-white"></i>
-                                        </div> -->
+                                                            style="width: 3rem; height: 3rem;">
+                                                            <i class="bx bxl-whatsapp icon-xl text-white"></i>
+                                                        </div> -->
                 <h3 class="text-body-emphasis fw-bold">Punya Pertanyaan atau Butuh Bantuan?</h3>
                 <p class="col-lg-8 mx-auto fs-5 text-muted">
                     Jangan ragu untuk menghubungi kami. Tim kami siap membantu Anda dengan solusi teknologi yang tepat.
@@ -281,7 +281,7 @@
         </div>
     </section>
 
-    <x-marketFooter></x-marketFooter>
+    <x-market-footer></x-market-footer>
 @endsection
 
 @section('page-script')

@@ -32,11 +32,11 @@ class WarrantieController extends Controller
 
         // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
         if ($request->ajax()) {
-            return view('content.produk._garansi_table', compact('warranties'))->render();
+            return view('content.produk.garansi.garansi_table', compact('warranties'))->render();
         }
 
         // Jika request biasa, kembalikan view lengkap
-        return view('content.produk.garansi', [
+        return view('content.produk.garansi.garansi', [
             'title' => 'Manajemen Warrantie',
             'warranties' => $warranties
         ]);

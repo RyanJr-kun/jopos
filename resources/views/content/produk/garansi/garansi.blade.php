@@ -24,7 +24,7 @@
         </div>
 
         <div class="card-body px-0 pt-0 pb-2">
-            <div class="filter-container">
+            <div class="">
                 <div class="row g-3 align-items-center justify-content-between">
                     <div class="col-5 col-lg-3 ms-3">
                         <input type="text" id="searchInput" name="search" class="form-control"
@@ -40,7 +40,7 @@
                 </div>
             </div>
             <div id="garansi-table-container">
-                @include('content.produk._garansi_table', ['warranties' => $warranties])
+                @include('content.produk.garansi._garansi_table', ['warranties' => $warranties])
             </div>
         </div>
     </div>

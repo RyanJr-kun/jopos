@@ -5,8 +5,10 @@ namespace App\Enums;
 // 1. Tambahkan ": string" untuk menjadikannya "Backed Enum"
 enum BannerPosition: string
 {
-    case MAIN_CAROUSEL  = 'main_carousel';
-    case PROMO_VERTIKAL = 'promo_vertikal';
+    case MAIN = 'main';
+    case MAIN2 = 'main2';
+    case MAIN3 = 'main3';
+    case PROMO = 'promo';
     case BESTSELLER     = 'bestseller';
 
     // 💡 Pro Tip: Anda bisa menambahkan helper function di sini jika perlu,
@@ -14,8 +16,10 @@ enum BannerPosition: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::MAIN_CAROUSEL => 'Main Carousel',
-            self::PROMO_VERTIKAL => 'Promotion Vertikal',
+            self::MAIN => 'Main',
+            self::MAIN2 => 'Main2',
+            self::MAIN3 => 'Main3',
+            self::PROMO => 'Promotion',
             self::BESTSELLER => 'Bestseller',
         };
     }

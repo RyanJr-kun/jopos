@@ -19,7 +19,7 @@
                 </div>
             </div>
             <div class="card-body px-0 pt-0 pb-2">
-                <div class="filter-container">
+                <div class="">
                     <div class="row g-3 align-items-center justify-content-between">
                         <div class="col-5 col-lg-3 ms-3">
                             <input type="text" name="search" id="searchInput" class="form-control"

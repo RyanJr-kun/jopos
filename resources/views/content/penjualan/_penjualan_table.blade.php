@@ -12,7 +12,7 @@
             </tr>
         </thead>
         <tbody>
-            @forelse ($penjualan as $item)
+            @forelse ($penjualan as $key => $item)
                 <tr>
                     <td>
                         <div class="d-flex flex-column justify-content-center ms-3">

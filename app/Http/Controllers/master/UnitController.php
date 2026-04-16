@@ -29,9 +29,9 @@ class UnitController extends Controller
 
         $units = $query->paginate(15)->withQueryString();
         if ($request->ajax()) {
-            return view('content.produk._unit_table', compact('units'))->render();
+            return view('content.produk.unit._unit_table', compact('units'))->render();
         }
-        return view('content.produk.unit', [
+        return view('content.produk.unit.unit', [
             'title' => 'Units',
             'units' => $units,
             'statuses' => $statuses,

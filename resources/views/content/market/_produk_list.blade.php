@@ -1,24 +1,31 @@
 {{-- Header Konten (Sorting & Info) --}}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    {{-- Menampilkan 0 jika tidak ada produk --}}
-    <p class="mb-0 text-muted">Menampilkan {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }} dari
-        {{ $products->total() }} hasil</p>
-    <div class="align-items-center">
-        <label for="sort" class="form-label me-2 mb-0 text-nowrap">Urutkan:</label>
-        {{-- Select sorting dipindahkan ke sini dari form utama agar tetap terlihat --}}
-        <select name="sort" id="sort" class="form-select select2" data-placeholder="Urutkan">
-            <option value="latest" @selected(request('sort') == 'latest' || !request('sort'))>Terbaru</option>
-            <option value="harga_asc" @selected(request('sort') == 'harga_asc')>Harga Terendah</option>
-            <option value="harga_desc" @selected(request('sort') == 'harga_desc')>Harga Tertinggi</option>
-        </select>
+<div class="row d-flex justify-content-between align-items-center mb-3">
+    <div class="col-md-8">
+        <p class="mb-0 text-muted small">
+            Menampilkan {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }}
+            dari {{ $products->total() }} hasil
+        </p>
+    </div>
+    <div class="col-md-4">
+        <div class="d-flex align-items-center">
+            <label for="sort" class="form-label me-2 mb-0 text-nowrap small">Urutkan:</label>
+            <select name="sort" id="sort" class="form-select select2" data-placeholder="Urutkan">
+                <option value="nama_asc" @selected(request('sort') == 'nama_asc')>Nama A-Z</option>
+                <option value="nama_desc" @selected(request('sort') == 'nama_desc')>Nama Z-A</option>
+                <option value="latest" @selected(request('sort') == 'latest' || !request('sort'))>Produk Terbaru</option>
+                <option value="terpopuler" @selected(request('sort') == 'terpopuler')>Terpopuler</option>
+                <option value="harga_asc" @selected(request('sort') == 'harga_asc')>Harga Terendah</option>
+                <option value="harga_desc" @selected(request('sort') == 'harga_desc')>Harga Tertinggi</option>
+            </select>
+        </div>
     </div>
 </div>
 
-{{-- Grid Product --}}
-<div class="row row-cols-2 row-cols-md-3 g-4">
+{{-- Grid Product: 2 kolom mobile, 3 tablet, 5 desktop --}}
+<div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3" id="product-grid">
     @forelse ($products as $produk)
-        <div class="col">
-            <div class="card product-card h-100 overflow-hidden">
+        <div class="col product-col">
+            <div class="card product-card product-card-compact h-100 overflow-hidden">
                 <div class="product-card-img-container">
                     <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                         <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
@@ -37,34 +44,36 @@
                                 @endif
                             </div>
                         @endif
-
                     </a>
                     <div class="product-card-actions">
                         @if ($produk->qty > 0)
                             <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                                target="_blank" class="btn btn-dark w-100">
+                                target="_blank" class="btn btn-dark btn-sm w-100">
                                 <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
                             </a>
                         @else
-                            <button type="button" class="btn btn-dark w-100">Stock Habis</button>
+                            <button type="button" class="btn btn-dark btn-sm w-100">Stock Habis</button>
                         @endif
                     </div>
                 </div>
-                <div class="card-body py-2">
+                <div class="card-body p-2">
                     <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}"
-                        class="text-decoration-none text-dark text-hover-primary">
-                        <p class="card-title fw-bold text-truncate" title="{{ $produk->name_product }}">
+                        class="text-decoration-none text-dark">
+                        <p class="product-title-compact fw-semibold mb-1" title="{{ $produk->name_product }}">
                             {{ $produk->name_product }}</p>
                     </a>
                     @if ($produk->harga_diskon)
-                        <div class="d-md-flex">
-                            <p class="text-sm text-muted text-decoration-line-through mb-0">
-                                {{ $produk->harga_formatted }}</p>
-                            <p class="text-sm text-dark mb-0 ms-md-2">
-                                {{ 'Rp ' . number_format($produk->harga_diskon, 0, ',', '.') }}</p>
+                        <div>
+                            <span class="text-muted text-decoration-line-through product-price-old">
+                                {{ $produk->harga_formatted }}</span>
+                            <span class="fw-bold product-price-current text-hover">
+                                {{ 'Rp ' . number_format($produk->harga_diskon, 0, ',', '.') }}</span>
                         </div>
                     @else
-                        <p class="text-sm text-dark mb-0">{{ $produk->harga_formatted }}</p>
+                        <div>
+                            <span class="fw-bold mb-0 product-price-current text-hover">
+                                {{ $produk->harga_formatted }}</span>
+                        </div>
                     @endif
                 </div>
             </div>
@@ -79,7 +88,18 @@
     @endforelse
 </div>
 
-{{-- Paginasi --}}
-<div class="d-flex justify-content-center mt-5">
-    {{ $products->links() }}
-</div>
+{{-- Sentinel untuk infinite scroll — JS IntersectionObserver akan mengawasi ini --}}
+@if ($products->hasMorePages())
+    <div id="infinite-scroll-sentinel" data-next-page="{{ $products->currentPage() + 1 }}"
+        class="d-flex justify-content-center py-4">
+        <div class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Memuat...</span>
+        </div>
+    </div>
+@else
+    @if ($products->total() > 0)
+        <div class="text-center py-4">
+            <p class="text-muted small mb-0"><i class="bx bx-check-circle me-1"></i>Semua produk telah ditampilkan</p>
+        </div>
+    @endif
+@endif

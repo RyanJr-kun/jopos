@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\authentications\AuthController;
-use App\Http\Controllers\authentications\StoreSettingController;
-use App\Http\Controllers\authentications\UserController;
+use App\Http\Controllers\auth\AuthController;
+use App\Http\Controllers\auth\StoreSettingController;
+use App\Http\Controllers\auth\UserController;
 use App\Http\Controllers\dashboard\DashboardController;
 use App\Http\Controllers\event\BannerController;
 use App\Http\Controllers\event\PromotionController;
@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::get('/auth/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/auht/login', [AuthController::class, 'login'])->name('login.post');
+    Route::post('/auth/login', [AuthController::class, 'login'])->name('login.post');
 });
 
 // Rute untuk Web Market (Publik)

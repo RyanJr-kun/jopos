@@ -32,6 +32,17 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
 
+    <!-- Anti-flash: Apply saved theme before styles load -->
+    <script>
+        (function() {
+            const saved = localStorage.getItem('templateCustomizer-theme') || 'light';
+            const theme = saved === 'system'
+                ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                : saved;
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
+
     <!-- Include Styles -->
     @include('layouts/sections/styles')
 

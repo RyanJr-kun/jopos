@@ -16,10 +16,10 @@
 @section('layoutContent')
 
     @yield('content')
-    <x-marketHeader></x-marketHeader>
+    <x-market-header :kategoris="$kategoris"></x-market-header>
     {{-- Breadcrumb --}}
-    <div class="bg-white ms-3 py-3">
-        <div class="container">
+    <div class="bg-white py-3">
+        <div class="container-market">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ url('/') }}" class="text-decoration-none">Beranda</a></li>
@@ -37,7 +37,7 @@
         </div>
     </div>
 
-    <div class="container py-5">
+    <div class="container-market py-5">
         <div class="row g-5">
             <div class="col-lg-6">
                 <div class="mb-3">
@@ -112,44 +112,62 @@
     {{-- Similar Products Section --}}
     @if ($produkSerupa->isNotEmpty())
         <div class="album py-5 bg-light">
-            <div class="container">
+            <div class="container-market">
                 <h2 class="text-center mb-5 fw-bold">Anda Mungkin Juga Suka</h2>
                 <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4">
-                    @foreach ($produkSerupa as $item)
-                        <div class="col">
-                            <div class="card product-card h-100 overflow-hidden">
+                    @foreach ($produkSerupa as $produk)
+                        <div class="col product-col">
+                            <div class="card product-card product-card-compact h-100 overflow-hidden">
                                 <div class="product-card-img-container">
-                                    <a href="{{ route('market.produk.detail', ['slug' => $item->slug]) }}">
-                                        <img src="{{ $item->img_produk ? asset('storage/' . $item->img_produk) : asset('assets/img/produk.png') }}"
-                                            loading="lazy" class="card-img-top" alt="{{ $item->name_product }}">
+                                    <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
+                                        <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
+                                            loading="lazy" class="card-img-top" alt="{{ $produk->name_product }}">
+                                        {{-- Badge Promotion --}}
+                                        @if ($produk->qty < 1)
+                                            <div class="product-badge">
+                                                <span class="badge bg-label-danger">Stock Habis</span>
+                                            </div>
+                                        @elseif($produk->promotions->isNotEmpty() && ($promo = $produk->promotions->first()))
+                                            <div class="product-badge">
+                                                @if ($promo->type == 'percentage')
+                                                    <span class="badge bg-label-danger">{{ (int) $promo->nilai_diskon }}%
+                                                        OFF</span>
+                                                @else
+                                                    <span class="badge bg-label-info">PROMO</span>
+                                                @endif
+                                            </div>
+                                        @endif
                                     </a>
                                     <div class="product-card-actions">
-                                        @if ($item->qty > 0)
+                                        @if ($produk->qty > 0)
                                             <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                                                target="_blank" class="btn btn-dark w-100 "
-                                                {{ $produk->qty <= 0 ? 'disabled' : '' }}>
-                                                <i class="bx bx-whatsapp me-1"></i> Pesan via WA
+                                                target="_blank" class="btn btn-dark btn-sm w-100">
+                                                <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
                                             </a>
                                         @else
-                                            <button type="button" class="btn btn-dark w-100">Stock Habis</button>
+                                            <button type="button" class="btn btn-dark btn-sm w-100">Stock Habis</button>
                                         @endif
                                     </div>
                                 </div>
-                                <div class="card-body py-2">
-                                    <a href="{{ route('market.produk.detail', ['slug' => $item->slug]) }}"
-                                        class="text-decoration-none text-dark text-hover-primary">
-                                        <p class="card-title fw-bold text-truncate mb-1" title="{{ $item->name_product }}">
-                                            {{ $item->name_product }}</p>
+                                <div class="card-body p-2">
+                                    <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}"
+                                        class="text-decoration-none text-dark">
+                                        <p class="product-title-compact fw-semibold mb-1"
+                                            title="{{ $produk->name_product }}">
+                                            {{ $produk->name_product }}</p>
                                     </a>
-                                    @if ($item->harga_diskon)
-                                        <div class="d-flex flex-wrap">
-                                            <p class="small text-muted text-decoration-line-through mb-0 me-2">
-                                                {{ $item->harga_formatted }}</p>
-                                            <p class="small text-danger fw-bold mb-0">
-                                                {{ 'Rp ' . number_format($item->harga_diskon, 0, ',', '.') }}</p>
+                                    @if ($produk->harga_diskon)
+                                        <div>
+                                            <span class="text-muted text-decoration-line-through product-price-old">
+                                                {{ $produk->harga_formatted }}</span>
+                                            <span class="fw-bold product-price-current text-hover">
+                                                {{ 'Rp ' . number_format($produk->harga_diskon, 0, ',', '.') }}</span>
                                         </div>
                                     @else
-                                        <p class="small text-dark fw-bold mb-0">{{ $item->harga_formatted }}</p>
+                                        <div>
+                                            <p class="fw-bold mb-0 product-price-current text-hover">
+                                                {{ $produk->harga_formatted }}</p>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -159,6 +177,8 @@
             </div>
         </div>
     @endif
+
+    <x-market-footer></x-market-footer>
 @endsection
 
 @section('page-script')

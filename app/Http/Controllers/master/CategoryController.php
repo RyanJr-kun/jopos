@@ -3,47 +3,61 @@
 namespace App\Http\Controllers\master;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
 
-
 class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $statuses = Category::select('status')->distinct()->pluck('status');
-        $query = Category::withCount('products')->latest();
+        // Ambil semua kategori utama untuk dropdown parent (dipakai di modal create/edit)
+        $parentKategoris = Category::whereNull('parent_id')->latest()->get(['id', 'name']);
+
+        $query = Category::with('parent', 'children')
+            ->withCount('products')
+            ->latest();
+
+        $type = $request->input('type', 'utama');
+
+        if ($type === 'utama') {
+            $query->whereNull('parent_id');
+        } elseif ($type === 'sub') {
+            $query->whereNotNull('parent_id');
+        }
+
+        // Filter: hanya tampilkan kategori utama atau sub kategori berdasarkan tab
+        if ($request->filled('type')) {
+            if ($request->input('type') === 'utama') {
+                $query->whereNull('parent_id');
+            } elseif ($request->input('type') === 'sub') {
+                $query->whereNotNull('parent_id');
+            }
+        }
+
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where('name', 'LIKE', "%{$search}%");
         }
+
         if ($request->filled('status')) {
             $statusValue = $request->input('status') === 'Aktif' ? 1 : 0;
             $query->where('status', $statusValue);
         }
 
         $kategoris = $query->paginate(15)->withQueryString();
+
         if ($request->ajax()) {
-            return view('content.produk._category_table', compact('kategoris'))->render();
+            return view('content.produk.kategori._category_table', compact('kategoris'))->render();
         }
 
-        return view('content.produk.kategoriproduk', [
-            'title' => 'Data Kategori Product',
-            'kategoris' => $kategoris,
-            'statuses' => $statuses,
+        return view('content.produk.kategori.kategoriproduk', [
+            'title'          => 'Data Kategori Product',
+            'kategoris'      => $kategoris,
+            'parentKategoris' => $parentKategoris,
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -52,66 +66,45 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
+            'parent_id'    => 'nullable|exists:categories,id',
             'img_kategori' => 'nullable|string|starts_with:tmp/',
-            'name' => 'required|max:255|unique:categories',
-            'slug' => 'required|max:255|unique:categories',
-            'status' => 'nullable|boolean',
+            'name'         => 'required|max:255|unique:categories',
+            'slug'         => 'required|max:255|unique:categories',
+            'status'       => 'nullable|boolean',
         ]);
 
-        // Jika ada file yang diunggah melalui FilePond
+        // Pindahkan file dari tmp ke direktori permanen
         if ($request->filled('img_kategori')) {
-            $sourcePath = $request->input('img_kategori'); // Path dari folder tmp
-            $fileName = basename($sourcePath);
+            $sourcePath = $request->input('img_kategori');
+            $fileName   = basename($sourcePath);
             $destinationPath = 'kategori-images/' . $fileName;
 
-            // Pindahkan file dari tmp ke direktori tujuan
             if (Storage::disk('public')->exists($sourcePath)) {
                 Storage::disk('public')->move($sourcePath, $destinationPath);
-                $validatedData['img_kategori'] = $destinationPath; // Simpan path baru
+                $validatedData['img_kategori'] = $destinationPath;
             } else {
-                // Hapus path jika file tidak ditemukan untuk mencegah error
                 unset($validatedData['img_kategori']);
             }
         }
 
         $validatedData['status'] = $request->has('status');
-        $kategori = Category::create($validatedData);
 
-        // Cek jika request adalah AJAX
-        if ($request->wantsJson()) {
-            // Muat relasi dan format tanggal untuk konsistensi dengan data yang ada
-            $kategori->loadCount('products');
-            $kategori->created_at_formatted = $kategori->created_at->translatedFormat('d M Y');
+        // parent_id null jika tidak diisi (kategori utama)
+        $validatedData['parent_id'] = $request->filled('parent_id') ? $request->input('parent_id') : null;
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Kategori baru berhasil ditambahkan.',
-                'data'    => $kategori
-            ], 201);
-        }
+        Category::create($validatedData);
 
-        // Respons standar jika bukan AJAX
-        return redirect()->route('kategoriproduk.index')->with('success', 'Kategori Baru Berhasil Ditambahkan.');
+        return redirect()
+            ->route('kategoriproduk.index', ['type' => $request->input('category_type_create', 'utama')])
+            ->with('success', 'Kategori Baru Berhasil Ditambahkan.');
     }
 
     /**
-     * Display the specified resource.
+     * Mengembalikan data JSON untuk modal edit.
      */
-    public function show(Category $category)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Category $kategoriproduk)
-    {
-        //
-    }
-
     public function getKategoriJson(Category $kategoriproduk)
     {
+        $kategoriproduk->load('parent:id,name');
         return response()->json($kategoriproduk);
     }
 
@@ -121,55 +114,56 @@ class CategoryController extends Controller
     public function update(Request $request, Category $kategoriproduk)
     {
         $rules = [
+            'parent_id'    => [
+                'nullable',
+                'exists:categories,id',
+                // Mencegah kategori menjadi anak dari dirinya sendiri
+                function ($attribute, $value, $fail) use ($kategoriproduk) {
+                    if ($value == $kategoriproduk->id) {
+                        $fail('Kategori tidak dapat menjadi sub kategori dari dirinya sendiri.');
+                    }
+                },
+            ],
             'img_kategori' => 'nullable|string',
-            'name' => ['required', 'max:255', Rule::unique('categories')->ignore($kategoriproduk->id)],
-            'slug' => ['required', 'max:255', Rule::unique('categories')->ignore($kategoriproduk->id)],
-            'status' => 'nullable|boolean',
+            'name'         => ['required', 'max:255', Rule::unique('categories')->ignore($kategoriproduk->id)],
+            'slug'         => ['required', 'max:255', Rule::unique('categories')->ignore($kategoriproduk->id)],
+            'status'       => 'nullable|boolean',
         ];
 
         $validatedData = $request->validate($rules);
 
-        // Cek apakah ada file baru yang diunggah
+        // Cek apakah ada file baru dari FilePond
         if ($request->filled('img_kategori')) {
             $sourcePath = $request->input('img_kategori');
 
-            // Pastikan ini adalah file baru dari tmp, bukan path file lama
-            if (strpos($sourcePath, 'tmp/') === 0 && Storage::disk('public')->exists($sourcePath)) {
-                // Hapus gambar lama jika ada
+            if (str_starts_with($sourcePath, 'tmp/') && Storage::disk('public')->exists($sourcePath)) {
                 if ($kategoriproduk->img_kategori) {
                     Storage::disk('public')->delete($kategoriproduk->img_kategori);
                 }
-
-                // Pindahkan gambar baru dari tmp ke lokasi permanen
-                $fileName = basename($sourcePath);
+                $fileName        = basename($sourcePath);
                 $destinationPath = 'kategori-images/' . $fileName;
                 Storage::disk('public')->move($sourcePath, $destinationPath);
                 $validatedData['img_kategori'] = $destinationPath;
             }
-            // Menangani kasus jika pengguna menghapus gambar yang ada melalui FilePond
         } elseif ($request->exists('img_kategori') && $request->input('img_kategori') === null) {
+            // Pengguna menghapus gambar
             if ($kategoriproduk->img_kategori && Storage::disk('public')->exists($kategoriproduk->img_kategori)) {
                 Storage::disk('public')->delete($kategoriproduk->img_kategori);
                 $validatedData['img_kategori'] = null;
             }
+        } else {
+            // Gambar tidak diubah, pertahankan nilai lama
+            unset($validatedData['img_kategori']);
         }
 
+        $validatedData['status']    = $request->has('status');
+        $validatedData['parent_id'] = $request->filled('parent_id') ? $request->input('parent_id') : null;
 
-        $validatedData['status'] = $request->has('status');
         $kategoriproduk->update($validatedData);
 
-        if ($request->wantsJson()) {
-            $kategoriproduk->loadCount('products');
-            $kategoriproduk->created_at_formatted = $kategoriproduk->created_at->translatedFormat('d M Y');
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Data Kategori Product Berhasil Diperbarui.',
-                'data'    => $kategoriproduk
-            ]);
-        }
-
-        return redirect()->route('kategoriproduk.index')->with('success', 'Data Kategori Product Berhasil Diperbarui.');
+        return redirect()
+            ->route('kategoriproduk.index', ['type' => $request->input('category_type_edit', 'utama')])
+            ->with('success', 'Data Kategori Product Berhasil Diperbarui.');
     }
 
     /**
@@ -177,8 +171,18 @@ class CategoryController extends Controller
      */
     public function destroy(Category $kategoriproduk)
     {
+        // Cek apakah masih memiliki produk terkait
         if ($kategoriproduk->products()->exists()) {
-            $message = 'Kategori Product tidak dapat dihapus karena masih memiliki produk terkait!';
+            $message = 'Kategori tidak dapat dihapus karena masih memiliki produk terkait!';
+            if (request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
+
+        // Cek apakah masih memiliki sub kategori
+        if ($kategoriproduk->children()->exists()) {
+            $message = 'Kategori tidak dapat dihapus karena masih memiliki sub kategori terkait!';
             if (request()->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 422);
             }
@@ -215,14 +219,10 @@ class CategoryController extends Controller
             ]);
 
             $file = $request->file('img_kategori');
-            // Simpan file ke direktori 'tmp' di dalam 'storage/app/public'
             $path = $file->store('tmp/kategori-images', 'public');
-
-            // Kembalikan path file sebagai plain text
             return $path;
         }
 
-        // Jika tidak ada file, kembalikan response error
         return response()->json(['error' => 'No file uploaded.'], 400);
     }
 
@@ -238,5 +238,17 @@ class CategoryController extends Controller
         }
 
         return response()->json(['error' => 'File not found.'], 404);
+    }
+
+    /**
+     * Mengembalikan daftar kategori utama untuk dropdown parent_id (dipakai via AJAX).
+     */
+    public function getParentOptions(Request $request)
+    {
+        $kategoris = Category::whereNull('parent_id')
+            ->where('status', true)
+            ->get(['id', 'name']);
+
+        return response()->json($kategoris);
     }
 }

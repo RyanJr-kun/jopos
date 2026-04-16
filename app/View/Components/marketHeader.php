@@ -2,20 +2,27 @@
 
 namespace App\View\Components;
 
-use App\Models\Category;
 use Closure;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\View\Component;
 
-class marketHeader extends Component
+class MarketHeader extends Component
 {
-    public $kategoris;
+    /**
+     * Daftar kategori utama (parent_id = null) beserta sub-kategorinya.
+     * Data ini diteruskan dari controller via prop, bukan di-query ulang di sini.
+     */
+    public Collection $kategoris;
+
     /**
      * Create a new component instance.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $kategoris
      */
-    public function __construct()
+    public function __construct(Collection $kategoris)
     {
-        $this->kategoris = Category::all();
+        $this->kategoris = $kategoris;
     }
 
     /**
@@ -23,6 +30,6 @@ class marketHeader extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.marketHeader');
+        return view('components.market-header');
     }
 }

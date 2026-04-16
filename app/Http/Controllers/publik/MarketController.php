@@ -5,12 +5,13 @@ namespace App\Http\Controllers\publik;
 use App\Enums\BannerPosition;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Stores;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MarketController extends Controller
 {
@@ -24,22 +25,30 @@ class MarketController extends Controller
         // Ambil produk terbaru dengan eager loading untuk performa
         $products = Product::with(['category', 'unit', 'brand', 'promotions'])
             ->latest()
-            ->paginate(10);
+            ->paginate(12);
 
         // Ambil banner yang aktif untuk Main Carousel, urutkan berdasarkan urutan
-        $mainBanners = Banner::where('is_active', true)
-            ->where('posisi', BannerPosition::MAIN_CAROUSEL)
+        $mainImg = Banner::where('is_active', true)
+            ->where('posisi', BannerPosition::MAIN)
+            ->orderBy('urutan')
+            ->get();
+        $main2Img = Banner::where('is_active', true)
+            ->where('posisi', BannerPosition::MAIN2)
+            ->orderBy('urutan')
+            ->get();
+        $main3Img = Banner::where('is_active', true)
+            ->where('posisi', BannerPosition::MAIN3)
             ->orderBy('urutan')
             ->get();
 
         // Ambil banner yang aktif untuk Promotion Vertikal, urutkan berdasarkan urutan
-        $promoVertikalBanners = Banner::where('is_active', true)
-            ->where('posisi', BannerPosition::PROMO_VERTIKAL)
+        $promoImg = Banner::where('is_active', true)
+            ->where('posisi', BannerPosition::PROMO)
             ->orderBy('urutan')
             ->get();
 
         // Ambil banner yang aktif untuk Bestseller, urutkan berdasarkan urutan
-        $bestsellerBanners = Banner::where('is_active', true)
+        $bestsellerImg = Banner::where('is_active', true)
             ->where('posisi', BannerPosition::BESTSELLER)
             ->orderBy('urutan')
             ->get();
@@ -51,14 +60,8 @@ class MarketController extends Controller
             ->latest()
             ->get();
 
-        // Ambil kategori produk yang memiliki produk untuk ditampilkan di menu header.
-        $kategorisForMenu = Category::withCount('products')
-            ->whereHas('products')
-            ->orderBy('name')
-            ->get();
-
         // Ambil 6 produk terlaris sepanjang waktu
-        $produkTerlaris = Product::with(['unit'])
+        $produkTerlaris = Product::with(['unit', 'promotions'])
             ->select('products.*', DB::raw('SUM(sale_items.jumlah) as total_terjual'))
             ->join('sale_items', 'products.id', '=', 'sale_items.product_id')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
@@ -100,16 +103,22 @@ class MarketController extends Controller
             ->limit(8)
             ->get();
 
+        $kategoris = Category::with('children')
+            ->whereNull('parent_id')
+            ->get();
+
         return view('content.market.beranda', [
             'title' => 'Beranda',
             'products' => $products,
-            'mainBanners' => $mainBanners,
-            'promoVertikalBanners' => $promoVertikalBanners,
-            'bestsellerBanners' => $bestsellerBanners,
+            'mainImg' => $mainImg,
+            'main2Img' => $main2Img,
+            'main3Img' => $main3Img,
+            'promoImg' => $promoImg,
+            'bestsellerImg' => $bestsellerImg,
             'produkTerlaris' => $produkTerlaris,
             'promotions' => $promotions,
-            'kategoris' => $kategorisForMenu, // Kirim data kategori ke view
-            'produkPromotion' => $produkPromotion
+            'produkPromotion' => $produkPromotion,
+            'kategoris' => $kategoris
         ]);
     }
 
@@ -123,14 +132,20 @@ class MarketController extends Controller
     {
         $query = Product::with(['category', 'unit', 'brand', 'promotions']);
 
-        // Filter berdasarkan Kategori (dari slug)
+        // Filter Kategori 
         if ($request->filled('kategori')) {
             $query->whereHas('category', function ($q) use ($request) {
                 $q->where('slug', $request->kategori);
             });
         }
 
-        // Filter berdasarkan pencarian keyword
+        // Filter Brand (checkbox — bisa multiple)
+        if ($request->filled('brand')) {
+            $brandIds = (array) $request->brand;
+            $query->whereIn('brand_id', $brandIds);
+        }
+
+        // Filter Pencarian
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -141,6 +156,21 @@ class MarketController extends Controller
 
         // Sorting
         switch ($request->get('sort')) {
+            case 'nama_asc':
+                $query->orderBy('name_product', 'asc');
+                break;
+            case 'nama_desc':
+                $query->orderBy('name_product', 'desc');
+                break;
+            case 'terpopuler':
+                $query->addSelect([
+                    'total_terjual' => DB::table('sale_items')
+                        ->leftJoin('sales', 'sale_items.sale_id', '=', 'sales.id')
+                        ->whereColumn('sale_items.product_id', 'products.id')
+                        ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
+                        ->selectRaw('COALESCE(SUM(sale_items.jumlah), 0)')
+                ])->orderByDesc('total_terjual');
+                break;
             case 'harga_asc':
                 $query->orderBy('harga_jual', 'asc');
                 break;
@@ -148,18 +178,34 @@ class MarketController extends Controller
                 $query->orderBy('harga_jual', 'desc');
                 break;
             default:
-                $query->latest(); // Default: terbaru
+                $query->latest();
         }
 
-        $products = $query->paginate(12)->withQueryString();
+        $products = $query->paginate(20)->withQueryString();
         $kategorisForFilter = Category::whereHas('products')->orderBy('name')->get();
 
-        // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
+        // AJAX: kembalikan hanya partial
         if ($request->ajax()) {
             return view('content.market._produk_list', compact('products'))->render();
         }
 
-        return view('content.market.produk', compact('products', 'kategorisForFilter'));
+        $kategoris = Category::with('children')->whereNull('parent_id')->get();
+
+        // ── Ambil semua brand yang memiliki produk, urutkan nama ──────
+        // Gunakan model Brand jika ada, atau ambil via join dari products
+        $brands = Brand::whereHas('products')
+            ->orderBy('name')
+            ->get();
+        // Catatan: jika nama model Brand berbeda (misal "Brands"), sesuaikan.
+        // Fallback alternatif jika tidak ada model Brand:
+        // $brands = \App\Models\Brand::orderBy('name')->get();
+
+        return view('content.market.produk', compact(
+            'products',
+            'kategorisForFilter',
+            'kategoris',
+            'brands'          // ← Data brand dikirim ke view
+        ));
     }
 
     /**
@@ -181,14 +227,18 @@ class MarketController extends Controller
             ->limit(5)
             ->get();
 
+        $kategoris = Category::with('children')->whereNull('parent_id')->get();
 
-        return view('content.market.produkdetail', compact('produk', 'produkSerupa'));
+        return view('content.market.produkdetail', compact('produk', 'produkSerupa', 'kategoris'));
     }
+
     public function layanan()
     {
+        $kategoris = Category::with('children')->whereNull('parent_id')->get();
+
         return view('content.market.layanan', [
-            'title' => 'Tentang Kami',
-            'title' => 'Layanan Kami',
+            'title'    => 'Layanan Kami',
+            'kategoris' => $kategoris,
         ]);
     }
 
@@ -215,13 +265,15 @@ class MarketController extends Controller
             // Kembalikan data dalam bentuk JSON berisi potongan HTML dan jumlah data
             return response()->json([
                 // Render file blade partial dan ubah jadi string HTML
-                'html' => view('content.market._list_toko', compact('profils'))->render(),
+                'html'  => view('content.market._list_toko', compact('profils'))->render(),
                 'count' => $profils->count()
             ]);
         }
 
+        $kategoris = Category::with('children')->whereNull('parent_id')->get();
+
         // 4. Jika Request biasa (Load halaman pertama kali)
-        return view('content.market.tentang', compact('profils'));
+        return view('content.market.tentang', compact('profils', 'kategoris'));
     }
     /**
      * Menangani permintaan live search dari header.

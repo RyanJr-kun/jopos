@@ -14,6 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('categories')) {
             Schema::create('categories', function (Blueprint $table) {
                 $table->id();
+                $table->foreignId('parent_id')->nullable()->constrained('categories')->nullOnDelete();
                 $table->string('img_kategori')->nullable();
                 $table->string('name', 100)->unique();
                 $table->string('slug', 100)->unique();

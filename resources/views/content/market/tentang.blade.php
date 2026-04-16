@@ -16,10 +16,10 @@
 @section('layoutContent')
 
     @yield('content')
-    <x-marketHeader></x-marketHeader>
+    <x-market-header :kategoris="$kategoris"></x-market-header>
     {{-- Breadcrumb --}}
-    <div class="bg-white py-3 ms-3">
-        <div class="container">
+    <div class="bg-white py-3">
+        <div class="container-market">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ url('/') }}" class="">Beranda</a></li>
@@ -31,7 +31,7 @@
 
     <!-- Section: Tentang Jo Computer -->
     <section id="tentangJoComputer" class="section-py bg-white">
-        <div class="container">
+        <div class="container-market">
             <div class="row align-items-start g-5">
                 <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
                     <img src="{{ asset('assets/img/toko.webp') }}" class="img-fluid rounded-3 shadow-lg"
@@ -53,7 +53,7 @@
 
     <!-- Section: Tentang Aplikasi Jo-POS -->
     <section id="supportSistem" class="section-py bg-white">
-        <div class="container">
+        <div class="container-market">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6 order-lg-2" data-aos="fade-up" data-aos-delay="600">
                     <!-- Ganti 'src' dengan screenshot atau logo aplikasi Jo-POS -->
@@ -74,7 +74,7 @@
     </section>
 
     <section id="location" class="section-py">
-        <div class="container">
+        <div class="container-market">
             <div class="text-start mb-5" data-aos="fade-up" data-aos-delay="300">
                 <h4 class="fw-bolder mb-0">Lokasi Toko Kami</h4>
                 <p class="lead text-muted">Temukan toko jocomputer terdekat dengan lokasi anda.</p>
@@ -138,7 +138,7 @@
         </div>
     </section>
 
-    <x-marketFooter></x-marketFooter>
+    <x-market-footer></x-market-footer>
 @endsection
 
 @section('page-script')

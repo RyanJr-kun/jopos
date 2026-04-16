@@ -57,7 +57,7 @@
         <div class="card-body px-0 pt-0 pb-2">
             {{-- Form untuk filter --}}
             <form method="GET" action="{{ route('stok-opname.index') }}" id="filterForm">
-                <div class="filter-container p-3">
+                <div class=" p-3">
                     <div class="row g-3 align-items-center justify-content-start">
                         <div class="col-md-4">
                             <input type="text" name="search" id="searchInput" class="form-control"

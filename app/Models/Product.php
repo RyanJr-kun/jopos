@@ -106,11 +106,11 @@ class Product extends Model
 
     public function getHargaDiskonAttribute()
     {
-        if (!$this->active_promo) {
+        if (!$this->active_promotion) {
             return null;
         }
 
-        $promo = $this->active_promo;
+        $promo = $this->active_promotion;
         $hargaAsli = $this->harga_jual;
 
         if ($promo->type == 'percentage') {

@@ -23,7 +23,7 @@ class ViewServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Composer untuk market header (sudah ada)
-        View::composer('components.marketHeader', function ($view) {
+        View::composer('components.MarketHeader', function ($view) {
             $kategoris = Category::whereHas('products')
                 ->orderBy('name')
                 ->get();
@@ -31,7 +31,7 @@ class ViewServiceProvider extends ServiceProvider
         });
 
         // Composer untuk market footer (baru)
-        View::composer('components.marketFooter', function ($view) {
+        View::composer('components.MarketFooter', function ($view) {
             $bestSellingCategories = Category::select('categories.name', 'categories.slug')
                 ->join('products', 'categories.id', '=', 'products.category_id')
                 ->join('sale_items', 'products.id', '=', 'sale_items.product_id')

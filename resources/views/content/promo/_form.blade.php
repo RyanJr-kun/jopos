@@ -83,7 +83,7 @@
         @enderror
     </div>
     <div class="col-12">
-        <label for="products" class="form-label">Berlaku untuk Product (Opsional)</label>
+        <label for="products" class="form-label select2">Berlaku untuk Product (Opsional)</label>
         <select class="form-select" id="products" name="products[]" multiple>
             @php
                 $selectedProductIds = old('products', $promo?->products->pluck('id')->toArray() ?? []);

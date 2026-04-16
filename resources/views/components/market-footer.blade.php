@@ -1,12 +1,11 @@
 <footer class="footer-market text-white pt-5 pb-4">
-    <div class="container pb-md-2">
-        <div class="row">
-
+    <div class="container-market pb-md-2">
+        <div class="row justify-content-lg-between">
             {{-- Kolom 1: Tentang Toko --}}
             <div class="col-12 col-md-4 mb-4 mb-md-0 mt-md-3">
                 <a class="navbar-brand d-inline-block mb-3" href="{{ url('/') }}">
                     <img src="{{ asset('assets/img/LM-Putih.png') }}" alt="Logo Jo Computer Putih"
-                        style="height: 70px;">
+                        class="img-fluid footer-logo">
                 </a>
                 <p style="font-size: 0.9rem;" class="mb-4 text-white-50">
                     Toko komponen dan aksesoris komputer terpercaya. Kami menyediakan produk berkualitas dengan harga
@@ -15,16 +14,22 @@
                 {{-- Alamat Pusat Solo --}}
                 <p class="small d-flex align-items-start mb-2">
                     <i class="bx bxs-map me-2 flex-shrink-0 mt-1 text-white"></i>
-                    <span><strong>JO Computer Solo</strong> (Pusat)<br>Jl. Slamet Riyadi Somodinalan No.250, Sukoharjo</span>
+                    <span><strong>JO Computer Solo</strong> (Pusat)<br>Jl. Slamet Riyadi Somodinalan No.250,
+                        Sukoharjo</span>
                 </p>
                 {{-- Alamat Cabang Baturetno --}}
                 <p class="small d-flex align-items-start mb-3">
                     <i class="bx bxs-map me-2 flex-shrink-0 mt-1 text-white"></i>
-                    <span><strong>JO Computer Baturetno</strong> (Cabang)<br>Jl. Raya Baturetno-Batuwarno, Wonogiri</span>
+                    <span><strong>JO Computer Baturetno</strong> (Cabang)<br>Jl. Raya Baturetno-Batuwarno,
+                        Wonogiri</span>
                 </p>
                 <div class="d-flex flex-column gap-2 mb-4 mb-md-0">
-                    <a href="mailto:cs@jocomputer.com" class="small text-white text-decoration-none email-hover d-inline-flex align-items-center"><i class="bx bxs-envelope me-2 text-white"></i>cs@jocomputer.com</a>
-                    <a href="tel:081318000699" class="small text-white text-decoration-none phone-hover d-inline-flex align-items-center"><i class="bx bxs-phone me-2 text-white"></i>081318000699</a>
+                    <a href="mailto:cs@jocomputer.com"
+                        class="small text-white text-decoration-none email-hover d-inline-flex align-items-center"><i
+                            class="bx bxs-envelope me-2 text-white"></i>cs@jocomputer.com</a>
+                    <a href="tel:081318000699"
+                        class="small text-white text-decoration-none phone-hover d-inline-flex align-items-center"><i
+                            class="bx bxs-phone me-2 text-white"></i>081318000699</a>
                 </div>
             </div>
 
@@ -46,7 +51,7 @@
                     @if (isset($bestSellingCategories) && $bestSellingCategories->isNotEmpty())
                         @foreach ($bestSellingCategories as $kategori)
                             <a href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}"
-                                    class="footer-link small">{{ $kategori->name }}</a>
+                                class="footer-link small">{{ $kategori->name }}</a>
                         @endforeach
                     @else
                         <span class="small text-muted">Kategori belum tersedia.</span>
@@ -58,14 +63,16 @@
             <div class="col-12 col-md-4 col-lg-3 mt-5 mt-md-3 mx-auto">
                 <h6 class="text-uppercase mb-4 font-weight-bold text-white fs-6">Ikuti Kami</h6>
                 <div class="d-flex gap-3 mb-4 flex-wrap">
-                    <a href="https://www.facebook.com/jo.comp.798/" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook"
-                        title="Facebook"><i class="bx bxl-facebook icon-md"></i></a>
-                    <a href="https://www.instagram.com/jocompsolo?utm_source=ig_web_button_share_sheet&igsh=b3J2dXFxMmV5Zml1" target="_blank" rel="noopener noreferrer"
-                        class="social-icon social-instagram" title="Instagram"><i class="bx bxl-instagram icon-md"></i></a>
-                    <a href="https://tokopedia.link/KTBDV7zZmXb" target="_blank" rel="noopener noreferrer" class="social-icon social-tokopedia"
-                        title="Tokopedia"><i class="bx bx-store"></i></a>
-                    <a href="https://www.tiktok.com/@jocomputer.official?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer"
-                        class="social-icon social-tiktok" title="TikTok"><i class="bx bxl-tiktok icon-md"></i></a>
+                    <a href="https://www.facebook.com/jo.comp.798/" target="_blank" rel="noopener noreferrer"
+                        class="social-icon social-facebook" title="Facebook"><i class="bx bxl-facebook icon-md"></i></a>
+                    <a href="https://www.instagram.com/jocompsolo?utm_source=ig_web_button_share_sheet&igsh=b3J2dXFxMmV5Zml1"
+                        target="_blank" rel="noopener noreferrer" class="social-icon social-instagram"
+                        title="Instagram"><i class="bx bxl-instagram icon-md"></i></a>
+                    <a href="https://tokopedia.link/KTBDV7zZmXb" target="_blank" rel="noopener noreferrer"
+                        class="social-icon social-tokopedia" title="Tokopedia"><i class="bx bx-store"></i></a>
+                    <a href="https://www.tiktok.com/@jocomputer.official?is_from_webapp=1&sender_device=pc"
+                        target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok" title="TikTok"><i
+                            class="bx bxl-tiktok icon-md"></i></a>
                 </div>
                 <h6 class="text-uppercase mb-3 font-weight-bold text-white fs-6">Jam Operasional</h6>
                 <div class="d-flex flex-column gap-2">
