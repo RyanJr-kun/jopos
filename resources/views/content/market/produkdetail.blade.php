@@ -41,10 +41,22 @@
         <div class="row g-5">
             <div class="col-lg-6">
                 <div class="mb-3">
+                    {{-- Gambar Utama --}}
                     <img id="main-product-image"
-                        src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
-                        class="img-fluid rounded-3 w-100" alt="{{ $produk->name_product }}"
-                        style="max-height: 500px; object-fit: contain;">
+                        src="{{ $produk->primaryImage ? (asset('storage/' . $produk->primaryImage->path) ?: asset('storage/' . $produk->img_produk)) : asset('assets/img/produk.png') }}"
+                        class="img-fluid rounded-3 w-100 border shadow-sm" alt="{{ $produk->name_product }}"
+                        style="height: 400px; object-fit: contain; background: #fff;">
+
+                    {{-- Thumbnail Galeri --}}
+                    @if ($produk->images && $produk->images->count() > 1)
+                        <div class="d-flex gap-2 mt-3 overflow-auto pb-2" style="scrollbar-width: thin;">
+                            @foreach ($produk->images as $img)
+                                <img src="{{ asset('storage/' . $img->path) }}" class="img-thumbnail cursor-pointer"
+                                    style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
+                                    onclick="document.getElementById('main-product-image').src=this.src">
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
             <div class="col-lg-6">
@@ -98,13 +110,37 @@
             </div>
         </div>
 
+
         {{-- Product Description & Specifications --}}
         <div class="row mt-2 pt-4">
             <div class="col-12">
-                <h3 class="fw-bold border-bottom pb-2 mb-3">Description Product</h3>
-                <div class="product-description">
+                <h3 class="fw-bold border-bottom pb-2 mb-3">Deskripsi Produk</h3>
+                <div class="product-description mb-5">
                     {!! $produk->description !!}
                 </div>
+
+                {{-- Render Tabel Spesifikasi JSON --}}
+                @if ($produk->specification)
+                    <h3 class="fw-bold border-bottom pb-2 mb-3">Spesifikasi Teknis</h3>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <tbody>
+                                @php
+                                    // Decode JSON dari database
+                                    $specs = json_decode($produk->specification, true);
+                                @endphp
+                                @if (is_array($specs))
+                                    @foreach ($specs as $spec)
+                                        <tr>
+                                            <th class="bg-light" style="width: 30%;">{{ $spec['key'] ?? '-' }}</th>
+                                            <td>{{ $spec['value'] ?? '-' }}</td>
+                                        </tr>
+                                    @endforeach
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -120,8 +156,12 @@
                             <div class="card product-card product-card-compact h-100 overflow-hidden">
                                 <div class="product-card-img-container">
                                     <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                                        <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
-                                            loading="lazy" class="card-img-top" alt="{{ $produk->name_product }}">
+                                        <img src="{{ $produk->primaryImage
+                                            ? asset('storage/' . $produk->primaryImage->path)
+                                            : ($produk->img_produk
+                                                ? asset('storage/' . $produk->img_produk)
+                                                : asset('assets/img/produk.png')) }}"
+                                            alt="{{ $produk->name_product }}" loading="lazy" class="card-img-top">
                                         {{-- Badge Promotion --}}
                                         @if ($produk->qty < 1)
                                             <div class="product-badge">

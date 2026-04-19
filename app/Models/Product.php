@@ -1,5 +1,7 @@
 <?php
-
+// ============================================================
+// FILE: app/Models/Product.php  (UPDATED)
+// ============================================================
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -7,7 +9,6 @@ use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
 
 class Product extends Model
 {
@@ -38,6 +39,9 @@ class Product extends Model
         );
     }
 
+    // -------------------------------------------------------
+    // RELASI LAMA (tidak diubah)
+    // -------------------------------------------------------
     public function promotions()
     {
         return $this->belongsToMany(Promotion::class, 'product_promotion');
@@ -83,21 +87,56 @@ class Product extends Model
         return $this->hasOne(\App\Models\PurchaseItem::class)->latestOfMany();
     }
 
+    // -------------------------------------------------------
+    // RELASI BARU
+    // -------------------------------------------------------
+
+    /** Galeri foto produk utama */
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    /** Foto utama (primary) */
+    public function primaryImage()
+    {
+        return $this->hasOne(ProductImage::class)->where('is_primary', true);
+    }
+
+    /** Tipe variasi (misal: Warna, RAM, Storage) */
+    public function variantTypes(): HasMany
+    {
+        return $this->hasMany(ProductVariantType::class)->orderBy('sort_order');
+    }
+
+    /** Semua kombinasi variasi (SKU individu) */
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    /** Apakah produk ini punya variasi */
+    public function getHasVariantsAttribute(): bool
+    {
+        return $this->variants()->exists();
+    }
+
+    // -------------------------------------------------------
+    // PROMO (tidak diubah)
+    // -------------------------------------------------------
     public function getActivePromotionAttribute()
     {
-        // Cari promo spesifik untuk produk ini terlebih dahulu
         $promo = $this->promotions()
             ->where('status', true)
             ->where('tanggal_mulai', '<=', now())
             ->where('tanggal_berakhir', '>=', now())
             ->first();
 
-        // Jika tidak ada promo spesifik, cari promo global (yang tidak terikat produk manapun)
         if (!$promo) {
             $promo = Promotion::where('status', true)
                 ->where('tanggal_mulai', '<=', now())
                 ->where('tanggal_berakhir', '>=', now())
-                ->whereDoesntHave('products') // Promotion yang tidak punya relasi produk
+                ->whereDoesntHave('products')
                 ->first();
         }
 

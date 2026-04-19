@@ -23,7 +23,7 @@ class MarketController extends Controller
     public function index()
     {
         // Ambil produk terbaru dengan eager loading untuk performa
-        $products = Product::with(['category', 'unit', 'brand', 'promotions'])
+        $products = Product::with(['category', 'unit', 'brand', 'promotions', 'primaryImage'])
             ->latest()
             ->paginate(12);
 
@@ -76,6 +76,7 @@ class MarketController extends Controller
                 'products.category_id',
                 'products.brand_id',
                 'products.unit_id',
+                'products.specification',
                 'products.description',
                 'products.harga_jual',
                 'products.harga_beli',
@@ -145,12 +146,20 @@ class MarketController extends Controller
             $query->whereIn('brand_id', $brandIds);
         }
 
-        // Filter Pencarian
+        // Filter Pencarian Multi-fungsi (Nama, SKU, Brand, atau Kategori)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name_product', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    // Mencari berdasarkan nama Brand
+                    ->orWhereHas('brand', function ($b) use ($search) {
+                        $b->where('name', 'like', "%{$search}%");
+                    })
+                    // Mencari berdasarkan nama Kategori
+                    ->orWhereHas('category', function ($c) use ($search) {
+                        $c->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -217,7 +226,7 @@ class MarketController extends Controller
     public function produkDetail($slug)
     {
         // PERBAIKAN: Eager load semua relasi yang mungkin ditampilkan di halaman detail.
-        $produk = Product::with(['category', 'brand', 'unit', 'garansi', 'pajak', 'user'])
+        $produk = Product::with(['category', 'brand', 'unit', 'garansi', 'pajak', 'user', 'images'])
             ->where('slug', $slug)
             ->firstOrFail();
         $produkSerupa = Product::with('unit', 'promotions')

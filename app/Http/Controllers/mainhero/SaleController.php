@@ -25,49 +25,43 @@ class SaleController extends Controller
      */
     public function index(Request $request)
     {
-        // Ambil semua status pembayaran yang unik untuk dropdown filter
+        // Mengambil status unik untuk filter
         $statuses = Sale::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
 
-        // Mulai query builder
-        $query = Sale::with(['pelanggan', 'user'])->latest();
+        $query = Sale::with(['customer', 'user'])->latest();
 
-
-        // Terapkan filter pencarian jika ada input 'search'
+        // Filter Nama Customer atau Nomor Invoice (Referensi)
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('referensi', 'like', "%{$search}%")
-                    ->orWhereHas('pelanggan', function ($q_pelanggan) use ($search) {
-                        $q_pelanggan->where('name', 'like', "%{$search}%");
+                    ->orWhereHas('customer', function ($q_customer) use ($search) {
+                        $q_customer->where('name', 'like', "%{$search}%");
                     });
             });
         }
 
-        // Terapkan filter status jika ada input 'status'
+        // Filter Status Penjualan
         if ($request->filled('status')) {
             $query->where('status_pembayaran', $request->input('status'));
         }
-        // Setelah filter search & status yang sudah ada
-        $query->when(request('date_from') && request('date_to'), function ($q) {
-            $q->whereBetween('created_at', [
-                request('date_from') . ' 00:00:00',
-                request('date_to')   . ' 23:59:59',
+
+        // Filter Rentang Tanggal
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('created_at', [
+                $request->date_from . ' 00:00:00',
+                $request->date_to   . ' 23:59:59',
             ]);
-        });
+        }
 
         $penjualan = $query->paginate(15)->withQueryString();
 
-        // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
+        // Logika AJAX: Jika request datang dari AJAX, return partial view (tabel saja)
         if ($request->ajax()) {
             return view('content.penjualan._penjualan_table', compact('penjualan'))->render();
         }
 
-        // Jika request biasa, kembalikan view lengkap
-        return view('content.penjualan.index', [
-            'title' => 'Daftar Invoice Sale',
-            'penjualan' => $penjualan,
-            'statuses' => $statuses,
-        ]);
+        return view('content.penjualan.index', compact('penjualan', 'statuses'));
     }
 
     /**
@@ -77,12 +71,14 @@ class SaleController extends Controller
     {
 
         // PERBAIKAN: Eager load relasi untuk efisiensi dan ketersediaan data di view
-        $products = Product::with(['categories', 'units', 'taxes', 'promotions'])
+        $products = Product::with(['category', 'unit', 'promotions'])
             ->where('qty', '>', 0)
             ->orderBy('name_product')
             ->get();
         $customers = Customer::where('status', 1)->orderBy('name')->get();
-        $kategoris = Category::where('status', 1)->orderBy('name')->get();
+        $kategoris = Category::with('children')
+            ->whereNull('parent_id')
+            ->get();
         $taxes = Taxe::all(); // Ambil semua data pajak
 
         return view('content.penjualan.create', [
@@ -296,7 +292,7 @@ class SaleController extends Controller
     public function show(Sale $penjualan)
     {
         // Eager load relasi untuk menghindari N+1 problem
-        $penjualan->load('items.product', 'items.serialNumbers', 'pelanggan', 'user');
+        $penjualan->load('items.product', 'items.serialNumbers', 'customer', 'user');
         $profilToko = Stores::first();
 
         return view('content.penjualan.show', [
@@ -312,7 +308,7 @@ class SaleController extends Controller
     public function edit(Sale $penjualan)
     {
         // Eager load relasi untuk efisiensi
-        $penjualan->load('items.product', 'pelanggan', 'user');
+        $penjualan->load('items.product', 'customer', 'user');
 
         // Ambil data yang dibutuhkan untuk form, mirip seperti method create()
         $customers = Customer::where('status', 1)->orderBy('name')->get();
@@ -572,7 +568,7 @@ class SaleController extends Controller
                     }
                 }
 
-                return $penjualan->load('items.product', 'pelanggan', 'user');
+                return $penjualan->load('items.product', 'customer', 'user');
             });
             return redirect()->route('penjualan.show', $penjualan->referensi)->with('success', 'Transaksi berhasil diperbarui.');
         } catch (\Exception $e) {
@@ -586,7 +582,7 @@ class SaleController extends Controller
     public function generatePdf(Sale $penjualan)
     {
         // Eager load relasi untuk efisiensi
-        $penjualan->load('pelanggan', 'user', 'items.product', 'items.serialNumbers');
+        $penjualan->load('customer', 'user', 'items.product', 'items.serialNumbers');
         $profilToko = Stores::first();
 
         // Data yang akan dikirim ke view
@@ -603,7 +599,7 @@ class SaleController extends Controller
     public function getTodayHistory(Request $request)
     {
         if ($request->ajax()) {
-            $todaySales = Sale::with('pelanggan')
+            $todaySales = Sale::with('customer')
                 ->whereDate('created_at', Carbon::today())
                 ->latest() // Urutkan dari yang terbaru
                 ->get()
@@ -612,7 +608,7 @@ class SaleController extends Controller
                         'referensi' => $sale->referensi,
                         'total_akhir' => $sale->total_akhir,
                         'status' => $sale->status_pembayaran, // Disesuaikan
-                        'name' => $sale->pelanggan->name ?? 'Customer Umum',
+                        'name' => $sale->customer->name ?? 'Customer Umum',
                         'waktu' => $sale->created_at->format('H:i'),
                     ];
                 });
@@ -632,7 +628,7 @@ class SaleController extends Controller
     public function printThermal(Sale $penjualan)
     {
         // Eager load relasi yang dibutuhkan untuk efisiensi
-        $penjualan->load('pelanggan', 'user', 'items.product', 'items.serialNumbers');
+        $penjualan->load('customer', 'user', 'items.product', 'items.serialNumbers');
         $profilToko = Stores::first();
 
         return view('content.penjualan.thermal', compact('penjualan', 'profilToko'));

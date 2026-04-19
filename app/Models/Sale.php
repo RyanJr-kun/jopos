@@ -41,10 +41,15 @@ class Sale extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function tax(): BelongsTo
+    {
+        return $this->belongsTo(Taxe::class);
+    }
+
     /**
-     * Get the pelanggan that owns the Sale
+     * Get the customer that owns the Sale
      */
-    public function pelanggan(): BelongsTo
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class)->withDefault([
             'name' => 'Customer Umum',

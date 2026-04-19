@@ -29,6 +29,7 @@ class SpatieRoleSeeder extends Seeder
             }
         }
 
+        User::find(1)?->assignRole('admin');
         $this->command->info('Roles assigned successfully via Spatie!');
     }
 }

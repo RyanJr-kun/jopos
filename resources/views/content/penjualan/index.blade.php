@@ -4,13 +4,10 @@
 @section('content')
 @section('vendor-style')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 @endsection
 
 @section('vendor-script')
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 @endsection
 
 <div class="card mb-4">
@@ -23,14 +20,19 @@
             </div>
 
             <!-- Filter Rentang Tanggal -->
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="input-group">
-                    <span class="input-group-text"><i class="bx bx-calendar"></i></span>
-                    <input type="text" id="dateRangePicker" class="form-contro  l"
+                    <input type="text" id="flatpickr-date" class="form-control"
                         placeholder="Pilih rentang tanggal..."
                         value="{{ request('date_from') && request('date_to') ? request('date_from') . ' to ' . request('date_to') : '' }}">
                     @if (request('date_from'))
-                        <button type="button" class="btn btn-outline-secondary" id="clearDateBtn">
+                        <button type="button" class="btn" id="clearDateBtn" title="Hapus Filter Tanggal"
+                            data-bs-toggle="tooltip" data-bs-placement="top">
+                            <i class="bx bx-x"></i>
+                        </button>
+                    @else
+                        <button type="button" class="btn d-none" id="clearDateBtn" title="Hapus Filter Tanggal"
+                            data-bs-toggle="tooltip" data-bs-placement="top">
                             <i class="bx bx-x"></i>
                         </button>
                     @endif
@@ -100,151 +102,48 @@
 
 @endsection
 @section('page-script')
-
-<script>
-    flatpickr('#dateRangePicker', {
-        mode: 'range',
-        dateFormat: 'Y-m-d',
-        locale: 'id',
-        allowInput: true,
-        onClose(selectedDates) {
-            if (selectedDates.length === 2) {
-                applyFilters();
-            }
-        }
-    });
-
-    function getUrlParams() {
-        const params = new URLSearchParams(window.location.search);
-        return params;
-    }
-
-    function applyFilters() {
-        const params = getUrlParams();
-        const search = document.getElementById('searchInput').value;
-        const status = document.getElementById('statusFilter').value;
-        const dateRange = document.getElementById('dateRangePicker').value;
-
-        search ? params.set('search', search) : params.delete('search');
-        status ? params.set('status', status) : params.delete('status');
-
-        if (dateRange.includes(' to ')) {
-            const [from, to] = dateRange.split(' to ');
-            params.set('date_from', from.trim());
-            params.set('date_to', to.trim());
-        } else {
-            params.delete('date_from');
-            params.delete('date_to');
-        }
-
-        params.delete('page'); // reset ke halaman 1
-        window.location.search = params.toString();
-    }
-
-    // Trigger filter
-    let searchTimeout;
-    document.getElementById('searchInput').addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(applyFilters, 500); // debounce 500ms
-    });
-
-    document.getElementById('statusFilter').addEventListener('change', applyFilters);
-
-    // Clear tanggal
-    document.getElementById('clearDateBtn')?.addEventListener('click', () => {
-        const params = getUrlParams();
-        params.delete('date_from');
-        params.delete('date_to');
-        params.delete('page');
-        window.location.search = params.toString();
-    });
-</script>
-<script>
-    // Ganti script lama untuk modal delete dengan yang ini
+<script type="module">
+    // --- Inisialisasi Flatpickr (Gaya Anda) ---
     document.addEventListener('DOMContentLoaded', function() {
-        const cancelModal = document.getElementById('cancelConfirmationModal');
-        if (cancelModal) {
-            cancelModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const invoiceNumber = button.getAttribute('data-invoice-number');
-                const form = cancelModal.querySelector('#cancelInvoiceForm');
-                const text = cancelModal.querySelector('#invoiceNumberToCancel');
+        const flatpickrDate = document.querySelector('#flatpickr-date');
+        const clearDateBtn = document.querySelector('#clearDateBtn');
+        let fp;
 
-                if (text) text.textContent = invoiceNumber;
-                // Arahkan form ke route update
-                if (form) form.action = `/penjualan/${invoiceNumber}`;
-            });
-        }
-    });
-
-    // AJAX untuk filter dan pencarian
-    $(document).ready(function() {
-        // Fungsi untuk menunda eksekusi (debounce)
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-
-        // Fungsi untuk mengambil data dengan AJAX
-        function fetchData(page = 1) {
-            let search = $('#searchInput').val();
-            let status = $('#statusFilter').val();
-            let url = '{{ route('penjualan.index') }}';
-
-            $('#penjualan-table-container').css('opacity', 0.5); // Efek loading
-
-            $.ajax({
-                url: url,
-                data: {
-                    search: search,
-                    status: status,
-                    page: page
-                },
-                success: function(data) {
-                    $('#penjualan-table-container').html(data).css('opacity', 1);
-                    window.history.pushState({
-                            path: url + '?page=' + page + '&search=' + search + '&status=' +
-                                status
-                        }, '', url + '?page=' + page + '&search=' + search + '&status=' +
-                        status);
-                },
-                error: function() {
-                    $('#penjualan-table-container').css('opacity', 1);
-                    alert('Gagal memuat data. Silakan coba lagi.');
+        if (flatpickrDate) {
+            fp = flatpickrDate.flatpickr({
+                mode: 'range',
+                dateFormat: 'Y-m-d',
+                locale: 'id',
+                allowInput: true,
+                onClose(selectedDates) {
+                    if (selectedDates.length === 2) {
+                        if (clearDateBtn) clearDateBtn.classList.remove('d-none');
+                        if (typeof window.fetchData === 'function') window.fetchData(1);
+                    } else if (selectedDates.length === 0) {
+                        if (clearDateBtn) clearDateBtn.classList.add('d-none');
+                        if (typeof window.fetchData === 'function') window.fetchData(1);
+                    }
                 }
             });
         }
 
-        // Event listener untuk input pencarian dengan debounce
-        $('#searchInput').on('keyup', debounce(function() {
-            fetchData(1); // Kembali ke halaman 1 saat mencari
-        }, 500));
-
-        // Event listener untuk filter status
-        $('#statusFilter').on('change', function() {
-            fetchData(1); // Kembali ke halaman 1 saat filter berubah
-        });
-
-        // Event listener untuk klik paginasi (delegasi event)
-        $(document).on('click', '#penjualan-table-container .pagination a', function(e) {
-            e.preventDefault();
-            let page = $(this).attr('href').split('page=')[1];
-            if (page) fetchData(page);
-        });
+        if (clearDateBtn) {
+            clearDateBtn.addEventListener('click', () => {
+                if (fp) fp.clear();
+                clearDateBtn.classList.add('d-none');
+                if (typeof window.fetchData === 'function') window.fetchData(1);
+            });
+        }
     });
-</script>
-<script type="module">
+
+    // --- Inisialisasi Select2 (Gaya Anda) ---
     const initSelect2 = () => {
         if (typeof $ !== 'undefined' && $.fn.select2) {
             $('.select2').each(function() {
                 const $this = $(this);
                 $this.select2({
                     placeholder: $this.data('placeholder') || "Pilih...",
-                    allowClear: $this.find('option[value=""]').length >
-                        0,
+                    allowClear: $this.find('option[value=""]').length > 0,
                     width: '100%',
                     minimumResultsForSearch: 10
                 });
@@ -254,5 +153,115 @@
         }
     };
     initSelect2();
+</script>
+
+<script>
+    // Sedikit pelindung untuk memastikan jQuery sudah siap di script biasa
+    const runAjaxScripts = () => {
+        if (typeof $ !== 'undefined') {
+            $(document).ready(function() {
+
+                // Fungsi Utama Fetch Data
+                window.fetchData = function(page = 1) {
+                    let search = $('#searchInput').val();
+                    let status = $('#statusFilter').val();
+                    let dateRange = $('#flatpickr-date').val();
+
+                    let date_from = '';
+                    let date_to = '';
+
+                    if (dateRange && dateRange.includes(' to ')) {
+                        let dates = dateRange.split(' to ');
+                        date_from = dates[0].trim();
+                        date_to = dates[1].trim();
+                    }
+
+                    $('#penjualan-table-container').css('opacity', 0.5);
+
+                    $.ajax({
+                        url: "{{ route('penjualan.index') }}",
+                        type: "GET",
+                        // PENTING: Header ini wajib agar $request->ajax() di controller merespon true
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        data: {
+                            page: page,
+                            search: search,
+                            status: status,
+                            date_from: date_from,
+                            date_to: date_to
+                        },
+                        success: function(response) {
+                            // Update isi tabel
+                            $('#penjualan-table-container').html(response).css('opacity',
+                                1);
+
+                            // PENTING: Inisialisasi ulang Tooltips Bootstrap agar tombol action tidak mati
+                            if (typeof bootstrap !== 'undefined') {
+                                const tooltipTriggerList = [].slice.call(document
+                                    .querySelectorAll('[data-bs-toggle="tooltip"]'));
+                                tooltipTriggerList.map(function(tooltipTriggerEl) {
+                                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                                });
+                            }
+
+                            // Update URL browser
+                            updateBrowserURL(page, search, status, date_from, date_to);
+                        },
+                        error: function(xhr) {
+                            $('#penjualan-table-container').css('opacity', 1);
+                            console.error("Terjadi kesalahan: ", xhr.responseText);
+                        }
+                    });
+                };
+
+                function updateBrowserURL(page, search, status, from, to) {
+                    let params = new URLSearchParams();
+                    if (page > 1) params.set('page', page);
+                    if (search) params.set('search', search);
+                    if (status) params.set('status', status);
+                    if (from) params.set('date_from', from);
+                    if (to) params.set('date_to', to);
+
+                    let newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() :
+                        '');
+                    window.history.pushState({
+                        path: newUrl
+                    }, '', newUrl);
+                }
+
+                // --- Event Listeners ---
+
+                // 1. Search dengan Debounce
+                let timeout = null;
+                $('#searchInput').on('keyup', function() {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(function() {
+                        window.fetchData(1);
+                    }, 500);
+                });
+
+                // 2. Filter Status Select2 (Ditambahkan event select2 spesifik)
+                $('#statusFilter').on('select2:select select2:clear change', function() {
+                    window.fetchData(1);
+                });
+
+                // 3. Pagination Link Click
+                $(document).on('click', '.pagination a', function(e) {
+                    e.preventDefault();
+                    // Ambil angka halamannya dengan lebih aman menggunakan URL API
+                    let url = new URL($(this).attr('href'), window.location.origin);
+                    let page = url.searchParams.get('page');
+                    if (page) window.fetchData(page);
+                });
+
+            });
+        } else {
+            setTimeout(runAjaxScripts, 50); // Ulangi cek jika jQuery belum load
+        }
+    };
+
+    runAjaxScripts();
 </script>
 @endsection

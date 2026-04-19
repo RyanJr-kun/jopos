@@ -1,7 +1,7 @@
 {{-- Header Konten (Sorting & Info) --}}
 <div class="row d-flex justify-content-between align-items-center mb-3">
     <div class="col-md-8">
-        <p class="mb-0 text-muted small">
+        <p class="mb-2 text-muted small">
             Menampilkan {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }}
             dari {{ $products->total() }} hasil
         </p>
@@ -28,8 +28,13 @@
             <div class="card product-card product-card-compact h-100 overflow-hidden">
                 <div class="product-card-img-container">
                     <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                        <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
-                            loading="lazy" class="card-img-top" alt="{{ $produk->name_product }}">
+                        <img src="{{ $produk->primaryImage
+                            ? asset('storage/' . $produk->primaryImage->path)
+                            : ($produk->img_produk
+                                ? asset('storage/' . $produk->img_produk)
+                                : asset('assets/img/produk.png')) }}"
+                            alt="{{ $produk->name_product }}" loading="lazy" class="card-img-top"
+                            alt="{{ $produk->name_product }}">
                         {{-- Badge Promotion --}}
                         @if ($produk->qty < 1)
                             <div class="product-badge">

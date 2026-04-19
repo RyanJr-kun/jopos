@@ -16,6 +16,7 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         // Mulai query builder
+        $statuses = Customer::select('status')->distinct()->pluck('status');
         $query = Customer::latest();
 
         if ($request->filled('search')) {
@@ -28,8 +29,7 @@ class CustomerController extends Controller
         }
 
         if ($request->filled('status')) {
-            $statusValue = $request->input('status') === 'Aktif' ? 1 : 0;
-            $query->where('status', $statusValue);
+            $query->where('status', $request->input('status'));
         }
 
         $customers = $query->paginate(15)->withQueryString();
@@ -40,10 +40,7 @@ class CustomerController extends Controller
         }
 
         // Jika request biasa, kembalikan view lengkap
-        return view('content.penjualan.pelanggan', [
-            'title' => 'Manajemen Customer',
-            'customers' => $customers,
-        ]);
+        return view('content.penjualan.pelanggan', compact('customers', 'statuses'));
     }
 
 

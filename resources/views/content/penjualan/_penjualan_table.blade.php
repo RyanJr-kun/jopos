@@ -16,7 +16,7 @@
                 <tr>
                     <td>
                         <div class="d-flex flex-column justify-content-center ms-3">
-                            <h6 class="mb-0 text-sm">{{ $item->pelanggan->name ?? 'Customer Umum' }}</h6>
+                            <h6 class="mb-0 text-sm">{{ $item->customer->name ?? 'Customer Umum' }}</h6>
                         </div>
                     </td>
                     <td>

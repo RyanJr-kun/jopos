@@ -66,21 +66,21 @@
                             <div class="col-md-6 mb-3">
                                 <label for="role_id" class="form-label">Posisi <span
                                         class="text-danger">*</span></label>
-                                <select class="form-select @error('role_id') is-invalid @enderror" id="role_id"
-                                    name="role_id" required @if (auth()->id() === $user->id) disabled @endif>
+                                <select name="role_name" class="form-select @error('role_name') is-invalid @enderror"
+                                    id="role_name" required @if (auth()->id() === $user->id) disabled @endif>
                                     <option value="" disabled selected>Pilih Role...</option>
                                     @foreach ($roles as $role)
-                                        <option value="{{ $role->id }}" @selected(old('role_id', $user->role_id) == $role->id)>
-                                            {{ $role->name }}</option>
+                                        <option value="{{ $role->name }}" @selected(old('role_name', $user->getRoleNames()->first()) == $role->name)>
+                                            {{ ucfirst($role->name) }}
+                                        </option>
                                     @endforeach
                                 </select>
+
                                 @if (auth()->id() === $user->id)
-                                    {{-- Jika disabled, nilainya tidak akan dikirim. Kirim via input hidden agar validasi tidak gagal. --}}
-                                    <input type="hidden" name="role_id" value="{{ $user->role_id }}">
-                                    <small class="form-text text-muted">Anda tidak dapat mengubah role Anda
-                                        sendiri.</small>
+                                    <input type="hidden" name="role_name"
+                                        value="{{ $user->getRoleNames()->first() }}">
                                 @endif
-                                @error('role_id')
+                                @error('role_name')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>

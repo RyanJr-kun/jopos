@@ -15,6 +15,7 @@
 <!-- Vendor Styles -->
 @vite('resources/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.scss')
 @vite('resources/assets/vendor/libs/select2/select2.scss')
+@vite('resources/assets/vendor/libs/flatpickr/flatpickr.scss')
 
 @yield('vendor-style')
 

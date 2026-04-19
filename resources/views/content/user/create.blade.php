@@ -61,15 +61,17 @@
 
                         <div class="col-md-6 mb-3">
                             <label for="role_id" class="form-label">Posisi <span class="text-danger">*</span></label>
-                            <select class="form-select @error('role_id') is-invalid @enderror" id="role_id"
-                                name="role_id" required>
+                            <select name="role_name" class="form-select @error('role_name') is-invalid @enderror"
+                                id="role_name" required>
                                 <option value="" disabled selected>Pilih Role...</option>
                                 @foreach ($roles as $role)
-                                    <option value="{{ $role->id }}" @selected(old('role_id') == $role->id)>
-                                        {{ $role->name }}</option>
+                                    <option value="{{ $role->name }}" @selected(old('role_name') == $role->name)>
+                                        {{ ucfirst($role->name) }}
+                                    </option>
                                 @endforeach
                             </select>
-                            @error('role_id')
+
+                            @error('role_name')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>

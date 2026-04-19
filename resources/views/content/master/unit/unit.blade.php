@@ -39,7 +39,7 @@
                 {{-- Container untuk tabel yang akan di-update oleh AJAX --}}
                 <div id="unit-table-container">
                     {{-- Memuat tabel parsial untuk tampilan awal --}}
-                    @include('content.produk.unit._unit_table', ['units' => $units])
+                    @include('content.master.unit._unit_table', ['units' => $units])
                 </div>
             </div>
         </div>

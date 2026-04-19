@@ -139,345 +139,327 @@
         {{-- =====================================================
          MAIN CONTENT
          ===================================================== --}}
-        <main class="main-content position-relative border-radius-lg d-flex flex-column min-vh-100" id="main-content"
-            role="main">
-            <div class="row m-0 m-md-3 d-md-flex d-block">
 
-                {{-- ==========================================
+        <div class="row m-0 m-md-3 d-md-flex d-block">
+
+            {{-- ==========================================
                  PANEL KIRI: Daftar & Filter Produk
                  ========================================== --}}
-                <div class="col-md-8 col-12 border-end">
-                    <div class="row mt-3 mx-2">
-                        <div class="col-md-8 col-12">
-                            <h6 class="mb-0 text-dark fw-bolder">
-                                Selamat Datang,
-                                <u class="text-warning">{{ auth()->user()->username }}</u>
-                            </h6>
-                            <p class="text-sm">{{ now()->translatedFormat('l, d F Y') }}</p>
-                        </div>
-                        <div class="col-md-4 col-12 mt-2 mt-md-0">
-                            <div class="ms-md-auto">
-                                {{-- [UX] aria-label ditambahkan untuk screen reader --}}
-                                <input type="text" id="product-search" class="form-control"
-                                    placeholder="Cari produk atau scan barcode..." aria-label="Cari atau scan produk"
-                                    autocomplete="off">
-                            </div>
-                        </div>
-
-                        {{-- Filter Kategori --}}
-                        <div class="col-12">
-                            <div id="category-container" class="d-flex flex-nowrap gap-2 pb-2" style="overflow-x: auto;"
-                                role="tablist" aria-label="Filter Kategori">
-                                <div class="category-btn category-active border rounded-1 d-flex align-items-center ms-1 my-3 p-2"
-                                    style="height: 40px; cursor: pointer;" data-category-id="all" role="tab"
-                                    aria-selected="true" tabindex="0">
-                                    <i class="bx bx-category me-1" aria-hidden="true"></i>
-                                    <p class="fw-bolder text-xs ms-1 mb-0">Semua</p>
-                                </div>
-                                @foreach ($kategoris as $kategori)
-                                    @if ($kategori->products->isNotEmpty())
-                                        <div class="category-btn border rounded-1 d-flex align-items-center my-3 p-2"
-                                            style="height: 40px; cursor: pointer;" data-category-id="{{ $kategori->id }}"
-                                            role="tab" aria-selected="false" tabindex="0">
-                                            <img src="{{ $kategori->img_kategori ? asset('storage/' . $kategori->img_kategori) : asset('assets/img/produk.png') }}"
-                                                class="avatar avatar-xs rounded-1" alt="{{ $kategori->name }}"
-                                                loading="lazy">
-                                            <p class="fw-bolder text-xs ms-2 mb-0">{{ $kategori->name }}</p>
-                                        </div>
-                                    @endif
-                                @endforeach
-                            </div>
+            <div class="col-md-7 col-12 border-end">
+                <div class="row mt-3 mx-2">
+                    <div class="col-md-8 col-12">
+                        <h6 class="mb-0 text-dark fw-bolder">
+                            Selamat Datang,
+                            <u class="text-warning">{{ auth()->user()->username }}</u>
+                        </h6>
+                        <p class="text-sm">{{ now()->translatedFormat('l, d F Y') }}</p>
+                    </div>
+                    <div class="col-md-4 col-12 mt-2 mt-md-0">
+                        <div class="ms-md-auto">
+                            {{-- [UX] aria-label ditambahkan untuk screen reader --}}
+                            <input type="text" id="product-search" class="form-control"
+                                placeholder="Cari produk atau scan barcode..." aria-label="Cari atau scan produk"
+                                autocomplete="off">
                         </div>
                     </div>
 
-                    {{-- Daftar Produk --}}
-                    <div class="p-3 product-list-container mb-3" style="max-height: 80vh; overflow-y: auto;">
-                        <div class="row" id="product-list">
-                            @forelse ($products as $produk)
-                                <div class="col-12 col-md-4 col-xl-3 mb-3"
-                                    data-product-category-id="{{ $produk->category_id }}">
-                                    {{--
+                    {{-- Filter Kategori --}}
+                    <div class="col-12">
+                        <div id="category-container" class="d-flex flex-nowrap gap-2 pb-2" style="overflow-x: auto;"
+                            role="tablist" aria-label="Filter Kategori">
+                            <div class="category-btn category-active border rounded-1 d-flex align-items-center ms-1 my-3 p-2"
+                                style="height: 40px; cursor: pointer;" data-category-id="all" role="tab"
+                                aria-selected="true" tabindex="0">
+                                <i class="bx bx-category me-1" aria-hidden="true"></i>
+                                <p class="fw-bolder text-xs ms-1 mb-0">Semua</p>
+                            </div>
+                            @foreach ($kategoris as $kategori)
+                                @if ($kategori->products->isNotEmpty())
+                                    <div class="category-btn border rounded-1 d-flex align-items-center my-3 p-2"
+                                        style="height: 40px; cursor: pointer;" data-category-id="{{ $kategori->id }}"
+                                        role="tab" aria-selected="false" tabindex="0">
+                                        <img src="{{ $kategori->img_kategori ? asset('storage/' . $kategori->img_kategori) : asset('assets/img/produk.png') }}"
+                                            class="avatar avatar-xs rounded-1" alt="{{ $kategori->name }}"
+                                            loading="lazy">
+                                        <p class="fw-bolder text-xs ms-2 mb-0">{{ $kategori->name }}</p>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Daftar Produk --}}
+                <div class="p-3 product-list-container mb-3" style="max-height: 80vh; overflow-y: auto;">
+                    <div class="row" id="product-list">
+                        @forelse ($products as $produk)
+                            <div class="col-12 col-md-4 col-xl-3 mb-3"
+                                data-product-category-id="{{ $produk->category_id }}">
+                                {{--
                                     [KEAMANAN] Semua data-* yang berisi string di-escape dengan e()
                                     untuk mencegah XSS jika nama produk mengandung karakter khusus.
                                 --}}
-                                    <div class="card product-card rounded-2 p-2" data-id="{{ $produk->id }}"
-                                        data-name="{{ e($produk->name_product) }}"
-                                        data-harga="{{ $produk->harga_diskon ?? $produk->harga_jual }}"
-                                        data-harga-asli="{{ $produk->harga_jual }}"
-                                        data-img="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
-                                        data-stok="{{ $produk->qty }}"
-                                        data-wajib-seri="{{ $produk->wajib_seri ? 'true' : 'false' }}"
-                                        data-pajak-id="{{ $produk->taxe_id }}"
-                                        data-pajak-rate="{{ $produk->pajak->rate ?? 0 }}"
-                                        data-disabled="{{ $produk->qty < 1 ? 'true' : 'false' }}" role="button"
-                                        aria-label="Tambah {{ e($produk->name_product) }} ke keranjang"
-                                        tabindex="{{ $produk->qty < 1 ? '-1' : '0' }}">
+                                <div class="card product-card rounded-2 p-2" data-id="{{ $produk->id }}"
+                                    data-name="{{ e($produk->name_product) }}"
+                                    data-harga="{{ $produk->harga_diskon ?? $produk->harga_jual }}"
+                                    data-harga-asli="{{ $produk->harga_jual }}"
+                                    data-img="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
+                                    data-stok="{{ $produk->qty }}"
+                                    data-wajib-seri="{{ $produk->wajib_seri ? 'true' : 'false' }}"
+                                    data-pajak-id="{{ $produk->taxe_id }}"
+                                    data-pajak-rate="{{ $produk->pajak->rate ?? 0 }}"
+                                    data-disabled="{{ $produk->qty < 1 ? 'true' : 'false' }}" role="button"
+                                    aria-label="Tambah {{ e($produk->name_product) }} ke keranjang"
+                                    tabindex="{{ $produk->qty < 1 ? '-1' : '0' }}">
 
-                                        <img class="card-img-top rounded-2"
-                                            src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
-                                            alt="Gambar {{ e($produk->name_product) }}" loading="lazy">
+                                    <img class="card-img-top rounded-2"
+                                        src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
+                                        alt="Gambar {{ e($produk->name_product) }}" loading="lazy">
 
-                                        {{-- Badge Stock Habis & Promosi --}}
-                                        @if ($produk->qty < 1)
-                                            <div class="product-badge">
-                                                <span class="badge bg-label-danger">Stok Habis</span>
-                                            </div>
-                                        @elseif($produk->promotions->isNotEmpty() && ($promo = $produk->promotions->first()))
-                                            <div class="product-badge">
-                                                @if ($promo->type == 'percentage')
-                                                    <span class="badge bg-label-danger">{{ (int) $promo->nilai_diskon }}%
-                                                        OFF</span>
-                                                @else
-                                                    <span class="badge bg-label-info">PROMO</span>
-                                                @endif
-                                            </div>
-                                        @endif
-
-                                        <div class="card-body p-2">
-                                            <div class="row g-1">
-                                                <div class="col-12">
-                                                    <p class="text-xs mb-1">
-                                                        <span
-                                                            class="font-weight-bold">{{ $produk->category->name }}</span>
-                                                    </p>
-                                                    <h6 class="mb-0 product-name text-sm">{{ $produk->name_product }}</h6>
-                                                </div>
-                                                <hr class="horizontal dark my-2">
-                                                @if ($produk->harga_diskon)
-                                                    <div class="col-12">
-                                                        <div class="d-flex align-items-center">
-                                                            <p
-                                                                class="text-sm text-muted me-2 text-decoration-line-through mb-0">
-                                                                {{ $produk->harga_formatted }}
-                                                            </p>
-                                                            <p class="text-sm font-weight-bold text-dark mb-0">
-                                                                {{ 'Rp ' . number_format($produk->harga_diskon, 0, ',', '.') }}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-12 text-end">
-                                                        <p class="text-xs mt-n2 mb-0">{{ $produk->qty }}
-                                                            {{ $produk->unit->singkat }}</p>
-                                                    </div>
-                                                @else
-                                                    <div class="col-8">
-                                                        <p class="font-weight-bold text-sm mb-0">
-                                                            {{ $produk->harga_formatted }}</p>
-                                                    </div>
-                                                    <div class="col-4 text-end">
-                                                        <p class="text-xs mb-0">{{ $produk->qty }}
-                                                            {{ $produk->unit->singkat }}</p>
-                                                    </div>
-                                                @endif
-                                            </div>
+                                    {{-- Badge Stock Habis & Promosi --}}
+                                    @if ($produk->qty < 1)
+                                        <div class="product-badge">
+                                            <span class="badge bg-label-danger">Stok Habis</span>
                                         </div>
+                                    @elseif($produk->promotions->isNotEmpty() && ($promo = $produk->promotions->first()))
+                                        <div class="product-badge">
+                                            @if ($promo->type == 'percentage')
+                                                <span class="badge bg-label-danger">{{ (int) $promo->nilai_diskon }}%
+                                                    OFF</span>
+                                            @else
+                                                <span class="badge bg-label-info">PROMO</span>
+                                            @endif
+                                        </div>
+                                    @endif
 
-                                        <div class="card-footer p-2 pt-0 border-0">
-                                            @if ($produk->qty < 1)
-                                                <p class="text-danger text-xs text-center fw-bold mb-0">Stok Habis</p>
+                                    <div class="card-body p-2">
+                                        <div class="row g-1">
+                                            <div class="col-12">
+                                                <p class="text-xs mb-1">
+                                                    <span class="font-weight-bold">{{ $produk->category->name }}</span>
+                                                </p>
+                                                <h6 class="mb-0 product-name text-sm">{{ $produk->name_product }}</h6>
+                                            </div>
+                                            <hr class="horizontal dark my-2">
+                                            @if ($produk->harga_diskon)
+                                                <div class="col-12">
+                                                    <div class="d-flex align-items-center">
+                                                        <p
+                                                            class="text-sm text-muted me-2 text-decoration-line-through mb-0">
+                                                            {{ $produk->harga_formatted }}
+                                                        </p>
+                                                        <p class="text-sm font-weight-bold text-dark mb-0">
+                                                            {{ 'Rp ' . number_format($produk->harga_diskon, 0, ',', '.') }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12 text-end">
+                                                    <p class="text-xs mt-n2 mb-0">{{ $produk->qty }}
+                                                        {{ $produk->unit->singkat }}</p>
+                                                </div>
+                                            @else
+                                                <div class="col-8">
+                                                    <p class="font-weight-bold text-sm mb-0">
+                                                        {{ $produk->harga_formatted }}</p>
+                                                </div>
+                                                <div class="col-4 text-end">
+                                                    <p class="text-xs mb-0">{{ $produk->qty }}
+                                                        {{ $produk->unit->singkat }}</p>
+                                                </div>
                                             @endif
                                         </div>
                                     </div>
+
+                                    <div class="card-footer p-2 pt-0 border-0">
+                                        @if ($produk->qty < 1)
+                                            <p class="text-danger text-xs text-center fw-bold mb-0">Stok Habis</p>
+                                        @endif
+                                    </div>
                                 </div>
-                            @empty
-                                <div class="col-12 text-center py-5">
-                                    <i class="bx bx-package fa-3x text-muted mb-2 d-block fs-1" aria-hidden="true"></i>
-                                    <p class="text-muted">Tidak ada produk yang tersedia.</p>
-                                </div>
-                            @endforelse
-                        </div>
+                            </div>
+                        @empty
+                            <div class="col-12 text-center py-5">
+                                <i class="bx bx-package fa-3x text-muted mb-2 d-block fs-1" aria-hidden="true"></i>
+                                <p class="text-muted">Tidak ada produk yang tersedia.</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
+            </div>
 
-                {{-- ==========================================
+            {{-- ==========================================
                  PANEL KANAN: Keranjang & Transaksi
                  ========================================== --}}
-                <div class="col-md-4 col-12">
-                    <form action="{{ route('penjualan.store') }}" method="POST" id="penjualanForm" novalidate
-                        aria-label="Form Transaksi Penjualan">
-                        @csrf
+            <div class="col-md-5 col-12">
+                <form action="{{ route('penjualan.store') }}" method="POST" id="penjualanForm" novalidate
+                    aria-label="Form Transaksi Penjualan">
+                    @csrf
 
-                        {{-- Tampilkan Error Validasi Server --}}
-                        @if ($errors->any())
-                            <div class="alert alert-danger text-white mt-3" role="alert">
-                                <strong class="font-weight-bold">Oops! Terjadi kesalahan:</strong>
-                                <ul class="mb-0 ps-3">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
+                    {{-- Tampilkan Error Validasi Server --}}
+                    @if ($errors->any())
+                        <div class="alert alert-danger text-white mt-3" role="alert">
+                            <strong class="font-weight-bold">Oops! Terjadi kesalahan:</strong>
+                            <ul class="mb-0 ps-3">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
 
-                        <div class="card rounded-2 mt-3">
-                            <div class="card-header pb-0">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-0">Detail Pesanan</h6>
-                                        <p class="text-sm mb-0">Invoice:
-                                            <span class="font-weight-bold">{{ $referensi }}</span>
-                                        </p>
-                                        <input type="hidden" name="referensi" value="{{ $referensi }}">
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <span class="badge badge-md bg-label-success me-2" id="cart-item-count"
-                                            aria-live="polite" aria-atomic="true">
-                                            <i class="fas fa-shopping-cart me-1" aria-hidden="true"></i>
-                                            <span>0 Item</span>
-                                        </span>
-                                        <button type="button"
-                                            class="btn btn-outline-danger btn-tooltip btn-sm py-1 px-2 mb-0"
-                                            id="btn-reset-cart" data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                            title="Kosongkan Keranjang" aria-label="Kosongkan Keranjang" disabled>
-                                            <i class="bx bx-trash" aria-hidden="true"></i>
-                                        </button>
-                                    </div>
+                    <div class="card rounded-2 mt-3">
+                        <div class="card-header pb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">Detail Pesanan</h6>
+                                    <p class="text-sm mb-0">Invoice:
+                                        <span class="font-weight-bold">{{ $referensi }}</span>
+                                    </p>
+                                    <input type="hidden" name="referensi" value="{{ $referensi }}">
                                 </div>
-                            </div>
-
-                            <div class="card-body pt-2">
-                                {{-- Pilihan Customer --}}
-                                <div class="mb-3">
-                                    <label for="Customer" class="form-label">
-                                        Customer <span class="text-danger" aria-hidden="true">*</span>
-                                    </label>
-                                    <div class="d-flex">
-                                        <select class="form-select me-2 @error('customer_id') is-invalid @enderror"
-                                            name="customer_id" id="Customer" required aria-required="true">
-                                            @foreach ($customers as $item)
-                                                <option value="{{ $item->id }}" @selected(old('customer_id') == $item->id)>
-                                                    {{ $item->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('customer_id')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                        <button type="button" class="btn btn-outline-info btn-xs mb-0"
-                                            data-bs-toggle="modal" data-bs-target="#createCustomerModal"
-                                            title="Tambah Pelanggan Baru" aria-label="Tambah Pelanggan Baru">
-                                            <i class="bx bx-plus icon-md cursor-pointer" aria-hidden="true"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- Tabel Keranjang --}}
-                                <div class="table-responsive p-0" style="max-height: 250px; overflow-y: auto;">
-                                    <table class="table table-hover align-items-center mb-0"
-                                        aria-label="Keranjang Belanja">
-                                        <thead class="table-secondary">
-                                            <tr>
-                                                <th scope="col" width="50%">Produk</th>
-                                                <th scope="col" width="15%">Qty</th>
-                                                <th scope="col" width="10%">PPN</th>
-                                                <th scope="col" width="30%">Subtotal</th>
-                                                <th scope="col" width="10%">Aksi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="cart-items-container" aria-live="polite">
-                                            {{-- Item keranjang di-render oleh JavaScript --}}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div class="card-footer pt-0">
-                                <hr class="mt-0">
-                                {{-- Rincian Biaya --}}
-                                <div class="d-flex justify-content-between mb-0">
-                                    <p class="text-sm">Subtotal (DPP)</p>
-                                    <p class="text-sm font-weight-bold" id="subtotal">Rp 0</p>
-                                </div>
-                                <div class="d-flex justify-content-between mb-0">
-                                    <p class="text-sm">PPN</p>
-                                    <p class="text-sm font-weight-bold" id="pajak-total-display">Rp 0</p>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center" style="cursor: pointer;"
-                                    data-bs-toggle="modal" data-bs-target="#editExtraCostModal" data-type="service"
-                                    data-label="Service" role="button" tabindex="0" aria-label="Edit biaya service">
-                                    <p class="text-sm mb-0">Service</p>
-                                    <p class="text-sm font-weight-bold mb-0" id="service-display">Rp 0</p>
-                                    <input type="hidden" name="service" id="service-input" value="0">
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center my-3"
-                                    style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editExtraCostModal"
-                                    data-type="ongkir" data-label="Ongkos Kirim" role="button" tabindex="0"
-                                    aria-label="Edit ongkos kirim">
-                                    <p class="text-sm mb-0">Ongkir</p>
-                                    <p class="text-sm font-weight-bold mb-0" id="ongkir-display">Rp 0</p>
-                                    <input type="hidden" name="ongkir" id="ongkir-input" value="0">
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center" style="cursor: pointer;"
-                                    data-bs-toggle="modal" data-bs-target="#editExtraCostModal" data-type="diskon"
-                                    data-label="Diskon" role="button" tabindex="0" aria-label="Edit diskon">
-                                    <p class="text-sm mb-0">Diskon (Rp)</p>
-                                    <p class="text-sm font-weight-bold mb-0" id="diskon-display">Rp 0</p>
-                                    <input type="hidden" name="diskon" id="diskon-input" value="0">
-                                </div>
-                                <hr class="horizontal dark my-2">
-                                <div class="d-flex justify-content-between">
-                                    <h6 class="font-weight-bold">Total</h6>
-                                    <h6 class="font-weight-bold" id="total-akhir" aria-live="polite">Rp 0</h6>
-                                </div>
-
-                                {{-- Pembayaran --}}
-                                <div class="row mt-3">
-                                    <div class="col-12 d-flex justify-content-between align-items-center mb-2">
-                                        <label for="jumlah-dibayar-input" class="form-label text-sm mb-0">
-                                            Jumlah Dibayar
-                                        </label>
-                                        <input type="text" name="jumlah_dibayar" id="jumlah-dibayar-input"
-                                            class="form-control form-control-sm text-end w-30" value="0"
-                                            aria-label="Jumlah dibayar oleh pelanggan" inputmode="numeric">
-                                    </div>
-                                    <div class="col-12 d-flex justify-content-between align-items-center">
-                                        <label class="form-label text-sm mb-0">Kembalian</label>
-                                        <p class="form-control-plaintext text-end fw-bold mb-0" id="change-display"
-                                            aria-live="polite">Rp 0</p>
-                                    </div>
-                                    <div class="col-6">
-                                        <label for="metode_pembayaran" class="form-label">Metode Pembayaran</label>
-                                        <select name="metode_pembayaran" id="metode_pembayaran" class="form-select"
-                                            required aria-required="true">
-                                            <option value="TUNAI">Tunai</option>
-                                            <option value="TRANSFER">Transfer</option>
-                                            <option value="QRIS">QRIS</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-12 mt-3">
-                                        <label for="catatan" class="form-label">Catatan (Opsional)</label>
-                                        <textarea name="catatan" id="catatan" class="form-control" rows="2"
-                                            placeholder="Tambahkan catatan untuk transaksi ini..."></textarea>
-                                    </div>
-                                </div>
-
-                                {{-- Tombol Aksi --}}
-                                <div class="d-flex justify-content-center mt-3">
-                                    <button type="button" class="btn btn-info me-3" id="btn-pay-exact">
-                                        Bayar Pas
-                                    </button>
-                                    <button type="submit" class="btn btn-dark" id="btn-save-transaction" disabled>
-                                        <i class="fas fa-save me-1" aria-hidden="true"></i>
-                                        Simpan Transaksi
+                                <div class="d-flex align-items-center">
+                                    <span class="badge badge-md bg-label-success me-2" id="cart-item-count"
+                                        aria-live="polite" aria-atomic="true">
+                                        <i class="fas fa-shopping-cart me-1" aria-hidden="true"></i>
+                                        <span>0 Item</span>
+                                    </span>
+                                    <button type="button"
+                                        class="btn btn-outline-danger btn-tooltip btn-sm py-1 px-2 mb-0"
+                                        id="btn-reset-cart" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                        title="Kosongkan Keranjang" aria-label="Kosongkan Keranjang" disabled>
+                                        <i class="bx bx-trash" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    </form>
-                </div>
-            </div>
-        </main>
 
-        {{-- =========================================================
-         TOAST NOTIFICATION (menggantikan alert() yang blocking)
-         ========================================================= --}}
-        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999" aria-live="assertive" aria-atomic="true">
-            <div id="pos-toast" class="toast" role="alert">
-                <div class="toast-header">
-                    <strong class="me-auto" id="toast-title">Notifikasi</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Tutup"></button>
-                </div>
-                <div class="toast-body" id="toast-body"></div>
+                        <div class="card-body pt-2">
+                            {{-- Pilihan Customer --}}
+                            <div class="mb-3">
+                                <label for="Customer" class="form-label">
+                                    Customer <span class="text-danger" aria-hidden="true">*</span>
+                                </label>
+                                <div class="d-flex">
+                                    <select class="form-select me-2 @error('customer_id') is-invalid @enderror"
+                                        name="customer_id" id="Customer" required aria-required="true">
+                                        @foreach ($customers as $item)
+                                            <option value="{{ $item->id }}" @selected(old('customer_id') == $item->id)>
+                                                {{ $item->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('customer_id')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                    <button type="button" class="btn btn-outline-info btn-xs mb-0"
+                                        data-bs-toggle="modal" data-bs-target="#createCustomerModal"
+                                        title="Tambah Pelanggan Baru" aria-label="Tambah Pelanggan Baru">
+                                        <i class="bx bx-plus icon-md cursor-pointer" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Tabel Keranjang --}}
+                            <div class="table-responsive p-0" style="max-height: 250px; overflow-y: auto;">
+                                <table class="table table-hover align-items-center mb-0" aria-label="Keranjang Belanja">
+                                    <thead class="table-secondary">
+                                        <tr>
+                                            <th scope="col" width="40%">Produk</th>
+                                            <th scope="col" class="text-center" width="25%">Qty</th>
+                                            <th scope="col" width="10%">PPN</th>
+                                            <th scope="col" width="30%">Subtotal</th>
+                                            <th scope="col" width="10%">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cart-items-container" aria-live="polite">
+                                        {{-- Item keranjang di-render oleh JavaScript --}}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card-footer pt-0">
+                            <hr class="mt-0">
+                            {{-- Rincian Biaya --}}
+                            <div class="d-flex justify-content-between mb-0">
+                                <p class="text-sm">Subtotal (DPP)</p>
+                                <p class="text-sm font-weight-bold" id="subtotal">Rp 0</p>
+                            </div>
+                            <div class="d-flex justify-content-between mb-0">
+                                <p class="text-sm">PPN</p>
+                                <p class="text-sm font-weight-bold" id="pajak-total-display">Rp 0</p>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center" style="cursor: pointer;"
+                                data-bs-toggle="modal" data-bs-target="#editExtraCostModal" data-type="service"
+                                data-label="Service" role="button" tabindex="0" aria-label="Edit biaya service">
+                                <p class="text-sm mb-0">Service</p>
+                                <p class="text-sm font-weight-bold mb-0" id="service-display">Rp 0</p>
+                                <input type="hidden" name="service" id="service-input" value="0">
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center my-3" style="cursor: pointer;"
+                                data-bs-toggle="modal" data-bs-target="#editExtraCostModal" data-type="ongkir"
+                                data-label="Ongkos Kirim" role="button" tabindex="0" aria-label="Edit ongkos kirim">
+                                <p class="text-sm mb-0">Ongkir</p>
+                                <p class="text-sm font-weight-bold mb-0" id="ongkir-display">Rp 0</p>
+                                <input type="hidden" name="ongkir" id="ongkir-input" value="0">
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center" style="cursor: pointer;"
+                                data-bs-toggle="modal" data-bs-target="#editExtraCostModal" data-type="diskon"
+                                data-label="Diskon" role="button" tabindex="0" aria-label="Edit diskon">
+                                <p class="text-sm mb-0">Diskon (Rp)</p>
+                                <p class="text-sm font-weight-bold mb-0" id="diskon-display">Rp 0</p>
+                                <input type="hidden" name="diskon" id="diskon-input" value="0">
+                            </div>
+                            <hr class="horizontal dark my-2">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="font-weight-bold">Total</h6>
+                                <h6 class="font-weight-bold" id="total-akhir" aria-live="polite">Rp 0</h6>
+                            </div>
+
+                            {{-- Pembayaran --}}
+                            <div class="row mt-3">
+                                <div class="col-12 d-flex justify-content-between align-items-center mb-2">
+                                    <label for="jumlah-dibayar-input" class="form-label text-sm mb-0">
+                                        Jumlah Dibayar
+                                    </label>
+                                    <input type="text" name="jumlah_dibayar" id="jumlah-dibayar-input"
+                                        class="form-control form-control-sm text-end w-30" value="0"
+                                        aria-label="Jumlah dibayar oleh pelanggan" inputmode="numeric">
+                                </div>
+                                <div class="col-12 d-flex justify-content-between align-items-center">
+                                    <label class="form-label text-sm mb-0">Kembalian</label>
+                                    <p class="form-control-plaintext text-end fw-bold mb-0" id="change-display"
+                                        aria-live="polite">Rp 0</p>
+                                </div>
+                                <div class="col-6">
+                                    <label for="metode_pembayaran" class="form-label">Metode Pembayaran</label>
+                                    <select name="metode_pembayaran" id="metode_pembayaran" class="form-select" required
+                                        aria-required="true">
+                                        <option value="TUNAI">Tunai</option>
+                                        <option value="TRANSFER">Transfer</option>
+                                        <option value="QRIS">QRIS</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <label for="catatan" class="form-label">Catatan (Opsional)</label>
+                                    <textarea name="catatan" id="catatan" class="form-control" rows="2"
+                                        placeholder="Tambahkan catatan untuk transaksi ini..."></textarea>
+                                </div>
+                            </div>
+
+                            {{-- Tombol Aksi --}}
+                            <div class="d-flex justify-content-center mt-3">
+                                <button type="button" class="btn btn-info me-3" id="btn-pay-exact">
+                                    Bayar Pas
+                                </button>
+                                <button type="submit" class="btn btn-dark" id="btn-save-transaction" disabled>
+                                    <i class="fas fa-save me-1" aria-hidden="true"></i>
+                                    Simpan Transaksi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -819,33 +801,6 @@
                 };
             };
 
-            /**
-             * [BARU] Toast notification menggantikan alert() yang blocking.
-             * @param {string} message - Pesan yang ditampilkan
-             * @param {string} type    - 'success' | 'danger' | 'warning' | 'info'
-             */
-            const showToast = (message, type = 'info') => {
-                const toastEl = document.getElementById('pos-toast');
-                const toastBody = document.getElementById('toast-body');
-                const toastTitle = document.getElementById('toast-title');
-                if (!toastEl) {
-                    console.warn(message);
-                    return;
-                }
-                const titles = {
-                    success: 'Berhasil',
-                    danger: 'Error',
-                    warning: 'Peringatan',
-                    info: 'Info'
-                };
-                toastTitle.textContent = titles[type] || 'Notifikasi';
-                toastBody.textContent = message;
-                toastEl.className = `toast text-white bg-${type}`;
-                bootstrap.Toast.getOrCreateInstance(toastEl, {
-                    delay: 4000
-                }).show();
-            };
-
             /** Debounce helper untuk mengoptimalkan event listener input */
             const debounce = (fn, delay = 250) => {
                 let timer;
@@ -1032,7 +987,7 @@
 
                         // Tampilan nomor seri di bawah nama produk
                         const serialNumberDisplay = (item.serial_numbers?.length > 0) ?
-                            `<span class="text-xs text-muted d-block">SN: ${item.serial_numbers.join(', ')}</span>` :
+                            `<small class="text-xs text-muted d-flex">SN: ${item.serial_numbers.join(', ')}</small>` :
                             '';
 
                         // Tampilan harga (normal vs diskon)
@@ -1061,15 +1016,15 @@
                         ${serialNumberInputs}
                         <td>
                             <div class="d-flex align-items-center">
-                                <img src="${item.img}" class="avatar avatar-sm rounded me-2" alt="${item.name}" loading="lazy">
+                                <img src="${item.img}" class="avatar avatar-md rounded me-2" alt="${item.name}" loading="lazy">
                                 <div class="d-flex flex-column" style="min-width: 0;">
                                     <h6 class="mb-0 text-xs text-wrap">${item.name}</h6>
-                                    ${serialNumberDisplay}
+                                    <small class="text-xs d-flex">${serialNumberDisplay}</small>
                                     ${hargaDisplay}
                                 </div>
                             </div>
                         </td>
-                        <td class="align-middle text-center">
+                        <td class="align-items-center text-center h-auto">
                             <button class="btn btn-outline-primary btn-sm rounded-circle p-0 qty-decrease"
                                     data-id="${item.id}" type="button"
                                     style="width: 22px; height: 22px; line-height: 1;"
@@ -1080,10 +1035,10 @@
                                     style="width: 22px; height: 22px; line-height: 1;"
                                     aria-label="Tambah jumlah ${item.name}">+</button>
                         </td>
-                        <td class="align-middle text-end">
+                        <td class="align-items-center text-start">
                             <span class="text-xs fw-bold">${formatCurrency(pajakAmountItem)}</span>
                         </td>
-                        <td class="align-middle text-end">
+                        <td class="align-items-center text-start">
                             <span class="text-xs fw-bold">${formatCurrency(dppItem)}</span>
                         </td>
                         <td class="align-middle text-end" style="padding-top: 25px;">

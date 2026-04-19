@@ -1,0 +1,310 @@
+@import "../../scss/bootstrap-extended"; // 1. Import library aslinya terlebih dahulu
+// ─── Flatpickr — Elegant Teal Theme ───────────────────────────────────────
+
+// Color tokens
+$fp-primary: #1d9e28;
+$fp-primary-dark: #0f6e1c;
+$fp-primary-bg: #e1f5e2;
+$fp-primary-mid: #9fe1a8;
+$fp-radius: 5px;
+$fp-radius-lg: 16px;
+$fp-transition: all 0.15s ease;
+
+// ─── Import base ──────────────────────────────────────────────────────────
+@import "node_modules/flatpickr/dist/flatpickr.css";
+
+// ─── Calendar container ───────────────────────────────────────────────────
+.flatpickr-calendar {
+    background: #fff;
+    border: 0.5px solid rgba(0, 0, 0, 0.12);
+    border-radius: $fp-radius-lg !important;
+    box-shadow: none !important;
+    padding: 16px !important;
+    font-family: inherit;
+    width: 300px !important;
+
+    &.open {
+        animation: fp-fade-in 0.18s ease;
+    }
+}
+
+@keyframes fp-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// ─── Month header ─────────────────────────────────────────────────────────
+.flatpickr-months {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2px;
+    margin-bottom: 14px;
+
+    .flatpickr-month {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .flatpickr-monthDropdown-months,
+    .cur-month {
+        font-size: 15px !important;
+        font-weight: 500 !important;
+        color: #1a1a1a !important;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .numInputWrapper {
+
+        span.arrowUp,
+        span.arrowDown {
+            display: none;
+        }
+
+        input.cur-year {
+            font-size: 15px !important;
+            font-weight: 500 !important;
+            color: #666 !important;
+            width: auto !important;
+            padding: 0 !important;
+            pointer-events: none;
+        }
+    }
+
+    .flatpickr-prev-month,
+    .flatpickr-next-month {
+        position: static !important;
+        width: 30px;
+        height: 30px;
+        border-radius: $fp-radius !important;
+        border: 0.5px solid rgba(0, 0, 0, 0.12) !important;
+        background: #f5f5f5 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        transition: $fp-transition;
+
+        svg {
+            fill: #888 !important;
+            width: 14px;
+            height: 14px;
+        }
+
+        &:hover {
+            background: $fp-primary-bg !important;
+            border-color: $fp-primary-mid !important;
+
+            svg {
+                fill: $fp-primary !important;
+            }
+        }
+    }
+}
+
+// ─── Weekday headers ──────────────────────────────────────────────────────
+.flatpickr-weekdays {
+    margin-bottom: 4px;
+}
+
+.flatpickr-weekday {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #aaa !important;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+// ─── Day cells ────────────────────────────────────────────────────────────
+.flatpickr-day {
+    border-radius: $fp-radius !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    max-width: 36px !important;
+    font-size: 13px !important;
+    color: #1a1a1a;
+    border: 0.5px solid transparent !important;
+    transition: $fp-transition;
+
+    // ── Hover & focus
+    &:hover,
+    &:focus {
+        background: $fp-primary-bg !important;
+        color: $fp-primary-dark !important;
+        border-color: transparent !important;
+    }
+
+    // ── Today
+    &.today {
+        font-weight: 500;
+        border-color: $fp-primary !important;
+        color: $fp-primary-dark;
+        position: relative;
+
+        &::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: $fp-primary;
+        }
+
+        &:hover {
+            background: $fp-primary-bg !important;
+            color: $fp-primary-dark !important;
+        }
+    }
+
+    // ── Selected (single)
+    &.selected,
+    &.selected.inRange,
+    &.selected.prevMonthDay,
+    &.selected.nextMonthDay {
+        background: $fp-primary !important;
+        color: #fff !important;
+        border-color: $fp-primary !important;
+        font-weight: 500;
+
+        &:hover {
+            background: $fp-primary-dark !important;
+            border-color: $fp-primary-dark !important;
+        }
+    }
+
+    // ── Date range — start & end
+    &.startRange {
+        background: $fp-primary !important;
+        color: #fff !important;
+        border-color: $fp-primary !important;
+        border-radius: $fp-radius 0 0 $fp-radius !important;
+        font-weight: 500;
+    }
+
+    &.endRange {
+        background: $fp-primary !important;
+        color: #fff !important;
+        border-color: $fp-primary !important;
+        border-radius: 0 $fp-radius $fp-radius 0 !important;
+        font-weight: 500;
+    }
+
+    // ── Date range — in between
+    &.inRange {
+        background: $fp-primary-bg !important;
+        color: $fp-primary-dark !important;
+        border-color: transparent !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    // ── Other month days
+    &.prevMonthDay,
+    &.nextMonthDay {
+        color: #ccc !important;
+
+        &:hover {
+            color: $fp-primary-dark !important;
+        }
+    }
+
+    // ── Disabled
+    &.disabled,
+    &.disabled:hover {
+        color: #ddd !important;
+        background: transparent !important;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    // ── Has event dot
+    &.hasEvent {
+        &::before {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: $fp-primary;
+        }
+    }
+}
+
+// ─── Time picker ──────────────────────────────────────────────────────────
+.flatpickr-time {
+    border-top: 0.5px solid rgba(0, 0, 0, 0.08) !important;
+    margin-top: 12px;
+    padding-top: 12px;
+
+    input,
+    .flatpickr-time-separator {
+        color: #1a1a1a !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+    }
+
+    input:hover,
+    input:focus {
+        background: $fp-primary-bg !important;
+        color: $fp-primary-dark !important;
+        border-radius: $fp-radius;
+    }
+
+    .flatpickr-am-pm {
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        color: $fp-primary !important;
+        background: $fp-primary-bg !important;
+        border-radius: $fp-radius !important;
+        transition: $fp-transition;
+
+        &:hover {
+            background: $fp-primary !important;
+            color: #fff !important;
+        }
+    }
+}
+
+// ─── Input element ────────────────────────────────────────────────────────
+input.flatpickr-input {
+    border: 0.5px solid rgba(0, 0, 0, 0.15);
+    border-radius: $fp-radius !important;
+    padding: 9px 14px;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #fff;
+    transition: $fp-transition;
+    outline: none;
+    width: 100%;
+    cursor: pointer;
+
+    &:hover {
+        border-color: $fp-primary-mid;
+    }
+
+    &:focus {
+        border-color: $fp-primary;
+        box-shadow: 0 0 0 3px rgba($fp-primary, 0.12);
+    }
+
+    &.active {
+        border-color: $fp-primary;
+    }
+}

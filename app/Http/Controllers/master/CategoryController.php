@@ -50,10 +50,10 @@ class CategoryController extends Controller
         $kategoris = $query->paginate(15)->withQueryString();
 
         if ($request->ajax()) {
-            return view('content.produk.kategori._category_table', compact('kategoris'))->render();
+            return view('content.master.kategori._category_table', compact('kategoris'))->render();
         }
 
-        return view('content.produk.kategori.kategoriproduk', [
+        return view('content.master.kategori.kategoriproduk', [
             'title'          => 'Data Kategori Product',
             'kategoris'      => $kategoris,
             'parentKategoris' => $parentKategoris,

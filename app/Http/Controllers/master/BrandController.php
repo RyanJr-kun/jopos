@@ -31,10 +31,10 @@ class BrandController extends Controller
 
         $brands = $query->paginate(15)->withQueryString();
         if ($request->ajax()) {
-            return view('content.produk.brand._brand_table', compact('brands'))->render();
+            return view('content.master.brand._brand_table', compact('brands'))->render();
         }
 
-        return view('content.produk.brand.brand', [
+        return view('content.master.brand.brand', [
             'title' => 'Data Brand',
             'brands' => $brands,
             'statuses' => $statuses,

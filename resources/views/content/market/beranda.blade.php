@@ -283,7 +283,7 @@
         <section id="promotions" class="section-py">
             <div class="container-market">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="fw-bolder tg-red-blue mb-0">PROMO TERBATAS</h3>
+                    <h3 class="fw-bolder  mb-0"><span class="tg-red-blue">PROMO TERBATAS</span></h3>
                     <a href="{{ route('market.produk') }}" class="btn btn-outline-secondary px-2">
                         <i class="bx bx-category"></i>
                         <span class="d-none d-lg-block ms-2">Lihat Semua</span>
@@ -316,9 +316,13 @@
                                         <div class="card product-card overflow-hidden h-100 d-flex flex-column">
                                             <div class="product-card-img-container">
                                                 <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                                                    <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
-                                                        loading="lazy" class="card-img-top"
-                                                        alt="{{ $produk->name_product }}">
+                                                    <img src="{{ $produk->primaryImage
+                                                        ? asset('storage/' . $produk->primaryImage->path)
+                                                        : ($produk->img_produk
+                                                            ? asset('storage/' . $produk->img_produk)
+                                                            : asset('assets/img/produk.png')) }}"
+                                                        alt="{{ $produk->name_product }}" loading="eager"
+                                                        class="card-img-top" alt="{{ $produk->name_product }}">
 
                                                     @if ($produk->qty < 1)
                                                         <div class="product-badge">
@@ -402,7 +406,7 @@
         <section id="best-seller" class="section-py">
             <div class="container-market">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="fw-bolder tg-red-blue mb-0">BEST SELLER</h3>
+                    <h3 class="fw-bolder mb-0"><span class="tg-red-blue">BEST SELLER</span></h3>
                     <a href="{{ route('market.produk') }}" class="btn btn-outline-secondary px-2"> <i
                             class="bx bx-category"></i>
                         <span class="d-none d-lg-block ms-2">Lihat Semua</span></a>
@@ -441,8 +445,13 @@
                                 <div class="card product-card overflow-hidden h-100 d-flex flex-column">
                                     <div class="product-card-img-container">
                                         <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                                            <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
-                                                loading="eager" class="card-img-top" alt="{{ $produk->name_product }}">
+                                            <img src="{{ $produk->primaryImage
+                                                ? asset('storage/' . $produk->primaryImage->path)
+                                                : ($produk->img_produk
+                                                    ? asset('storage/' . $produk->img_produk)
+                                                    : asset('assets/img/produk.png')) }}"
+                                                alt="{{ $produk->name_product }}" loading="eager" class="card-img-top"
+                                                alt="{{ $produk->name_product }}">
                                             @if ($produk->qty < 1)
                                                 <div class="product-badge">
                                                     <span class="badge bg-danger fw-bolder rounded-4">Habis</span>
@@ -526,8 +535,13 @@
                         <div class="card product-card overflow-hidden h-100 d-flex flex-column">
                             <div class="product-card-img-container">
                                 <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                                    <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
-                                        loading="eager" class="card-img-top" alt="{{ $produk->name_product }}">
+                                    <img src="{{ $produk->primaryImage
+                                        ? asset('storage/' . $produk->primaryImage->path)
+                                        : ($produk->img_produk
+                                            ? asset('storage/' . $produk->img_produk)
+                                            : asset('assets/img/produk.png')) }}"
+                                        alt="{{ $produk->name_product }}" loading="eager" class="card-img-top"
+                                        alt="{{ $produk->name_product }}">
                                     {{-- Badge Promotion --}}
                                     @if ($produk->qty < 1)
                                         <div class="product-badge">

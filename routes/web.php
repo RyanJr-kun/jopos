@@ -6,24 +6,25 @@ use App\Http\Controllers\auth\UserController;
 use App\Http\Controllers\dashboard\DashboardController;
 use App\Http\Controllers\event\BannerController;
 use App\Http\Controllers\event\PromotionController;
-use App\Http\Controllers\inventaris\StockTakeController;
 use App\Http\Controllers\inventaris\StockAdjustmentController;
-use App\Http\Controllers\master\BrandController;
-use App\Http\Controllers\master\WarrantieController;
-use App\Http\Controllers\master\CategoryController;
-use App\Http\Controllers\master\TransactionCategoryController;
-use App\Http\Controllers\master\CustomerController;
-use App\Http\Controllers\master\SupplierController;
-use App\Http\Controllers\master\SerialNumberController;
-use App\Http\Controllers\master\UnitController;
+use App\Http\Controllers\inventaris\StockTakeController;
+use App\Http\Controllers\laporan\ExpenseController;
+use App\Http\Controllers\laporan\IncomeController;
 use App\Http\Controllers\laporan\KeuanganController;
 use App\Http\Controllers\laporan\LaporanController;
-use App\Http\Controllers\laporan\IncomeController;
-use App\Http\Controllers\laporan\ExpenseController;
 use App\Http\Controllers\mainhero\PurchaseController;
 use App\Http\Controllers\mainhero\SaleController;
+use App\Http\Controllers\master\BrandController;
+use App\Http\Controllers\master\CategoryController;
+use App\Http\Controllers\master\CustomerController;
+use App\Http\Controllers\master\SerialNumberController;
+use App\Http\Controllers\master\SupplierController;
+use App\Http\Controllers\master\TransactionCategoryController;
+use App\Http\Controllers\master\UnitController;
+use App\Http\Controllers\master\WarrantieController;
 use App\Http\Controllers\produk\ProductController;
 use App\Http\Controllers\publik\MarketController;
+use App\Http\Controllers\auth\RoleController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -173,4 +174,7 @@ Route::middleware(['role:admin', 'auth'])->group(function () {
     Route::resource('users', UserController::class)->except('show')->parameter('user', 'user:username');
     Route::post('/dashboard/users/upload', [UserController::class, 'upload'])->name('users.upload');
     Route::delete('/dashboard/users/revert', [UserController::class, 'revert'])->name('users.revert');
+
+    //roles
+    Route::resource('roles', RoleController::class)->except('show', 'create', 'edit', 'update', 'destroy');
 });

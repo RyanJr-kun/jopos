@@ -40,7 +40,7 @@
                 </div>
             </div>
             <div id="garansi-table-container">
-                @include('content.produk.garansi._garansi_table', ['warranties' => $warranties])
+                @include('content.master.garansi._garansi_table', ['warranties' => $warranties])
             </div>
         </div>
     </div>

@@ -76,7 +76,7 @@
                 </div>
                 <div class="card-body px-0 pt-0 pb-2">
                     <div id="kategori-table-container">
-                        @include('content.produk.kategori._category_table')
+                        @include('content.master.kategori._category_table')
                     </div>
                 </div>
             </div>

@@ -233,16 +233,16 @@
       ]
     },
     {
-      "url": "pengaturan/profil-toko",
-      "name": "Setting",
-      "icon": "menu-icon icon-base bx bx-cog",
-      "slug": "pengaturan.profil-toko.edit"
-    },
-    {
       "url": "users",
       "name": "Pengguna",
       "icon": "menu-icon icon-base bx bx-users",
       "slug": "users.index"
+    },
+    {
+      "url": "roles",
+      "name": "Role & Permission",
+      "icon": "menu-icon icon-base bx bx-shield-quarter",
+      "slug": "roles.index"
     }
   ]
 }

@@ -35,7 +35,6 @@
                                 <th>Nama</th>
                                 <th>kontak</th>
                                 <th>Posisi</th>
-                                <th>Mulai Bekerja</th>
                                 <th>status</th>
                                 <th></th>
                             </tr>
@@ -68,6 +67,7 @@
                                                 'admin' => 'danger',
                                                 'kasir' => 'secondary',
                                                 'teknisi' => 'warning',
+                                                'staff' => 'info',
                                                 'sales' => 'primary',
                                                 'pelanggan' => 'success',
                                             ];
@@ -79,12 +79,6 @@
                                             <span class="text-muted small">Tanpa Role</span>
                                         @endforelse
                                     </td>
-
-                                    <td class="align-middle text-center">
-                                        <span
-                                            class="text-dark text-xs fw-bold">{{ $user->mulai_kerja?->translatedFormat('d M Y') }}</span>
-                                    </td>
-
                                     <td class="align-middle text-center text-sm">
                                         @if ($user->status)
                                             <span class="badge bg-label-success">Aktif</span>

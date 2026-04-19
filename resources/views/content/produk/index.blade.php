@@ -39,7 +39,7 @@
             </div>
             {{-- Container untuk tabel yang akan di-refresh oleh AJAX --}}
             <div id="produk-table-container">
-                @include('content.produk.produk._produk_table', ['produk' => $produk])
+                @include('content.master._produk_table', ['produk' => $produk])
             </div>
         </div>
     </div>

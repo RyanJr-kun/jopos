@@ -60,7 +60,7 @@ class UserController extends Controller
             'username' => 'required|min:3|max:255|unique:users',
             'email' => 'required|email:dns|unique:users',
             'password' => 'required|min:5|max:255',
-            'role_id' => ['required', Rule::exists('roles', 'id')],
+            'role_name'   => ['required', Rule::exists('roles', 'name')],
             'kontak' => 'nullable|min:9|max:14|unique:users',
             'mulai_kerja' => 'required|date',
             'status' => 'required|boolean',
@@ -80,8 +80,11 @@ class UserController extends Controller
         }
 
         $validatedData['password'] = bcrypt($validatedData['password']);
+        $roleName = $validatedData['role_name'];
+        unset($validatedData['role_name']);
 
-        User::create($validatedData);
+        $user = User::create($validatedData);
+        $user->syncRoles($roleName);
         return redirect()->route('users.index')->with('success', 'User Baru Berhasil Ditambahkan.');
     }
 
@@ -110,7 +113,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         // Cek jika pengguna yang sedang login mencoba mengubah role-nya sendiri
-        if (Auth::id() === $user->id && $request->input('role_id') != $user->role_id) {
+        if (Auth::id() === $user->id && $request->role_name !== $user->getRoleNames()->first()) {
             return back()->withInput()->with('warning', 'Anda tidak dapat mengubah role Anda sendiri.');
         }
 
@@ -119,7 +122,7 @@ class UserController extends Controller
             'username' => ['required', 'min:3', 'max:255', Rule::unique('users')->ignore($user->id)],
             'email' => ['required', 'email:dns', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|min:5|max:255',
-            'role_id' => ['required', Rule::exists('roles', 'id')],
+            'role_name'   => ['required', Rule::exists('roles', 'name')],
             'kontak' => ['nullable', 'min:9', 'max:14', Rule::unique('users')->ignore($user->id)],
             'mulai_kerja' => 'required|date',
             'status' => 'required|boolean',
@@ -157,7 +160,13 @@ class UserController extends Controller
         } else {
             unset($validatedData['password']);
         }
+
+        $roleName = $validatedData['role_name'];
+        unset($validatedData['role_name']);
+
         $user->update($validatedData);
+        $user->syncRoles($roleName);
+
         return redirect()->route('users.index')->with('success', 'Data Pengguna Berhasil Diperbarui.');
     }
 

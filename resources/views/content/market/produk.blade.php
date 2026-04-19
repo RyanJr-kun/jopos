@@ -97,7 +97,7 @@
                     <i class="bx bx-search me-1 text-primary"></i> Cari Produk
                 </h6>
                 <input type="text" id="mobile-search-input" class="form-control form-control-sm"
-                    placeholder="Nama atau SKU..." value="{{ request('search') }}">
+                    placeholder="Cara Nama, Kategori, atau Brand." value="{{ request('search') }}">
             </div>
 
             {{-- ── Kategori ────────────────────────────────────── --}}
@@ -214,7 +214,7 @@
     </div>
 
     {{-- Main Content --}}
-    <section id="productShowCase" class="section-py bg-white">
+    <section id="productShowCase" class="py-3 bg-white">
         <div class="container-market">
             <div class="row">
 
@@ -229,7 +229,7 @@
                                 <div class="mb-4">
                                     <h6 class="filter-title">Cari Product</h6>
                                     <input type="text" name="search" id="search-input" class="form-control"
-                                        placeholder="Nama atau SKU..." value="{{ request('search') }}">
+                                        placeholder="Cara Nama, Kategori, atau Brand." value="{{ request('search') }}">
                                 </div>
 
                                 {{-- Filter Kategori: Multilevel Dropdown --}}
