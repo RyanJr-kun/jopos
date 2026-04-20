@@ -188,7 +188,7 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $recentSales = Sale::with('pelanggan')
+        $recentSales = Sale::with('customer')
             ->latest('tanggal_penjualan')
             ->take(11)
             ->get();

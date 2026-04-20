@@ -16,6 +16,7 @@ class SupplierController extends Controller
      */
     public function index(Request $request)
     {
+        $statuses = Supplier::select('status')->distinct()->pluck('status');
         $query = Supplier::latest();
 
         // Terapkan filter pencarian jika ada input 'search'
@@ -24,7 +25,8 @@ class SupplierController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('perusahaan', 'like', "%{$search}%")
-                    ->orWhere('kontak', 'like', "%{$search}%");
+                    ->orWhere('kontak', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -33,17 +35,14 @@ class SupplierController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $suppliers = $query->paginate(10)->withQueryString();
+        $suppliers = $query->paginate(15)->withQueryString();
 
         // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
         if ($request->ajax()) {
             return view('content.pembelian._pemasok_table', compact('suppliers'))->render();
         }
 
-        return view('content.pembelian.pemasok', [
-            'title' => 'Supplier',
-            'suppliers' => $suppliers,
-        ]);
+        return view('content.pembelian.pemasok', compact('suppliers', 'statuses'));
     }
 
     /**

@@ -17,7 +17,7 @@ class Purchase extends Model
     {
         return 'referensi';
     }
-    public function pemasok(): BelongsTo
+    public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
     }

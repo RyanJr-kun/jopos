@@ -2,31 +2,53 @@
 
 @section('title', 'Cards basic - UI elements')
 @section('content')
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row g-3 align-items-center justify-content-start">
-                <!-- Filter Pencarian -->
-                <div class="col-md-3">
-                    <input type="text" name="search" id="searchInput" class="form-control"
-                        placeholder="Cari nama, kontak, atau email..." value="{{ request('search') }}">
+    <div class="row mb-4 align-items-stretch">
+        <div class="col-12 col-md-4 col-xl-3 mb-3 mb-md-0">
+            <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #696cff 0%, #8592ff 100%);">
+                <div class="card-body d-flex align-items-center">
+                    <div class="avatar avatar-md me-3">
+                        <span class="avatar-initial rounded bg-white text-primary shadow-sm">
+                            <i class="bx bx-group fs-4"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <p class="text-white mb-0 text-sm">Total Pelanggan</p>
+                        {{-- Mengambil total data dari paginasi atau count biasa --}}
+                        <h3 class="text-white mb-0 fw-bold" id="resumeTotalPelanggan">
+                            {{ method_exists($customers, 'total') ? $customers->total() : $customers->count() }}
+                        </h3>
+                    </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Filter Dropdown Status -->
-                <div class="col-md-2">
-                    <select name="status" id="statusFilter" class="form-select select2" data-placeholder="Semua Status">
-                        <option value="">Semua Status</option>
-                        @foreach ($statuses as $status)
-                            <option value="{{ $status }}" @selected(request('status') == $status)>
-                                {{ $status == 1 ? 'Aktif' : 'Tidak Aktif' }}</option>
-                        @endforeach
-                    </select>
-                </div>
+        <div class="col-12 col-md-8 col-xl-9">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <div class="row g-3 align-items-center justify-content-start w-100 m-0">
+                        <div class="col-12 col-sm-6 col-md-5">
+                            <input type="text" name="search" id="searchInput" class="form-control"
+                                placeholder="Cari invoice atau pelanggan..." value="{{ request('search') }}">
+                        </div>
 
-                <!-- Tombol Tambah -->
-                <div class="col-md-auto ms-md-auto">
-                    <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#createModal">
-                        <i class="bx bx-plus cursor-pointer pe-2"></i>Pelanggan
-                    </button>
+                        <div class="col-12 col-sm-6 col-md-4">
+                            <select name="status" id="statusFilter" class="form-select select2"
+                                data-placeholder="Semua Status">
+                                <option value="">Semua Status</option>
+                                @foreach ($statuses as $status)
+                                    <option value="{{ $status }}" @selected(request('status') == $status)>
+                                        {{ $status == 1 ? 'Aktif' : 'Tidak Aktif' }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-auto ms-md-auto">
+                            <button class="btn btn-info w-100 w-md-auto" data-bs-toggle="modal"
+                                data-bs-target="#createModal">
+                                <i class="bx bx-plus cursor-pointer pe-1"></i>Pelanggan
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -186,7 +208,6 @@
         };
         initSelect2();
     </script>
-
     <script>
         // Sedikit pelindung untuk memastikan jQuery sudah siap di script biasa
         const runAjaxScripts = () => {

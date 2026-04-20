@@ -69,7 +69,7 @@ class KeuanganController extends Controller
         $expenseData = collect($period)->map(fn($date) => $expensePerHari[$date->format('Y-m-d')] ?? 0);
 
         // 5. Ambil invoice penjualan terbaru
-        $recentInvoices = Sale::with('pelanggan')
+        $recentInvoices = Sale::with('customer')
             ->latest()
             ->limit(5)
             ->get();

@@ -26,15 +26,15 @@ class PurchaseController extends Controller
         $statuses = Purchase::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
 
         // Mulai query builder
-        $query = Purchase::with(['pemasok', 'user'])->latest();
+        $query = Purchase::with(['supplier', 'user'])->latest();
 
         // Terapkan filter pencarian jika ada input 'search'
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('referensi', 'like', "%{$search}%")
-                    ->orWhereHas('pemasok', function ($q_pemasok) use ($search) {
-                        $q_pemasok->where('name', 'like', "%{$search}%");
+                    ->orWhereHas('supplier', function ($q_supplier) use ($search) {
+                        $q_supplier->where('name', 'like', "%{$search}%");
                     });
             });
         }
@@ -44,7 +44,7 @@ class PurchaseController extends Controller
             $query->where('status_pembayaran', $request->input('status'));
         }
 
-        $pembelian = $query->paginate(10)->withQueryString();
+        $pembelian = $query->paginate(15)->withQueryString();
 
         // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
         if ($request->ajax()) {
@@ -52,11 +52,7 @@ class PurchaseController extends Controller
         }
 
         // Jika request biasa, kembalikan view lengkap
-        return view('content.pembelian.index', [
-            'title' => 'Daftar Invoice Purchase',
-            'pembelian' => $pembelian,
-            'statuses' => $statuses,
-        ]);
+        return view('content.pembelian.index', compact('pembelian', 'statuses'));
     }
 
     /**
@@ -67,7 +63,7 @@ class PurchaseController extends Controller
         $statuses = Purchase::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
         return view('content.pembelian.create', [
             'title' => 'Tambah Invoice Purchase',
-            'pemasok' => Supplier::all(),
+            'supplier' => Supplier::all(),
             'taxes' => Taxe::all(),
             'nomer_referensi' => $this->generatePurchaseInvoiceNumber(),
             'statuses' => $statuses,
@@ -224,7 +220,7 @@ class PurchaseController extends Controller
     public function show(Purchase $pembelian)
     {
         // Eager load relasi untuk efisiensi query dan menghindari N+1 problem
-        $pembelian->load('pemasok', 'user', 'details.produk');
+        $pembelian->load('supplier', 'user', 'details.produk');
         $profilToko = Stores::first();
 
         return view('content.pembelian.show', [
@@ -247,7 +243,7 @@ class PurchaseController extends Controller
         return view('content.pembelian.edit', [
             'title' => 'Edit Invoice Purchase: ' . $pembelian->referensi,
             'pembelian' => $pembelian,
-            'pemasok' => Supplier::all(),
+            'supplier' => Supplier::all(),
             'taxes' => Taxe::all(),
             'statuses' => $statuses,
         ]);
@@ -440,7 +436,7 @@ class PurchaseController extends Controller
     public function printThermal(Purchase $pembelian)
     {
         // Eager load relasi yang dibutuhkan
-        $pembelian->load('pemasok', 'details.produk');
+        $pembelian->load('supplier', 'details.produk');
         $profilToko = Stores::first();
 
         return view('content.pembelian.thermal', compact('pembelian', 'profilToko'));
@@ -452,7 +448,7 @@ class PurchaseController extends Controller
     public function generatePdf(Purchase $pembelian)
     {
         // Eager load relasi untuk efisiensi
-        $pembelian->load('pemasok', 'user', 'details.produk', 'details.pajak');
+        $pembelian->load('supplier', 'user', 'details.produk', 'details.pajak');
         $profilToko = Stores::first();
 
         // Data yang akan dikirim ke view

@@ -2,49 +2,66 @@
 
 @section('title', 'Cards basic - UI elements')
 @section('content')
-    {{-- Breadcrumb --}}
-    <div class="container-fluid p-3">
-        <div class="card rounded-2 mb-4">
-            <div class="card-header pb-0 px-3 pt-2 mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-n1">Invoice Purchase</h6>
-                        <p class="text-sm mb-0"> riwayat transaksi pembelian.</p>
-                    </div>
-                    <div class="ms-md-auto mt-2">
-                        <a href="{{ route('pembelian.create') }}" class="btn btn-outline-info mb-0">
-                            <i class="bx bx-plus me-2"></i>Transaksi
-                        </a>
+
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-center justify-content-start">
+                <!-- Filter Pencarian -->
+                <div class="col-md-3">
+                    <input type="text" name="search" id="searchInput" class="form-control"
+                        placeholder="Cari invoice atau supplier..." value="{{ request('search') }}">
+                </div>
+
+                <!-- Filter Rentang Tanggal -->
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <input type="text" id="flatpickr-date" class="form-control"
+                            placeholder="Pilih rentang tanggal..."
+                            value="{{ request('date_from') && request('date_to') ? request('date_from') . ' to ' . request('date_to') : '' }}">
+                        @if (request('date_from'))
+                            <button type="button" class="btn" id="clearDateBtn" title="Hapus Filter Tanggal"
+                                data-bs-toggle="tooltip" data-bs-placement="top">
+                                <i class="bx bx-x"></i>
+                            </button>
+                        @else
+                            <button type="button" class="btn d-none" id="clearDateBtn" title="Hapus Filter Tanggal"
+                                data-bs-toggle="tooltip" data-bs-placement="top">
+                                <i class="bx bx-x"></i>
+                            </button>
+                        @endif
                     </div>
                 </div>
-            </div>
-            <div class="card-body px-0 pt-0 pb-2">
-                <div class=" p-3">
-                    <div class="row g-3 align-items-center justify-content-between">
-                        <!-- Filter Pencarian -->
-                        <div class="col-md-4">
-                            <input type="text" name="search" id="searchInput" class="form-control"
-                                placeholder="Cari invoice atau pemasok..." value="{{ request('search') }}">
-                        </div>
-                        <!-- Filter Dropdown Status -->
-                        <div class="col-md-3">
-                            <select name="status" id="statusFilter" class="form-select">
-                                <option value="">Semua Status Pembayaran</option>
-                                @foreach ($statuses as $status)
-                                    <option value="{{ $status }}" @selected(request('status') == $status)>{{ $status }}
-                                    </option>
-                                @endforeach
-                                <option value="Dibatalkan" @selected(request('status') == 'Dibatalkan')>Dibatalkan</option>
-                            </select>
-                        </div>
-                    </div>
+                <!-- Filter Dropdown Status -->
+                <div class="col-md-2">
+                    <select name="status" id="statusFilter" class="form-select select2" data-placeholder="Semua Status">
+                        <option value="">Semua Status</option>
+                        @foreach ($statuses as $status)
+                            <option value="{{ $status }}" @selected(request('status') == $status)>{{ $status }}</option>
+                        @endforeach
+                    </select>
                 </div>
-                <div id="pembelian-table-container" class="mt-3">
-                    @include('content.pembelian._pembelian_table')
+                <!-- Tombol Tambah -->
+                <div class="col-md-auto ms-md-auto">
+                    <a href="{{ route('pembelian.create') }}" class="btn btn-outline-info mb-0">
+                        <i class="bx bx-plus me-2"></i>Transaksi
+                    </a>
                 </div>
             </div>
         </div>
     </div>
+    <div class="card">
+        <div class="card-header pb-0 px-3 pt-2 mb-3">
+            <h6 class="mb-n1">Invoice Purchase</h6>
+            <p class="text-sm mb-0"> riwayat transaksi pembelian.</p>
+        </div>
+        <div class="card-body px-0 pt-0 pb-2">
+            <div id="pembelian-table-container" class="mt-3">
+                @include('content.pembelian._pembelian_table')
+            </div>
+        </div>
+    </div>
+
 
     {{-- modal edit --}}
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -82,7 +99,8 @@
                         </div>
                         <div class="modal-footer border-0 pb-0">
                             <button type="submit" class="btn btn-info btn-sm">Simpan Perubahan</button>
-                            <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Batalkan</button>
+                            <button type="button" class="btn btn-danger btn-sm"
+                                data-bs-dismiss="modal">Batalkan</button>
                         </div>
                     </form>
                 </div>
@@ -114,72 +132,168 @@
             </div>
         </div>
     </div>
+@endsection
 @section('page-script')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Fungsi untuk menunda eksekusi (debounce)
-            function debounce(func, delay) {
-                let timeout;
-                return function(...args) {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func.apply(this, args), delay);
-                };
-            }
+    <script type="module">
+        // --- Inisialisasi Flatpickr (Gaya Anda) ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const flatpickrDate = document.querySelector('#flatpickr-date');
+            const clearDateBtn = document.querySelector('#clearDateBtn');
+            let fp;
 
-            // Fungsi untuk mengambil data dengan AJAX
-            function fetchData(page = 1) {
-                let search = $('#searchInput').val();
-                let status = $('#statusFilter').val();
-                let url = '{{ route('pembelian.index') }}';
-
-                // Tambahkan spinner atau loading state di sini jika diinginkan
-                $('#pembelian-table-container').css('opacity', 0.5);
-
-                $.ajax({
-                    url: url,
-                    data: {
-                        search: search,
-                        status: status,
-                        page: page
-                    },
-                    success: function(data) {
-                        $('#pembelian-table-container').html(data);
-                        $('#pembelian-table-container').css('opacity', 1);
-                        // Update URL di browser
-                        window.history.pushState({
-                                path: url + '?page=' + page + '&search=' + search + '&status=' +
-                                    status
-                            }, '', url + '?page=' + page + '&search=' + search + '&status=' +
-                            status);
-                    },
-                    error: function() {
-                        // Handle error, misalnya tampilkan pesan
-                        $('#pembelian-table-container').css('opacity', 1);
-                        alert('Gagal memuat data. Silakan coba lagi.');
+            if (flatpickrDate) {
+                fp = flatpickrDate.flatpickr({
+                    mode: 'range',
+                    dateFormat: 'Y-m-d',
+                    locale: 'id',
+                    allowInput: true,
+                    onClose(selectedDates) {
+                        if (selectedDates.length === 2) {
+                            if (clearDateBtn) clearDateBtn.classList.remove('d-none');
+                            if (typeof window.fetchData === 'function') window.fetchData(1);
+                        } else if (selectedDates.length === 0) {
+                            if (clearDateBtn) clearDateBtn.classList.add('d-none');
+                            if (typeof window.fetchData === 'function') window.fetchData(1);
+                        }
                     }
                 });
             }
 
-            // Event listener untuk input pencarian dengan debounce
-            $('#searchInput').on('keyup', debounce(function() {
-                fetchData(1); // Selalu kembali ke halaman 1 saat melakukan pencarian baru
-            }, 500)); // Tunggu 500ms setelah user berhenti mengetik
-
-            // Event listener untuk filter status
-            $('#statusFilter').on('change', function() {
-                fetchData(1); // Selalu kembali ke halaman 1 saat filter diubah
-            });
-
-            // Event listener untuk klik paginasi
-            $(document).on('click', '#pembelian-table-container .pagination a', function(e) {
-                e.preventDefault();
-                let page = $(this).attr('href').split('page=')[1];
-                if (page) {
-                    fetchData(page);
-                }
-            });
+            if (clearDateBtn) {
+                clearDateBtn.addEventListener('click', () => {
+                    if (fp) fp.clear();
+                    clearDateBtn.classList.add('d-none');
+                    if (typeof window.fetchData === 'function') window.fetchData(1);
+                });
+            }
         });
+
+        // --- Inisialisasi Select2 (Gaya Anda) ---
+        const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    $this.select2({
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
+                    });
+                });
+            } else {
+                setTimeout(initSelect2, 100);
+            }
+        };
+        initSelect2();
+    </script>
+    <script>
+        // Sedikit pelindung untuk memastikan jQuery sudah siap di script biasa
+        const runAjaxScripts = () => {
+            if (typeof $ !== 'undefined') {
+                $(document).ready(function() {
+
+                    // Fungsi Utama Fetch Data
+                    window.fetchData = function(page = 1) {
+                        let search = $('#searchInput').val();
+                        let status = $('#statusFilter').val();
+                        let dateRange = $('#flatpickr-date').val();
+
+                        let date_from = '';
+                        let date_to = '';
+
+                        if (dateRange && dateRange.includes(' to ')) {
+                            let dates = dateRange.split(' to ');
+                            date_from = dates[0].trim();
+                            date_to = dates[1].trim();
+                        }
+
+                        $('#penjualan-table-container').css('opacity', 0.5);
+
+                        $.ajax({
+                            url: "{{ route('penjualan.index') }}",
+                            type: "GET",
+                            // PENTING: Header ini wajib agar $request->ajax() di controller merespon true
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            data: {
+                                page: page,
+                                search: search,
+                                status: status,
+                                date_from: date_from,
+                                date_to: date_to
+                            },
+                            success: function(response) {
+                                // Update isi tabel
+                                $('#penjualan-table-container').html(response).css('opacity',
+                                    1);
+
+                                // PENTING: Inisialisasi ulang Tooltips Bootstrap agar tombol action tidak mati
+                                if (typeof bootstrap !== 'undefined') {
+                                    const tooltipTriggerList = [].slice.call(document
+                                        .querySelectorAll('[data-bs-toggle="tooltip"]'));
+                                    tooltipTriggerList.map(function(tooltipTriggerEl) {
+                                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                                    });
+                                }
+
+                                // Update URL browser
+                                updateBrowserURL(page, search, status, date_from, date_to);
+                            },
+                            error: function(xhr) {
+                                $('#penjualan-table-container').css('opacity', 1);
+                                console.error("Terjadi kesalahan: ", xhr.responseText);
+                            }
+                        });
+                    };
+
+                    function updateBrowserURL(page, search, status, from, to) {
+                        let params = new URLSearchParams();
+                        if (page > 1) params.set('page', page);
+                        if (search) params.set('search', search);
+                        if (status) params.set('status', status);
+                        if (from) params.set('date_from', from);
+                        if (to) params.set('date_to', to);
+
+                        let newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() :
+                            '');
+                        window.history.pushState({
+                            path: newUrl
+                        }, '', newUrl);
+                    }
+
+                    // --- Event Listeners ---
+
+                    // 1. Search dengan Debounce
+                    let timeout = null;
+                    $('#searchInput').on('keyup', function() {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(function() {
+                            window.fetchData(1);
+                        }, 500);
+                    });
+
+                    // 2. Filter Status Select2 (Ditambahkan event select2 spesifik)
+                    $('#statusFilter').on('select2:select select2:clear change', function() {
+                        window.fetchData(1);
+                    });
+
+                    // 3. Pagination Link Click
+                    $(document).on('click', '.pagination a', function(e) {
+                        e.preventDefault();
+                        // Ambil angka halamannya dengan lebih aman menggunakan URL API
+                        let url = new URL($(this).attr('href'), window.location.origin);
+                        let page = url.searchParams.get('page');
+                        if (page) window.fetchData(page);
+                    });
+
+                });
+            } else {
+                setTimeout(runAjaxScripts, 50); // Ulangi cek jika jQuery belum load
+            }
+        };
+
+        runAjaxScripts();
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -195,5 +309,4 @@
             }
         });
     </script>
-@endsection
 @endsection

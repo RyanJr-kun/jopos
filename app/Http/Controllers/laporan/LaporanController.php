@@ -383,7 +383,7 @@ class LaporanController extends Controller
      */
     public function penjualan(Request $request)
     {
-        $query = Sale::with(['pelanggan', 'user'])
+        $query = Sale::with(['customer', 'user'])
             ->latest('tanggal_penjualan'); // ->select() tidak diperlukan, Eloquent akan memilih semua kolom secara default.
 
         // Terapkan filter
@@ -433,7 +433,7 @@ class LaporanController extends Controller
         $type = $request->query('type', 'xlsx');
 
         // Gunakan query yang sama dengan method penjualan() untuk konsistensi filter
-        $query = Sale::with(['pelanggan', 'user'])
+        $query = Sale::with(['customer', 'user'])
             ->latest('tanggal_penjualan');
 
         // Terapkan filter

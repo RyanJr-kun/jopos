@@ -53,7 +53,7 @@ class SaleExport implements FromCollection, WithHeadings, WithMapping, ShouldAut
         return [
             Carbon::parse($penjualan->tanggal_penjualan)->format('d-m-Y'),
             $penjualan->referensi,
-            $penjualan->pelanggan->name ?? 'N/A',
+            $penjualan->customer->name ?? 'N/A',
             $penjualan->status_pembayaran,
             $penjualan->total_akhir,
             $penjualan->jumlah_dibayar,
