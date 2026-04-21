@@ -52,7 +52,7 @@
     </div>
     <div class="card">
         <div class="card-header pb-0 px-3 pt-2 mb-3">
-            <h6 class="mb-n1">Invoice Purchase</h6>
+            <h5 class="fw-bolder mb-n1">Invoice Purchase</h5>
             <p class="text-sm mb-0"> riwayat transaksi pembelian.</p>
         </div>
         <div class="card-body px-0 pt-0 pb-2">
@@ -69,7 +69,7 @@
             <div class="modal-content">
                 <div class="modal-header border-0 mb-n3">
                     <h6 class="modal-title" id="editModalLabel">Edit Unit Product</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">

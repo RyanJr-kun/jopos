@@ -61,7 +61,7 @@
     <div class="card-header pb-0 px-3 pt-2 mb-3">
         <div class="d-flex justify-content-start align-items-center">
             <div>
-                <h4 class="mb-n1 fw-bolder">Invoice Sale</h4>
+                <h5 class="mb-n1 fw-bolder">Invoice Sale</h5>
                 <p class="text-sm mb-0"> riwayat transaksi penjualan.</p>
             </div>
         </div>

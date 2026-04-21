@@ -2,194 +2,234 @@
 
 @section('title', 'Cards basic - UI elements')
 @section('content')
-    <div class="container-fluid p-3 ">
-        <div class="card rounded-2">
-            <div class="card-header pb-0 px-3 pt-2 mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-n1">Data Satuan</h6>
-                        <p class="text-sm mb-0">Kelola Data Satuan Productmu</p>
+<div class="row g-3 align-items-stretch">
+    <div class="col-12 col-md-4 col-xl-3 mb-md-0">
+        <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4d50eb 0%, #8592ff 100%);">
+            <div class="card-body d-flex align-items-center">
+                <div class="avatar avatar-md me-3">
+                    <span class="avatar-initial rounded bg-white text-primary shadow-sm">
+                        <i class="bx bx-view-list fs-4"></i>
+                    </span>
+                </div>
+                <div>
+                    <p class="text-white mb-0 text-sm">Total Satuan</p>
+                    <h3 class="text-white mb-0 fw-bold" id="resumeTotalUnit">
+                        {{ method_exists($units, 'total') ? $units->total() : $units->count() }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Filter & Tombol Tambah --}}
+    <div class="col-12 col-md-8 col-xl-9">
+        <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                <div class="row g-3 align-items-center justify-content-start w-100 m-0">
+                    <div class="col-md-4">
+                        <input type="text" name="search" id="searchInput" class="form-control"
+                            placeholder="Cari kategori..." value="{{ request('search') }}">
                     </div>
-                    <div class="ms-auto mt-2">
+                    <div class="col-md-4 me-3">
+                        <select name="status" id="statusFilter" class="form-select select2"
+                            data-placeholder="Semua Status">
+                            <option value="">Semua Status</option>
+                            <option value="Aktif" @selected(request('status') == 'Aktif')>Aktif</option>
+                            <option value="Tidak Aktif" @selected(request('status') == 'Tidak Aktif')>Tidak Aktif</option>
+                        </select>
+                    </div>
+                    <div class="col-md-auto ms-md-auto">
                         {{-- triger-modal --}}
-                        <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#import">
-                            <i class="bx bx-plus cursor-pointer pe-2"></i>Satuan
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body px-0 pt-0 pb-2">
-                <div class="">
-                    <div class="row g-3 align-items-center justify-content-between">
-                        <!-- Filter Pencarian Satuan -->
-                        <div class="col-5 col-lg-3 ms-3">
-                            <input type="text" id="searchInput" class="form-control" placeholder="Cari Satuan..."
-                                value="{{ request('search') }}">
-                        </div>
-                        <!-- Filter Dropdown Status -->
-                        <div class="col-5 col-lg-2 me-3">
-                            <select id="statusFilter" class="form-select">
-                                <option value="">Semua Status</option>
-                                <option value="1" @selected(request('status') == '1')>Aktif</option>
-                                <option value="0" @selected(request('status') == '0')>Tidak Aktif</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                {{-- Container untuk tabel yang akan di-update oleh AJAX --}}
-                <div id="unit-table-container">
-                    {{-- Memuat tabel parsial untuk tampilan awal --}}
-                    @include('content.master.unit._unit_table', ['units' => $units])
-                </div>
-            </div>
-        </div>
-
-        {{-- modal-create --}}
-        <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header border-0 mb-n3">
-                        <h6 class="modal-title" id="ModalLabel">Buat Satuan Baru</h6>
-                        <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form action="{{ route('unit.store') }}" method="post">
-                            @csrf
-                            <div class="row">
-                                <div class="form-group">
-
-                                    <div class="mb-3">
-                                        <label for="name" class="form-label ">Nama Satuan</label>
-                                        <input id="name" name="name" type="string"
-                                            class="form-control @error('name') is-invalid @enderror"
-                                            value="{{ old('name') }}" required>
-                                        @error('name')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="slug" class="form-label">Slug</label>
-                                        <input id="slug" name="slug" type="string"
-                                            class="form-control @error('slug') is-invalid @enderror"
-                                            value="{{ old('slug') }}" required>
-                                        @error('slug')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="singkat" class="form-label">Nama Pendek</label>
-                                        <input id="singkat" name="singkat" type="string"
-                                            class="form-control @error('singkat') is-invalid @enderror"
-                                            value="{{ old('singkat') }}" required>
-                                        @error('singkat')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="justify-content-end form-check form-switch form-check-reverse">
-                                        <label class="me-auto form-check-label" for="status">Status</label>
-                                        <input id="status" class="form-check-input" type="checkbox" name="status"
-                                            value="1" checked>
-                                    </div>
-
-                                </div>
-                            </div>
-                            <div class="modal-footer border-0 pb-0">
-                                <button type="submit" class="btn btn-outline-info btn-sm">Buat Satuan</button>
-                                <button type="button" class="btn btn-danger btn-sm"
-                                    data-bs-dismiss="modal">Batalkan</button>
-                            </div>
-                        </form>
-
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                const hasError = document.querySelector('.is-invalid');
-                                if (hasError) {
-                                    var importModal = new bootstrap.Modal(document.getElementById('import'));
-                                    importModal.show();
-                                }
-                            });
-                        </script>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-        {{-- modal edit --}}
-        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header border-0 mb-n3">
-                        <h6 class="modal-title" id="editModalLabel">Edit Satuan Product</h6>
-                        <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="editUnitForm" method="post">
-                            @method('put')
-                            @csrf
-                            <div class="row">
-                                <div class="form-group">
-                                    <div class="mb-3">
-                                        <label for="edit_name" class="form-label">Nama</label>
-                                        <input id="edit_name" name="name" type="text" class="form-control"
-                                            required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="edit_slug" class="form-label">Slug</label>
-                                        <input id="edit_slug" name="slug" type="text" class="form-control"
-                                            required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="edit_singkat" class="form-label">Nama Pendek</label>
-                                        <input id="edit_singkat" name="singkat" type="text" class="form-control"
-                                            required>
-                                    </div>
-                                    <div class="justify-content-end form-check form-switch form-check-reverse mt-3">
-                                        <label class="me-auto form-check-label" for="edit_status">Status</label>
-                                        <input id="edit_status" class="form-check-input" type="checkbox" name="status"
-                                            value="1">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer border-0 pb-0">
-                                <button type="submit" class="btn btn-outline-info btn-sm">Simpan Perubahan</button>
-                                <button type="button" class="btn btn-danger btn-sm"
-                                    data-bs-dismiss="modal">Batalkan</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {{-- modal delete --}}
-        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1"
-            aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body text-center mt-3 mx-n5">
-                        <i class="bx bx-trash fa-2x text-danger mb-3"></i>
-                        <p class="mb-0">Apakah Anda yakin ingin menghapus Satuan ini?</p>
-                        <h6 class="mt-2" id="unitNameToDelete"></h6>
-                        <div class="mt-4">
-                            <form id="deleteUnitForm" method="POST" action="#">
-                                @method('delete')
-                                @csrf
-                                <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
-                                    data-bs-dismiss="modal">Batal</button>
-                            </form>
-                        </div>
+                    <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#import">
+                        <i class="bx bx-plus cursor-pointer pe-2"></i>Satuan
+                    </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="col-12 g-3 align-items-stretch">
+        <div class="card ">
+            <div class="card-header pb-0 px-3 pt-2 mb-3">
+                <h5 class="fw-bold mb-n1">Data Satuan</h5>
+                <p class="text-sm mb-0">Kelola Data Satuan Productmu</p>        
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+                <div id="unit-table-container">
+                    @include('content.master.unit._unit_table', ['units' => $units])
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- modal-create --}}
+<div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 mb-n3">
+                <h6 class="modal-title" id="ModalLabel">Buat Satuan Baru</h6>
+                <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ route('unit.store') }}" method="post">
+                    @csrf
+                    <div class="row">
+                        <div class="form-group">
+
+                            <div class="mb-3">
+                                <label for="name" class="form-label ">Nama Satuan</label>
+                                <input id="name" name="name" type="string"
+                                    class="form-control @error('name') is-invalid @enderror"
+                                    value="{{ old('name') }}" required>
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label for="slug" class="form-label">Slug</label>
+                                <input id="slug" name="slug" type="string"
+                                    class="form-control @error('slug') is-invalid @enderror"
+                                    value="{{ old('slug') }}" required>
+                                @error('slug')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label for="singkat" class="form-label">Nama Pendek</label>
+                                <input id="singkat" name="singkat" type="string"
+                                    class="form-control @error('singkat') is-invalid @enderror"
+                                    value="{{ old('singkat') }}" required>
+                                @error('singkat')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="justify-content-end form-check form-switch form-check-reverse">
+                                <label class="me-auto form-check-label" for="status">Status</label>
+                                <input id="status" class="form-check-input" type="checkbox" name="status"
+                                    value="1" checked>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pb-0">
+                        <button type="submit" class="btn btn-outline-info btn-sm">Buat Satuan</button>
+                        <button type="button" class="btn btn-danger btn-sm"
+                            data-bs-dismiss="modal">Batalkan</button>
+                    </div>
+                </form>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const hasError = document.querySelector('.is-invalid');
+                        if (hasError) {
+                            var importModal = new bootstrap.Modal(document.getElementById('import'));
+                            importModal.show();
+                        }
+                    });
+                </script>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- modal edit --}}
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 mb-n3">
+                <h6 class="modal-title" id="editModalLabel">Edit Satuan Product</h6>
+                <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUnitForm" method="post">
+                    @method('put')
+                    @csrf
+                    <div class="row">
+                        <div class="form-group">
+                            <div class="mb-3">
+                                <label for="edit_name" class="form-label">Nama</label>
+                                <input id="edit_name" name="name" type="text" class="form-control"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_slug" class="form-label">Slug</label>
+                                <input id="edit_slug" name="slug" type="text" class="form-control"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_singkat" class="form-label">Nama Pendek</label>
+                                <input id="edit_singkat" name="singkat" type="text" class="form-control"
+                                    required>
+                            </div>
+                            <div class="justify-content-end form-check form-switch form-check-reverse mt-3">
+                                <label class="me-auto form-check-label" for="edit_status">Status</label>
+                                <input id="edit_status" class="form-check-input" type="checkbox" name="status"
+                                    value="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pb-0">
+                        <button type="submit" class="btn btn-outline-info btn-sm">Simpan Perubahan</button>
+                        <button type="button" class="btn btn-danger btn-sm"
+                            data-bs-dismiss="modal">Batalkan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- modal delete --}}
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1"
+    aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center mt-3 mx-n5">
+                <i class="bx bx-trash fa-2x text-danger mb-3"></i>
+                <p class="mb-0">Apakah Anda yakin ingin menghapus Satuan ini?</p>
+                <h6 class="mt-2" id="unitNameToDelete"></h6>
+                <div class="mt-4">
+                    <form id="deleteUnitForm" method="POST" action="#">
+                        @method('delete')
+                        @csrf
+                        <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
+                            data-bs-dismiss="modal">Batal</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
 @section('page-script')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="module">
+            const initSelect2 = () => {
+                if (typeof $ !== 'undefined' && $.fn.select2) {
+                    $('.select2').each(function() {
+                        const $this = $(this);
+                        $this.select2({
+                            placeholder: $this.data('placeholder') || "Pilih...",
+                            allowClear: $this.find('option[value=""]').length > 0,
+                            width: '100%',
+                            minimumResultsForSearch: 10
+                        });
+                    });
+                } else {
+                    setTimeout(initSelect2, 100);
+                }
+            };
+            initSelect2();
+        </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = '{{ csrf_token() }}';
@@ -328,5 +368,4 @@
             }
         });
     </script>
-@endsection
 @endsection

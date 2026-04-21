@@ -20,25 +20,24 @@ class BrandController extends Controller
     {
         $statuses = Brand::select('status')->distinct()->pluck('status');
         $query = Brand::withCount('products')->latest();
+        
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where('name', 'LIKE', "%{$search}%");
         }
+
         if ($request->filled('status')) {
             $statusValue = $request->input('status') === 'Aktif' ? 1 : 0;
             $query->where('status', $statusValue);
         }
 
         $brands = $query->paginate(15)->withQueryString();
+
         if ($request->ajax()) {
             return view('content.master.brand._brand_table', compact('brands'))->render();
         }
 
-        return view('content.master.brand.brand', [
-            'title' => 'Data Brand',
-            'brands' => $brands,
-            'statuses' => $statuses,
-        ]);
+        return view('content.master.brand.brand',compact('brands','statuses'));
     }
 
     /**
@@ -63,41 +62,26 @@ class BrandController extends Controller
             'status' => 'nullable|boolean',
         ]);
 
-        // Jika ada file yang diunggah melalui FilePond
         if ($request->filled('img_brand')) {
-            $sourcePath = $request->input('img_brand'); // Path dari folder tmp
+            $sourcePath = $request->input('img_brand');
             $fileName = basename($sourcePath);
             $destinationPath = 'brand-images/' . $fileName;
 
-            // Pindahkan file dari tmp ke direktori tujuan
             if (Storage::disk('public')->exists($sourcePath)) {
                 Storage::disk('public')->move($sourcePath, $destinationPath);
-                $validatedData['img_brand'] = $destinationPath; // Simpan path baru
+                $validatedData['img_brand'] = $destinationPath;
             } else {
-                // Hapus path jika file tidak ditemukan untuk mencegah error
                 unset($validatedData['img_brand']);
             }
         }
 
         $validatedData['status'] = $request->has('status');
-        $brand = Brand::create($validatedData);
+        Brand::create($validatedData);
 
-        // Cek jika request adalah AJAX
-        if ($request->wantsJson()) {
-            // Muat relasi dan format tanggal untuk konsistensi
-            $brand->loadCount('products');
-            $brand->created_at_formatted = $brand->created_at->translatedFormat('d M Y');
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Brand baru berhasil ditambahkan.',
-                'data'    => $brand
-            ], 201);
-        }
-
-        // Respons standar jika bukan AJAX
+        // Langsung redirect dengan pesan sukses (metode biasa)
         return redirect()->route('brand.index')->with('success', 'Brand Baru Berhasil Ditambahkan.');
     }
+
     public function show(Brand $brand)
     {
         //
@@ -131,24 +115,19 @@ class BrandController extends Controller
 
         $validatedData = $request->validate($rules);
 
-        // Cek apakah ada file baru yang diunggah
         if ($request->filled('img_brand')) {
             $sourcePath = $request->input('img_brand');
 
-            // Pastikan ini adalah file baru dari tmp, bukan path file lama
             if (strpos($sourcePath, 'tmp/') === 0 && Storage::disk('public')->exists($sourcePath)) {
-                // Hapus gambar lama jika ada
                 if ($brand->img_brand) {
                     Storage::disk('public')->delete($brand->img_brand);
                 }
 
-                // Pindahkan gambar baru dari tmp ke lokasi permanen
                 $fileName = basename($sourcePath);
                 $destinationPath = 'brand-images/' . $fileName;
                 Storage::disk('public')->move($sourcePath, $destinationPath);
                 $validatedData['img_brand'] = $destinationPath;
             }
-            // Menangani kasus jika pengguna menghapus gambar yang ada melalui FilePond
         } elseif ($request->exists('img_brand') && $request->input('img_brand') === null) {
             if ($brand->img_brand && Storage::disk('public')->exists($brand->img_brand)) {
                 Storage::disk('public')->delete($brand->img_brand);
@@ -159,17 +138,7 @@ class BrandController extends Controller
         $validatedData['status'] = $request->has('status');
         $brand->update($validatedData);
 
-        if ($request->wantsJson()) {
-            $brand->loadCount('products');
-            $brand->created_at_formatted = $brand->created_at->translatedFormat('d M Y');
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Data Brand Berhasil Diperbarui.',
-                'data'    => $brand
-            ]);
-        }
-
+        // Langsung redirect dengan pesan sukses (metode biasa)
         return redirect()->route('brand.index')->with('success', 'Data Brand Berhasil Diperbarui.');
     }
 

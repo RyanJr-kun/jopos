@@ -1,56 +1,83 @@
 @extends('layouts/contentNavbarLayout')
 
 @section('title', 'Cards basic - UI elements')
-@section('content')
+
 @section('vendor-style')
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 @endsection
-<div class="container-fluid p-3">
-    <div class="card rounded-2">
-        <div class="card-header pb-0 px-3 pt-2 mb-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="mb-0">
-                    <h6 class="mb-n1">Data Warrantie</h6>
-                    <p class="text-sm mb-0">
-                        Kelola data garansimu
-                    </p>
-                </div>
-                <div class="ms-auto mt-2">
-                    {{-- triger-modal-create --}}
-                    <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#import"><i
-                            class="bx bx-plus fixed-plugin-button-nav cursor-pointer pe-2"></i>Buat Warrantie</button>
-                </div>
-            </div>
-        </div>
 
-        <div class="card-body px-0 pt-0 pb-2">
-            <div class="">
-                <div class="row g-3 align-items-center justify-content-between">
-                    <div class="col-5 col-lg-3 ms-3">
-                        <input type="text" id="searchInput" name="search" class="form-control"
-                            placeholder="Cari garansi..." value="{{ request('search') }}">
-                    </div>
-                    <div class="col-5 col-lg-2 me-3">
-                        <select id="statusFilter" name="status" class="form-select">
-                            <option value="">Semua Status</option>
-                            <option value="1" @selected(request('status') == '1')>Aktif</option>
-                            <option value="0" @selected(request('status') == '0')>Tidak Aktif</option>
-                        </select>
-                    </div>
+@section('content')
+<div class="row g-3 align-items-stretch">
+    <div class="col-12 col-md-4 col-xl-3 mb-md-0">
+        <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4d50eb 0%, #8592ff 100%);">
+            <div class="card-body d-flex align-items-center">
+                <div class="avatar avatar-md me-3">
+                    <span class="avatar-initial rounded bg-white text-primary shadow-sm">
+                        <i class="bx bx-view-list fs-4"></i>
+                    </span>
                 </div>
-            </div>
-            <div id="garansi-table-container">
-                @include('content.master.garansi._garansi_table', ['warranties' => $warranties])
+                <div>
+                    <p class="text-white mb-0 text-sm">Total Garansi</p>
+                    <h3 class="text-white mb-0 fw-bold" id="resumeTotalUnit">
+                        {{ method_exists($warranties, 'total') ? $warranties->total() : $warranties->count() }}
+                    </h3>
+                </div>
             </div>
         </div>
     </div>
+
+    {{-- Filter & Tombol Tambah --}}
+    <div class="col-12 col-md-8 col-xl-9">
+        <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                <div class="row g-3 align-items-center justify-content-start w-100 m-0">
+                    <div class="col-md-4">
+                        <input type="text" name="search" id="searchInput" class="form-control"
+                            placeholder="Cari kategori..." value="{{ request('search') }}">
+                    </div>
+                    <div class="col-md-4 me-3">
+                        <select name="status" id="statusFilter" class="form-select select2"
+                            data-placeholder="Semua Status">
+                            <option value="">Semua Status</option>
+                            <option value="Aktif" @selected(request('status') == 'Aktif')>Aktif</option>
+                            <option value="Tidak Aktif" @selected(request('status') == 'Tidak Aktif')>Tidak Aktif</option>
+                        </select>
+                    </div>
+                    <div class="col-md-auto ms-md-auto">
+                    {{-- triger-modal-create --}}
+                        <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#import"><i
+                                class="bx bx-plus fixed-plugin-button-nav cursor-pointer pe-2"></i>Garansi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 px-3 pt-2 mb-3">
+                
+                <h5 class="mb-n1 fw-bolder">Data Warrantie</h5>
+                <p class="text-sm mb-0">
+                    Kelola data garansimu
+                </p>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+                <div id="garansi-table-container">
+                    @include('content.master.garansi._garansi_table', ['warranties' => $warranties])
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
     {{-- modal-create --}}
     <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-0 mb-n2">
                     <h6 class="modal-title" id="ModalLabel">Buat Warrantie Baru</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -89,7 +116,7 @@
                             <div class="col-md-5">
                                 <div class="form-group">
                                     <label for="period" class="form-label"> Periode </label>
-                                    <select class="form-select" id="period" name="period" required>
+                                    <select class="form-select select2" id="period" name="period" required>
                                         <option value="Day">Hari</option>
                                         <option value="Week">Minggu</option>
                                         <option value="Month">Bulan</option>
@@ -125,19 +152,20 @@
             </div>
         </div>
     </div>
+
     {{-- modal edit --}}
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-0 mb-n3">
                     <h6 class="modal-title" id="editModalLabel">Edit Warrantie </h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="editWarrantieForm" method="post">
-                        @method('put')
-                        @csrf
+                    <form id="editWarrantieForm" method="post" action="">
+                    @method('put')
+                    @csrf
                         <div class="mb-3">
                             <label for="edit_name" class="form-label">Nama</label>
                             <input id="edit_name" name="name" type="text" class="form-control" required>
@@ -158,7 +186,7 @@
                             <div class="col-md-5">
                                 <div class="mb-3">
                                     <label for="edit_period" class="form-label">Periode</label>
-                                    <select class="form-select" id="edit_period" name="period" required>
+                                    <select class="form-select select2" id="edit_period" name="period" required>
                                         <option value="Day">Hari</option>
                                         <option value="Week">Minggu</option>
                                         <option value="Month">Bulan</option>
@@ -188,6 +216,7 @@
             </div>
         </div>
     </div>
+
     {{-- modal delete --}}
     <div class="modal fade" id="deleteConfirmationModal" tabindex="-1"
         aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
@@ -210,317 +239,225 @@
             </div>
         </div>
     </div>
-</div>
+@endsection
 @section('page-script')
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-                    // QUILL
-                    const maxLength = 60;
-                    let quillCreate, quillEdit;
-
-                    // Fungsi untuk menangani perubahan teks dan counter
-                    function handleTextChange(quill, counterElement, hiddenInputElement) {
-                        const length = quill.getText().length - 1; // -1 untuk mengabaikan newline di akhir
-
-                        counterElement.textContent = `${length}/${maxLength}`;
-
-                        if (length > maxLength) {
-                            quill.deleteText(maxLength, length);
-                            counterElement.classList.add('text-danger');
-                        } else {
-                            counterElement.classList.remove('text-danger');
-                        }
-
-                        hiddenInputElement.value = quill.root.innerHTML;
-                    }
-
-                    // Inisialisasi Quill untuk modal CREATE
-                    const counterCreate = document.getElementById('counter-create');
-                    const hiddenInputCreate = document.getElementById('description-create');
-                    const createModalEl = document.getElementById('import');
-                    const createForm = document.getElementById('createWarrantieForm');
-                    const createNamaInput = document.getElementById('name');
-                    const createSlugInput = document.getElementById('slug');
-                    const submitCreateBtn = document.getElementById('submit-create-button');
-
-                    quillCreate = new Quill('#quill-editor-create', {
-                        theme: 'snow',
-                        placeholder: 'Tulis description di sini...',
+    <script type="module">
+            const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    $this.select2({
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
                     });
-                    quillCreate.on('text-change', () => handleTextChange(quillCreate, counterCreate, hiddenInputCreate));
-                    if (hiddenInputCreate.value) {
-                        quillCreate.root.innerHTML = hiddenInputCreate.value;
-                    }
-
-                    // Inisialisasi Quill untuk modal EDIT
-                    const counterEdit = document.getElementById('counter-edit');
-                    const hiddenInputEdit = document.getElementById('description-edit');
-                    quillEdit = new Quill('#quill-editor-edit', {
-                        theme: 'snow',
-                        placeholder: 'Tulis description di sini...',
-                    });
-                    quillEdit.on('text-change', () => handleTextChange(quillEdit, counterEdit, hiddenInputEdit));
-
-                    // --- MODAL CREATE ---
-                    if (createModalEl) {
-                        // Slug otomatis untuk modal create
-                        createNamaInput.addEventListener('change', function() {
-                            fetch(`/dashboard/garansi/chekSlug?name=${this.value}`) // Pastikan route ini ada
-                                .then(response => response.json())
-                                .then(data => createSlugInput.value = data.slug);
-                        });
-
-                        // Tampilkan modal jika ada error validasi dari server (saat reload)
-                        const hasError = document.querySelector('.is-invalid');
-                        if (hasError) {
-                            new bootstrap.Modal(createModalEl).show();
-                        }
-
-                        // Submit form create via AJAX
-                        submitCreateBtn.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                const formData = new FormData(createForm);
-
-                                // Reset error states
-                                createForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove(
-                                    'is-invalid'));
-                                createForm.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
-
-                                fetch('{{ route('garansi.store') }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                            'Accept': 'application/json'
-                                        },
-                                        body: formData
-                                    })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                            if (data.success) {
-                                                const tableBody = document.getElementById('isiTable');
-                                                const newRowHtml = createTableRow(data.data);
-                                                tableBody.insertAdjacentHTML('afterbegin', newRowHtml);
-                                                document.getElementById('garansi-row-empty')?.remove();
-                                                document.getElementById('garansi-row-empty')?.remove();
-                                                // Re-initialize event listeners for the new row's buttons
-                                                initializeModalEventListeners();
-
-                                                createForm.reset();
-                                                quillCreate.setText('');
-                                                bootstrap.Modal.getInstance(createModalEl).hide();
-
-                                                window.showToast('success', data.message);
-                                                else if (data.errors) {
-                                                    // Handle validation errors
-                                                    Object.keys(data.errors).forEach(key => {
-                                                        const input = createForm.querySelector(
-                                                            `[name="${key}"]`);
-                                                        const errorDiv = input.nextElementSibling;
-                                                        if (input) input.classList.add('is-invalid');
-                                                        if (errorDiv && errorDiv.classList.contains(
-                                                                'invalid-feedback')) {
-                                                            errorDiv.textContent = data.errors[key][0];
-                                                        } else if (key === 'description') {
-                                                            // Khusus untuk Quill
-                                                            const quillErrorDiv = document.querySelector(
-                                                                '#description-create + .invalid-feedback');
-                                                            if (quillErrorDiv) quillErrorDiv.textContent = data
-                                                                .errors[key][0];
-                                                        }
-                                                    });
-                                                } else {
-                                                    window.showToast('error', data.message || 'Terjadi kesalahan.');
-                                                }
-                                            })
-                                        .catch(error => {
-                                            console.error('Error:', error);
-                                            window.showToast('error', 'Tidak dapat terhubung ke server.');
-                                        });
-                                    });
-                        }
-
-
-                        // --- INITIALIZE MODAL EVENT LISTENERS ---
-                        function initializeModalEventListeners() {
-                            // --- MODAL DELETE ---
-                            const deleteModal = document.getElementById('deleteConfirmationModal');
-                            if (deleteModal) {
-                                deleteModal.addEventListener('show.bs.modal', function(event) {
-                                    const button = event.relatedTarget;
-                                    if (!button) return; // Guard clause
-                                    const garansiSlug = button.getAttribute('data-garansi-slug');
-                                    const garansiName = button.getAttribute('data-garansi-name');
-                                    const modalBodyName = deleteModal.querySelector('#garansiNameToDelete');
-                                    const deleteForm = deleteModal.querySelector('#deleteWarrantieForm');
-
-                                    modalBodyName.textContent = garansiName;
-                                    deleteForm.action = `/garansi/${garansiSlug}`;
-                                });
-                            }
-
-                            // --- MODAL EDIT ---
-                            const editModal = document.getElementById('editModal');
-                            if (editModal) {
-                                const editForm = editModal.querySelector('#editWarrantieForm');
-                                const inputNama = editModal.querySelector('#edit_name');
-                                const inputSlug = editModal.querySelector('#edit_slug');
-                                const inputDurasi = editModal.querySelector('#edit_duration');
-                                const selectPeriod = editModal.querySelector('#edit_period');
-                                const inputStatus = editModal.querySelector('#edit_status');
-
-                                editModal.addEventListener('show.bs.modal', function(event) {
-                                    const button = event.relatedTarget;
-                                    if (!button) return; // Guard clause
-                                    const dataUrl = button.getAttribute('data-url');
-                                    const updateUrl = button.getAttribute('data-update-url');
-                                    editForm.action = updateUrl;
-
-                                    fetch(dataUrl)
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            inputNama.value = data.name;
-                                            inputSlug.value = data.slug;
-                                            inputStatus.checked = data.status == 1;
-
-                                            const totalDays = data
-                                                .duration; // Ini adalah total hari (misal: 400)
-
-                                            if (totalDays && totalDays > 0) {
-                                                if (totalDays % 360 === 0) {
-                                                    selectPeriod.value = 'Year';
-                                                    inputDurasi.value = totalDays / 360;
-                                                } else if (totalDays % 30 === 0) {
-                                                    selectPeriod.value = 'Month';
-                                                    inputDurasi.value = totalDays / 30;
-                                                } else if (totalDays % 7 === 0) {
-                                                    selectPeriod.value = 'Week';
-                                                    inputDurasi.value = totalDays / 7;
-                                                } else {
-                                                    // Jika tidak habis dibagi, tampilkan sebagai hari
-                                                    selectPeriod.value = 'Day';
-                                                    inputDurasi.value = totalDays;
-                                                }
-                                            } else {
-                                                // Fallback jika duration 0 atau null
-                                                inputDurasi.value = '';
-                                                selectPeriod.value = 'Day'; // Default
-                                            }
-
-                                            quillEdit.root.innerHTML = data.description || '';
-                                            handleTextChange(quillEdit, counterEdit, hiddenInputEdit);
-                                        })
-                                        .catch(error => console.error('Error fetching garansi data:', error));
-                                });
-
-                                inputNama.addEventListener('change', function() {
-                                    fetch(`/dashboard/garansi/chekSlug?name=${this.value}`)
-                                        .then(response => response.json())
-                                        .then(data => inputSlug.value = data.slug);
-                                });
-                            }
-                        }
-
-                        // Panggil fungsi inisialisasi saat halaman pertama kali dimuat
-                        initializeModalEventListeners();
-
-                        // Fungsi untuk membuat baris tabel baru dari data
-                        function createTableRow(garansi) {
-                            const statusBadge = garansi.status ? '<span class="badge bg-label-success">Aktif</span>' :
-                                '<span class="badge bg-label-secondary">Tidak Aktif</span>';
-                            const editUrl = `{{ url('dashboard/garansi/getjson') }}/${garansi.slug}`;
-                            const updateUrl = `{{ url('garansi') }}/${garansi.slug}`;
-                            const deleteUrl = `{{ url('garansi') }}/${garansi.slug}`;
-
-                            // Fungsi untuk membersihkan dan membatasi teks description
-                            const stripAndLimit = (html, limit) => {
-                                const text = new DOMParser().parseFromString(html, 'text/html').body.textContent || "";
-                                return text.length > limit ? text.substring(0, limit) + '...' : text;
-                            };
-
-                            return `
-                        <tr>
-                            <td><p title="garansi" class="ms-3 text-xs text-dark fw-bold mb-0">${garansi.name}</p></td>
-                            <td><p title="Description" class="text-xs text-dark fw-bold mb-0">${stripAndLimit(garansi.description, 60)}</p></td>
-                            <td class="align-middle"><span class="text-dark text-xs fw-bold">${garansi.formatted_duration}</span></td>
-                            <td class="align-middle text-center text-sm">${statusBadge}</td>
-                            <td class="align-middle">
-                                <a href="#" class="text-dark fw-bold px-3 text-xs"
-                                    data-bs-toggle="modal" data-bs-target="#editModal"
-                                    data-url="${editUrl}"
-                                    data-update-url="${updateUrl}"
-                                    title="Edit garansi">
-                                    <i class="bx bx-edit text-dark text-sm opacity-10"></i>
-                                </a>
-                                <a href="#" class="text-dark delete-user-btn"
-                                    data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal"
-                                    data-garansi-slug="${garansi.slug}"
-                                    data-garansi-name="${garansi.name}"
-                                    title="Hapus garansi">
-                                    <i class="bx bx-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    `;
-                        }
-
-                        // --- AJAX FILTER & SEARCH ---
-                        $(document).ready(function() {
-                            // Fungsi untuk menunda eksekusi (debounce)
-                            function debounce(func, delay) {
-                                let timeout;
-                                return function(...args) {
-                                    clearTimeout(timeout);
-                                    timeout = setTimeout(() => func.apply(this, args), delay);
-                                };
-                            }
-
-                            // Fungsi untuk mengambil data dengan AJAX
-                            function fetchData(page = 1) {
-                                let search = $('#searchInput').val();
-                                let status = $('#statusFilter').val();
-                                let url = '{{ route('garansi.index') }}';
-
-                                $('#garansi-table-container').css('opacity', 0.5); // Efek loading
-
-                                $.ajax({
-                                    url: url,
-                                    data: {
-                                        search: search,
-                                        status: status,
-                                        page: page
-                                    },
-                                    success: function(data) {
-                                        $('#garansi-table-container').html(data).css('opacity', 1);
-                                        window.history.pushState({
-                                                path: url + '?page=' + page + '&search=' + search +
-                                                    '&status=' + status
-                                            }, '', url + '?page=' + page + '&search=' + search +
-                                            '&status=' + status);
-                                    },
-                                    error: function() {
-                                        $('#garansi-table-container').css('opacity', 1);
-                                        alert('Gagal memuat data. Silakan coba lagi.');
-                                    }
-                                });
-                            }
-
-                            $('#searchInput').on('keyup', debounce(function() {
-                                fetchData(1);
-                            }, 500));
-                            $('#statusFilter').on('change', function() {
-                                fetchData(1);
-                            });
-                            $(document).on('click', '#garansi-table-container .pagination a', function(e) {
-                                e.preventDefault();
-                                let page = $(this).attr('href').split('page=')[1];
-                                if (page) {
-                                    fetchData(page);
-                                }
-                            });
-                        });
-                    });
+                });
+            } else {
+                setTimeout(initSelect2, 100);
+            }
+        };
+        initSelect2();
     </script>
-@endsection
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- QUILL EDITOR SETUP ---
+        const maxLength = 60;
+        let quillCreate, quillEdit;
+
+        function handleTextChange(quill, counterElement, hiddenInputElement) {
+            const length = quill.getText().length - 1; 
+            counterElement.textContent = `${length}/${maxLength}`;
+
+            if (length > maxLength) {
+                quill.deleteText(maxLength, length);
+                counterElement.classList.add('text-danger');
+            } else {
+                counterElement.classList.remove('text-danger');
+            }
+            hiddenInputElement.value = quill.root.innerHTML;
+        }
+
+        // Init Quill Create
+        const counterCreate = document.getElementById('counter-create');
+        const hiddenInputCreate = document.getElementById('description-create');
+        quillCreate = new Quill('#quill-editor-create', {
+            theme: 'snow',
+            placeholder: 'Tulis description di sini...',
+        });
+        quillCreate.on('text-change', () => handleTextChange(quillCreate, counterCreate, hiddenInputCreate));
+        if (hiddenInputCreate.value) {
+            quillCreate.root.innerHTML = hiddenInputCreate.value;
+        }
+
+        // Init Quill Edit
+        const counterEdit = document.getElementById('counter-edit');
+        const hiddenInputEdit = document.getElementById('description-edit');
+        quillEdit = new Quill('#quill-editor-edit', {
+            theme: 'snow',
+            placeholder: 'Tulis description di sini...',
+        });
+        quillEdit.on('text-change', () => handleTextChange(quillEdit, counterEdit, hiddenInputEdit));
+
+
+        // --- AUTO SLUG & MODAL RE-OPEN ---
+        const createModalEl = document.getElementById('import');
+        if (createModalEl) {
+            const createNamaInput = document.getElementById('name');
+            const createSlugInput = document.getElementById('slug');
+
+            createNamaInput.addEventListener('change', function() {
+                fetch(`/dashboard/garansi/chekSlug?name=${this.value}`)
+                    .then(response => response.json())
+                    .then(data => createSlugInput.value = data.slug);
+            });
+
+            // Buka kembali modal jika ada error validasi saat reload
+            if (document.querySelector('#createWarrantieForm .is-invalid')) {
+                new bootstrap.Modal(createModalEl).show();
+            }
+        }
+
+        // --- MODAL DELETE LOGIC ---
+        const deleteModal = document.getElementById('deleteConfirmationModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+                const garansiSlug = button.getAttribute('data-garansi-slug');
+                const garansiName = button.getAttribute('data-garansi-name');
+                
+                this.querySelector('#garansiNameToDelete').textContent = garansiName;
+                this.querySelector('#deleteWarrantieForm').action = `/garansi/${garansiSlug}`;
+            });
+        }
+
+        // --- MODAL EDIT LOGIC ---
+        const editModal = document.getElementById('editModal');
+        if (editModal) {
+            const editForm = editModal.querySelector('#editWarrantieForm');
+            const inputNama = editModal.querySelector('#edit_name');
+            const inputSlug = editModal.querySelector('#edit_slug');
+            const inputDurasi = editModal.querySelector('#edit_duration');
+            const selectPeriod = editModal.querySelector('#edit_period');
+            const inputStatus = editModal.querySelector('#edit_status');
+
+            // Buka kembali modal edit jika ada error validasi
+            if (document.querySelector('#editWarrantieForm .is-invalid')) {
+                new bootstrap.Modal(editModal).show();
+            }
+
+            // Auto slug untuk Edit
+            inputNama.addEventListener('change', function() {
+                fetch(`/dashboard/garansi/chekSlug?name=${this.value}`)
+                    .then(response => response.json())
+                    .then(data => inputSlug.value = data.slug);
+            });
+
+            // Fetch data saat modal edit dibuka
+            editModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+                
+                const dataUrl = button.getAttribute('data-url');
+                const updateUrl = button.getAttribute('data-update-url');
+                
+                // Set action form untuk submit biasa
+                editForm.action = updateUrl;
+
+                fetch(dataUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        inputNama.value = data.name;
+                        inputSlug.value = data.slug;
+                        inputStatus.checked = data.status == 1;
+
+                        const totalDays = data.duration;
+                        if (totalDays && totalDays > 0) {
+                            if (totalDays % 360 === 0) {
+                                $(selectPeriod).val('Year').trigger('change');
+                                inputDurasi.value = totalDays / 360;
+                            } else if (totalDays % 30 === 0) {
+                                $(selectPeriod).val('Month').trigger('change');
+                                inputDurasi.value = totalDays / 30;
+                            } else if (totalDays % 7 === 0) {
+                                $(selectPeriod).val('Week').trigger('change');
+                                inputDurasi.value = totalDays / 7;
+                            } else {
+                                $(selectPeriod).val('Day').trigger('change');
+                                inputDurasi.value = totalDays;
+                            }
+                        }
+
+                        quillEdit.root.innerHTML = data.description || '';
+                        handleTextChange(quillEdit, counterEdit, hiddenInputEdit);
+                    })
+                    .catch(error => console.error('Error fetching garansi data:', error));
+            });
+        }
+
+        // --- AJAX FILTER & SEARCH ---
+        if (typeof $ !== 'undefined') {
+            $(document).ready(function() {
+                function debounce(func, delay) {
+                    let timeout;
+                    return function(...args) {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => func.apply(this, args), delay);
+                    };
+                }
+
+                function fetchData(page = 1) {
+                    let search = $('#searchInput').val();
+                    let status = $('#statusFilter').val();
+                    let url = '{{ route('garansi.index') }}';
+
+                    $('#garansi-table-container').css('opacity', 0.5);
+
+                    $.ajax({
+                        url: url,
+                        type: 'GET',
+                        data: {
+                            search: search,
+                            status: status,
+                            page: page
+                        },
+                        success: function(data) {
+                            $('#garansi-table-container').html(data).css('opacity', 1);
+                            
+                            // Update URL browser tanpa refresh
+                            let newParams = new URLSearchParams();
+                            if(page > 1) newParams.append('page', page);
+                            if(search) newParams.append('search', search);
+                            if(status) newParams.append('status', status);
+                            
+                            let newUrl = url + (newParams.toString() ? '?' + newParams.toString() : '');
+                            window.history.pushState({path: newUrl}, '', newUrl);
+                        },
+                        error: function() {
+                            $('#garansi-table-container').css('opacity', 1);
+                            alert('Gagal memuat data. Silakan coba lagi.');
+                        }
+                    });
+                }
+
+                $('#searchInput').on('keyup', debounce(function() {
+                    fetchData(1);
+                }, 500));
+
+                $('#statusFilter').on('change', function() {
+                    fetchData(1);
+                });
+
+                $(document).on('click', '#garansi-table-container .pagination a', function(e) {
+                    e.preventDefault();
+                    let urlObj = new URL($(this).attr('href'));
+                    let page = urlObj.searchParams.get('page');
+                    if (page) fetchData(page);
+                });
+            });
+        }
+    });
+</script>
 @endsection

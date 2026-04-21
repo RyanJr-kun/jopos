@@ -32,14 +32,11 @@ class WarrantieController extends Controller
 
         // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
         if ($request->ajax()) {
-            return view('content.master.garansi.garansi_table', compact('warranties'))->render();
+            return view('content.master.garansi._garansi_table', compact('warranties'))->render();
         }
 
         // Jika request biasa, kembalikan view lengkap
-        return view('content.master.garansi.garansi', [
-            'title' => 'Manajemen Warrantie',
-            'warranties' => $warranties
-        ]);
+        return view('content.master.garansi.garansi', compact('warranties'));
     }
 
     /**
@@ -55,7 +52,6 @@ class WarrantieController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input. Jika request adalah AJAX dan validasi gagal, Laravel akan otomatis mengirim response JSON 422.
         $validated = $request->validate([
             'name' => 'required|string|max:100|unique:warranties',
             'slug' => 'required|string|max:100|unique:warranties',
@@ -65,7 +61,6 @@ class WarrantieController extends Controller
             'status' => 'nullable|boolean',
         ]);
 
-        // Kalkulasi total bulan. Unit dasar penyimpanan adalah bulan.
         $totalDays = 0;
         switch ($validated['period']) {
             case 'Year':
@@ -82,7 +77,6 @@ class WarrantieController extends Controller
                 break;
         }
 
-        // Siapkan data untuk disimpan, termasuk slug
         $dataToStore = [
             'name' => $validated['name'],
             'slug' => $validated['slug'],
@@ -91,21 +85,9 @@ class WarrantieController extends Controller
             'duration' => $totalDays,
         ];
 
-        $garansi = Warrantie::create($dataToStore);
-        if ($request->wantsJson()) {
-            // Muat ulang model untuk mendapatkan atribut tambahan seperti 'formatted_duration'
-            $garansi->refresh();
-            // Secara eksplisit tambahkan accessor 'formatted_duration' ke output JSON
-            $garansi->append('formatted_duration');
+        Warrantie::create($dataToStore);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Warrantie Baru Berhasil Ditambahkan.',
-                'data'    => $garansi
-            ]);
-        }
-
-        // Fallback untuk non-AJAX request
+        // Langsung redirect (metode biasa)
         return redirect()->route('garansi.index')->with('success', 'Warrantie Baru Berhasil Ditambahkan.');
     }
 
@@ -135,7 +117,6 @@ class WarrantieController extends Controller
      */
     public function update(Request $request, Warrantie $garansi)
     {
-        // Validasi untuk update
         $validated = $request->validate([
             'name' => ['required', 'max:255', Rule::unique('warranties')->ignore($garansi->id)],
             'slug' => ['required', 'max:255', Rule::unique('warranties')->ignore($garansi->id)],
@@ -145,11 +126,10 @@ class WarrantieController extends Controller
             'status' => 'nullable|boolean',
         ]);
 
-        // Kalkulasi ulang total bulan. Unit dasar penyimpanan adalah bulan.
         $totalDays = 0;
         switch ($validated['period']) {
             case 'Year':
-                $totalDays = $validated['duration'] * 360; // 12 bulan * 30 hari
+                $totalDays = $validated['duration'] * 360; 
                 break;
             case 'Month':
                 $totalDays = $validated['duration'] * 30;
@@ -162,27 +142,17 @@ class WarrantieController extends Controller
                 break;
         }
 
-        // Siapkan data untuk diupdate
         $dataToUpdate = [
             'name' => $validated['name'],
             'slug' => $validated['slug'],
             'description' => $validated['description'] ?? null,
             'status' => $request->has('status'),
-            'duration' => $totalDays, // Simpan total HARI
+            'duration' => $totalDays, 
         ];
 
         $garansi->update($dataToUpdate);
 
-        if ($request->wantsJson()) {
-            $garansi->refresh();
-            $garansi->append('formatted_duration');
-            return response()->json([
-                'success' => true,
-                'message' => 'Warrantie Berhasil Diperbarui.',
-                'data'    => $garansi
-            ]);
-        }
-
+        // Langsung redirect (metode biasa)
         return redirect()->route('garansi.index')->with('success', 'Warrantie Berhasil Diperbarui.');
     }
 

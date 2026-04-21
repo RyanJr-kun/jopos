@@ -53,11 +53,7 @@ class CategoryController extends Controller
             return view('content.master.kategori._category_table', compact('kategoris'))->render();
         }
 
-        return view('content.master.kategori.kategoriproduk', [
-            'title'          => 'Data Kategori Product',
-            'kategoris'      => $kategoris,
-            'parentKategoris' => $parentKategoris,
-        ]);
+        return view('content.master.kategori.kategoriproduk', compact('kategoris', 'parentKategoris'));
     }
 
     /**

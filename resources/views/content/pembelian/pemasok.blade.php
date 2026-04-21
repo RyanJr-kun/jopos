@@ -1,9 +1,10 @@
 @extends('layouts/contentNavbarLayout')
 
 @section('title', 'Cards basic - UI elements')
+
 @section('content')
-    <div class="row mb-4 align-items-stretch">
-        <div class="col-12 col-md-4 col-xl-3 mb-3 mb-md-0">
+    <div class="row g-3 align-items-stretch">
+        <div class="col-12 col-md-4 col-xl-3 mb-md-0">
             <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4d50eb 0%, #8592ff 100%);">
                 <div class="card-body d-flex align-items-center">
                     <div class="avatar avatar-md me-3">
@@ -51,19 +52,22 @@
                 </div>
             </div>
         </div>
-    </div>
-    <div class="card rounded-2">
-        <div class="card-header pb-0 px-3 pt-2 mb-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-n1">List Supplier</h6>
-                    <p class="text-sm mb-0">Kelola data pemasokmu.</p>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0 px-3 pt-2 mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-n1 fw-bolder">List Supplier</h5>
+                            <p class="text-sm mb-0">Kelola data pemasokmu.</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="card-body px-0 pt-0 pb-2">
-            <div id="pemasok-table-container">
-                @include('content.pembelian._pemasok_table')
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div id="pemasok-table-container">
+                        @include('content.pembelian._pemasok_table')
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -73,7 +77,7 @@
             <div class="modal-content">
                 <div class="modal-header border-0 mb-n3">
                     <h6 class="modal-title">Tambah Supplier Baru</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -102,7 +106,7 @@
             <div class="modal-content">
                 <div class="modal-header border-0 mb-n3">
                     <h6 class="modal-title" id="editModalLabel">Edit Supplier</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -147,152 +151,153 @@
         </div>
     </div>
 
-@section('page-script')
-    <script type="module">
-        const initSelect2 = () => {
-            if (typeof $ !== 'undefined' && $.fn.select2) {
-                $('.select2').each(function() {
-                    const $this = $(this);
-                    $this.select2({
-                        placeholder: $this.data('placeholder') || "Pilih...",
-                        allowClear: $this.find('option[value=""]').length > 0,
-                        width: '100%',
-                        minimumResultsForSearch: 10
+    @endsection
+
+    @section('page-script')
+        <script type="module">
+            const initSelect2 = () => {
+                if (typeof $ !== 'undefined' && $.fn.select2) {
+                    $('.select2').each(function() {
+                        const $this = $(this);
+                        $this.select2({
+                            placeholder: $this.data('placeholder') || "Pilih...",
+                            allowClear: $this.find('option[value=""]').length > 0,
+                            width: '100%',
+                            minimumResultsForSearch: 10
+                        });
                     });
-                });
-            } else {
-                setTimeout(initSelect2, 100);
-            }
-        };
-        initSelect2();
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- MODAL EDIT ---
-            const editModal = document.getElementById('editModal');
-            if (editModal) {
-                editModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const dataUrl = button.getAttribute('data-url');
-                    const updateUrl = button.getAttribute('data-update-url');
-
-                    const editForm = document.getElementById('editSupplierForm');
-                    const inputNama = document.getElementById('edit_name');
-                    const inputPerusahaan = document.getElementById('edit_perusahaan');
-                    const inputKontak = document.getElementById('edit_kontak');
-                    const inputEmail = document.getElementById('edit_email');
-                    const inputAlamat = document.getElementById('edit_alamat');
-                    const inputNote = document.getElementById('edit_note');
-                    const inputStatus = document.getElementById('edit_status');
-
-                    editForm.action = updateUrl;
-
-                    fetch(dataUrl)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            inputNama.value = data.name;
-                            inputPerusahaan.value = data.perusahaan;
-                            inputKontak.value = data.kontak;
-                            inputEmail.value = data.email;
-                            inputAlamat.value = data.alamat;
-                            inputNote.value = data.note;
-                            inputStatus.checked = data.status == 1;
-                        })
-                        .catch(error => console.error('Error fetching pemasok data:', error));
-                });
-            }
-
-            // --- MODAL DELETE ---
-            const deleteModal = document.getElementById('deleteConfirmationModal');
-            if (deleteModal) {
-                deleteModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const pemasokId = button.getAttribute('data-pemasok-id');
-                    const pemasokName = button.getAttribute('data-pemasok-name');
-                    const modalBodyName = deleteModal.querySelector('#pemasokNameToDelete');
-                    const deleteForm = deleteModal.querySelector('#deleteSupplierForm');
-
-                    modalBodyName.textContent = pemasokName;
-                    // Pastikan route untuk delete sudah benar, contoh: /pemasok/{id}
-                    deleteForm.action = `{{ url('pemasok') }}/${pemasokId}`;
-                });
-            }
-
-            // --- AJAX FILTER & SEARCH ---
-            $(document).ready(function() {
-                // Fungsi untuk menunda eksekusi (debounce)
-                function debounce(func, delay) {
-                    let timeout;
-                    return function(...args) {
-                        clearTimeout(timeout);
-                        timeout = setTimeout(() => func.apply(this, args), delay);
-                    };
+                } else {
+                    setTimeout(initSelect2, 100);
                 }
-
-                // Fungsi untuk mengambil data dengan AJAX
-                function fetchData(page = 1) {
-                    let search = $('#searchInput').val();
-                    let status = $('#statusFilter').val();
-                    let url = '{{ route('pemasok.index') }}';
-
-                    $('#pemasok-table-container').css('opacity', 0.5); // Efek loading
-
-                    $.ajax({
-                        url: url,
-                        data: {
-                            search: search,
-                            status: status,
-                            page: page
-                        },
-                        success: function(data) {
-                            $('#pemasok-table-container').html(data).css('opacity', 1);
-                            // Update URL di browser
-                            window.history.pushState({
-                                    path: url + '?page=' + page + '&search=' + search +
-                                        '&status=' + status
-                                }, '', url + '?page=' + page + '&search=' + search +
-                                '&status=' + status);
-                        },
-                        error: function() {
-                            $('#pemasok-table-container').css('opacity', 1);
-                            window.showToast('error', 'Gagal memuat data. Silakan coba lagi.');
+            };
+            initSelect2();
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // --- MODAL EDIT ---
+                const editModal = document.getElementById('editModal');
+                if (editModal) {
+                    editModal.addEventListener('show.bs.modal', function(event) {
+                        const button = event.relatedTarget;
+                        const dataUrl = button.getAttribute('data-url');
+                        const updateUrl = button.getAttribute('data-update-url');
+    
+                        const editForm = document.getElementById('editSupplierForm');
+                        const inputNama = document.getElementById('edit_name');
+                        const inputPerusahaan = document.getElementById('edit_perusahaan');
+                        const inputKontak = document.getElementById('edit_kontak');
+                        const inputEmail = document.getElementById('edit_email');
+                        const inputAlamat = document.getElementById('edit_alamat');
+                        const inputNote = document.getElementById('edit_note');
+                        const inputStatus = document.getElementById('edit_status');
+    
+                        editForm.action = updateUrl;
+    
+                        fetch(dataUrl)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                inputNama.value = data.name;
+                                inputPerusahaan.value = data.perusahaan;
+                                inputKontak.value = data.kontak;
+                                inputEmail.value = data.email;
+                                inputAlamat.value = data.alamat;
+                                inputNote.value = data.note;
+                                inputStatus.checked = data.status == 1;
+                            })
+                            .catch(error => console.error('Error fetching pemasok data:', error));
+                    });
+                }
+    
+                // --- MODAL DELETE ---
+                const deleteModal = document.getElementById('deleteConfirmationModal');
+                if (deleteModal) {
+                    deleteModal.addEventListener('show.bs.modal', function(event) {
+                        const button = event.relatedTarget;
+                        const pemasokId = button.getAttribute('data-pemasok-id');
+                        const pemasokName = button.getAttribute('data-pemasok-name');
+                        const modalBodyName = deleteModal.querySelector('#pemasokNameToDelete');
+                        const deleteForm = deleteModal.querySelector('#deleteSupplierForm');
+    
+                        modalBodyName.textContent = pemasokName;
+                        // Pastikan route untuk delete sudah benar, contoh: /pemasok/{id}
+                        deleteForm.action = `{{ url('pemasok') }}/${pemasokId}`;
+                    });
+                }
+    
+                // --- AJAX FILTER & SEARCH ---
+                $(document).ready(function() {
+                    // Fungsi untuk menunda eksekusi (debounce)
+                    function debounce(func, delay) {
+                        let timeout;
+                        return function(...args) {
+                            clearTimeout(timeout);
+                            timeout = setTimeout(() => func.apply(this, args), delay);
+                        };
+                    }
+    
+                    // Fungsi untuk mengambil data dengan AJAX
+                    function fetchData(page = 1) {
+                        let search = $('#searchInput').val();
+                        let status = $('#statusFilter').val();
+                        let url = '{{ route('pemasok.index') }}';
+    
+                        $('#pemasok-table-container').css('opacity', 0.5); // Efek loading
+    
+                        $.ajax({
+                            url: url,
+                            data: {
+                                search: search,
+                                status: status,
+                                page: page
+                            },
+                            success: function(data) {
+                                $('#pemasok-table-container').html(data).css('opacity', 1);
+                                // Update URL di browser
+                                window.history.pushState({
+                                        path: url + '?page=' + page + '&search=' + search +
+                                            '&status=' + status
+                                    }, '', url + '?page=' + page + '&search=' + search +
+                                    '&status=' + status);
+                            },
+                            error: function() {
+                                $('#pemasok-table-container').css('opacity', 1);
+                                window.showToast('error', 'Gagal memuat data. Silakan coba lagi.');
+                            }
+                        });
+                    }
+    
+                    // Event listener untuk input pencarian dengan debounce
+                    $('#searchInput').on('keyup', debounce(function() {
+                        fetchData(1); // Selalu kembali ke halaman 1 saat melakukan pencarian baru
+                    }, 500));
+    
+                    // Event listener untuk filter status
+                    $('#statusFilter').on('change', function() {
+                        fetchData(1); // Selalu kembali ke halaman 1 saat mengubah filter
+                    });
+    
+                    // Event listener untuk klik pada link pagination
+                    $(document).on('click', '#pemasok-table-container .pagination a', function(e) {
+                        e.preventDefault();
+                        let page = $(this).attr('href').split('page=')[1];
+                        if (page) {
+                            fetchData(page);
                         }
                     });
-                }
-
-                // Event listener untuk input pencarian dengan debounce
-                $('#searchInput').on('keyup', debounce(function() {
-                    fetchData(1); // Selalu kembali ke halaman 1 saat melakukan pencarian baru
-                }, 500));
-
-                // Event listener untuk filter status
-                $('#statusFilter').on('change', function() {
-                    fetchData(1); // Selalu kembali ke halaman 1 saat mengubah filter
                 });
-
-                // Event listener untuk klik pada link pagination
-                $(document).on('click', '#pemasok-table-container .pagination a', function(e) {
-                    e.preventDefault();
-                    let page = $(this).attr('href').split('page=')[1];
-                    if (page) {
-                        fetchData(page);
-                    }
-                });
+    
+                // --- SHOW CREATE MODAL ON VALIDATION ERROR ---
+                const hasError = document.querySelector('.is-invalid');
+                @if ($errors->any())
+                    var createModal = new bootstrap.Modal(document.getElementById('createModal'));
+                    createModal.show();
+                @endif
+    
             });
-
-            // --- SHOW CREATE MODAL ON VALIDATION ERROR ---
-            const hasError = document.querySelector('.is-invalid');
-            @if ($errors->any())
-                var createModal = new bootstrap.Modal(document.getElementById('createModal'));
-                createModal.show();
-            @endif
-
-        });
-    </script>
-@endsection
-@endsection
+        </script>
+    @endsection

@@ -57,7 +57,7 @@
         <div class="card-header pb-0 px-3 pt-2 mb-3">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h4 class="mb-n1 fw-bolder">List Pelanggan</h4>
+                    <h5 class="mb-n1 fw-bolder">List Pelanggan</h5>
                     <p class="text-sm mb-0">Kelola data pelangganmu.</p>
                 </div>
             </div>
@@ -76,7 +76,7 @@
             <div class="modal-content">
                 <div class="modal-header border-0 mb-n3">
                     <h6 class="modal-title">Buat Customer Baru</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -125,7 +125,7 @@
             <div class="modal-content">
                 <div class="modal-header border-0 mb-n3">
                     <h6 class="modal-title" id="editModalLabel">Edit Customer</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">

@@ -221,7 +221,7 @@
             <div class="modal-content">
                 <div class="modal-header border-0 mb-n3">
                     <h6 class="modal-title" id="editSerialModalLabel">Edit Nomor Seri</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">

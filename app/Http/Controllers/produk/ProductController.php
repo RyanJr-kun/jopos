@@ -50,7 +50,7 @@ class ProductController extends Controller
             $query->whereIn('category_id', $childIds);
         }
 
-        $products = $query->paginate(10)->withQueryString();
+        $products = $query->paginate(15)->withQueryString();
 
         if ($request->ajax()) {
             return view('content.produk._produk_table', ['produk' => $products])->render();

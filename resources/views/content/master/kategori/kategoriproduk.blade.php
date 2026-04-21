@@ -8,22 +8,22 @@
 @endsection
 
 @section('content')
-    <div class="row g-3 align-items-center">
+    <div class="row g-3">
 
         {{-- Tab Navigasi Jenis Kategori --}}
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body d-flex justify-content-center">
-                    <div class="nav-align-top g-3">
-                        <ul class="nav nav-pills flex-lg-row gap-md-0 gap-2">
-                            <li class="nav-item">
+        <div class="col-12 col-md-4 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="nav-align-top">
+                        <ul class="nav nav-pills flex-md-column flex-row flex-nowrap overflow-x-auto gap-2 pb-2 pb-md-0" style="scrollbar-width: none;">
+                            <li class="nav-item text-nowrap">
                                 <a class="nav-link category-tab {{ request('type') === 'utama' ? 'active' : '' }}"
                                     href="#" data-type="utama">
                                     <i class="icon-base bx bx-badge-2 icon-sm me-1_5"></i>
                                     Kategori Utama
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item text-nowrap">
                                 <a class="nav-link category-tab {{ request('type') === 'sub' ? 'active' : '' }}"
                                     href="#" data-type="sub">
                                     <i class="icon-base bx bx-category icon-sm me-1_5"></i>
@@ -37,15 +37,15 @@
         </div>
 
         {{-- Filter & Tombol Tambah --}}
-        <div class="col-md-9">
-            <div class="card">
+        <div class="col-12 col-md-8 col-xl-9">
+            <div class="card h-100">
                 <div class="card-body">
-                    <div class="row g-3 align-items-center justify-content-start">
-                        <div class="col-md-4">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-12 col-sm-6 col-lg-5">
                             <input type="text" name="search" id="searchInput" class="form-control"
                                 placeholder="Cari kategori..." value="{{ request('search') }}">
                         </div>
-                        <div class="col-md-2 me-3">
+                        <div class="col-12 col-sm-6 col-lg-4">
                             <select name="status" id="statusFilter" class="form-select select2"
                                 data-placeholder="Semua Status">
                                 <option value="">Semua Status</option>
@@ -53,8 +53,8 @@
                                 <option value="Tidak Aktif" @selected(request('status') == 'Tidak Aktif')>Tidak Aktif</option>
                             </select>
                         </div>
-                        <div class="col-md-auto ms-md-auto">
-                            <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#createModal">
+                        <div class="col-12 col-lg-auto ms-lg-auto">
+                            <button class="btn btn-outline-info w-100 mb-0 d-flex justify-content-center align-items-center" data-bs-toggle="modal" data-bs-target="#createModal">
                                 <i class="bx bx-plus icon-md me-2"></i>Kategori
                             </button>
                         </div>
@@ -67,7 +67,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header p-4">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
                         <div>
                             <h5 class="mb-0 fw-bold">List Kategori</h5>
                             <small class="text-muted mb-0">Kelola data Kategorimu</small>
@@ -75,7 +75,7 @@
                     </div>
                 </div>
                 <div class="card-body px-0 pt-0 pb-2">
-                    <div id="kategori-table-container">
+                    <div class="table-responsive" id="kategori-table-container">
                         @include('content.master.kategori._category_table')
                     </div>
                 </div>
@@ -91,7 +91,7 @@
             <div class="modal-content">
                 <div class="modal-header border-0 mb-n3">
                     <h6 class="modal-title">Buat Kategori Baru</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -177,7 +177,7 @@
             <div class="modal-content">
                 <div class="modal-header border-0 mb-n3">
                     <h6 class="modal-title" id="editModalLabel">Edit Kategori Product</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
+                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
