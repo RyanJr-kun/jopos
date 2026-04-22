@@ -1,33 +1,30 @@
 <div class="table-responsive p-0 mt-3">
     <table class="table table-hover align-items-center mb-0" id="tableData">
         <thead>
-            <tr class="table-secondary">
-                <th class="text-uppercase text-dark text-xs font-weight-bolder">Nama</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Singkatan</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Jumlah Product</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Dibuat Tanggal</th>
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Status</th>
-                <th class="text-dark"></th>
+            <tr>
+                <th width="5%">No</th>
+                <th>Nama</th>
+                <th>Singkatan</th>
+                <th class="text-center">Jumlah Product</th>
+                <th class="text-center">Status</th>
+                <th></th>
             </tr>
         </thead>
         <tbody id="isiTable">
-            @forelse ($units as $unit)
+            @forelse ($units as $key => $unit)
                 <tr id="unit-row-{{ $unit->slug }}">
                     <td>
-                        <div class="d-flex ms-2 px-2 py-1 align-items-center">
-                            <p class="mb-0 text-xs text-dark fw-bold">{{ $unit->name }}</p>
-                        </div>
+                        {{ ++$key }}
+                    <td>
+                        <p>{{ $unit->name }}</p>
+                        
                     </td>
                     <td>
-                        <p class="text-xs text-dark fw-bold mb-0">{{ $unit->singkat }}</p>
+                        <p>{{ $unit->singkat }}</p>
                     </td>
                     <td>
-                        <p class="text-xs text-dark fw-bold mb-0">{{ $unit->products_count }}</p>
+                        <p class="text-center">{{ $unit->products_count }}</p>
                     </td>
-                    <td>
-                        <p class="text-xs text-dark fw-bold mb-0">{{ $unit->created_at->translatedFormat('d M Y') }}</p>
-                    </td>
-
                     <td class="align-middle text-center text-sm">
                         @if ($unit->status)
                             <span class="badge bg-label-success">Aktif</span>

@@ -35,10 +35,7 @@ class PromotionController extends Controller
             return view('content.promo._promo_table', compact('promotions'))->render();
         }
 
-        return view('content.promo.index', [
-            'title' => 'Manajemen Promotion & Diskon',
-            'promotions' => $promotions,
-        ]);
+        return view('content.promo.index', compact('promotions'));
     }
 
     /**

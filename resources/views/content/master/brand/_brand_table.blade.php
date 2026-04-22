@@ -1,19 +1,20 @@
 <div class="table-responsive p-0 mt-3">
     <table class="table table-hover align-items-center justify-content-start mb-0" id="tableData">
         <thead>
-            <tr class="table-secondary">
-                <th class="text-uppercase text-dark text-xs font-weight-bolder">Nama</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Jumlah Product</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Dibuat Tanggal</th>
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">status</th>
-                <th class="text-dark"></th>
+            <tr>
+                <th width="5%">No</th>
+                <th>Nama</th>
+                <th class="text-center">Jumlah Product</th>
+                <th class="text-center">status</th>
+                <th></th>
             </tr>
         </thead>
         <tbody id="isiTable">
-            @foreach ($brands as $brand)
+            @foreach ($brands as $key => $brand)
                 <tr id="brand-row-{{ $brand->slug }}">
+                    <td>{{ ++$key }}</td>
                     <td>
-                        <div title="foto & name brand" class="d-flex ms-2 px-2 py-1 align-items-center">
+                        <div class="d-flex align-items-center">
                             @if ($brand->img_brand)
                                 <img src="{{ asset('storage/' . $brand->img_brand) }}" class="avatar avatar-sm me-3"
                                     alt="{{ $brand->name }}">
@@ -24,14 +25,9 @@
                             <h6 class="mb-0 text-sm">{{ $brand->name }}</h6>
                         </div>
                     </td>
-                    <td>
-                        <p class="text-xs text-dark fw-bold mb-0">{{ $brand->products_count }}</p>
+                    <td class="align-middle text-center">
+                        <small>{{ $brand->products_count }}</small>
                     </td>
-                    <td>
-                        <p class="text-xs text-dark fw-bold mb-0">{{ $brand->created_at->translatedFormat('d M Y') }}
-                        </p>
-                    </td>
-
                     <td class="align-middle text-center text-sm">
                         @if ($brand->status)
                             <span class="badge bg-label-success">Aktif</span>

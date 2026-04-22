@@ -1,26 +1,27 @@
 <div class="table-responsive p-0 mt-3">
     <table class="table table-hover align-items-center justify-content-start mb-0" id="tableData">
         <thead>
-            <tr class="table-secondary">
-                <th class="text-uppercase text-dark text-xs font-weight-bolder">Warrantie</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Description</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Durasi</th>
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Status</th>
-                <th class="text-dark"></th>
+            <tr>
+                <th width="5%">No</th>
+                <th>Warrantie</th>
+                <th>Description</th>
+                <th>Durasi</th>
+                <th class="text-center">Status</th>
+                <th></th>
             </tr>
         </thead>
         <tbody id="isiTable">
-            @forelse ($warranties as $garansi)
+            @forelse ($warranties as $key => $garansi)
                 <tr id="garansi-row-{{ $garansi->slug }}">
+                    <td>{{ ++$key }}</td>
                     <td>
-                        <p title="garansi" class="ms-3 text-xs text-dark fw-bold mb-0">{{ $garansi->name }}</p>
+                        <p>{{ $garansi->name }}</p>
                     </td>
                     <td>
-                        <p title="Description" class=" text-xs text-dark fw-bold mb-0">
-                            {{ Str::limit(strip_tags($garansi->description), 60) ?: '-' }}</p>
+                        <p>{{ Str::limit(strip_tags($garansi->description), 60) ?: '-' }}</p>
                     </td>
-                    <td class="align-middle ">
-                        <span class="text-dark text-xs fw-bold">{{ $garansi->formatted_duration }}</span>
+                    <td>
+                        <small>{{ $garansi->formatted_duration }}</small>
                     </td>
                     <td class="align-middle text-center text-sm">
                         @if ($garansi->status)

@@ -13,8 +13,7 @@
         <div class="card-header pb-0 px-3 pt-2">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    {{-- [SNEAT] Ganti class text-sm -> text-muted, h6 tetap h6 --}}
-                    <h5 class="mb-1">Manajemen Banner</h5>
+                    <h5 class="mb-n1 fw-bolder">Manajemen Banner</h5>
                     <p class="text-muted mb-0">Kelola gambar banner untuk halaman depan.</p>
                 </div>
                 <button class="btn btn-outline-primary ms-md-auto mt-2" data-bs-toggle="modal"
@@ -26,11 +25,11 @@
         <div class="card-body px-0 pt-0 pb-2">
             <div id="banner-table-container" class="table-responsive p-0 mt-3">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th class="text-nowrap">Gambar & Judul</th>
-                            <th class="text-nowrap ps-2">Link Tujuan</th>
-                            <th class="text-nowrap ps-2">Posisi</th>
+                            <th class="text-nowrap">Link Tujuan</th>
+                            <th class="text-nowrap">Posisi</th>
                             <th class="text-nowrap text-center">Status</th>
                             <th class="text-nowrap text-center">Dibuat</th>
                             <th></th>
@@ -107,7 +106,6 @@
 
 
     <!-- Modal Create -->
-
     <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">

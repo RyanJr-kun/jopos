@@ -1,53 +1,53 @@
 <div class="table-responsive p-0 mt-2">
     <table class="table table-hover align-items-center justify-content-start mb-0" id="tableData">
         <thead>
-            <tr class="table-secondary">
-                <th class="text-uppercase text-dark text-xs font-weight-bolder">Nama Promotion</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Kode Promotion</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Tipe Diskon</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Nilai Diskon</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Periode</th>
-                <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Hitung Mundur</th>
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Status</th>
-                <th class="text-dark"></th>
+            <tr>
+                <th>No</th>
+                <th>Nama Promotion</th>
+                <th>Kode Promotion</th>
+                <th>Tipe Diskon</th>
+                <th>Nilai Diskon</th>
+                <th>Periode</th>
+                <th>Hitung Mundur</th>
+                <th class="text-center">Status</th>
+                <th></th>
             </tr>
         </thead>
         <tbody id="isiTable">
-            @forelse ($promotions as $promo)
+            @forelse ($promotions as $key => $promo)
                 <tr id="promo-row-{{ $promo->id }}">
+                <td>{{ ++$key }}</td>
                     <td>
-                        <p title="Nama Promotion" class="ms-3 text-xs text-dark fw-bold mb-0">{{ $promo->name }}
-                        </p>
+                        <p>{{ $promo->name }}</p>
                     </td>
                     <td>
-                        <p title="Kode Promotion" class="text-xs text-dark fw-bold mb-0">{{ $promo->code ?? '-' }}
-                        </p>
+                        <p>{{ $promo->code ?? '-' }}</p>
                     </td>
                     <td>
-                        <p title="Tipe Diskon" class="text-xs text-dark fw-bold mb-0">
+                        <small>
                             @if ($promo->type == 'percentage')
                                 Persentase
                             @else
                                 Jumlah Tetap
                             @endif
-                        </p>
+                        </small>
                     </td>
                     <td>
-                        <p title="Nilai Diskon" class="text-xs text-dark fw-bold mb-0">
+                        <small>
                             @if ($promo->type == 'percentage')
                                 {{ $promo->nilai_diskon }}%
                             @else
                                 @money($promo->nilai_diskon)
                             @endif
-                        </p>
+                        </small>
                     </td>
                     <td>
-                        <p title="Periode Promotion" class="text-xs text-dark fw-bold mb-0">
+                        <small>
                             {{ \Carbon\Carbon::parse($promo->tanggal_mulai)->format('d M Y') }} -
                             {{ \Carbon\Carbon::parse($promo->tanggal_berakhir)->format('d M Y') }}
-                        </p>
+                        </small>
                     </td>
-                    <td class="text-xs text-dark fw-bold mb-0" id="countdown-{{ $promo->id }}"
+                    <td id="countdown-{{ $promo->id }}"
                         data-end-time="{{ $promo->tanggal_berakhir->toIso8601String() }}"
                         data-promo-id="{{ $promo->id }}">
                         <div class="spinner-border spinner-border-sm" role="status">

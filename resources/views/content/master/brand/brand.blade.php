@@ -202,23 +202,23 @@
     <script src="https://unpkg.com/filepond-plugin-image-transform/dist/filepond-plugin-image-transform.js"></script>
     <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
     <script type="module">
-            const initSelect2 = () => {
-                if (typeof $ !== 'undefined' && $.fn.select2) {
-                    $('.select2').each(function() {
-                        const $this = $(this);
-                        $this.select2({
-                            placeholder: $this.data('placeholder') || "Pilih...",
-                            allowClear: $this.find('option[value=""]').length > 0,
-                            width: '100%',
-                            minimumResultsForSearch: 10
-                        });
+        const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    $this.select2({
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
                     });
-                } else {
-                    setTimeout(initSelect2, 100);
-                }
-            };
-            initSelect2();
-        </script>
+                });
+            } else {
+                setTimeout(initSelect2, 100);
+            }
+        };
+        initSelect2();
+    </script>
    <script>
     document.addEventListener('DOMContentLoaded', function() {
         // --- FILEPOND SETUP ---

@@ -31,7 +31,7 @@
                     <table class="table table-hover align-items-center justify-content-start mb-0" id="tableData">
                         <thead>
                             <tr class="table-secondary">
-                                <th>No</th>
+                                <th width="5%">No</th>
                                 <th>Nama</th>
                                 <th>kontak</th>
                                 <th>Posisi</th>
