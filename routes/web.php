@@ -176,5 +176,5 @@ Route::middleware(['role:admin', 'auth'])->group(function () {
     Route::delete('/dashboard/users/revert', [UserController::class, 'revert'])->name('users.revert');
 
     //roles
-    Route::resource('roles', RoleController::class)->except('show', 'create', 'edit', 'update', 'destroy');
+    Route::resource('roles', RoleController::class)->except('show');
 });
