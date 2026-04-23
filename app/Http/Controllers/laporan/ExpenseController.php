@@ -17,40 +17,49 @@ class ExpenseController extends Controller
      */
     public function index(Request $request)
     {
-        // Mulai query dengan eager loading untuk efisiensi
-        $query = Expense::with(['user', 'transaction_category'])->latest();
+        $query = Expense::with(['transaction_category', 'user'])->latest();
 
         $kategoriFilters = TransactionCategory::where('type', 'expense')
             ->whereHas('expenses')
             ->orderBy('name')
             ->get();
+            
         $allKategoris = TransactionCategory::where('type', 'expense')
             ->where('status', 1)
             ->orderBy('name')
             ->get();
 
-        // Terapkan filter pencarian jika ada
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where('keterangan', 'like', "%{$search}%")
-                ->orWhere('referensi', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('keterangan', 'like', "%{$search}%")
+                  ->orWhere('referensi', 'like', "%{$search}%");
+            });
         }
 
-        // Terapkan filter kategori jika ada
         if ($request->filled('kategori_id')) {
             $query->where('transaction_category_id', $request->input('kategori_id'));
         }
 
         $expenses = $query->paginate(15)->withQueryString();
 
-        // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
+        // --- PRO AJAX RETURN ---
         if ($request->ajax()) {
-            return view('content.keuangan._expense_table', compact('expenses'))->render();
+            $html = view('content.keuangan.pengeluaran', [
+                'title' => 'expense',
+                'expenses' => $expenses,
+                'kategoriFilters' => $kategoriFilters,
+                'allKategoris' => $allKategoris,
+                'referensi_otomatis' => $this->generateExpenseReferenceNumber()
+            ])->fragment('expense-table-area');
+
+            return response()->json([
+                'html' => $html,
+                'total' => $expenses->total()
+            ]);
         }
 
-        // Jika request biasa, kembalikan view lengkap
-        return view('content.keuangan.expense', [
-            'title' => 'Data Expense',
+        return view('content.keuangan.pengeluaran', [
             'expenses' => $expenses,
             'kategoriFilters' => $kategoriFilters,
             'allKategoris' => $allKategoris,

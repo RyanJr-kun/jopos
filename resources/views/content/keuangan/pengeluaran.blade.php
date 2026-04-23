@@ -5,47 +5,137 @@
 @section('vendor-style')
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 @endsection
-<div class="container-fluid p-3 ">
-    <div class="card rounded-2">
-        <div class="card-header pb-0 px-3 pt-2 mb-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-0">Data Expense</h6>
-                    <p class="text-sm mb-0">
-                        Kelola expensemu
-                    </p>
+
+    <div class="row g-3 align-items-stretch">
+    {{-- Card Total Data --}}
+    <div class="col-12 col-md-4 col-xl-3 mb-md-0">
+        <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4d50eb 0%, #8592ff 100%);">
+            <div class="card-body d-flex align-items-center">
+                <div class="avatar avatar-md me-3">
+                    <span class="avatar-initial rounded bg-white text-primary shadow-sm">
+                        <i class="bx bx-wallet fs-4"></i>
+                    </span>
                 </div>
-                <div class="ms-md-auto mt-2">
-                    {{-- triger-modal-create --}}
-                    <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#createModal">
-                        <i class="bx bx-plus fixed-plugin-button-nav cursor-pointer pe-2"></i> Expense
-                    </button>
+                <div>
+                    <p class="text-white mb-0 text-sm">Data Pengeluaran</p>
+                    <h3 class="text-white mb-0 fw-bold" id="resumeTotaluser">
+                        {{ $expenses->total() }}
+                    </h3>
                 </div>
             </div>
         </div>
-        <div class="card-body px-0 pt-0 pb-2">
-            <div class="">
-                <div class="row g-3 align-items-center justify-content-between">
-                    <div class="col-5 col-lg-3 ms-3">
-                        <input type="text" id="searchInput" name="search" class="form-control"
+    </div>
+
+    {{-- Filter & Tombol Tambah --}}
+    <div class="col-12 col-md-8 col-xl-9">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="row g-3 align-items-center justify-content-start w-100 m-0">
+                    <div class="col-md-5">
+                        <label class="form-label">Pencarian</label>
+                        <input type="text" id="searchInput" class="form-control"
                             placeholder="Cari keterangan/referensi..." value="{{ request('search') }}">
                     </div>
-                    <div class="col-5 col-lg-2 me-3">
-                        <select id="kategoriFilter" name="kategori_id" class="form-select">
+                    <div class="col-md-4">
+                        <label class="form-label">Filter Kategori</label>
+                        <select id="kategoriFilter" class="form-select select2" data-placeholder="Semua Kategori">
                             <option value="">Semua Kategori</option>
                             @foreach ($kategoriFilters as $kategori)
-                                <option value="{{ $kategori->id }}" @selected(request('kategori_id') == $kategori->id)>{{ $kategori->name }}
+                                <option value="{{ $kategori->id }}" @selected(request('kategori_id') == $kategori->id)>
+                                    {{ $kategori->name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-md-auto ms-md-auto">
+                        <button class="btn btn-outline-info mt-md-4 mb-0" data-bs-toggle="modal" data-bs-target="#createModal">
+                            <i class="bx bx-plus me-2"></i>expense
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div id="expense-table-container">
-                @include('content.keuangan._expense_table', ['expenses' => $expenses])
             </div>
         </div>
     </div>
+
+    {{-- Tabel Data --}}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 px-3 pt-2 mb-3">
+                <h6 class="mb-n1">Data expense</h6>
+                <p class="text-sm mb-0">Kelola riwayat pemasukanmu</p>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+                {{-- Container target AJAX --}}
+                <div id="expense-table-container">
+                    @fragment('expense-table-area')
+                    <div class="table-responsive p-0">
+                        <table class="table table-hover align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Tanggal & Ref</th>
+                                    <th>Keterangan</th>
+                                    <th>Kategori</th>
+                                    <th>Jumlah</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($expenses as $key => $expense)
+                                    <tr>
+                                        <td>{{ ++$key }}</td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0 ms-3">{{ \Carbon\Carbon::parse($expense->tanggal)->format('d M Y') }}</p>
+                                            <p class="text-xs text-muted mb-0 ms-3">{{ $expense->referensi }}</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-sm text-dark font-weight-bold mb-0">{{ $expense->keterangan }}</p>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-label-danger">{{ $expense->transaction_category->name ?? 'N/A' }}</span>
+                                        </td>
+                                        <td>
+                                            <p class="text-sm text-danger font-weight-bold mb-0">Rp {{ number_format($expense->jumlah, 0, ',', '.') }}</p>
+                                        </td>
+                                        {{-- Fix Tombol Aksi Tumpang Tindih (Flexbox & nowrap) --}}
+                                        <td class="align-middle text-center text-nowrap">
+                                            <div class="d-flex justify-content-center align-items-center gap-3">
+                                                <a href="#" class="text-info fw-bold text-xs" data-bs-toggle="modal"
+                                                    data-bs-target="#viewModal" data-url="{{ route('expense.getjson', $expense->referensi) }}" title="Lihat Detail">
+                                                    <i class="bx bx-show fs-6"></i>
+                                                </a>
+                                                <a href="#" class="text-dark fw-bold text-xs" data-bs-toggle="modal"
+                                                    data-bs-target="#editModal" data-url="{{ route('expense.getjson', $expense->referensi) }}" 
+                                                    data-update-url="{{ route('expense.update', $expense->referensi) }}" title="Edit expense">
+                                                    <i class="bx bx-edit fs-6 opacity-10"></i>
+                                                </a>
+                                                <a href="#" class="text-danger" data-bs-toggle="modal"
+                                                    data-bs-target="#deleteConfirmationModal" data-expense-referensi="{{ $expense->referensi }}"
+                                                    data-expense-name="{{ $expense->keterangan }}" title="Hapus expense">
+                                                    <i class="bx bx-trash fs-6"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <span class="text-muted text-sm">Data expense tidak ditemukan.</span>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                        <div class="my-3 ms-3">
+                            {{ $expenses->onEachSide(1)->links() }}
+                        </div>
+                    </div>
+                    @endfragment
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
     {{-- modal-create --}}
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
@@ -63,7 +153,7 @@
                             <div class="col-md-6 mb-3">
                                 <label for="transaction_category_id" class="form-label">Kategori</label>
                                 <select name="transaction_category_id" id="transaction_category_id"
-                                    class="form-select @error('transaction_category_id') is-invalid @enderror" required>
+                                    class="form-select select2 @error('transaction_category_id') is-invalid @enderror" required>
                                     <option value="">Pilih Kategori</option>
                                     @foreach ($allKategoris as $kategori)
                                         <option value="{{ $kategori->id }}"
@@ -263,194 +353,206 @@
             </div>
         </div>
     </div>
-</div>
-@section('page-script')
-    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- INISIALISASI QUILL ---
-            let quillCreate, quillEdit;
 
-            // Inisialisasi Quill untuk modal CREATE
-            const hiddenInputCreate = document.getElementById('description-create');
-            quillCreate = new Quill('#quill-editor-create', {
-                theme: 'snow',
-                placeholder: 'Tulis detail expense di sini...',
-            });
-            quillCreate.on('text-change', () => {
-                hiddenInputCreate.value = quillCreate.root.innerHTML;
-            });
-            if (hiddenInputCreate.value) {
-                quillCreate.root.innerHTML = hiddenInputCreate.value;
-            }
-
-            // Inisialisasi Quill untuk modal EDIT
-            const hiddenInputEdit = document.getElementById('description-edit');
-            quillEdit = new Quill('#quill-editor-edit', {
-                theme: 'snow',
-                placeholder: 'Tulis detail expense di sini...',
-            });
-            quillEdit.on('text-change', () => {
-                hiddenInputEdit.value = quillEdit.root.innerHTML;
-            });
-
-            // --- MODAL EDIT ---
-            const editModal = document.getElementById('editModal');
-            if (editModal) {
-                editModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const dataUrl = button.getAttribute('data-url');
-                    const updateUrl = button.getAttribute('data-update-url');
-
-                    const editForm = document.getElementById('editExpenseForm');
-                    editForm.action = updateUrl;
-
-                    fetch(dataUrl)
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById('edit_keterangan').value = data.keterangan;
-                            document.getElementById('edit_transaction_category_id').value = data
-                                .transaction_category_id;
-                            document.getElementById('edit_tanggal').value = data.tanggal;
-                            document.getElementById('edit_jumlah').value = data.jumlah;
-                            document.getElementById('edit_referensi').value = data.referensi;
-
-                            // Isi editor Quill dan input hidden
-                            quillEdit.root.innerHTML = data.description || '';
-                            hiddenInputEdit.value = data.description || '';
-                        })
-                        .catch(error => console.error('Error fetching expense data:', error));
+    @endsection
+    @section('page-script')
+        <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+        <script type="module">
+        const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    $this.select2({
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
+                    });
                 });
+            } else {
+                setTimeout(initSelect2, 100);
             }
-
-            // --- MODAL VIEW ---
-            const viewModal = document.getElementById('viewModal');
-            if (viewModal) {
-                viewModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const dataUrl = button.getAttribute('data-url');
-
-                    // Fungsi untuk memformat mata uang
-                    const formatCurrency = (number) => new Intl.NumberFormat('id-ID', {
-                        style: 'currency',
-                        currency: 'IDR',
-                        minimumFractionDigits: 0
-                    }).format(number);
-
-                    // Fungsi untuk memformat tanggal
-                    const formatDate = (dateString) => {
-                        const options = {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                        };
-                        return new Date(dateString).toLocaleDateString('id-ID', options);
-                    };
-
-                    fetch(dataUrl)
-                        .then(response => response.json())
-                        .then(data => {
-                            // Memuat relasi dari controller sudah memastikan data ini ada
-                            const kategoriNama = data.transaction_category?.name ||
-                                'Tidak ada kategori';
-
-                            document.getElementById('view_referensi').textContent = data.referensi ||
-                                '-';
-                            document.getElementById('view_tanggal').textContent = formatDate(data
-                                .tanggal);
-                            document.getElementById('view_kategori').textContent = kategoriNama;
-                            document.getElementById('view_jumlah').textContent = formatCurrency(data
-                                .jumlah);
-                            document.getElementById('view_keterangan').textContent = data.keterangan;
-                            document.getElementById('view_description').innerHTML = data.description ||
-                                '<p class="text-muted">Tidak ada detail.</p>';
-                        })
-                        .catch(error => console.error('Error fetching expense data for view:', error));
+        };
+        initSelect2();
+    </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // --- INISIALISASI QUILL ---
+                let quillCreate, quillEdit;
+    
+                // Inisialisasi Quill untuk modal CREATE
+                const hiddenInputCreate = document.getElementById('description-create');
+                quillCreate = new Quill('#quill-editor-create', {
+                    theme: 'snow',
+                    placeholder: 'Tulis detail expense di sini...',
                 });
-            }
-
-
-            // --- MODAL DELETE ---
-            const deleteModal = document.getElementById('deleteConfirmationModal');
-            if (deleteModal) {
-                deleteModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const expenseReferensi = button.getAttribute('data-expense-referensi');
-                    const expenseName = button.getAttribute('data-expense-name');
-
-                    const modalBodyName = deleteModal.querySelector('#expenseNameToDelete');
-                    const deleteForm = deleteModal.querySelector('#deleteExpenseForm');
-
-                    modalBodyName.textContent = expenseName;
-                    deleteForm.action = `/expense/${expenseReferensi}`;
+                quillCreate.on('text-change', () => {
+                    hiddenInputCreate.value = quillCreate.root.innerHTML;
                 });
-            }
-
-            // --- AJAX FILTER & SEARCH ---
-            $(document).ready(function() {
-                // Fungsi untuk menunda eksekusi (debounce)
-                function debounce(func, delay) {
-                    let timeout;
-                    return function(...args) {
-                        clearTimeout(timeout);
-                        timeout = setTimeout(() => func.apply(this, args), delay);
-                    };
+                if (hiddenInputCreate.value) {
+                    quillCreate.root.innerHTML = hiddenInputCreate.value;
                 }
-
-                // Fungsi untuk mengambil data dengan AJAX
-                function fetchData(page = 1) {
-                    let search = $('#searchInput').val();
-                    let kategori_id = $('#kategoriFilter').val();
-                    let url = '{{ route('expense.index') }}';
-
-                    $('#expense-table-container').css('opacity', 0.5); // Efek loading
-
+    
+                // Inisialisasi Quill untuk modal EDIT
+                const hiddenInputEdit = document.getElementById('description-edit');
+                quillEdit = new Quill('#quill-editor-edit', {
+                    theme: 'snow',
+                    placeholder: 'Tulis detail expense di sini...',
+                });
+                quillEdit.on('text-change', () => {
+                    hiddenInputEdit.value = quillEdit.root.innerHTML;
+                });
+    
+                // --- MODAL EDIT ---
+                const editModal = document.getElementById('editModal');
+                if (editModal) {
+                    editModal.addEventListener('show.bs.modal', function(event) {
+                        const button = event.relatedTarget;
+                        const dataUrl = button.getAttribute('data-url');
+                        const updateUrl = button.getAttribute('data-update-url');
+    
+                        const editForm = document.getElementById('editExpenseForm');
+                        editForm.action = updateUrl;
+    
+                        fetch(dataUrl)
+                            .then(response => response.json())
+                            .then(data => {
+                                document.getElementById('edit_keterangan').value = data.keterangan;
+                                document.getElementById('edit_transaction_category_id').value = data
+                                    .transaction_category_id;
+                                document.getElementById('edit_tanggal').value = data.tanggal;
+                                document.getElementById('edit_jumlah').value = data.jumlah;
+                                document.getElementById('edit_referensi').value = data.referensi;
+    
+                                // Isi editor Quill dan input hidden
+                                quillEdit.root.innerHTML = data.description || '';
+                                hiddenInputEdit.value = data.description || '';
+                            })
+                            .catch(error => console.error('Error fetching expense data:', error));
+                    });
+                }
+    
+                // --- MODAL VIEW ---
+                const viewModal = document.getElementById('viewModal');
+                if (viewModal) {
+                    viewModal.addEventListener('show.bs.modal', function(event) {
+                        const button = event.relatedTarget;
+                        const dataUrl = button.getAttribute('data-url');
+    
+                        // Fungsi untuk memformat mata uang
+                        const formatCurrency = (number) => new Intl.NumberFormat('id-ID', {
+                            style: 'currency',
+                            currency: 'IDR',
+                            minimumFractionDigits: 0
+                        }).format(number);
+    
+                        // Fungsi untuk memformat tanggal
+                        const formatDate = (dateString) => {
+                            const options = {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                            };
+                            return new Date(dateString).toLocaleDateString('id-ID', options);
+                        };
+    
+                        fetch(dataUrl)
+                            .then(response => response.json())
+                            .then(data => {
+                                // Memuat relasi dari controller sudah memastikan data ini ada
+                                const kategoriNama = data.transaction_category?.name ||
+                                    'Tidak ada kategori';
+    
+                                document.getElementById('view_referensi').textContent = data.referensi ||
+                                    '-';
+                                document.getElementById('view_tanggal').textContent = formatDate(data
+                                    .tanggal);
+                                document.getElementById('view_kategori').textContent = kategoriNama;
+                                document.getElementById('view_jumlah').textContent = formatCurrency(data
+                                    .jumlah);
+                                document.getElementById('view_keterangan').textContent = data.keterangan;
+                                document.getElementById('view_description').innerHTML = data.description ||
+                                    '<p class="text-muted">Tidak ada detail.</p>';
+                            })
+                            .catch(error => console.error('Error fetching expense data for view:', error));
+                    });
+                }
+    
+    
+                // --- MODAL DELETE ---
+                const deleteModal = document.getElementById('deleteConfirmationModal');
+                if (deleteModal) {
+                    deleteModal.addEventListener('show.bs.modal', function(event) {
+                        const button = event.relatedTarget;
+                        const expenseReferensi = button.getAttribute('data-expense-referensi');
+                        const expenseName = button.getAttribute('data-expense-name');
+    
+                        const modalBodyName = deleteModal.querySelector('#expenseNameToDelete');
+                        const deleteForm = deleteModal.querySelector('#deleteExpenseForm');
+    
+                        modalBodyName.textContent = expenseName;
+                        deleteForm.action = `/expense/${expenseReferensi}`;
+                    });
+                }
+    
+                // --- AJAX FILTER & SEARCH ---
+                const searchInput = $('#searchInput');
+                const kategoriFilter = $('#kategoriFilter');
+                const tableContainer = $('#expense-table-container');
+                const totalCounter = $('#resumeTotaluser');
+                
+                let typingTimer;
+                const doneTypingInterval = 500;
+    
+                function fetchExpense(targetUrl = null) {
+                    let url = targetUrl;
+                    if (!url) {
+                        url = "{{ route('expense.index') }}?" + $.param({
+                            search: searchInput.val(),
+                            kategori_id: kategoriFilter.val()
+                        });
+                    }
+    
                     $.ajax({
                         url: url,
-                        data: {
-                            search: search,
-                            kategori_id: kategori_id,
-                            page: page
+                        type: "GET",
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        beforeSend: function() {
+                            tableContainer.css('opacity', '0.4');
                         },
-                        success: function(data) {
-                            $('#expense-table-container').html(data).css('opacity', 1);
-                            window.history.pushState({
-                                    path: url + '?page=' + page + '&search=' + search +
-                                        '&kategori_id=' + kategori_id
-                                }, '', url + '?page=' + page + '&search=' + search +
-                                '&kategori_id=' + kategori_id);
+                        success: function(response) {
+                            tableContainer.html(response.html);
+                            totalCounter.text(response.total);
+                            tableContainer.css('opacity', '1');
+                            window.history.pushState(null, '', url);
                         },
-                        error: function() {
-                            $('#expense-table-container').css('opacity', 1);
-                            window.showToast('error', 'Gagal memuat data. Silakan coba lagi.');
+                        error: function(xhr) {
+                            console.error("Gagal mengambil data AJAX", xhr);
+                            tableContainer.css('opacity', '1');
                         }
                     });
                 }
-
-                $('#searchInput').on('keyup', debounce(function() {
-                    fetchData(1);
-                }, 500));
-                $('#kategoriFilter').on('change', function() {
-                    fetchData(1);
+    
+                searchInput.on('keyup', function() {
+                    clearTimeout(typingTimer);
+                    typingTimer = setTimeout(() => fetchExpense(), doneTypingInterval);
                 });
+    
+                kategoriFilter.on('change', () => fetchExpense());
+    
+                // Hijack Pagination Clicks
                 $(document).on('click', '#expense-table-container .pagination a', function(e) {
                     e.preventDefault();
-                    let page = $(this).attr('href').split('page=')[1];
-                    if (page) {
-                        fetchData(page);
-                    }
+                    fetchExpense($(this).attr('href'));
                 });
+    
+                // --- SHOW CREATE MODAL ON VALIDATION ERROR ---
+                const hasError = document.querySelector('.is-invalid');
+                if (hasError) {
+                    var createModal = new bootstrap.Modal(document.getElementById('createModal'));
+                    createModal.show();
+                }
+    
             });
-
-            // --- SHOW CREATE MODAL ON VALIDATION ERROR ---
-            const hasError = document.querySelector('.is-invalid');
-            if (hasError) {
-                var createModal = new bootstrap.Modal(document.getElementById('createModal'));
-                createModal.show();
-            }
-
-        });
-    </script>
-@endsection
-@endsection
+        </script>
+    @endsection

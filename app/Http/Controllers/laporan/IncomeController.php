@@ -17,39 +17,49 @@ class IncomeController extends Controller
      */
     public function index(Request $request)
     {
-        // Memuat relasi untuk efisiensi dan memulai query
         $query = Income::with(['transaction_category', 'user'])->latest();
 
         $kategoriFilters = TransactionCategory::where('type', 'income')
             ->whereHas('incomes')
             ->orderBy('name')
             ->get();
+            
         $allKategoris = TransactionCategory::where('type', 'income')
             ->where('status', 1)
             ->orderBy('name')
             ->get();
 
-        // Terapkan filter pencarian berdasarkan keterangan
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where('keterangan', 'like', "%{$search}%")
-                ->orWhere('referensi', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('keterangan', 'like', "%{$search}%")
+                  ->orWhere('referensi', 'like', "%{$search}%");
+            });
         }
 
-        // Terapkan filter berdasarkan ID kategori
         if ($request->filled('kategori_id')) {
             $query->where('transaction_category_id', $request->input('kategori_id'));
         }
 
         $incomes = $query->paginate(15)->withQueryString();
 
-        // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
+        // --- PRO AJAX RETURN ---
         if ($request->ajax()) {
-            return view('content.keuangan._income_table', compact('incomes'))->render();
+            $html = view('content.keuangan.pemasukan', [
+                'title' => 'Income',
+                'incomes' => $incomes,
+                'kategoriFilters' => $kategoriFilters,
+                'allKategoris' => $allKategoris,
+                'referensi_otomatis' => $this->generateIncomeReferenceNumber()
+            ])->fragment('income-table-area');
+
+            return response()->json([
+                'html' => $html,
+                'total' => $incomes->total()
+            ]);
         }
 
-        // Jika request biasa, kembalikan view lengkap
-        return view('content.keuangan.income', [
+        return view('content.keuangan.pemasukan', [
             'title' => 'Income',
             'incomes' => $incomes,
             'kategoriFilters' => $kategoriFilters,

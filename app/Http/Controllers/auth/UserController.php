@@ -19,23 +19,40 @@ class UserController extends Controller
     {
         $query = User::with('roles')->orderBy('id', 'DESC');
 
-        // filter pencarian name, nidn, username.
-        if ($request->filled('q')) {
-            $search = $request->q;
+        // 1. Filter Pencarian (Ganti parameter dari 'q' ke 'search' sesuai input frontend)
+        if ($request->filled('search')) {
+            $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                    ->orWhere('nidn', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%") // Opsional: tambah filter via email
                     ->orWhere('username', 'LIKE', "%{$search}%");
             });
         }
 
-        //filter select role
+        // 2. Filter Select Role
         if ($request->filled('role')) {
             $query->role($request->role);
         }
 
-        $data = $query->get(); // ambil semua data query
+        // 3. Filter Status (Konversi value 'Aktif'/'Tidak Aktif' ke boolean 1/0)
+        if ($request->filled('status')) {
+            $status = $request->status === 'Aktif' ? 1 : 0;
+            $query->where('status', $status);
+        }
+
+        $data = $query->get(); 
         $roles = Role::pluck('name', 'name')->all();
+
+        // 4. Deteksi Request AJAX (The Pro Way)
+        if ($request->ajax()) {
+            // Mengambil potongan view pada bagian @fragment('user-table-body') saja
+            $html = view('content.user.index', compact('data', 'roles'))->fragment('user-table-body');
+            
+            return response()->json([
+                'html' => $html,
+                'total' => $data->count() // Kirim total data untuk update card Total Pengguna
+            ]);
+        }
 
         return view('content.user.index', compact('data', 'roles'));
     }

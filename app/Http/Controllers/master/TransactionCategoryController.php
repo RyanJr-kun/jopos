@@ -15,35 +15,44 @@ class TransactionCategoryController extends Controller
      */
     public function index(Request $request)
     {
-        // Mulai query builder
-        $query = TransactionCategory::latest();
+        // Hapus 'with('type')' karena 'type' adalah kolom, bukan relasi.
+        $query = TransactionCategory::orderBy('id', 'DESC');
 
-        // Terapkan filter pencarian berdasarkan name
+        // 1. Filter Pencarian
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('description', 'LIKE', "%{$search}%");
+            });
         }
 
-        // Terapkan filter status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // Terapkan filter type
+        // 2. Filter Type
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
 
-        $kategoris = $query->paginate(15)->withQueryString();
-
-        // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
-        if ($request->ajax()) {
-            return view('content.keuangan._kategori_table', compact('kategoris'))->render();
+        // 3. Filter Status (Aktif/Tidak Aktif atau 1/0)
+        if ($request->filled('status')) {
+            // Cek apakah filter mengirim teks "Aktif" atau angka "1"
+            $status = in_array($request->status, ['Aktif', '1', 1]) ? 1 : 0;
+            $query->where('status', $status);
         }
 
-        return view('content.keuangan.kategori', [
-            'title' => 'Kategori Transaksi',
-            'kategoris' => $kategoris,
-        ]);
+        $kategoris = $query->paginate(15)->withQueryString();
+        $types = TransactionCategory::distinct()->pluck('type', 'type')->all();
+
+        if ($request->ajax()) {
+            // Kita render fragment yang mencakup TABEL dan PAGINATION
+            $html = view('content.keuangan.kategori', compact('kategoris', 'types'))->fragment('kategori-table-area');
+            
+            return response()->json([
+                'html' => $html,
+                'total' => $kategoris->total() // total keseluruhan data (bukan cuma per halaman)
+            ]);
+        }
+
+        return view('content.keuangan.kategori', compact('kategoris', 'types'));
     }
 
     /**

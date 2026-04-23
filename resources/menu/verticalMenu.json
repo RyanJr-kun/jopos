@@ -178,12 +178,12 @@
         },
         {
           "url": "income",
-          "name": "Income",
+          "name": "Pemasukan",
           "slug": "income.index"
         },
         {
           "url": "expense",
-          "name": "Expense",
+          "name": "Pengeluaran",
           "slug": "expense.index"
         },
         {

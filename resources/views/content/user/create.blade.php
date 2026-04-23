@@ -8,7 +8,7 @@
     <link href="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.css" rel="stylesheet">
 @endsection
 
-<div class="card rounded-2 m-3">
+<div class="card">
     <div class="card-body">
         <form action="{{ route('users.store') }}" method="post" enctype="multipart/form-data">
             @csrf
@@ -55,13 +55,13 @@
                             <input type="tel" class="form-control @error('kontak') is-invalid @enderror"
                                 value="{{ old('kontak') }}" id="kontak" name="kontak" placeholder="08...">
                             @error('kontak')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>  
                             @enderror
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label for="role_id" class="form-label">Posisi <span class="text-danger">*</span></label>
-                            <select name="role_name" class="form-select @error('role_name') is-invalid @enderror"
+                            <select name="role_name" class="form-select select2 @error('role_name') is-invalid @enderror"
                                 id="role_name" required>
                                 <option value="" disabled selected>Pilih Role...</option>
                                 @foreach ($roles as $role)
@@ -125,6 +125,24 @@
     <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
     <script src="https://unpkg.com/filepond-plugin-image-transform/dist/filepond-plugin-image-transform.js"></script>
     <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+    <script type="module">
+        const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    $this.select2({
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
+                    });
+                });
+            } else {
+                setTimeout(initSelect2, 100);
+            }
+        };
+        initSelect2();
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // FilePond

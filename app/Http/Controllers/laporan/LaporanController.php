@@ -278,7 +278,7 @@ class LaporanController extends Controller
      */
     public function pembelian(Request $request)
     {
-        $query = Purchase::with(['pemasok', 'user'])
+        $query = Purchase::with(['supplier', 'user'])
             ->latest('tanggal_pembelian'); // ->select() tidak diperlukan, Eloquent akan memilih semua kolom secara default.
 
         // Terapkan filter
@@ -338,7 +338,7 @@ class LaporanController extends Controller
         $type = $request->query('type', 'xlsx');
 
         // Gunakan query yang sama dengan method pembelian() untuk konsistensi filter
-        $query = Purchase::with(['pemasok', 'user'])
+        $query = Purchase::with(['supplier', 'user'])
             ->latest('tanggal_pembelian');
 
         // Terapkan filter
