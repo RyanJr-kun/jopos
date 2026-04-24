@@ -11,6 +11,9 @@ use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Stores;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
 class MarketController extends Controller
@@ -25,7 +28,7 @@ class MarketController extends Controller
         // Ambil produk terbaru dengan eager loading untuk performa
         $products = Product::with(['category', 'unit', 'brand', 'promotions', 'primaryImage'])
             ->latest()
-            ->paginate(12);
+            ->paginate(10);
 
         // Ambil banner yang aktif untuk Main Carousel, urutkan berdasarkan urutan
         $mainImg = Banner::where('is_active', true)
@@ -107,6 +110,51 @@ class MarketController extends Controller
         $kategoris = Category::with('children')
             ->whereNull('parent_id')
             ->get();
+
+        $googleData = Cache::remember('google_reviews_jocomputer', 1440, function () {
+        $placeId = env('GOOGLE_MAPS_PLACE_ID'); // Taruh di .env
+        $apiKey = env('GOOGLE_MAPS_API_KEY');   // Taruh di .env
+
+        $response = Http::get("https://maps.googleapis.com/maps/api/place/details/json", [
+            'place_id' => $placeId,
+            'fields'   => 'rating,user_ratings_total,reviews',
+            'key'      => $apiKey,
+            'language' => 'id' // Meminta ulasan dalam bahasa Indonesia
+        ]);
+
+        if ($response->successful() && isset($response['result'])) {
+            return $response['result'];
+        }
+
+        return null; // Fallback jika API gagal
+    });
+
+    // Format ulang data agar sesuai dengan struktur Blade Anda
+    $reviewSources = [];
+    $googleRating = 0;
+    $googleTotal = 0;
+
+    if ($googleData) {
+        $googleRating = $googleData['rating'] ?? 0;
+        $googleTotal  = $googleData['user_ratings_total'] ?? 0;
+
+        if (isset($googleData['reviews'])) {
+            foreach ($googleData['reviews'] as $review) {
+                // Buat inisial dari nama
+                $initials = (string) Str::of($review['author_name'])->explode(' ')->map(fn($n) => substr($n, 0, 1))->take(2)->join('');
+
+                $reviewSources[] = [
+                    'source'   => 'google',
+                    'name'     => $review['author_name'],
+                    'avatar'   => $initials,
+                    'rating'   => $review['rating'],
+                    'date'     => $review['relative_time_description'], // Contoh: "2 minggu lalu"
+                    'text'     => $review['text'],
+                    'verified' => false,
+                ];
+            }
+        }
+    }
 
         return view('content.market.beranda', [
             'title' => 'Beranda',

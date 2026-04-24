@@ -531,6 +531,108 @@ $blue-g: #000f94;
     }
 }
 
+.promo-card {
+    border: none;
+    border-radius: 0.75rem;
+    height: 360px;
+    width: 100%;
+    box-shadow: none;
+    background-color: transparent;
+}
+
+
+.promo-produk {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 4/5;
+
+    .product-badge {
+        position: absolute;
+        top: 12px; // Jarak dari atas
+        left: 12px; // Jarak dari kiri
+        z-index: 3; // Pastikan berada di atas gambar (dan di atas hover actions)
+    }
+
+    .product-card-actions {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 2;
+        padding: 0.5rem;
+        opacity: 0;
+        transform: translateY(100%); // Mulai dari bawah, di luar container
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        // background: linear-gradient(to top,
+        //         rgba(255, 255, 255, 0.468) 0%,
+        //         rgba(0, 0, 0, 0) 100%); // Gradient agar teks terbaca
+    }
+
+    &:hover {
+        .product-card-actions {
+            opacity: 1;
+            transform: translateY(0); // Kembali ke posisi normal
+        }
+    }
+}
+
+// ── Promo Produk Large: menyamai tinggi promo-card (360px) ──────
+// Gunakan class ini pada .promo-produk agar gambar produk promo
+// tampak lebih lebar & tinggi, setara dengan banner promo-card.
+.promo-produk-lg {
+    position: relative;
+    overflow: hidden;
+    height: 290px; // Menyamai tinggi .promo-card
+    width: 100%;
+
+    .card-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; // Gambar mengisi penuh tanpa distorsi
+        object-position: center;
+        transition: transform 0.3s ease-in-out;
+    }
+
+    &:hover .card-img-top {
+        transform: scale(1.04); // Efek zoom halus saat hover
+    }
+
+    .product-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 3;
+    }
+
+    .product-card-actions {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 2;
+        padding: 0.5rem;
+        opacity: 0;
+        transform: translateY(100%);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    &:hover {
+        .product-card-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    // Responsif: kurangi tinggi di layar kecil agar tidak terlalu dominan
+    @media (max-width: 767.98px) {
+        height: 260px;
+    }
+
+    @media (min-width: 768px) and (max-width: 991.98px) {
+        height: 300px;
+    }
+}
+
 /*
 *
 * Market Page - Product Card Hover Actions
@@ -539,7 +641,7 @@ $blue-g: #000f94;
 .product-card-img-container {
     position: relative;
     overflow: hidden;
-    aspect-ratio: 4/5;
+    aspect-ratio: 1/1;
 
     .product-badge {
         position: absolute;
@@ -2381,5 +2483,426 @@ $brand-red: #ff2032;
 
     .filter-section-title i {
         color: #818cf8 !important;
+    }
+}
+
+
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  Review / Ulasan Pelanggan Section                              ║
+// ║  — Custom classes, no Sneat/Bootstrap dependency                ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
+// ── Color tokens ─────────────────────────────────────────────────────
+$review-star-color    : #FBBC05;
+$review-card-bg       : #ffffff;
+$review-card-shadow   : 0 2px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+$review-card-shadow-h : 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+$review-border-radius : 14px;
+$review-accent-google : #4285F4;
+
+// ── Section Wrapper ──────────────────────────────────────────────────
+.review-section {
+    padding-block: 3.5rem;
+    background: linear-gradient(160deg, #f8f9ff 0%, #fff 50%, #fdf8ff 100%);
+    position: relative;
+    overflow: hidden;
+
+    // subtle decorative arc
+    &::before {
+        content: '';
+        position: absolute;
+        top: -80px;
+        right: -80px;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(66,133,244,0.06) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -60px;
+        left: -60px;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(234,67,53,0.05) 0%, transparent 70%);
+        pointer-events: none;
+    }
+}
+
+// ── Section Header ───────────────────────────────────────────────────
+.review-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.review-section-title {
+    font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+    font-weight: 800;
+    margin-bottom: 0.2rem;
+    letter-spacing: -0.01em;
+}
+
+.review-section-subtitle {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+// ── Google Maps rating badge ─────────────────────────────────────────
+.review-gmaps-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.55rem 1rem 0.55rem 0.75rem;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.09);
+    border-radius: 50px;
+    text-decoration: none;
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+
+    &:hover {
+        border-color: rgba($review-accent-google, 0.3);
+        box-shadow: 0 4px 16px rgba($review-accent-google, 0.12);
+        transform: translateY(-1px);
+    }
+
+    &__logo {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    &__info {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        line-height: 1.2;
+    }
+
+    &__rating {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        line-height: 1;
+    }
+
+    &__stars {
+        display: flex;
+        gap: 1px;
+    }
+
+    &__count {
+        font-size: 0.7rem;
+        color: #6b7280;
+        white-space: nowrap;
+    }
+
+    &__arrow {
+        font-size: 0.85rem;
+        color: #9ca3af;
+        margin-left: 0.1rem;
+        transition: color 0.2s ease;
+    }
+
+    &:hover &__arrow {
+        color: $review-accent-google;
+    }
+}
+
+// ── Swiper wrapper (to allow space for custom nav) ───────────────────
+.review-swiper-wrapper {
+    position: relative;
+    padding-bottom: 2.5rem; // space for pagination dots
+
+    // Hide default Swiper nav arrows (we use custom)
+    .swiper-button-next,
+    .swiper-button-prev {
+        display: none;
+    }
+}
+
+// ── Custom navigation buttons ────────────────────────────────────────
+.review-swiper-prev,
+.review-swiper-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(calc(-50% - 1.25rem)); // offset for pagination
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    transition: all 0.22s ease;
+
+    i {
+        font-size: 1.1rem;
+        color: #374151;
+        line-height: 1;
+    }
+
+    &:hover {
+        background: $review-accent-google;
+        border-color: $review-accent-google;
+        box-shadow: 0 4px 16px rgba($review-accent-google, 0.28);
+
+        i { color: #fff; }
+    }
+
+    // Hide on very small screens
+    @media (max-width: 575.98px) {
+        display: none;
+    }
+}
+
+.review-swiper-prev {
+    left: -18px;
+
+    @media (max-width: 767.98px) {
+        left: -10px;
+    }
+}
+
+.review-swiper-next {
+    right: -18px;
+
+    @media (max-width: 767.98px) {
+        right: -10px;
+    }
+}
+
+// ── Pagination bullets ───────────────────────────────────────────────
+.review-pagination {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+
+    .swiper-pagination-bullet {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #d1d5db;
+        opacity: 1;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .swiper-pagination-bullet-active {
+        width: 20px;
+        border-radius: 4px;
+        background: $review-accent-google;
+    }
+}
+
+// ── Review Card ──────────────────────────────────────────────────────
+.review-card {
+    background: $review-card-bg;
+    border-radius: $review-border-radius;
+    padding: 1.4rem 1.3rem 1.2rem;
+    box-shadow: $review-card-shadow;
+    border: 1px solid rgba(0,0,0,0.055);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    position: relative;
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+    overflow: hidden;
+
+    // Left accent bar
+    &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        border-radius: $review-border-radius 0 0 $review-border-radius;
+        background: linear-gradient(180deg, $review-accent-google, #EA4335);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+
+    &:hover {
+        box-shadow: $review-card-shadow-h;
+        transform: translateY(-4px);
+        border-color: rgba($review-accent-google, 0.15);
+
+        &::before { opacity: 1; }
+    }
+
+    // ── Source label (top-right) ──────────────────────────────────
+    &__source {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #6b7280;
+        background: #f3f4f6;
+        border-radius: 20px;
+        padding: 0.2rem 0.55rem;
+        align-self: flex-start;
+        letter-spacing: 0.01em;
+
+        &--google  { background: rgba($review-accent-google, 0.07); color: darken($review-accent-google, 10%); }
+        &--tokopedia { background: rgba(3,172,14,0.07); color: #03AC0E; }
+        &--instagram { background: rgba(214,36,159,0.07); color: #d6249f; }
+    }
+
+    // ── Stars ────────────────────────────────────────────────────
+    &__stars {
+        display: flex;
+        gap: 2px;
+
+        i {
+            font-size: 0.95rem;
+            color: $review-star-color;
+        }
+    }
+
+    // ── Review text ───────────────────────────────────────────────
+    &__text {
+        font-size: 0.875rem;
+        line-height: 1.65;
+        color: #374151;
+        flex: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin: 0;
+
+        // Subtle gradient fade at the bottom for truncated text
+        // (fallback)
+    }
+
+    // ── Footer: avatar + name ─────────────────────────────────────
+    &__footer {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding-top: 0.65rem;
+        border-top: 1px solid #f3f4f6;
+        margin-top: auto;
+    }
+
+    &__avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $review-accent-google, #053172);
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        letter-spacing: 0.04em;
+        box-shadow: 0 2px 8px rgba($review-accent-google, 0.3);
+    }
+
+    &__author {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    &__name {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1.2;
+    }
+
+    &__date {
+        font-size: 0.7rem;
+        color: #9ca3af;
+    }
+}
+
+// ── Dark mode overrides ──────────────────────────────────────────────
+[data-bs-theme="dark"] {
+    .review-section {
+        background: linear-gradient(160deg, #12122a 0%, #1a1a2e 50%, #12122a 100%);
+
+        &::before {
+            background: radial-gradient(circle, rgba(66,133,244,0.08) 0%, transparent 70%);
+        }
+    }
+
+    .review-section-subtitle {
+        color: #9ca3af;
+    }
+
+    .review-gmaps-badge {
+        background: #1e1e38;
+        border-color: rgba(255,255,255,0.08);
+
+        &__rating { color: #e5e7eb; }
+        &__count  { color: #9ca3af; }
+
+        &:hover {
+            background: #232340;
+        }
+    }
+
+    .review-swiper-prev,
+    .review-swiper-next {
+        background: #1e1e38;
+        border-color: rgba(255,255,255,0.1);
+
+        i { color: #d1d5db; }
+    }
+
+    .review-card {
+        background: #1e1e38;
+        border-color: rgba(255,255,255,0.07);
+        box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+
+        &:hover {
+            border-color: rgba($review-accent-google, 0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        &__text  { color: #c9d1d9; }
+        &__name  { color: #e5e7eb; }
+        &__date  { color: #6b7280; }
+
+        &__footer {
+            border-top-color: rgba(255,255,255,0.07);
+        }
+
+        &__source {
+            background: rgba(255,255,255,0.06);
+            color: #9ca3af;
+
+            &--google    { background: rgba($review-accent-google,0.1); color: lighten($review-accent-google,15%); }
+            &--tokopedia { background: rgba(3,172,14,0.1); color: #4ade80; }
+        }
+    }
+
+    .review-pagination {
+        .swiper-pagination-bullet { background: #374151; }
+        .swiper-pagination-bullet-active { background: $review-accent-google; }
     }
 }

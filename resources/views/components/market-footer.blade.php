@@ -90,13 +90,13 @@
 
         <hr class="mb-4 mt-5 opacity-25">
 
-        <div class="row align-items-center justify-content-center">
-            <div class="col-12">
-                <p class="text-center mb-0 small opacity-75">
-                    © {{ date('Y') }} Copyright
-                    <a href="{{ url('/') }}" class="text-white fw-bold text-decoration-none">JO Computer</a>.
-                    All Rights Reserved.
-                </p>
+        <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <div class="copyright text-center text-md-start mb-2 mb-md-0">
+                © {{ date('Y') }} <strong>JO Computer</strong>. All Rights Reserved.
+            </div>
+            <div class="credit text-center text-md-end text-muted fs-14px">
+                Theme designed by <a href="https://themeselection.com" target="_blank"
+                    class="text-decoration-none">ThemeSelection</a>
             </div>
         </div>
     </div>
