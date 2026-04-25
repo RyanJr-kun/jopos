@@ -56,6 +56,11 @@ class MarketController extends Controller
             ->orderBy('urutan')
             ->get();
 
+        $bestsellerMobileImg = Banner::where('is_active', true)
+            ->where('posisi', BannerPosition::BESTSELLERMOBILE)
+            ->orderBy('urutan')
+            ->get();
+
         // Ambil promo yang aktif dan sedang berjalan saat ini
         $promotions = Promotion::where('status', true)
             ->where('tanggal_mulai', '<=', now())
@@ -164,6 +169,7 @@ class MarketController extends Controller
             'main3Img' => $main3Img,
             'promoImg' => $promoImg,
             'bestsellerImg' => $bestsellerImg,
+            'bestsellerMobileImg' => $bestsellerMobileImg,
             'produkTerlaris' => $produkTerlaris,
             'promotions' => $promotions,
             'produkPromotion' => $produkPromotion,

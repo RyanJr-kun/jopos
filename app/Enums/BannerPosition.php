@@ -9,7 +9,8 @@ enum BannerPosition: string
     case MAIN2 = 'main2';
     case MAIN3 = 'main3';
     case PROMO = 'promo';
-    case BESTSELLER     = 'bestseller';
+    case BESTSELLER = 'bestseller';
+    case BESTSELLERMOBILE = 'bestseller_mobile';
 
     // 💡 Pro Tip: Anda bisa menambahkan helper function di sini jika perlu,
     // misalnya untuk mendapatkan daftar name yang lebih ramah untuk dropdown.
@@ -21,6 +22,7 @@ enum BannerPosition: string
             self::MAIN3 => 'Main3',
             self::PROMO => 'Promotion',
             self::BESTSELLER => 'Bestseller',
+            self::BESTSELLERMOBILE => 'Bestseller Mobile',
         };
     }
 }
