@@ -92,4 +92,15 @@ class User extends Authenticatable
   {
     return $this->getRoleNames()->implode(', ');
   }
+
+    public function store()
+  {
+      return $this->belongsTo(\Modules\Inventory\app\Models\Store::class, 'store_id');
+  }
+
+
+  public function ledStore()
+  {
+      return $this->hasOne(\Modules\Inventory\app\Models\Store::class, 'pic_id');
+  }
 }

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('img_user')->nullable();
             $table->string('kontak')->unique()->nullable();
-            $table->date('mulai_kerja')->nullable();
+            $table->foreignId('store_id')->nullable()->constrained('stores')->nullOnDelete();
             $table->boolean('status')->default(true);
             $table->json('notification_settings')->nullable();
             $table->rememberToken();
