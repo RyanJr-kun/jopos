@@ -69,8 +69,8 @@
                         <a href="javascript:void(0);" class="nav-link dropdown-toggle hide-arrow p-0 ms-3"
                             data-bs-toggle="dropdown">
                             <div class="avatar avatar-online">
-                                @if (auth()->user()->img_user)
-                                    <img src="{{ asset('storage/' . auth()->user()->img_user) }}" alt="Profile"
+                                @if (auth()->user()->avatar)
+                                    <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="Profile"
                                         class="w-px-40 h-auto rounded-circle">
                                 @else
                                     <span class="avatar-initial rounded-circle bg-label-primary">

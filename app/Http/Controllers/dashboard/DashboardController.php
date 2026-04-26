@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\dashboard;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
-use App\Models\Supplier;
+use Modules\Inventory\Models\Product;
+use Modules\Inventory\Models\Supplier;
 use App\Models\Customer;
-use App\Models\Purchase;
+use Modules\Inventory\Models\Purchase;
 use App\Models\Expense;
-use App\Models\Sale;
+use Modules\POS\Models\Sale;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 

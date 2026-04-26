@@ -4,14 +4,13 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Spatie\Permission\Traits\HasRoles;
-use App\Models\Product;
+use Modules\Inventory\Models\Product;
 use App\Models\Income;
-use App\Models\Purchase;
-use App\Models\Sale;
+use Modules\Inventory\Models\Purchase;
+use Modules\POS\Models\Sale;
 use App\Models\Expense;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
@@ -23,6 +22,7 @@ class User extends Authenticatable
    * @var list<string>
    */
   protected $guarded = ['id'];
+
   /**
    * The attributes that should be hidden for serialization.
    *
@@ -46,6 +46,11 @@ class User extends Authenticatable
       'password' => 'hashed',
       'status' => 'boolean',
     ];
+  }
+
+  public function employeeProfile()
+  {
+    return $this->hasOne(EmployeeProfile::class, 'user_id');
   }
 
   public function products(): HasMany
@@ -93,14 +98,14 @@ class User extends Authenticatable
     return $this->getRoleNames()->implode(', ');
   }
 
-    public function store()
+  public function store()
   {
-      return $this->belongsTo(\Modules\Inventory\app\Models\Store::class, 'store_id');
+    return $this->belongsTo(Store::class, 'store_id');
   }
 
 
   public function ledStore()
   {
-      return $this->hasOne(\Modules\Inventory\app\Models\Store::class, 'pic_id');
+    return $this->hasOne(Store::class, 'pic_id');
   }
 }

@@ -14,11 +14,13 @@ return new class extends Migration
         if (!Schema::hasTable('customers')) {
             Schema::create('customers', function (Blueprint $table) {
                 $table->id();
+                $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
                 $table->string('name', 255);
                 $table->string('kontak', 20)->unique()->nullable();
                 $table->string('email')->unique()->nullable();
-                $table->text('alamat')->nullable();
+                $table->integer('loyalty_points')->default(0);
                 $table->boolean('status')->default(true);
+
                 $table->timestamps();
             });
         }

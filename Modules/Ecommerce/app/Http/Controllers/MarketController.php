@@ -1,20 +1,20 @@
 <?php
 
-namespace Modules\Ecommerce\app\Http\Controllers;
+namespace Modules\Ecommerce\Http\Controllers;
 
-use App\Enums\BannerPosition;
 use App\Http\Controllers\Controller;
-use App\Models\Banner;
-use App\Models\Brand;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\Promotion;
-use Modules\Inventory\app\Models\Store;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use App\Enums\BannerPosition;
+use Modules\Ecommerce\Models\Banner;
+use Modules\Ecommerce\Models\Promotion;
+use Modules\Inventory\Models\Brand;
+use Modules\Inventory\Models\Category;
+use Modules\Inventory\Models\Product;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use App\Models\Store;
 
 class MarketController extends Controller
 {
@@ -116,9 +116,9 @@ class MarketController extends Controller
             ->whereNull('parent_id')
             ->get();
 
-        
 
-        return view('content.market.beranda', [
+
+        return view('ecommerce::market.beranda', [
             'title' => 'Beranda',
             'products' => $products,
             'mainImg' => $mainImg,
@@ -206,7 +206,7 @@ class MarketController extends Controller
 
         // AJAX: kembalikan hanya partial
         if ($request->ajax()) {
-            return view('content.market._produk_list', compact('products'))->render();
+            return view('ecommerce::market._produk_list', compact('products'))->render();
         }
 
         $kategoris = Category::with('children')->whereNull('parent_id')->get();
@@ -220,7 +220,7 @@ class MarketController extends Controller
         // Fallback alternatif jika tidak ada model Brand:
         // $brands = \App\Models\Brand::orderBy('name')->get();
 
-        return view('content.market.produk', compact(
+        return view('ecommerce::market.produk', compact(
             'products',
             'kategorisForFilter',
             'kategoris',
@@ -249,7 +249,7 @@ class MarketController extends Controller
 
         $kategoris = Category::with('children')->whereNull('parent_id')->get();
 
-        return view('content.market.produkdetail', compact('produk', 'produkSerupa', 'kategoris'));
+        return view('ecommerce::market.produkdetail', compact('produk', 'produkSerupa', 'kategoris'));
     }
 
     public function layanan()
@@ -257,51 +257,51 @@ class MarketController extends Controller
         $kategoris = Category::with('children')->whereNull('parent_id')->get();
 
         $googleData = Cache::remember('google_reviews_jocomputer', 1440, function () {
-        $placeId = env('GOOGLE_MAPS_PLACE_ID'); // Taruh di .env
-        $apiKey = env('GOOGLE_MAPS_API_KEY');   // Taruh di .env
+            $placeId = env('GOOGLE_MAPS_PLACE_ID'); // Taruh di .env
+            $apiKey = env('GOOGLE_MAPS_API_KEY');   // Taruh di .env
 
-        $response = Http::get("https://maps.googleapis.com/maps/api/place/details/json", [
-            'place_id' => $placeId,
-            'fields'   => 'rating,user_ratings_total,reviews',
-            'key'      => $apiKey,
-            'language' => 'id' // Meminta ulasan dalam bahasa Indonesia
-        ]);
+            $response = Http::get("https://maps.googleapis.com/maps/api/place/details/json", [
+                'place_id' => $placeId,
+                'fields'   => 'rating,user_ratings_total,reviews',
+                'key'      => $apiKey,
+                'language' => 'id' // Meminta ulasan dalam bahasa Indonesia
+            ]);
 
-        if ($response->successful() && isset($response['result'])) {
-            return $response['result'];
-        }
+            if ($response->successful() && isset($response['result'])) {
+                return $response['result'];
+            }
 
-        return null; // Fallback jika API gagal
-    });
+            return null; // Fallback jika API gagal
+        });
 
-    // Format ulang data agar sesuai dengan struktur Blade Anda
-    $reviewSources = [];
-    $googleRating = 0;
-    $googleTotal = 0;
+        // Format ulang data agar sesuai dengan struktur Blade Anda
+        $reviewSources = [];
+        $googleRating = 0;
+        $googleTotal = 0;
 
-    if ($googleData) {
-        $googleRating = $googleData['rating'] ?? 0;
-        $googleTotal  = $googleData['user_ratings_total'] ?? 0;
+        if ($googleData) {
+            $googleRating = $googleData['rating'] ?? 0;
+            $googleTotal  = $googleData['user_ratings_total'] ?? 0;
 
-        if (isset($googleData['reviews'])) {
-            foreach ($googleData['reviews'] as $review) {
-                // Buat inisial dari nama
-                $initials = (string) Str::of($review['author_name'])->explode(' ')->map(fn($n) => substr($n, 0, 1))->take(2)->join('');
+            if (isset($googleData['reviews'])) {
+                foreach ($googleData['reviews'] as $review) {
+                    // Buat inisial dari nama
+                    $initials = (string) Str::of($review['author_name'])->explode(' ')->map(fn($n) => substr($n, 0, 1))->take(2)->join('');
 
-                $reviewSources[] = [
-                    'source'   => 'google',
-                    'name'     => $review['author_name'],
-                    'avatar'   => $initials,
-                    'rating'   => $review['rating'],
-                    'date'     => $review['relative_time_description'], // Contoh: "2 minggu lalu"
-                    'text'     => $review['text'],
-                    'verified' => false,
-                ];
+                    $reviewSources[] = [
+                        'source'   => 'google',
+                        'name'     => $review['author_name'],
+                        'avatar'   => $initials,
+                        'rating'   => $review['rating'],
+                        'date'     => $review['relative_time_description'], // Contoh: "2 minggu lalu"
+                        'text'     => $review['text'],
+                        'verified' => false,
+                    ];
+                }
             }
         }
-    }
 
-        return view('content.market.layanan', compact(
+        return view('ecommerce::market.layanan', compact(
             'kategoris',
             'reviewSources',
             'googleRating',
@@ -312,7 +312,7 @@ class MarketController extends Controller
     public function tentang(Request $request)
     {
         // Mulai query
-        $query = Stores::query();
+        $query = Store::query();
 
         // 1. Filter Pencarian berdasarkan Nama Toko
         if ($request->filled('search')) {
@@ -332,7 +332,7 @@ class MarketController extends Controller
             // Kembalikan data dalam bentuk JSON berisi potongan HTML dan jumlah data
             return response()->json([
                 // Render file blade partial dan ubah jadi string HTML
-                'html'  => view('content.market._list_toko', compact('profils'))->render(),
+                'html'  => view('ecommerce::market._list_toko', compact('profils'))->render(),
                 'count' => $profils->count()
             ]);
         }
@@ -340,7 +340,7 @@ class MarketController extends Controller
         $kategoris = Category::with('children')->whereNull('parent_id')->get();
 
         // 4. Jika Request biasa (Load halaman pertama kali)
-        return view('content.market.tentang', compact('profils', 'kategoris'));
+        return view('ecommerce::market.tentang', compact('profils', 'kategoris'));
     }
     /**
      * Menangani permintaan live search dari header.

@@ -40,7 +40,7 @@ class RoleController extends Controller
     public function index()
     {
         $roles = Role::with('permissions')->withCount('users')->orderBy('id')->get();
-        return view('content.role.index', compact('roles'));
+        return view('content.auth.role.index', compact('roles'));
     }
 
     /**
@@ -49,7 +49,7 @@ class RoleController extends Controller
     public function create()
     {
         $groupedPermissions = $this->groupedPermissions();
-        return view('content.role.create', compact('groupedPermissions'));
+        return view('content.auth.role.create', compact('groupedPermissions'));
     }
 
     /**
@@ -89,7 +89,7 @@ class RoleController extends Controller
         $groupedPermissions  = $this->groupedPermissions();
         $rolePermissionIds   = $role->permissions->pluck('id')->toArray();
 
-        return view('content.role.edit', compact('role', 'groupedPermissions', 'rolePermissionIds'));
+        return view('content.auth.role.edit', compact('role', 'groupedPermissions', 'rolePermissionIds'));
     }
 
     /**

@@ -175,8 +175,8 @@
                 <a href="javascript:void(0);" class="nav-link dropdown-toggle hide-arrow p-0" id="userDropdown"
                     data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                        @if (auth()->user()->img_user)
-                            <img src="{{ asset('storage/' . auth()->user()->img_user) }}" alt="Profile"
+                        @if (auth()->user()->avatar)
+                            <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="Profile"
                                 class="w-px-40 h-auto rounded-circle">
                         @else
                             <span
@@ -190,8 +190,8 @@
                             <div class="d-flex">
                                 <div class="flex-shrink-0 me-3">
                                     <div class="avatar avatar-online">
-                                        @if (auth()->user()->img_user)
-                                            <img src="{{ asset('storage/' . auth()->user()->img_user) }}" alt="Profile"
+                                        @if (auth()->user()->avatar)
+                                            <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="Profile"
                                                 class="w-px-40 h-auto rounded-circle">
                                         @else
                                             <span
