@@ -14,7 +14,10 @@ return new class extends Migration
         if (!Schema::hasTable('stock_movements')) {
             Schema::create('stock_movements', function (Blueprint $table) {
                 $table->id();
+                $table->foreignId('asal_store_id')->constrained('stores')->onDelete('cascade');
+                $table->foreignId('tujuan_store_id')->constrained('stores')->onDelete('cascade');
                 $table->foreignId('product_id')->constrained('products');
+                $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->nullOnDelete();
                 $table->integer('jumlah'); // positif (masuk) atau negatif (keluar)
                 $table->enum('tipe', ['PEMBELIAN', 'PENJUALAN', 'PENYESUAIAN', 'RETUR_JUAL', 'RETUR_BELI']);
                 $table->text('keterangan')->nullable();

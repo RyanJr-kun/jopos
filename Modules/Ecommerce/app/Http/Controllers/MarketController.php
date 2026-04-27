@@ -316,7 +316,14 @@ class MarketController extends Controller
 
         // 1. Filter Pencarian berdasarkan Nama Toko
         if ($request->filled('search')) {
-            $query->where('name_toko', 'like', '%' . $request->search . '%');
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name_toko', 'like', "%{$search}%")
+                    ->orWhere('kecamatan', 'like', "%{$search}%")
+                    ->orWhere('kabupaten_kota', 'like', "%{$search}%")
+                    ->orWhere('desa', 'like', "%{$search}%")
+                    ->orWhere('alamat', 'like', "%{$search}%");
+             });
         }
 
         // 2. Filter Select berdasarkan Daerah
@@ -325,22 +332,22 @@ class MarketController extends Controller
         }
 
         // Eksekusi query
-        $profils = $query->get();
+        $stores = $query->get();
 
         // 3. Jika Request berasal dari AJAX
         if ($request->ajax()) {
             // Kembalikan data dalam bentuk JSON berisi potongan HTML dan jumlah data
             return response()->json([
                 // Render file blade partial dan ubah jadi string HTML
-                'html'  => view('ecommerce::market._list_toko', compact('profils'))->render(),
-                'count' => $profils->count()
+                'html'  => view('ecommerce::market._list_toko', compact('stores'))->render(),
+                'count' => $stores->count()
             ]);
         }
 
         $kategoris = Category::with('children')->whereNull('parent_id')->get();
 
         // 4. Jika Request biasa (Load halaman pertama kali)
-        return view('ecommerce::market.tentang', compact('profils', 'kategoris'));
+        return view('ecommerce::market.tentang', compact('stores', 'kategoris'));
     }
     /**
      * Menangani permintaan live search dari header.

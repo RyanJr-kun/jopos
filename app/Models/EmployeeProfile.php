@@ -66,4 +66,9 @@ class EmployeeProfile extends Model
             ? asset('storage/' . $this->avatar)
             : asset('assets/img/avatars/1.png'); // Sesuaikan path default Sneat
     }
+
+    public function getStoreNameAttribute()
+    {
+        return $this->store ? $this->store->name_toko : '-';
+    }
 }

@@ -21,7 +21,6 @@ return new class extends Migration
                 $table->string('sku', 50)->unique();
                 $table->decimal('harga_jual', 15, 0);
                 $table->decimal('harga_beli', 15, 0);
-                $table->integer('qty')->default(0);
                 $table->boolean('wajib_seri')->default(false);
                 $table->unsignedInteger('stok_minimum')->default(0);
                 $table->string('img_produk', 255)->nullable();

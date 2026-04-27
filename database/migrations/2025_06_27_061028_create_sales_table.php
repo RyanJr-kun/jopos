@@ -14,6 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('sales')) {
             Schema::create('sales', function (Blueprint $table) {
                 $table->id();
+                $table->foreignId('store_id')->constrained('stores')->onDelete('cascade');
                 $table->string('referensi', 50)->unique();
                 $table->dateTime('tanggal_penjualan');
                 $table->decimal('subtotal', 15, 0);

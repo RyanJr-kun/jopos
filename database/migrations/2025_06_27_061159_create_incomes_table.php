@@ -14,6 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('incomes')) {
             Schema::create('incomes', function (Blueprint $table) {
                 $table->id();
+                $table->foreignId('store_id')->constrained('stores')->onDelete('cascade');
                 $table->foreignId('transaction_category_id')->constrained('transaction_categories')->onDelete('restrict');
                 $table->dateTime('tanggal');
                 $table->decimal('jumlah', 15, 0);

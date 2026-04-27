@@ -91,7 +91,7 @@
                                     <div>
                                         <span class="badge bg-label-danger fw-bolder" id="badge-daerah">Semua Kota</span>
                                         <span class="badge bg-label-danger fw-bolder"><span
-                                                id="toko-count">{{ count($profils) }}</span> Toko</span>
+                                                id="toko-count">{{ count($stores) }}</span> Toko</span>
                                     </div>
                                 </div>
                                 <div class="row g-2">
@@ -107,8 +107,8 @@
                                         <select id="filter-daerah" name="daerah" class="form-select select2"
                                             data-placeholder="Kota">
                                             <option value="" selected>Semua Kota</option>
-                                            @foreach ($profils as $d)
-                                                <option value="{{ $d->daerah }}">{{ $d->daerah }}</option>
+                                            @foreach ($stores as $d)
+                                                <option value="{{ $d->kecamatan }}">{{ $d->kecamatan }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -121,17 +121,30 @@
                         </div>
 
                         <div class="list-group list-group-flush overflow-auto" id="wadah-toko" style="max-height: 500px;">
-                            @include('ecommerce::market._list_toko', ['profils' => $profils])
+                            @include('ecommerce::market._list_toko', ['stores' => $stores])
                         </div>
                     </div>
                 </div>
 
+                {{-- Ganti bagian ini di tentang.blade.php --}}
                 <div class="col-lg-7" data-aos="fade-up" data-aos-delay="400">
                     <div class="ratio ratio-16x9 rounded-3 overflow-hidden shadow-sm h-100">
-                        <iframe id="map-frame"
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.1238542545925!2d110.75378237591431!3d-7.561472674674966!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a14f83e78f24b%3A0x76f6f20de70e8d57!2sJO%20Computer!5e0!3m2!1sen!2sid!4v1760027885984!5m2!1sen!2sid"
-                            allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-                            class="border-0"></iframe>
+                        @php
+                            // Ambil toko pertama untuk default view
+                            $firstStore = $stores->first();
+                            $defaultSrc = 'https://www.google.com/maps/embed?pb=...'; // Fallback jika tidak ada data sama sekali
+
+                            if ($firstStore) {
+                                $defaultSrc = $firstStore->map_url;
+                                // Pastikan URL memiliki parameter output=embed agar bisa tampil di iframe
+                                if (!str_contains($defaultSrc, 'output=embed')) {
+                                    $defaultSrc .= (str_contains($defaultSrc, '?') ? '&' : '?') . 'output=embed';
+                                }
+                            }
+                        @endphp
+                        <iframe id="map-iframe" src="{{ $defaultSrc }}" allowfullscreen="" loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade" class="border-0">
+                        </iframe>
                     </div>
                 </div>
             </div>
@@ -143,19 +156,29 @@
 
 @section('page-script')
     <script>
-        // --- 1. Fungsi Klik Peta (Dipanggil dari _list_toko) ---
-        function updateMap(element) {
-            // Hapus background abu dari semua item
-            document.querySelectorAll('.toko-item').forEach(el => el.classList.remove('bg-light'));
-            // Tambah background abu ke item yang diklik
-            element.classList.add('bg-light');
+        function updateMapByCoords(el) {
+            const mapUrl = el.getAttribute('data-map-url');
+            const lat = el.getAttribute('data-lat');
+            const lng = el.getAttribute('data-lng');
+            const iframe = document.getElementById('map-iframe');
 
-            const mapUrl = element.getAttribute('data-map-url');
-            if (mapUrl) {
-                document.getElementById('map-frame').src = mapUrl;
+            // 1. Prioritas Utama: Gunakan map_url yang sudah ada di database
+            if (mapUrl && mapUrl !== '' && mapUrl !==
+                'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.1238542545925!2d110.75378237591431!3d-7.561472674674966!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a14f83e78f24b%3A0x76f6f20de70e8d57!2sJO%20Computer!5e0!3m2!1sen!2sid!4v1760027885984!5m2!1sen!2sid'
+            ) {
+                let embedUrl = mapUrl;
+                // Pastikan formatnya adalah embed
+                if (!embedUrl.includes('output=embed')) {
+                    embedUrl += (embedUrl.includes('?') ? '&' : '?') + 'output=embed';
+                }
+                iframe.src = embedUrl;
+            }
+            // 2. Fallback: Gunakan koordinat jika map_url tidak valid
+            else if (lat && lng && lat !== '' && lng !== '') {
+                const coordUrl = `https://maps.google.com/maps?q=${lat},${lng}&hl=id&z=15&output=embed`;
+                iframe.src = coordUrl;
             }
         }
-
         // --- 2. Fungsi AJAX ---
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('search-toko');
@@ -197,6 +220,11 @@
                     const data = await response.json();
                     wadahToko.innerHTML = data.html;
                     countDisplay.textContent = data.count;
+
+                    const firstItem = wadahToko.querySelector('.toko-item');
+                    if (firstItem) {
+                        updateMapByCoords(firstItem);
+                    }
 
                 } catch (error) {
                     console.error('Error fetching data:', error);

@@ -14,7 +14,9 @@ return new class extends Migration
         if (!Schema::hasTable('serial_numbers')) {
             Schema::create('serial_numbers', function (Blueprint $table) {
                 $table->id();
+                $table->foreignId('store_id')->constrained('stores')->onDelete('cascade');
                 $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+                $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->nullOnDelete();
                 $table->string('nomor_seri');
                 $table->enum('status', ['Tersedia', 'Terjual', 'Rusak', 'Hilang'])->default('Tersedia');
                 $table->foreignId('purchase_id')->nullable()->constrained('purchases');

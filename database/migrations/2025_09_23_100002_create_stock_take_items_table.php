@@ -16,6 +16,7 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('stock_take_id')->constrained('stock_takes')->onDelete('cascade');
                 $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+                $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->nullOnDelete();
                 $table->integer('stok_sistem');
                 $table->integer('stok_fisik');
                 $table->integer('selisih');

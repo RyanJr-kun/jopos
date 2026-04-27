@@ -16,6 +16,7 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('sale_id')->constrained('sales')->onDelete('cascade');
                 $table->foreignId('product_id')->constrained('products')->onDelete('restrict');
+                $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->nullOnDelete();
                 $table->unsignedInteger('jumlah');
                 $table->decimal('harga_jual', 15, 0);
                 $table->decimal('diskon_item', 15, 0)->default(0)->comment('Diskon per item dalam nominal');

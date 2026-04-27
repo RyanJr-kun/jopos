@@ -16,7 +16,7 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('purchase_id')->constrained('purchases')->onDelete('cascade');
                 $table->foreignId('product_id')->constrained('products')->onDelete('restrict');
-                $table->unsignedInteger('qty');
+                $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->nullOnDelete();
                 $table->decimal('harga_beli', 15, 0);
                 $table->decimal('diskon', 15, 0)->default(0);
                 $table->foreignId('taxe_id')->nullable()->constrained('taxes');

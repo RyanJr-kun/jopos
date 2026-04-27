@@ -55,11 +55,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('laba-rugi/export', [LaporanController::class, 'exportLabaRugi'])->name('laba-rugi.export');
     });
 
-    // Pengaturan
+    // toko
     Route::resource('toko', StoreController::class)->except('show', 'create', 'edit');
     Route::prefix('toko')->name('toko.')->group(function () {
-        Route::post('toko/upload', [StoreController::class, 'upload'])->name('upload');
-        Route::delete('toko/revert', [StoreController::class, 'revert'])->name('revert');
+        Route::post('upload', [StoreController::class, 'upload'])->name('upload');
+        Route::delete('revert', [StoreController::class, 'revert'])->name('revert');
+Route::get('{toko}/members', [StoreController::class, 'getMembers'])->name('members');
+Route::post('{toko}/members/update', [StoreController::class, 'updateMembers'])->name('members-update');
     });
 
     //pelanggan

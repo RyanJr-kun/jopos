@@ -1,10 +1,11 @@
 {{-- FILE: resources/views/content/market/_list_toko.blade.php --}}
-@forelse ($profils as $toko)
+@forelse ($stores as $toko)
     <div class="list-group-item list-group-item-action p-4 border-bottom toko-item" style="cursor: pointer;"
         data-map-url="{{ $toko->map_url ?? 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.1238542545925!2d110.75378237591431!3d-7.561472674674966!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a14f83e78f24b%3A0x76f6f20de70e8d57!2sJO%20Computer!5e0!3m2!1sen!2sid!4v1760027885984!5m2!1sen!2sid' }}"
-        onclick="updateMap(this)">
+        data-lat="{{ $toko->latitude }}" data-lng="{{ $toko->longitude }}" data-name="{{ $toko->name_toko }}"
+        onclick="updateMapByCoords(this)">
 
-        <h5 class="fw-bolder mb-2 text-dark">{{ $toko->name_toko }}</h5>
+        <h5 class="fw-bolder mb-2 text-dark">{{ $toko->name_toko }} - {{ $toko->kecamatan }}</h5>
 
         <div class="d-flex align-items-start mb-2 small text-muted">
             <i class="bx bx-location-fill fs-4 me-3"></i>

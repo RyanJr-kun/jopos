@@ -14,6 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('expenses')) {
             Schema::create('expenses', function (Blueprint $table) {
                 $table->id();
+                $table->foreignId('store_id')->constrained('stores')->onDelete('cascade');
                 $table->dateTime('tanggal');
                 $table->decimal('jumlah', 15, 0);
                 $table->foreignId('user_id')->constrained('users');

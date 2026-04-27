@@ -4,6 +4,7 @@ namespace App\Http\Controllers\dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Store;
+use App\Models\EmployeeProfile;
 use App\Models\User; // Untuk tarik data PIC
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -41,7 +42,7 @@ class StoreController extends Controller
             'telepon' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:100',
             'pic_id' => 'nullable|exists:users,id',
-            'logo' => 'nullable|string', // Path dari FilePond
+            'logo' => 'nullable|string', 
             'is_active' => 'boolean',
         ]);
 
@@ -62,13 +63,16 @@ class StoreController extends Controller
 
         Store::create($validatedData);
 
-        return redirect()->route('store.index')->with('success', 'Lokasi baru berhasil ditambahkan.');
+        return redirect()->route('toko.index')->with('success', 'Lokasi baru berhasil ditambahkan.');
     }
 
     /**
      * Memperbarui data toko/gudang.
      */
-    public function update(Request $request, Store $store)
+    /**
+     * Memperbarui data toko/gudang.
+     */
+    public function update(Request $request, Store $toko)   
     {
         $validatedData = $request->validate([
             'name_toko' => 'required|string|max:100',
@@ -97,54 +101,54 @@ class StoreController extends Controller
                 Storage::disk('public')->move($tempPath, $newPath);
 
                 // Hapus logo lama jika ada
-                if ($store->logo && Storage::disk('public')->exists($store->logo)) {
-                    Storage::disk('public')->delete($store->logo);
+                if ($toko->logo && Storage::disk('public')->exists($toko->logo)) {   
+                    Storage::disk('public')->delete($toko->logo);   
                 }
                 $validatedData['logo'] = $newPath;
             }
         } else {
             // Jika form logo kosong (artinya dihapus)
-            if ($store->logo && Storage::disk('public')->exists($store->logo)) {
-                Storage::disk('public')->delete($store->logo);
+            if ($toko->logo && Storage::disk('public')->exists($toko->logo)) {   
+                Storage::disk('public')->delete($toko->logo);   
             }
             $validatedData['logo'] = null;
         }
 
-        $store->update($validatedData);
+        $toko->update($validatedData);   
 
-        return redirect()->route('store.index')->with('success', 'Profil lokasi berhasil diperbarui.');
+        return redirect()->route('toko.index')->with('success', 'Profil lokasi berhasil diperbarui.');
     }
 
     /**
      * Menyimpan file yang diunggah sementara oleh FilePond.
      */
+    /**
+     * Menyimpan file yang diunggah sementara oleh FilePond.
+     */
     public function upload(Request $request)
     {
-        // Validasi input terlebih dahulu
+        // Deteksi nama field otomatis (apakah FilePond mengirim 'logo' atau 'filepond')
+        $inputName = $request->hasFile('logo') ? 'logo' : 'filepond';
+
+        // Validasi input
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'logo' => 'required|image|mimes:jpeg,png,jpg,svg,webp|max:2048',
+            $inputName => 'required|image|mimes:jpeg,png,jpg,svg,webp|max:2048',
         ]);
 
-        // === PERBAIKAN DI SINI ===
         if ($validator->fails()) {
-            // Gabungkan pesan error menjadi satu string
             $errors = implode(', ', $validator->errors()->all());
-            // Kembalikan sebagai plain text dengan status error yang sesuai
             return response($errors, 422)->header('Content-Type', 'text/plain');
         }
 
-        // Jika validasi berhasil dan file ada
-        if ($request->hasFile('logo')) {
-            $file = $request->file('logo');
-            // Simpan file ke direktori 'tmp' di dalam 'storage/app/public'
+        // Simpan file
+        if ($request->hasFile($inputName)) {
+            $file = $request->file($inputName);
             $path = $file->store('tmp/profil-toko', 'public');
 
-            // Kembalikan path file sebagai plain text, bukan JSON
             return response($path, 200)->header('Content-Type', 'text/plain');
         }
 
-        // Jika tidak ada file, kembalikan response error
-        return response()->json(['error' => 'No file uploaded.'], 400);
+        return response('Gagal menemukan file gambar.', 400)->header('Content-Type', 'text/plain');
     }
 
     /**
@@ -164,5 +168,50 @@ class StoreController extends Controller
             return response()->noContent();
         }
         return response()->json(['error' => 'File not found.'], 404); // Tetap JSON untuk error
+    }
+    // Tambahkan di App\Http\Controllers\dashboard\StoreController.php
+
+/**
+ * Mengambil daftar semua karyawan dan status keanggotaan di toko tertentu (AJAX).
+ */
+    public function getMembers($id)
+    {
+        $store = Store::findOrFail($id);
+        
+        // Ambil semua user yang memiliki profil karyawan
+        $allEmployees = User::has('profile')
+            ->with('profile.store')
+            ->get()
+            ->map(function($user) use ($id) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'jabatan' => $user->profile->jabatan ?? '-',
+                    'is_member' => $user->profile->store_id == $id,
+                    'current_store' => $user->profile->store->name_toko ?? 'Belum Ditempatkan'
+                ];
+            });
+
+        return response()->json([
+            'store_name' => $store->name_toko,
+            'employees' => $allEmployees
+        ]);
+    }
+
+    /**
+     * Memperbarui penempatan karyawan ke toko ini.
+     */
+    public function updateMembers(Request $request, Store $toko)
+    {
+        $selectedUserIds = $request->input('user_ids', []);
+
+        EmployeeProfile::whereIn('user_id', $selectedUserIds)
+            ->update(['store_id' => $toko->id]);
+
+        EmployeeProfile::where('store_id', $toko->id)
+            ->whereNotIn('user_id', $selectedUserIds)
+            ->update(['store_id' => null]);
+
+        return response()->json(['success' => true, 'message' => 'Daftar anggota berhasil diperbarui.']);
     }
 }

@@ -14,6 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('stock_adjustments')) {
             Schema::create('stock_adjustments', function (Blueprint $table) {
                 $table->id();
+                $table->foreignId('store_id')->constrained('stores')->onDelete('cascade');
                 $table->string('kode_penyesuaian')->unique();
                 $table->dateTime('tanggal_penyesuaian');
                 $table->foreignId('user_id')->constrained('users')->onDelete('cascade');

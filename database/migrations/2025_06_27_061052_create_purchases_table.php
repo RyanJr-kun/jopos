@@ -14,6 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('purchases')) {
             Schema::create('purchases', function (Blueprint $table) {
                 $table->id();
+                $table->foreignId('store_id')->constrained('stores')->onDelete('cascade');
                 $table->foreignId('user_id')->constrained('users');
                 $table->foreignId('supplier_id')->constrained('suppliers');
                 $table->string('referensi', 50)->unique();
