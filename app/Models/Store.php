@@ -33,6 +33,8 @@ class Store extends Model
         'desa',
         'alamat',
         'map_url',
+        'latitude',
+        'longitude',
         'telepon',
         'email',
         'logo',

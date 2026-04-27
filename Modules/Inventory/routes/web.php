@@ -12,6 +12,7 @@ use Modules\Inventory\Http\Controllers\stok\StockTakeController;
 use Modules\Inventory\Http\Controllers\produk\PurchaseController;
 use Modules\Inventory\Http\Controllers\produk\ProductController;
 
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('stok-opname', [StockTakeController::class, 'index'])->name('stok-opname.index');
     Route::post('stok-opname', [StockTakeController::class, 'store'])->name('stok-opname.store');

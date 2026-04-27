@@ -4,6 +4,7 @@ namespace App\Http\Controllers\dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Store;
+use App\Models\User; // Untuk tarik data PIC
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -11,71 +12,107 @@ class StoreController extends Controller
 {
     public function index()
     {
-        $tokos = Store::all();
-        return view('content.hrd.store.index', compact('tokos'));
+        // Kita pisahkan datanya di sini agar di Blade tinggal pakai Tabs
+        $tokos = Store::toko()->latest()->get();
+        $gudangs = Store::gudang()->latest()->get();
+
+        // Ambil user untuk dropdown pilihan Kepala Toko (PIC) saat Create/Edit
+        $users = User::all();
+
+        return view('content.hrd.store.index', compact('tokos', 'gudangs', 'users'));
     }
 
     /**
-     * Menampilkan form untuk mengedit profil toko.
-     *
-     * @return \Illuminate\View\View
+     * Menyimpan data toko/gudang baru.
      */
-    public function edit()
+    public function store(Request $request)
     {
-        return view('content.hrd.store.index');
-    }
-
-    /**
-     * Memperbarui data profil toko.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(Request $request)
-    {
-        // Validasi input
         $validatedData = $request->validate([
             'name_toko' => 'required|string|max:100',
+            'type' => 'required|in:toko,gudang',
+            'provinsi' => 'nullable|string|max:100',
+            'kabupaten_kota' => 'nullable|string|max:100',
+            'kecamatan' => 'nullable|string|max:100',
+            'desa' => 'nullable|string|max:100',
             'alamat' => 'nullable|string',
+            'map_url' => 'nullable|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
             'telepon' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:100',
-            'logo' => 'nullable|string', // FilePond mengirim path, bukan file
+            'pic_id' => 'nullable|exists:users,id',
+            'logo' => 'nullable|string', // Path dari FilePond
+            'is_active' => 'boolean',
         ]);
 
-        // Cari profil toko, yang seharusnya selalu ada dengan id = 1
-        $profil = Store::find(1);
+        // Default is_active = true jika tidak dikirim dari form
+        $validatedData['is_active'] = $request->has('is_active') ? true : false;
 
-        // Handle upload logo dari FilePond
+        // Handle FilePond Upload
         if ($request->filled('logo')) {
-            $tempPath = $request->input('logo'); // Path dari file temp
-
-            // Cek apakah file temp ada
+            $tempPath = $request->input('logo');
             if (Storage::disk('public')->exists($tempPath)) {
                 $newPath = 'profil-toko/' . basename($tempPath);
+                Storage::disk('public')->move($tempPath, $newPath);
+                $validatedData['logo'] = $newPath;
+            } else {
+                $validatedData['logo'] = null;
+            }
+        }
 
-                // Pindahkan file dari temp ke direktori final
+        Store::create($validatedData);
+
+        return redirect()->route('store.index')->with('success', 'Lokasi baru berhasil ditambahkan.');
+    }
+
+    /**
+     * Memperbarui data toko/gudang.
+     */
+    public function update(Request $request, Store $store)
+    {
+        $validatedData = $request->validate([
+            'name_toko' => 'required|string|max:100',
+            'type' => 'required|in:toko,gudang',
+            'provinsi' => 'nullable|string|max:100',
+            'kabupaten_kota' => 'nullable|string|max:100',
+            'kecamatan' => 'nullable|string|max:100',
+            'desa' => 'nullable|string|max:100',
+            'alamat' => 'nullable|string',
+            'map_url' => 'nullable|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'telepon' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:100',
+            'pic_id' => 'nullable|exists:users,id',
+            'logo' => 'nullable|string',
+        ]);
+
+        $validatedData['is_active'] = $request->has('is_active') ? true : false;
+
+        // Handle FilePond
+        if ($request->filled('logo')) {
+            $tempPath = $request->input('logo');
+            if (Storage::disk('public')->exists($tempPath)) {
+                $newPath = 'profil-toko/' . basename($tempPath);
                 Storage::disk('public')->move($tempPath, $newPath);
 
-                // Hapus logo lama jika ada dan berbeda dari yang baru
-                if ($profil->logo && $profil->logo !== $newPath && Storage::disk('public')->exists($profil->logo)) {
-                    Storage::disk('public')->delete($profil->logo);
+                // Hapus logo lama jika ada
+                if ($store->logo && Storage::disk('public')->exists($store->logo)) {
+                    Storage::disk('public')->delete($store->logo);
                 }
-
-                // Set path logo baru untuk diupdate
                 $validatedData['logo'] = $newPath;
             }
         } else {
-            // Jika input logo kosong (artinya logo dihapus di UI), hapus logo lama
-            if ($profil->logo && Storage::disk('public')->exists($profil->logo)) {
-                Storage::disk('public')->delete($profil->logo);
+            // Jika form logo kosong (artinya dihapus)
+            if ($store->logo && Storage::disk('public')->exists($store->logo)) {
+                Storage::disk('public')->delete($store->logo);
             }
             $validatedData['logo'] = null;
         }
 
-        // Update data profil
-        $profil->update($validatedData);
+        $store->update($validatedData);
 
-        return redirect()->route('content.hrd.store.index')->with('success', 'Profil toko berhasil diperbarui.');
+        return redirect()->route('store.index')->with('success', 'Profil lokasi berhasil diperbarui.');
     }
 
     /**

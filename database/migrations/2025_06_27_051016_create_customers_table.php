@@ -18,7 +18,7 @@ return new class extends Migration
                 $table->string('name', 255);
                 $table->string('kontak', 20)->unique()->nullable();
                 $table->string('email')->unique()->nullable();
-                $table->integer('loyalty_points')->default(0);
+                $table->integer('loyalti_points')->nullable()->default(0);
                 $table->boolean('status')->default(true);
 
                 $table->timestamps();

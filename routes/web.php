@@ -56,10 +56,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Pengaturan
-    Route::resource('toko', StoreController::class)->except('show');
+    Route::resource('toko', StoreController::class)->except('show', 'create', 'edit');
     Route::prefix('toko')->name('toko.')->group(function () {
-        Route::post('toko/upload', [StoreController::class, 'upload'])->name('toko.upload');
-        Route::delete('toko/revert', [StoreController::class, 'revert'])->name('toko.revert');
+        Route::post('toko/upload', [StoreController::class, 'upload'])->name('upload');
+        Route::delete('toko/revert', [StoreController::class, 'revert'])->name('revert');
     });
 
     //pelanggan

@@ -224,9 +224,10 @@
       "menuHeader": "Autentikasi"
     },
     {
+      "url": "toko",
       "name": "Toko",
       "icon": "menu-icon icon-base bx bx-store",
-      "slug": "front-pages",
+      "slug": "toko.index",
       "badge": [
         "label-primary fs-tiny",
         "New"
