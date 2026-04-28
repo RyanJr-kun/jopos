@@ -2,29 +2,29 @@
 
 namespace Modules\Inventory\Http\Controllers\produk;
 
+use \Cviebrock\EloquentSluggable\Services\SlugService;
 use App\Http\Controllers\Controller;
+use App\Models\ProductStock;
+use App\Models\Store;
 use App\Models\Taxe;
-use Modules\Inventory\Models\Unit;
-use Modules\Inventory\Models\Brand;
-use Modules\Inventory\Models\Product;
-use Modules\Inventory\Models\ProductVariant;
-use Modules\Inventory\Models\ProductVariantType;
-use Modules\Inventory\Models\ProductVariantOption;
-use Modules\Inventory\Models\Warrantie;
 use Illuminate\Http\Request;
-use Modules\POS\Models\SaleItem;
-use Modules\Inventory\Models\Category;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use \Cviebrock\EloquentSluggable\Services\SlugService;
+use Illuminate\Validation\Rule;
+use Modules\Inventory\Models\Brand;
+use Modules\Inventory\Models\Category;
+use Modules\Inventory\Models\Product;
+use Modules\Inventory\Models\ProductVariant;
+use Modules\Inventory\Models\ProductVariantOption;
+use Modules\Inventory\Models\ProductVariantType;
+use Modules\Inventory\Models\Unit;
+use Modules\Inventory\Models\Warrantie;
+use Modules\POS\Models\SaleItem;
 
 class ProductController extends Controller
 {
-    // -------------------------------------------------------
-    // INDEX
-    // -------------------------------------------------------
+    
     public function index()
     {
         $request = request();
@@ -62,13 +62,10 @@ class ProductController extends Controller
         ]);
     }
 
-    // -------------------------------------------------------
-    // CREATE
-    // -------------------------------------------------------
+   
     public function create()
     {
         return view('inventory::produk.create', [
-            // Kirim kategori terstruktur (parent + children) untuk dropdown bertingkat
             'kategoris' => Category::where('status', 1)
                 ->whereNull('parent_id')
                 ->with(['children' => fn($q) => $q->where('status', 1)->orderBy('name')])
@@ -77,16 +74,17 @@ class ProductController extends Controller
             'unit'    => Unit::where('status', 1)->orderBy('name')->get(),
             'garansi' => Warrantie::where('status', 1)->orderBy('name')->get(),
             'pajak'   => Taxe::orderBy('name_taxe')->get(),
+            // BARU: Kirim data toko untuk pilihan lokasi stok awal
+            'stores'  => Store::where('is_active', 1)->orderBy('name_toko')->get(), 
         ]);
     }
 
-    // -------------------------------------------------------
-    // STORE
-    // -------------------------------------------------------
+    
     public function store(Request $request)
     {
         $request->validate([
             'name_product'  => 'required|string|max:255',
+            'store_id'      => 'required|exists:stores,id',
             'slug'          => 'required|string|unique:products,slug',
             'barcode'       => 'nullable|string|unique:products,barcode',
             'sku'           => 'required|string|unique:products,sku',
@@ -125,9 +123,8 @@ class ProductController extends Controller
             'variants.*.img_variant'         => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($request) {
-
-            // ---- 1. Buat produk utama ----
+       DB::transaction(function () use ($request) {
+            // ---- Buat produk utama ----
             $product = Product::create([
                 'name_product'  => $request->name_product,
                 'slug'          => $request->slug,
@@ -137,7 +134,6 @@ class ProductController extends Controller
                 'specification' => $request->specification,
                 'harga_jual'    => $request->harga_jual,
                 'harga_beli'    => $request->harga_beli,
-                'qty'           => $request->qty,
                 'stok_minimum'  => $request->stok_minimum,
                 'wajib_seri'    => $request->boolean('wajib_seri'),
                 'category_id'   => $request->kategori,
@@ -146,24 +142,30 @@ class ProductController extends Controller
                 'warrantie_id'  => $request->garansi,
                 'taxe_id'       => $request->pajak,
                 'user_id'       => Auth::id(),
-                // img_produk dikosongkan — sekarang pakai tabel product_images
             ]);
+
+            if (!$request->filled('variant_types')) {
+                ProductStock::create([
+                    'store_id'           => $request->store_id,
+                    'product_id'         => $product->id,
+                    'product_variant_id' => null,
+                    'qty'                => $request->qty,
+                ]);
+            }
 
             // ---- 2. Simpan galeri foto ----
             $this->saveGallery($product, $request->input('gallery', []), $request->input('primary_image'));
 
-            // ---- 3. Simpan tipe & opsi variasi, lalu kombinasi ----
+            // ---- 3. Simpan variasi (Kirimkan store_id untuk stok variannya) ----
             if ($request->filled('variant_types')) {
-                $this->saveVariants($product, $request->input('variant_types'), $request->input('variants', []));
+                $this->saveVariants($product, $request->input('variant_types'), $request->input('variants', []), $request->store_id);
             }
         });
 
         return redirect()->route('produk.index')->with('success', 'Product Baru Berhasil Ditambahkan.');
     }
 
-    // -------------------------------------------------------
-    // SHOW
-    // -------------------------------------------------------
+    
     public function show(Product $produk)
     {
         return view('inventory::produk.show', [
@@ -181,9 +183,7 @@ class ProductController extends Controller
         ]);
     }
 
-    // -------------------------------------------------------
-    // EDIT
-    // -------------------------------------------------------
+   
     public function edit(Product $produk)
     {
         return view('inventory::produk.edit', [
@@ -191,25 +191,26 @@ class ProductController extends Controller
                 'images',
                 'variantTypes.options',
                 'variants.options.variantType',
+                'stocks' // BARU: Load relasi stok agar bisa ditampilkan
             ]),
-            'kategoris' => Category::where('status', 1)
-                ->whereNull('parent_id')
+            'kategoris' => Category::where('status', 1)->whereNull('parent_id')
                 ->with(['children' => fn($q) => $q->where('status', 1)->orderBy('name')])
                 ->orderBy('name')->get(),
             'brands'    => Brand::where('status', 1)->orderBy('name')->get(),
             'units'     => Unit::where('status', 1)->orderBy('name')->get(),
-            'warranties' => Warrantie::where('status', 1)->orderBy('name')->get(),
+            'warranties'=> Warrantie::where('status', 1)->orderBy('name')->get(),
             'pajak'     => Taxe::orderBy('name_taxe')->get(),
+            // BARU: Kirim data toko
+            'stores'    => Store::where('is_active', 1)->orderBy('name_toko')->get(),
         ]);
     }
 
-    // -------------------------------------------------------
-    // UPDATE
-    // -------------------------------------------------------
+    
     public function update(Request $request, Product $produk)
     {
         $request->validate([
             'name_product'  => 'required|string|max:255',
+            'store_id'      => 'required|exists:stores,id',
             'slug'          => ['required', 'string', Rule::unique('products', 'slug')->ignore($produk->id)],
             'barcode'       => ['nullable', 'string', Rule::unique('products', 'barcode')->ignore($produk->id)],
             'sku'           => ['required', 'string', Rule::unique('products', 'sku')->ignore($produk->id)],
@@ -230,7 +231,6 @@ class ProductController extends Controller
             'gallery'         => 'nullable|array',
             'gallery.*'       => 'string',
             'primary_image'   => 'nullable|string',
-            // ID gambar lama yang INGIN DIPERTAHANKAN (yang tidak ada = dihapus)
             'existing_images' => 'nullable|array',
             'existing_images.*' => 'integer',
 
@@ -275,7 +275,6 @@ class ProductController extends Controller
                 'specification' => $request->specification,
                 'harga_jual'    => $request->harga_jual,
                 'harga_beli'    => $request->harga_beli,
-                'qty'           => $request->qty,
                 'stok_minimum'  => $request->stok_minimum,
                 'wajib_seri'    => $request->boolean('wajib_seri'),
                 'category_id'   => $request->kategori,
@@ -286,7 +285,18 @@ class ProductController extends Controller
                 'user_id'       => Auth::id(),
             ]);
 
-            // ---- 2. Update galeri foto ----
+            if (!$request->filled('variant_types')) {
+                ProductStock::updateOrCreate(
+                    [
+                        'store_id'           => $request->store_id,
+                        'product_id'         => $produk->id,
+                        'product_variant_id' => null
+                    ],
+                    ['qty' => $request->qty]
+                );
+            }
+
+            // ---- Update galeri foto ----
             $keepIds = $request->input('existing_images', []);
             // Hapus foto lama yang tidak di-keep
             $produk->images()->whereNotIn('id', $keepIds)->each(function ($img) {
@@ -296,19 +306,16 @@ class ProductController extends Controller
             // Tambah foto baru
             $this->saveGallery($produk, $request->input('gallery', []), $request->input('primary_image'));
 
-            // ---- 3. Update variasi ----
+            // ---- Update variasi ----
             if ($request->filled('variant_types')) {
-                // Hapus semua tipe lama, buat ulang (simpel & aman untuk edit)
-                // Hapus variant lama -> hapus foto variant lama
                 $produk->variants()->each(function ($v) {
                     if ($v->img_variant) Storage::disk('public')->delete($v->img_variant);
                     $v->delete();
                 });
                 $produk->variantTypes()->delete();
 
-                $this->saveVariants($produk, $request->input('variant_types'), $request->input('variants', []));
+                $this->saveVariants($produk, $request->input('variant_types'), $request->input('variants', []), $request->store_id);
             } else {
-                // Kalau variant_types dikosongkan, berarti hapus semua variasi
                 $produk->variants()->each(function ($v) {
                     if ($v->img_variant) Storage::disk('public')->delete($v->img_variant);
                     $v->delete();
@@ -320,9 +327,7 @@ class ProductController extends Controller
         return redirect()->route('produk.index')->with('success', 'Product Berhasil Diupdate.');
     }
 
-    // -------------------------------------------------------
-    // DESTROY
-    // -------------------------------------------------------
+    
     public function destroy(Product $produk)
     {
         // Hapus semua foto galeri
@@ -432,6 +437,42 @@ class ProductController extends Controller
                 $variant->options()->attach($varData['option_ids']);
             }
         }
+
+        foreach ($variantCombinations as $varData) {
+            // Tangani foto variant
+            $imgPath = null;
+            $tmpImg = $varData['img_variant'] ?? null;
+            if ($tmpImg && str_starts_with($tmpImg, 'tmp/') && Storage::disk('public')->exists($tmpImg)) {
+                $imgPath = 'produk/variants/' . basename($tmpImg);
+                Storage::disk('public')->move($tmpImg, $imgPath);
+            }
+
+            $variant = ProductVariant::create([
+                'product_id' => $product->id,
+                'sku'        => $varData['sku'],
+                'barcode'    => $varData['barcode'] ?? null,
+                'harga_jual' => $varData['harga_jual'],
+                'harga_beli' => $varData['harga_beli'],
+                // 'qty' => $varData['qty'],  <--- DIHAPUS DARI SINI
+                'img_variant'=> $imgPath,
+                'is_active'  => true,
+            ]);
+
+            // Attach option IDs ke pivot
+            if (!empty($varData['option_ids'])) {
+                $variant->options()->attach($varData['option_ids']);
+            }
+
+            // BARU: Masukkan data stok varian ke product_stocks
+            if ($storeId && isset($varData['qty'])) {
+                ProductStock::create([
+                    'store_id'           => $storeId,
+                    'product_id'         => $product->id,
+                    'product_variant_id' => $variant->id,
+                    'qty'                => $varData['qty'],
+                ]);
+            }
+        }
     }
 
     // -------------------------------------------------------
@@ -535,13 +576,29 @@ class ProductController extends Controller
     {
         $subQueryLogic = fn($query) => $query->whereNotIn('status', ['Terjual', 'Hilang']);
 
+        // 1. Ambil 5 produk untuk ditampilkan
         $productsNeedingSerials = Product::where('wajib_seri', true)
-            ->withCount(['serialNumbers as sn_tercatat_count' => $subQueryLogic])
-            ->whereRaw('products.qty > (select count(*) from serial_numbers where products.id = serial_numbers.product_id and status NOT IN (?, ?))', ['Terjual', 'Hilang'])
-            ->orderBy('updated_at', 'desc')->take(5)->get();
+            // Hitung total kolom 'qty' dari relasi stocks
+            ->withSum('stocks as total_stok', 'qty') 
+            // Hitung total baris dari relasi serialNumbers dengan filter status
+            ->withCount(['serialNumbers as sn_tercatat_count' => function ($query) {
+                $query->whereNotIn('status', ['Terjual', 'Hilang']);
+            }])
+            // Bandingkan hasilnya (Gunakan HAVING karena variabel ini baru diciptakan oleh Eloquent)
+            ->havingRaw('COALESCE(total_stok, 0) > sn_tercatat_count')
+            ->orderBy('updated_at', 'desc')
+            ->take(5)
+            ->get();
 
+        // 2. Hitung jumlah total produknya (untuk angka badge/notif)
         $count = Product::where('wajib_seri', true)
-            ->whereRaw('products.qty > (select count(*) from serial_numbers where products.id = serial_numbers.product_id and status NOT IN (?, ?))', ['Terjual', 'Hilang'])
+            ->withSum('stocks as total_stok', 'qty')
+            ->withCount(['serialNumbers as sn_tercatat_count' => function ($query) {
+                $query->whereNotIn('status', ['Terjual', 'Hilang']);
+            }])
+            ->havingRaw('COALESCE(total_stok, 0) > sn_tercatat_count')
+            // Gunakan get()->count() karena count() biasa kadang bentrok dengan havingRaw
+            ->get()
             ->count();
 
         return response()->json([
@@ -565,7 +622,7 @@ class ProductController extends Controller
             ->whereRaw('products.qty > (select count(*) from serial_numbers where products.id = serial_numbers.product_id and status NOT IN (?, ?))', ['Terjual', 'Hilang'])
             ->orderBy('updated_at', 'desc')->get();
 
-        return view('inventory::all', [
+        return view('content.dashboard.all', [
             'title'                  => 'Semua Notifikasi',
             'lowStockProducts'       => $lowStockProducts,
             'productsNeedingSerials' => $productsNeedingSerials,

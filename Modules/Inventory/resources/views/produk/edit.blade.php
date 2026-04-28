@@ -6,26 +6,58 @@
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
     <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
     <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
+
+    <style>
+        .quill-wrapper {
+            background-color: #fff;
+            border-radius: 0.375rem;
+            border: 1px solid #d9dee3;
+        }
+
+        .ql-container.ql-snow {
+            border: none !important;
+            height: 200px;
+            border-bottom-left-radius: 0.375rem;
+            border-bottom-right-radius: 0.375rem;
+        }
+
+        .ql-toolbar.ql-snow {
+            border: none !important;
+            border-bottom: 1px solid #d9dee3 !important;
+            border-top-left-radius: 0.375rem;
+            border-top-right-radius: 0.375rem;
+            background-color: #f8f9fa;
+        }
+
+        .ql-editor {
+            word-break: break-word;
+        }
+
+        #combinations-table th,
+        #combinations-table td {
+            vertical-align: middle;
+            padding: 0.5rem;
+        }
+    </style>
 @endsection
 
 @section('content')
-
     <form id="editProductForm" method="POST" action="{{ route('produk.update', $produk->slug) }}"
         enctype="multipart/form-data">
         @method('PUT')
         @csrf
 
         {{-- ============================================================ --}}
-        {{-- CARD 1: INFORMASI PRODUK --}}
+        {{-- CARD 1: INFORMASI DASAR PRODUK --}}
         {{-- ============================================================ --}}
-        <div class="card rounded-2">
+        <div class="card rounded-2 mb-4">
             <div class="card-header pt-3 pb-0">
-                <h6>Informasi Produk</h6>
+                <h6 class="m-0 font-weight-bold">Informasi Utama Produk</h6>
             </div>
-            <div class="card-body px-4 pt-0">
-                <div class="row">
-
-                    <div class="col-md-6 mb-3">
+            <div class="card-body pt-3">
+                <div class="row g-3">
+                    {{-- Nama --}}
+                    <div class="col-md-6">
                         <label class="form-label">Nama Produk <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('name_product') is-invalid @enderror"
                             id="name_product" name="name_product" value="{{ old('name_product', $produk->name_product) }}"
@@ -35,50 +67,21 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Barcode</label>
-                        <input type="text" class="form-control @error('barcode') is-invalid @enderror" id="barcode"
-                            name="barcode" value="{{ old('barcode', $produk->barcode) }}">
-                        @error('barcode')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Slug <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('slug') is-invalid @enderror" id="slug"
-                            name="slug" value="{{ old('slug', $produk->slug) }}" required>
-                        @error('slug')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">SKU <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('sku') is-invalid @enderror" id="sku"
-                            name="sku" value="{{ old('sku', $produk->sku) }}" required>
-                        @error('sku')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- Kategori bertingkat --}}
-                    <div class="col-md-6 mb-3">
+                    {{-- Kategori --}}
+                    <div class="col-md-6">
                         <label class="form-label">Kategori <span class="text-danger">*</span></label>
                         <select class="form-select select2 @error('kategori') is-invalid @enderror" name="kategori"
-                            data-placeholder="Pilih Kategori" required>
-                            <option value="" disabled>Pilih Kategori</option>
+                            id="kategori" data-placeholder="Pilih Kategori..." required>
+                            <option value="" disabled>Pilih Kategori...</option>
                             @foreach ($kategoris as $parent)
                                 @if ($parent->children->isEmpty())
-                                    <option value="{{ $parent->id }}" @selected(old('kategori', $produk->category_id) == $parent->id)>
-                                        {{ $parent->name }}
+                                    <option value="{{ $parent->id }}" @selected(old('kategori', $produk->category_id) == $parent->id)>{{ $parent->name }}
                                     </option>
                                 @else
                                     <optgroup label="{{ $parent->name }}">
                                         @foreach ($parent->children as $child)
                                             <option value="{{ $child->id }}" @selected(old('kategori', $produk->category_id) == $child->id)>
-                                                {{ $child->name }}
-                                            </option>
+                                                {{ $child->name }}</option>
                                         @endforeach
                                     </optgroup>
                                 @endif
@@ -89,11 +92,12 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    {{-- Brand --}}
+                    <div class="col-md-6">
                         <label class="form-label">Brand <span class="text-danger">*</span></label>
                         <select class="form-select select2 @error('brand') is-invalid @enderror" name="brand"
-                            data-placeholder="Pilih Brand" required>
-                            <option value="" disabled>Pilih Brand</option>
+                            data-placeholder="Pilih Brand..." required>
+                            <option value="" disabled>Pilih Brand...</option>
                             @foreach ($brands as $item)
                                 <option value="{{ $item->id }}" @selected(old('brand', $produk->brand_id) == $item->id)>{{ $item->name }}
                                 </option>
@@ -104,11 +108,12 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Unit <span class="text-danger">*</span></label>
+                    {{-- Unit --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Unit / Satuan <span class="text-danger">*</span></label>
                         <select class="form-select select2 @error('unit') is-invalid @enderror" name="unit"
-                            data-placeholder="Pilih Unit" required>
-                            <option value="" disabled>Pilih Unit</option>
+                            data-placeholder="Pilih Unit..." required>
+                            <option value="" disabled>Pilih Unit...</option>
                             @foreach ($units as $item)
                                 <option value="{{ $item->id }}" @selected(old('unit', $produk->unit_id) == $item->id)>{{ $item->name }}
                                 </option>
@@ -119,10 +124,11 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Garansi</label>
+                    {{-- Garansi --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Garansi <span class="text-danger">*</span></label>
                         <select class="form-select select2 @error('garansi') is-invalid @enderror" name="garansi"
-                            data-placeholder="Pilih Garansi">
+                            data-placeholder="Pilih Garansi...">
                             <option value="">Tidak Ada Garansi</option>
                             @foreach ($warranties as $item)
                                 <option value="{{ $item->id }}" @selected(old('garansi', $produk->warrantie_id) == $item->id)>{{ $item->name }}
@@ -134,20 +140,21 @@
                         @enderror
                     </div>
 
-                    {{-- Spesifikasi (BARU) --}}
-                    <div class="col-md-12 mb-3">
+                    {{-- Spesifikasi Teknis --}}
+                    <div class="col-md-6">
                         <label class="form-label">Spesifikasi Teknis</label>
-                        <div id="specification-container">
-                        </div>
+                        <div id="specification-container"></div>
                         <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="btn-add-spec">
                             <i class="bx bx-plus"></i> Tambah Baris Spesifikasi
                         </button>
                     </div>
 
-                    {{-- Deskripsi --}}
-                    <div class="col-md-12 mb-3">
-                        <label class="form-label">Deskripsi</label>
-                        <div id="quill-description" style="min-height:120px;">{!! old('description', $produk->description) !!}</div>
+                    {{-- Deskripsi Pakai Quill --}}
+                    <div class="col-md-12 mt-4">
+                        <label class="form-label">Deskripsi Lengkap</label>
+                        <div class="quill-wrapper">
+                            <div id="quill-description">{!! old('description', $produk->description) !!}</div>
+                        </div>
                         <input type="hidden" name="description" id="description"
                             value="{{ old('description', $produk->description) }}">
                         @error('description')
@@ -160,48 +167,58 @@
         </div>
 
         {{-- ============================================================ --}}
-        {{-- CARD 2: STOK & HARGA --}}
+        {{-- CARD 2: STOK, HARGA & KODE --}}
         {{-- ============================================================ --}}
-        <div class="card mt-3 rounded-2">
+        <div class="card mb-4 rounded-2">
             <div class="card-header pt-3 pb-0">
-                <h6>Stok &amp; Harga (Produk Utama)</h6>
+                <h6 class="m-0 font-weight-bold">Stok, Harga & Identitas</h6>
             </div>
-            <div class="card-body px-4 pt-0">
-                <div class="row g-3">
+            <div class="card-body pt-3">
 
+                {{-- Toggle Jika Punya Varian --}}
+                <div class="alert alert-primary d-flex align-items-center mb-4" role="alert">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="toggle-variants" @checked($produk->variantTypes->count() > 0)>
+                        <label class="form-check-label fw-bold" for="toggle-variants">Aktifkan Varian Produk (Warna,
+                            Ukuran, dll)</label>
+                    </div>
+                    <small class="ms-auto">Centang ini jika produk memiliki variasi harga/stok.</small>
+                </div>
+
+                <div class="row g-3">
+                    {{-- Blok Harga Default (Akan diredupkan jika varian aktif) --}}
                     <div class="col-md-3">
                         <label class="form-label">Stok <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control @error('qty') is-invalid @enderror" name="qty"
-                            value="{{ old('qty', $produk->qty) }}" required>
+                        <input type="number" class="form-control base-price-input @error('qty') is-invalid @enderror"
+                            name="qty" value="{{ old('qty', $produk->qty) }}" required>
                         @error('qty')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Harga Jual <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text">Rp</span>
-                            <input type="number" class="form-control @error('harga_jual') is-invalid @enderror"
-                                name="harga_jual" value="{{ old('harga_jual', $produk->harga_jual) }}" required>
-                            @error('harga_jual')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
                     <div class="col-md-3">
                         <label class="form-label">Harga Beli <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text">Rp</span>
-                            <input type="number" class="form-control @error('harga_beli') is-invalid @enderror"
+                            <input type="number"
+                                class="form-control base-price-input @error('harga_beli') is-invalid @enderror"
                                 name="harga_beli" value="{{ old('harga_beli', $produk->harga_beli) }}" required>
                             @error('harga_beli')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
-
+                    <div class="col-md-3">
+                        <label class="form-label">Harga Jual <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">Rp</span>
+                            <input type="number"
+                                class="form-control base-price-input @error('harga_jual') is-invalid @enderror"
+                                name="harga_jual" value="{{ old('harga_jual', $produk->harga_jual) }}" required>
+                            @error('harga_jual')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
                     <div class="col-md-3">
                         <label class="form-label">Stok Minimum</label>
                         <input type="number" class="form-control @error('stok_minimum') is-invalid @enderror"
@@ -211,7 +228,35 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-3">
+                    <hr class="my-3">
+
+                    <div class="col-md-4">
+                        <label class="form-label">SKU <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('sku') is-invalid @enderror" id="sku"
+                            name="sku" value="{{ old('sku', $produk->sku) }}" required>
+                        @error('sku')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Barcode</label>
+                        <input type="text" class="form-control @error('barcode') is-invalid @enderror" id="barcode"
+                            name="barcode" value="{{ old('barcode', $produk->barcode) }}">
+                        @error('barcode')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Slug URL <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light @error('slug') is-invalid @enderror"
+                            id="slug" name="slug" value="{{ old('slug', $produk->slug) }}" readonly required>
+                        @error('slug')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Pajak --}}
+                    <div class="col-md-4">
                         <label class="form-label">Pajak</label>
                         <select class="form-select select2 @error('pajak') is-invalid @enderror" name="pajak"
                             data-placeholder="Tidak Ada Pajak">
@@ -226,12 +271,12 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-12">
+                    <div class="col-md-12 mt-3">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="wajib_seri" name="wajib_seri"
                                 value="1" @checked(old('wajib_seri', $produk->wajib_seri))>
-                            <label class="form-check-label fw-bold" for="wajib_seri">
-                                Produk ini memiliki <u class="text-warning">Nomor Seri</u>
+                            <label class="form-check-label fw-bold text-warning" for="wajib_seri">
+                                Produk ini melacak Nomor Seri (Serial Number)
                             </label>
                         </div>
                         <small id="serial-info" class="text-muted"
@@ -239,31 +284,76 @@
                             Jika dicentang, Anda harus memasukkan nomor seri saat pembelian.
                         </small>
                     </div>
-
                 </div>
             </div>
         </div>
 
         {{-- ============================================================ --}}
-        {{-- CARD 3: GALERI FOTO --}}
+        {{-- CARD 3: VARIASI PRODUK --}}
         {{-- ============================================================ --}}
-        <div class="card mt-3 rounded-2">
-            <div class="card-header pt-3 pb-0">
-                <h6>Galeri Foto Produk</h6>
+        <div class="card mb-4 rounded-2" id="variant-section"
+            style="display:{{ $produk->variantTypes->count() ? 'block' : 'none' }}; border: 2px solid #696cff;">
+            <div class="card-header pt-3 pb-0 bg-label-primary">
+                <h6 class="m-0 font-weight-bold text-primary">Manajemen Variasi</h6>
             </div>
-            <div class="card-body">
+            <div class="card-body pt-3">
+                <div class="mb-3">
+                    <div id="variant-types-container">
+                        {{-- Diisi oleh JS berdasarkan data existing --}}
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-variant-type">
+                        <i class="bx bx-plus"></i> Tambah Tipe (Warna, RAM, dll)
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary btn-sm w-100" id="generate-combinations">
+                        <i class="bx bx-refresh"></i> Generate / Refresh Kombinasi
+                    </button>
+                    <small class="text-muted ms-2">Klik setelah mengubah tipe &amp; opsi.</small>
+                </div>
+
+                <div id="combinations-container" style="display:{{ $produk->variants->count() ? 'block' : 'none' }};">
+                    <label class="form-label fw-bold">Detail per Kombinasi</label>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle" id="combinations-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="15%">Varian</th>
+                                    <th width="10%">Foto</th>
+                                    <th width="15%">SKU <span class="text-danger">*</span></th>
+                                    <th width="15%">Barcode</th>
+                                    <th width="15%">Hrg Jual</th>
+                                    <th width="15%">Hrg Beli</th>
+                                    <th width="15%">Stok</th>
+                                </tr>
+                            </thead>
+                            <tbody id="combinations-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ============================================================ --}}
+        {{-- CARD 4: GALERI FOTO (FILEPOND) --}}
+        {{-- ============================================================ --}}
+        <div class="card mb-4 rounded-2">
+            <div class="card-header pt-3 pb-0">
+                <h6 class="m-0 font-weight-bold">Galeri Foto Produk Utama</h6>
+            </div>
+            <div class="card-body pt-3">
 
                 {{-- Foto yang sudah ada --}}
                 @if ($produk->images->count())
                     <div class="mb-3">
-                        <label class="form-label">Foto yang ada sekarang</label>
-                        <p class="text-muted small">Klik X untuk menghapus foto. Foto pertama otomatis jadi thumbnail.</p>
+                        <label class="form-label">Foto Saat Ini</label>
+                        <p class="text-muted small">Klik × untuk menghapus foto. Foto pertama otomatis jadi thumbnail.</p>
                         <div class="d-flex flex-wrap gap-2" id="existing-gallery">
                             @foreach ($produk->images as $img)
                                 <div class="position-relative existing-img-wrapper" data-id="{{ $img->id }}">
                                     <img src="{{ asset('storage/' . $img->path) }}" alt=""
-                                        style="width:100px;height:100px;object-fit:cover;border-radius:8px;
-                            {{ $img->is_primary ? 'border:3px solid #696cff;' : '' }}">
+                                        style="width:100px;height:100px;object-fit:cover;border-radius:8px;{{ $img->is_primary ? 'border:3px solid #696cff;' : '' }}">
                                     @if ($img->is_primary)
                                         <span class="badge bg-primary position-absolute bottom-0 start-0 m-1"
                                             style="font-size:9px;">Utama</span>
@@ -288,67 +378,12 @@
             </div>
         </div>
 
-        {{-- ============================================================ --}}
-        {{-- CARD 4: VARIASI PRODUK --}}
-        {{-- ============================================================ --}}
-        <div class="card mt-3 rounded-2">
-            <div class="card-header pt-3 pb-0 d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Variasi Produk</h6>
-                <div class="form-check form-switch mb-0">
-                    <input class="form-check-input" type="checkbox" id="toggle-variants" @checked($produk->variantTypes->count() > 0)>
-                    <label class="form-check-label" for="toggle-variants">Produk ini punya variasi</label>
-                </div>
-            </div>
-            <div class="card-body" id="variant-section"
-                style="display:{{ $produk->variantTypes->count() ? 'block' : 'none' }};">
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Tipe Variasi</label>
-                    <div id="variant-types-container">
-                        {{-- Isi dari JS berdasarkan data existing --}}
-                    </div>
-                    <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="add-variant-type">
-                        <i class="bx bx-plus"></i> Tambah Tipe Variasi
-                    </button>
-                </div>
-
-                <hr>
-
-                <div class="mb-3">
-                    <button type="button" class="btn btn-outline-info btn-sm" id="generate-combinations">
-                        <i class="bx bx-refresh"></i> Generate / Refresh Kombinasi
-                    </button>
-                    <small class="text-muted ms-2">Klik setelah mengubah tipe &amp; opsi.</small>
-                </div>
-
-                <div id="combinations-container" style="display:{{ $produk->variants->count() ? 'block' : 'none' }};">
-                    <label class="form-label fw-bold">Detail per Kombinasi</label>
-                    <div class="table-responsive">
-                        <table class="table table-bordered align-middle" id="combinations-table">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Variasi</th>
-                                    <th>Foto</th>
-                                    <th>SKU <span class="text-danger">*</span></th>
-                                    <th>Barcode</th>
-                                    <th>Harga Jual <span class="text-danger">*</span></th>
-                                    <th>Harga Beli <span class="text-danger">*</span></th>
-                                    <th>Stok <span class="text-danger">*</span></th>
-                                </tr>
-                            </thead>
-                            <tbody id="combinations-tbody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        {{-- TOMBOL --}}
-        <div class="d-flex justify-content-end mt-3 mb-4 me-4 gap-2">
-            <a href="{{ route('produk.index') }}" id="cancel-button" class="btn btn-danger">Batalkan</a>
-            <button id="submit-edit-produk" type="submit" class="btn btn-outline-info">Simpan Perubahan</button>
+        {{-- TOMBOL SUBMIT --}}
+        <div class="d-flex justify-content-end mb-5 gap-2">
+            <a href="{{ route('produk.index') }}" id="cancel-button" class="btn btn-secondary">Batal</a>
+            <button id="submit-edit-produk" type="submit" class="btn btn-primary">
+                <i class="bx bx-save me-1"></i> Simpan Perubahan
+            </button>
         </div>
 
     </form>
@@ -368,7 +403,7 @@
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
             // ============================================================
-            // SLUG
+            // 1. AUTO SLUG dari Nama Produk
             // ============================================================
             document.getElementById('name_product').addEventListener('change', function() {
                 fetch(`/produk/checkSlug?name_product=${this.value}`)
@@ -377,48 +412,44 @@
             });
 
             // ============================================================
-            // QUILL
+            // 2. INIT QUILL EDITOR
             // ============================================================
             const quillDesc = new Quill('#quill-description', {
                 theme: 'snow',
-                placeholder: 'Deskripsi produk...'
+                placeholder: 'Tulis deskripsi produk yang menarik...',
             });
             const hiddenDesc = document.getElementById('description');
             quillDesc.on('text-change', () => hiddenDesc.value = quillDesc.root.innerHTML);
             if (hiddenDesc.value) quillDesc.root.innerHTML = hiddenDesc.value;
 
+            // ============================================================
+            // 3. SPESIFIKASI TEKNIS
+            // ============================================================
             const specContainer = document.getElementById('specification-container');
-            document.getElementById('btn-add-spec').addEventListener('click', addSpecRow);
+            document.getElementById('btn-add-spec').addEventListener('click', () => addSpecRow());
 
             function addSpecRow(key = '', value = '') {
                 const row = document.createElement('div');
                 row.className = 'd-flex gap-2 mb-2 align-items-center spec-row';
                 row.innerHTML = `
-        <input type="text" name="spec_keys[]" class="form-control" placeholder="Cth: Warna" value="${key}" required>
-        <input type="text" name="spec_values[]" class="form-control" placeholder="Cth: Merah Merona" value="${value}" required>
-        <button type="button" class="btn btn-icon btn-danger btn-sm remove-spec" title="Hapus">
-            <i class="bx bx-trash"></i>
-        </button>
-    `;
+                    <input type="text" name="spec_keys[]" class="form-control" placeholder="Cth: Warna" value="${key}" required>
+                    <input type="text" name="spec_values[]" class="form-control" placeholder="Cth: Merah Merona" value="${value}" required>
+                    <button type="button" class="btn btn-icon btn-danger btn-sm remove-spec" title="Hapus">
+                        <i class="bx bx-trash"></i>
+                    </button>`;
                 specContainer.appendChild(row);
-
-                // Fungsi hapus
-                row.querySelector('.remove-spec').addEventListener('click', function() {
-                    row.remove();
-                });
+                row.querySelector('.remove-spec').addEventListener('click', () => row.remove());
             }
 
-            // KHUSUS EDIT.BLADE.PHP: Untuk me-load data spesifikasi yang sudah ada
-            // Parse JSON dari database jika ada
             const existingSpecs = {!! $produk->specification ? $produk->specification : '[]' !!};
             if (existingSpecs.length > 0) {
                 existingSpecs.forEach(spec => addSpecRow(spec.key, spec.value));
             } else {
-                addSpecRow(); // Tampilkan 1 baris kosong sebagai default
+                addSpecRow();
             }
 
             // ============================================================
-            // SERIAL CHECKBOX
+            // 4. SERIAL NUMBER CHECKBOX
             // ============================================================
             const serialCb = document.getElementById('wajib_seri');
             const serialInfo = document.getElementById('serial-info');
@@ -435,20 +466,18 @@
             serialCb.addEventListener('change', toggleSerial);
 
             // ============================================================
-            // EXISTING GALLERY – HAPUS FOTO LAMA
+            // 5. HAPUS FOTO LAMA (existing gallery)
             // ============================================================
             document.querySelectorAll('.remove-existing-img').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const wrapper = this.closest('.existing-img-wrapper');
-                    const id = this.dataset.id;
-                    // Hapus hidden input sehingga tidak dikirim ke server
                     wrapper.querySelector('.existing-img-input').remove();
                     wrapper.remove();
                 });
             });
 
             // ============================================================
-            // FILEPOND – GALERI MULTI (FOTO BARU)
+            // 6. INIT FILEPOND
             // ============================================================
             FilePond.registerPlugin(FilePondPluginImagePreview, FilePondPluginFileValidateSize,
                 FilePondPluginFileValidateType);
@@ -460,7 +489,7 @@
 
             const galleryPond = FilePond.create(galleryInput, {
                 allowMultiple: true,
-                labelIdle: `Seret &amp; Lepas atau <span class="filepond--label-action">Cari</span>`,
+                labelIdle: `Seret & Lepas gambar ke sini atau <span class="filepond--label-action">Browse</span>`,
                 allowImagePreview: true,
                 imagePreviewHeight: 160,
                 maxFileSize: '2MB',
@@ -510,21 +539,43 @@
                     saveBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Mengunggah...`;
                 } else {
                     saveBtn.disabled = false;
-                    saveBtn.innerHTML = 'Simpan Perubahan';
+                    saveBtn.innerHTML = '<i class="bx bx-save me-1"></i> Simpan Perubahan';
                 }
             }
 
             // ============================================================
-            // VARIASI – TOGGLE SECTION
+            // 7. LOGIKA VARIAN vs HARGA DEFAULT
             // ============================================================
             const toggleVariants = document.getElementById('toggle-variants');
             const variantSection = document.getElementById('variant-section');
+            const baseInputs = document.querySelectorAll('.base-price-input');
+
             toggleVariants.addEventListener('change', function() {
-                variantSection.style.display = this.checked ? 'block' : 'none';
+                if (this.checked) {
+                    variantSection.style.display = 'block';
+                    baseInputs.forEach(inp => {
+                        inp.removeAttribute('required');
+                        inp.parentElement.parentElement.style.opacity = '0.5';
+                    });
+                } else {
+                    variantSection.style.display = 'none';
+                    baseInputs.forEach(inp => {
+                        inp.setAttribute('required', 'required');
+                        inp.parentElement.parentElement.style.opacity = '1';
+                    });
+                }
             });
 
+            // Jalankan sekali saat load jika varian sudah aktif
+            if (toggleVariants.checked) {
+                baseInputs.forEach(inp => {
+                    inp.removeAttribute('required');
+                    inp.parentElement.parentElement.style.opacity = '0.5';
+                });
+            }
+
             // ============================================================
-            // VARIASI – TIPE & OPSI
+            // 8. VARIASI – TIPE & OPSI
             // ============================================================
             const typesContainer = document.getElementById('variant-types-container');
             let typeCount = 0;
@@ -532,55 +583,56 @@
             function createTypeRow(existingName = '', existingOptions = []) {
                 const idx = typeCount++;
                 const div = document.createElement('div');
-                div.className = 'border rounded p-3 mb-3 position-relative';
+                div.className = 'border rounded p-3 mb-2 position-relative bg-white';
                 div.dataset.typeIndex = idx;
                 div.innerHTML = `
-            <button type="button" class="btn-close position-absolute top-0 end-0 m-2 remove-type-btn"></button>
-            <div class="row g-2 align-items-start">
-                <div class="col-md-3">
-                    <label class="form-label">Nama Tipe <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control type-name-input" name="variant_types[${idx}][name]"
-                        placeholder="cth: Warna" value="${existingName}" required>
-                </div>
-                <div class="col-md-9">
-                    <label class="form-label">Opsi</label>
-                    <input type="text" class="form-control option-input" placeholder="Ketik lalu Enter" data-type-idx="${idx}">
-                    <div class="option-tags mt-2 d-flex flex-wrap gap-1" data-type-idx="${idx}"></div>
-                    <div class="option-hiddens" data-type-idx="${idx}"></div>
-                </div>
-            </div>`;
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2 remove-type-btn"></button>
+                    <div class="row g-2 align-items-start">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control type-name-input" name="variant_types[${idx}][name]"
+                                placeholder="Nama Tipe (Misal: Warna)" value="${existingName}" required>
+                        </div>
+                        <div class="col-md-8">
+                            <input type="text" class="form-control option-input" placeholder="Ketik opsi lalu Enter (Merah, Biru)" data-type-idx="${idx}">
+                            <div class="option-tags mt-2 d-flex flex-wrap gap-1" data-type-idx="${idx}"></div>
+                            <div class="option-hiddens" data-type-idx="${idx}"></div>
+                        </div>
+                    </div>`;
                 typesContainer.appendChild(div);
 
-                // Isi opsi yang sudah ada
-                existingOptions.forEach(opt => addOptionTag(idx, opt));
+                existingOptions.forEach(opt => addOptionTag(idx, opt, div));
 
                 const optionInput = div.querySelector('.option-input');
                 optionInput.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' || e.key === ',') {
                         e.preventDefault();
-                        addOptionTag(idx, this.value.trim().replace(/,$/, ''));
+                        addOptionTag(idx, this.value.trim().replace(/,$/, ''), div);
                         this.value = '';
                     }
                 });
                 optionInput.addEventListener('blur', function() {
                     if (this.value.trim()) {
-                        addOptionTag(idx, this.value.trim());
+                        addOptionTag(idx, this.value.trim(), div);
                         this.value = '';
                     }
                 });
                 div.querySelector('.remove-type-btn').addEventListener('click', () => div.remove());
             }
 
-            function addOptionTag(typeIdx, value) {
+            function addOptionTag(typeIdx, value, containerDiv) {
                 if (!value) return;
-                const tagsEl = typesContainer.querySelector(`.option-tags[data-type-idx="${typeIdx}"]`);
-                const hiddenEl = typesContainer.querySelector(`.option-hiddens[data-type-idx="${typeIdx}"]`);
+                const tagsEl = containerDiv ?
+                    containerDiv.querySelector('.option-tags') :
+                    typesContainer.querySelector(`.option-tags[data-type-idx="${typeIdx}"]`);
+                const hiddenEl = containerDiv ?
+                    containerDiv.querySelector('.option-hiddens') :
+                    typesContainer.querySelector(`.option-hiddens[data-type-idx="${typeIdx}"]`);
 
                 const tag = document.createElement('span');
-                tag.className = 'badge bg-label-primary d-inline-flex align-items-center gap-1 px-2 py-1';
+                tag.className = 'badge bg-secondary d-inline-flex align-items-center gap-1';
                 tag.innerHTML =
-                    `${value} <button type="button" class="btn-close btn-close-sm" aria-label="Hapus"></button>`;
-                tag.querySelector('.btn-close').addEventListener('click', () => {
+                    `${value} <i class="bx bx-x text-white" style="cursor:pointer"></i>`;
+                tag.querySelector('i').addEventListener('click', () => {
                     tag.remove();
                     Array.from(hiddenEl.children).forEach(inp => {
                         if (inp.value === value) inp.remove();
@@ -597,17 +649,16 @@
 
             document.getElementById('add-variant-type').addEventListener('click', () => createTypeRow());
 
-            // ---- Load existing variant types dari server ----
+            // Load existing variant types dari server
             const existingTypes = @json(
                 $produk->variantTypes->map(fn($t) => [
                         'name' => $t->name,
                         'options' => $t->options->pluck('value')->toArray(),
                     ]));
-
             existingTypes.forEach(type => createTypeRow(type.name, type.options));
 
             // ============================================================
-            // VARIASI – GENERATE KOMBINASI
+            // 9. VARIASI – GENERATE & RENDER KOMBINASI
             // ============================================================
             const existingVariants = {!! $produk->variants->map(
                     fn($v) => [
@@ -665,48 +716,38 @@
 
                 combinations.forEach((combo, i) => {
                     const label = combo.map(c => c.value).join(' / ');
-                    // Cari data existing berdasarkan label
                     const existing = existingVariants.find(v => v.label === label) || {};
 
                     const row = document.createElement('tr');
-                    row.innerHTML = `
-                <td>
-                    <strong>${label}</strong>
-                    ${existing.id ? `<input type="hidden" name="variants[${i}][id]" value="${existing.id}">` : ''}
-                </td>
-                <td>
-                    <input type="file" class="variant-img-input" id="edit-variant-img-${i}" accept="image/*" style="display:none;">
-                    <label for="edit-variant-img-${i}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bx bx-image-add"></i>
-                    </label>
-                    ${existing.img_variant
-                        ? `<img src="/storage/${existing.img_variant}" alt="" id="edit-variant-img-preview-${i}"
-                                                                  style="max-height:48px;border-radius:4px;" class="ms-1">`
-                        : `<img id="edit-variant-img-preview-${i}" src="" alt="" style="max-height:48px;display:none;border-radius:4px;" class="ms-1">`
-                    }
-                    <input type="hidden" name="variants[${i}][img_variant]" id="edit-variant-img-path-${i}" value="${existing.img_variant ?? ''}">
-                </td>
-                <td><input type="text" class="form-control form-control-sm" name="variants[${i}][sku]"
-                    value="${existing.sku ?? ''}" required></td>
-                <td><input type="text" class="form-control form-control-sm" name="variants[${i}][barcode]"
-                    value="${existing.barcode ?? ''}"></td>
-                <td>
-                    <div class="input-group input-group-sm"><span class="input-group-text">Rp</span>
-                    <input type="number" class="form-control" name="variants[${i}][harga_jual]"
-                        value="${existing.harga_jual ?? ''}" required></div>
-                </td>
-                <td>
-                    <div class="input-group input-group-sm"><span class="input-group-text">Rp</span>
-                    <input type="number" class="form-control" name="variants[${i}][harga_beli]"
-                        value="${existing.harga_beli ?? ''}" required></div>
-                </td>
-                <td><input type="number" class="form-control form-control-sm" name="variants[${i}][qty]"
-                    value="${existing.qty ?? 0}" required></td>`;
+                    row.innerHTML =
+                        `
+                        <td>
+                            <span class="badge bg-label-info">${label}</span>
+                            ${existing.id ? `<input type="hidden" name="variants[${i}][id]" value="${existing.id}">` : ''}
+                            ${combo.map(c => `<input type="hidden" name="variants[${i}][option_ids][]" data-type="${c.type}" data-value="${c.value}">`).join('')}
+                        </td>
+                        <td class="text-center">
+                            <input type="file" class="variant-img-input" id="v-img-${i}" accept="image/*" style="display:none;">
+                            <label for="v-img-${i}" class="btn btn-sm btn-icon btn-outline-secondary"><i class="bx bx-camera"></i></label>
+                            ${existing.img_variant
+                                ? `<img src="/storage/${existing.img_variant}" id="v-preview-${i}" style="max-height:48px;border-radius:4px;" class="ms-1">`
+                                : `<img id="v-preview-${i}" src="" style="display:none;max-height:48px;border-radius:4px;" class="ms-1">`}
+                            <input type="hidden" name="variants[${i}][img_variant]" id="v-path-${i}" value="${existing.img_variant ?? ''}">
+                        </td>
+                        <td><input type="text" class="form-control form-control-sm" name="variants[${i}][sku]" value="${existing.sku ?? ''}" required></td>
+                        <td><input type="text" class="form-control form-control-sm" name="variants[${i}][barcode]" value="${existing.barcode ?? ''}"></td>
+                        <td>
+                            <div class="input-group input-group-sm"><span class="input-group-text">Rp</span>
+                            <input type="number" class="form-control" name="variants[${i}][harga_jual]" value="${existing.harga_jual ?? ''}" required></div>
+                        </td>
+                        <td>
+                            <div class="input-group input-group-sm"><span class="input-group-text">Rp</span>
+                            <input type="number" class="form-control" name="variants[${i}][harga_beli]" value="${existing.harga_beli ?? ''}" required></div>
+                        </td>
+                        <td><input type="number" class="form-control form-control-sm" name="variants[${i}][qty]" value="${existing.qty ?? 0}" required></td>`;
                     tbody.appendChild(row);
 
-                    // Upload foto variant
-                    const imgInput = row.querySelector(`#edit-variant-img-${i}`);
-                    imgInput.addEventListener('change', function() {
+                    row.querySelector(`#v-img-${i}`).addEventListener('change', function() {
                         if (!this.files[0]) return;
                         const fd = new FormData();
                         fd.append('file', this.files[0]);
@@ -718,10 +759,8 @@
                                 body: fd
                             })
                             .then(r => r.text()).then(path => {
-                                document.getElementById(`edit-variant-img-path-${i}`).value =
-                                    path;
-                                const preview = document.getElementById(
-                                    `edit-variant-img-preview-${i}`);
+                                document.getElementById(`v-path-${i}`).value = path;
+                                const preview = document.getElementById(`v-preview-${i}`);
                                 preview.src = `/storage/${path}`;
                                 preview.style.display = 'inline-block';
                             });
@@ -732,15 +771,14 @@
             }
 
             // ============================================================
-            // SUBMIT – SYNC QUILL
+            // 10. SUBMIT – SYNC QUILL
             // ============================================================
             document.getElementById('editProductForm').addEventListener('submit', function() {
                 hiddenDesc.value = quillDesc.root.innerHTML;
-                hiddenSpec.value = quillSpec.root.innerHTML;
             });
 
             // ============================================================
-            // CANCEL – Revert foto baru yang belum disimpan
+            // 11. CANCEL – Revert foto baru yang belum disimpan
             // ============================================================
             document.getElementById('cancel-button').addEventListener('click', function(e) {
                 e.preventDefault();
@@ -761,6 +799,7 @@
 
         });
     </script>
+
     <script type="module">
         const initSelect2 = () => {
             if (typeof $ !== 'undefined' && $.fn.select2) {
@@ -768,8 +807,7 @@
                     const $this = $(this);
                     $this.select2({
                         placeholder: $this.data('placeholder') || "Pilih...",
-                        allowClear: $this.find('option[value=""]').length >
-                            0,
+                        allowClear: $this.find('option[value=""]').length > 0,
                         width: '100%',
                         minimumResultsForSearch: 10
                     });

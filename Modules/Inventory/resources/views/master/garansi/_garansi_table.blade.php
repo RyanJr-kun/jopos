@@ -21,7 +21,7 @@
                         <p>{{ Str::limit(strip_tags($garansi->description), 60) ?: '-' }}</p>
                     </td>
                     <td>
-                        <small>{{ $garansi->formatted_duration }}</small>
+                        <small>{{ $garansi->duration ?? '-' }}</small>
                     </td>
                     <td class="align-middle text-center text-sm">
                         @if ($garansi->status)

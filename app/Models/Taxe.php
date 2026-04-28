@@ -8,6 +8,7 @@ use Modules\Inventory\Models\Product;
 
 class Taxe extends Model
 {
+  
   protected $guarded = ['id'];
 
   public function produk(): HasMany

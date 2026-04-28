@@ -88,7 +88,6 @@ class MarketController extends Controller
                 'products.description',
                 'products.harga_jual',
                 'products.harga_beli',
-                'products.qty',
                 'products.warrantie_id',
                 'products.stok_minimum',
                 'products.taxe_id',

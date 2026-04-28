@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\dashboard;
 
 use App\Http\Controllers\Controller;
-use Modules\Inventory\Models\Product;
-use Modules\Inventory\Models\Supplier;
 use App\Models\Customer;
-use Modules\Inventory\Models\Purchase;
 use App\Models\Expense;
-use Modules\POS\Models\Sale;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Modules\Inventory\Models\Product;
+use Modules\Inventory\Models\Purchase;
+use Modules\Inventory\Models\Supplier;
+use Modules\POS\Models\Sale;
 
 class DashboardController extends Controller
 {
@@ -59,10 +60,33 @@ class DashboardController extends Controller
 
         // --- DATA UNTUK STATS CARDS ---
 
-        // 4. Product dengan Stock Rendah (berdasarkan stok minimum per produk)
-        $lowStockQuery = Product::whereColumn('qty', '<=', 'stok_minimum');
+       /// Ambil ID Toko user yang sedang login
+        $currentStoreId = Auth::user()->profile->store_id;
+
+        // 1. Siapkan Query Dasar
+        // withSum berfungsi agar variabel 'total_stok' otomatis tersedia saat di-looping di Blade
+        $lowStockQuery = Product::withSum(['stocks as total_stok' => function($query) use ($currentStoreId) {
+                $query->where('store_id', $currentStoreId);
+            }], 'qty')
+            // whereRaw berfungsi untuk memfilter data secara aman tanpa melanggar aturan MySQL
+            ->whereRaw('
+                COALESCE((
+                    SELECT SUM(qty) 
+                    FROM product_stocks 
+                    WHERE product_stocks.product_id = products.id 
+                    AND product_stocks.store_id = ?
+                ), 0) <= products.stok_minimum
+            ', [$currentStoreId]);
+
+        // 2. Hitung jumlah total produk yang stoknya rendah
+        // Kabar baik! Karena kita pakai whereRaw, kita bisa kembali menggunakan ->count() biasa dengan sangat aman
         $stokRendahCount = (clone $lowStockQuery)->count();
-        $produkStockRendah = $lowStockQuery->orderBy('qty', 'asc')->limit(5)->get();
+
+        // 3. Ambil 5 produk dengan stok paling menipis untuk ditampilkan di widget
+        $produkStockRendah = clone($lowStockQuery)
+            ->orderBy('total_stok', 'asc')
+            ->limit(5)
+            ->get();
 
         // 5. Total Sale & Purchase Berdasarkan Periode
         $totalSalePeriode = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])

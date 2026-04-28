@@ -66,7 +66,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/unit/chekSlug', [UnitController::class, 'chekSlug']);
 
     //garansi
-    Route::get('/garansi/{garansi}/json', [WarrantieController::class, 'getWarrantieJson'])->name('garansi.getjson');
     Route::resource('garansi', WarrantieController::class)->except('show', 'create', 'edit');
     Route::get('/garansi/{garansi:slug}/json', [WarrantieController::class, 'getWarrantieJson'])->name('garansi.getjson');
     Route::resource('garansi', WarrantieController::class)->except('show', 'create', 'edit')->parameters(['garansi' => 'garansi:slug']);

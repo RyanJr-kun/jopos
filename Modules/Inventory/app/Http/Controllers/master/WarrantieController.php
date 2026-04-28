@@ -55,7 +55,7 @@ class WarrantieController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100|unique:warranties',
             'slug' => 'required|string|max:100|unique:warranties',
-            'duration' => 'required|integer|min:1',
+            'duration' => 'nullable|integer|min:0',
             'period' => 'required|string|in:Day,Week,Month,Year',
             'description' => 'nullable|string',
             'status' => 'nullable|boolean',
@@ -120,7 +120,7 @@ class WarrantieController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'max:255', Rule::unique('warranties')->ignore($garansi->id)],
             'slug' => ['required', 'max:255', Rule::unique('warranties')->ignore($garansi->id)],
-            'duration' => 'required|integer|min:1',
+            'duration' => 'nullable|integer|min:0',
             'period' => 'required|string|in:Day,Week,Month,Year',
             'description' => 'nullable|string',
             'status' => 'nullable|boolean',

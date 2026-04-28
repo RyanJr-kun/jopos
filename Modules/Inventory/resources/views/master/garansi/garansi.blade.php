@@ -7,6 +7,7 @@
 @endsection
 
 @section('content')
+
     <div class="row g-3 align-items-stretch">
         <div class="col-12 col-md-4 col-xl-3 mb-md-0">
             <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4d50eb 0%, #8592ff 100%);">
@@ -70,7 +71,6 @@
         </div>
     </div>
 
-
     {{-- modal-create --}}
     <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -106,8 +106,7 @@
                                 <div class="form-group">
                                     <label for="duration" class="form-label">Durasi</label>
                                     <input type="number" class="form-control @error('duration') is-invalid @enderror"
-                                        id="duration" name="duration" value="{{ old('duration') }}" required
-                                        min="1">
+                                        id="duration" name="duration" value="{{ old('duration') }}" min="0">
                                     @error('duration')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -142,7 +141,7 @@
                                 value="1" checked>
                         </div>
                         <div class="modal-footer border-0 pb-0">
-                            <button type="button" id="submit-create-button" class="btn btn-outline-info btn-sm">Buat
+                            <button type="submit" id="submit-create-button" class="btn btn-outline-info btn-sm">Buat
                                 Warrantie</button>
                             <button type="button" class="btn btn-danger btn-sm"
                                 data-bs-dismiss="modal">Batalkan</button>
@@ -179,7 +178,7 @@
                                 <div class="mb-3">
                                     <label for="edit_duration" class="form-label">Durasi</label>
                                     <input type="number" class="form-control" id="edit_duration" name="duration"
-                                        required min="1">
+                                        min="0">
                                 </div>
                             </div>
                             <div class="col-md-5">
@@ -238,7 +237,9 @@
             </div>
         </div>
     </div>
+
 @endsection
+
 @section('page-script')
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script type="module">

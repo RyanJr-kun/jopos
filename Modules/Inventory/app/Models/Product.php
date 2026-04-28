@@ -2,6 +2,7 @@
 
 namespace Modules\Inventory\Models;
 
+use App\Models\ProductStock;
 use App\Models\Taxe;
 use App\Models\User;
 use Cviebrock\EloquentSluggable\Sluggable;
@@ -32,6 +33,11 @@ class Product extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+    public function stocks()
+    {
+       
+        return $this->hasMany(ProductStock::class, 'product_id');
     }
 
     // Accessor untuk format harga
