@@ -40,6 +40,16 @@ class Product extends Model
         return $this->hasMany(ProductStock::class, 'product_id');
     }
 
+    public function scopeWithTotalStock($query, $storeId = null)
+    {
+        return $query->addSelect([
+            'total_stock' => ProductStock::selectRaw('COALESCE(SUM(qty), 0)')
+                ->whereColumn('product_id', 'products.id')
+                ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+                ->whereNull('product_variant_id') // Produk utama
+        ]);
+    }
+
     // Accessor untuk format harga
     protected function hargaFormatted(): Attribute
     {

@@ -157,8 +157,7 @@
                 </div>
 
                 <div class="row g-3">
-
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Harga Beli <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text">Rp</span>
@@ -166,7 +165,7 @@
                                 value="{{ old('harga_beli') }}" required>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Harga Jual <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text">Rp</span>
@@ -174,12 +173,11 @@
                                 value="{{ old('harga_jual') }}" required>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Stok Minimum</label>
                         <input type="number" class="form-control" name="stok_minimum"
                             value="{{ old('stok_minimum', 0) }}" required>
                     </div>
-
                     <hr class="my-3">
 
                     <div class="col-md-4">
@@ -485,7 +483,7 @@
                         <td><input type="text" class="form-control form-control-sm" name="variants[${i}][sku]" value="${baseSku}-${label}" required></td>
                         <td><input type="number" class="form-control form-control-sm" name="variants[${i}][harga_beli]" required></td>
                         <td><input type="number" class="form-control form-control-sm" name="variants[${i}][harga_jual]" required></td>
-                        <td><input type="number" class="form-control form-control-sm" name="variants[${i}][qty]" value="0" required></td>
+                        
                     `;
                     tbody.appendChild(row);
 

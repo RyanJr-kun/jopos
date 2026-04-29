@@ -84,7 +84,6 @@ class ProductController extends Controller
     {
         $request->validate([
             'name_product'  => 'required|string|max:255',
-            'store_id'      => 'required|exists:stores,id',
             'slug'          => 'required|string|unique:products,slug',
             'barcode'       => 'nullable|string|unique:products,barcode',
             'sku'           => 'required|string|unique:products,sku',
@@ -95,7 +94,6 @@ class ProductController extends Controller
             'specification' => 'nullable|string',
             'harga_jual'    => 'required|numeric',
             'harga_beli'    => 'required|numeric',
-            'qty'           => 'required|integer',
             'garansi'       => 'required|exists:warranties,id',
             'stok_minimum'  => 'required|integer',
             'pajak'         => 'nullable|exists:taxes,id',
@@ -144,21 +142,14 @@ class ProductController extends Controller
                 'user_id'       => Auth::id(),
             ]);
 
-            if (!$request->filled('variant_types')) {
-                ProductStock::create([
-                    'store_id'           => $request->store_id,
-                    'product_id'         => $product->id,
-                    'product_variant_id' => null,
-                    'qty'                => $request->qty,
-                ]);
-            }
+            
 
             // ---- 2. Simpan galeri foto ----
             $this->saveGallery($product, $request->input('gallery', []), $request->input('primary_image'));
 
             // ---- 3. Simpan variasi (Kirimkan store_id untuk stok variannya) ----
             if ($request->filled('variant_types')) {
-                $this->saveVariants($product, $request->input('variant_types'), $request->input('variants', []), $request->store_id);
+                $this->saveVariants($product, $request->input('variant_types'), $request->input('variants', []));
             }
         });
 
@@ -210,7 +201,6 @@ class ProductController extends Controller
     {
         $request->validate([
             'name_product'  => 'required|string|max:255',
-            'store_id'      => 'required|exists:stores,id',
             'slug'          => ['required', 'string', Rule::unique('products', 'slug')->ignore($produk->id)],
             'barcode'       => ['nullable', 'string', Rule::unique('products', 'barcode')->ignore($produk->id)],
             'sku'           => ['required', 'string', Rule::unique('products', 'sku')->ignore($produk->id)],
@@ -221,7 +211,6 @@ class ProductController extends Controller
             'specification' => 'nullable|string',
             'harga_jual'    => 'required|numeric',
             'harga_beli'    => 'required|numeric',
-            'qty'           => 'required|integer',
             'garansi'       => 'nullable|exists:warranties,id',
             'stok_minimum'  => 'required|integer',
             'pajak'         => 'nullable|exists:taxes,id',
@@ -285,18 +274,7 @@ class ProductController extends Controller
                 'user_id'       => Auth::id(),
             ]);
 
-            if (!$request->filled('variant_types')) {
-                ProductStock::updateOrCreate(
-                    [
-                        'store_id'           => $request->store_id,
-                        'product_id'         => $produk->id,
-                        'product_variant_id' => null
-                    ],
-                    ['qty' => $request->qty]
-                );
-            }
-
-            // ---- Update galeri foto ----
+                       // ---- Update galeri foto ----
             $keepIds = $request->input('existing_images', []);
             // Hapus foto lama yang tidak di-keep
             $produk->images()->whereNotIn('id', $keepIds)->each(function ($img) {
@@ -314,7 +292,7 @@ class ProductController extends Controller
                 });
                 $produk->variantTypes()->delete();
 
-                $this->saveVariants($produk, $request->input('variant_types'), $request->input('variants', []), $request->store_id);
+                $this->saveVariants($produk, $request->input('variant_types'), $request->input('variants', []));
             } else {
                 $produk->variants()->each(function ($v) {
                     if ($v->img_variant) Storage::disk('public')->delete($v->img_variant);
@@ -426,7 +404,6 @@ class ProductController extends Controller
                 'barcode'    => $varData['barcode'] ?? null,
                 'harga_jual' => $varData['harga_jual'],
                 'harga_beli' => $varData['harga_beli'],
-                'qty'        => $varData['qty'],
                 'img_variant' => $imgPath,
                 'is_active'  => true,
             ]);
@@ -453,7 +430,6 @@ class ProductController extends Controller
                 'barcode'    => $varData['barcode'] ?? null,
                 'harga_jual' => $varData['harga_jual'],
                 'harga_beli' => $varData['harga_beli'],
-                // 'qty' => $varData['qty'],  <--- DIHAPUS DARI SINI
                 'img_variant'=> $imgPath,
                 'is_active'  => true,
             ]);
@@ -461,16 +437,6 @@ class ProductController extends Controller
             // Attach option IDs ke pivot
             if (!empty($varData['option_ids'])) {
                 $variant->options()->attach($varData['option_ids']);
-            }
-
-            // BARU: Masukkan data stok varian ke product_stocks
-            if ($storeId && isset($varData['qty'])) {
-                ProductStock::create([
-                    'store_id'           => $storeId,
-                    'product_id'         => $product->id,
-                    'product_variant_id' => $variant->id,
-                    'qty'                => $varData['qty'],
-                ]);
             }
         }
     }
@@ -528,8 +494,16 @@ class ProductController extends Controller
 
     public function cekStock(Request $request)
     {
-        $stok = Product::findOrFail($request->query('id'))->qty;
-        return response()->json($stok);
+        $productId = $request->query('id');
+        $storeId = Auth::user()->employeeProfile->store_id ?? null; // Sesuaikan dengan auth user
+        
+        $query = ProductStock::where('product_id', $productId);
+        if ($storeId) {
+            $query->where('store_id', $storeId);
+        }
+        
+        $totalStok = $query->sum('qty');
+        return response()->json($totalStok);
     }
 
     public function getByBarcode($barcode)
@@ -550,23 +524,34 @@ class ProductController extends Controller
     // -------------------------------------------------------
     public function getLowStockNotifications()
     {
-        $lowStockProducts = Product::whereColumn('qty', '<=', 'stok_minimum')
-            ->orderBy('qty', 'asc')->take(5)
-            ->get(['id', 'name_product', 'slug', 'qty', 'stok_minimum', 'img_produk']);
-
-        $lowStockCount = Product::whereColumn('qty', '<=', 'stok_minimum')->count();
-
+        $storeId = Auth::user()->employeeProfile->store_id ?? null;
+    
+        $lowStockProducts = Product::select('products.*')
+            ->join('product_stocks', 'products.id', '=', 'product_stocks.product_id')
+            ->where('product_stocks.product_variant_id', null) // Produk utama
+            ->when($storeId, fn($q) => $q->where('product_stocks.store_id', $storeId))
+            ->whereColumn('product_stocks.qty', '<=', 'products.stok_minimum')
+            ->groupBy('products.id')
+            ->orderBy('product_stocks.qty', 'asc')
+            ->take(5)
+            ->get(['products.id', 'products.name_product', 'products.slug', 'products.stok_minimum', 'products.img_produk']);
+        
+        // Hitung total count dengan query terpisah
+        $lowStockCount = Product::join('product_stocks', 'products.id', '=', 'product_stocks.product_id')
+            ->where('product_stocks.product_variant_id', null)
+            ->when($storeId, fn($q) => $q->where('product_stocks.store_id', $storeId))
+            ->whereColumn('product_stocks.qty', '<=', 'products.stok_minimum')
+            ->count();
+        
         return response()->json([
-            'count'    => $lowStockCount,
+            'count' => $lowStockCount,
             'products' => $lowStockProducts->map(function ($produk) {
+                // ... mapping tetap sama, tapi ambil qty dari join
                 return [
-                    'name_product' => \Illuminate\Support\Str::limit($produk->name_product, 30),
-                    'qty'          => $produk->qty,
+                    'name_product' => Str::limit($produk->name_product, 30),
+                    'qty' => $produk->stocks->firstWhere('product_variant_id', null)?->qty ?? 0, // Atau hitung via subquery
                     'stok_minimum' => $produk->stok_minimum,
-                    'img_url'      => $produk->img_produk
-                        ? asset('storage/' . $produk->img_produk)
-                        : asset('assets/img/produk.webp'),
-                    'url' => route('stok.rendah')
+                    // ...
                 ];
             })
         ]);

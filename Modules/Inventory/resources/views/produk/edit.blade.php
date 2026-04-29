@@ -167,11 +167,11 @@
         </div>
 
         {{-- ============================================================ --}}
-        {{-- CARD 2: STOK, HARGA & KODE --}}
+        {{-- CARD 2:   , HARGA & KODE --}}
         {{-- ============================================================ --}}
         <div class="card mb-4 rounded-2">
             <div class="card-header pt-3 pb-0">
-                <h6 class="m-0 font-weight-bold">Stok, Harga & Identitas</h6>
+                <h6 class="m-0 font-weight-bold"> , Harga & Identitas</h6>
             </div>
             <div class="card-body pt-3">
 
@@ -182,20 +182,11 @@
                         <label class="form-check-label fw-bold" for="toggle-variants">Aktifkan Varian Produk (Warna,
                             Ukuran, dll)</label>
                     </div>
-                    <small class="ms-auto">Centang ini jika produk memiliki variasi harga/stok.</small>
+                    <small class="ms-auto">Centang ini jika produk memiliki variasi harga/ .</small>
                 </div>
 
                 <div class="row g-3">
-                    {{-- Blok Harga Default (Akan diredupkan jika varian aktif) --}}
-                    <div class="col-md-3">
-                        <label class="form-label">Stok <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control base-price-input @error('qty') is-invalid @enderror"
-                            name="qty" value="{{ old('qty', $produk->qty) }}" required>
-                        @error('qty')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Harga Beli <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text">Rp</span>
@@ -207,7 +198,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Harga Jual <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text">Rp</span>
@@ -219,7 +210,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Stok Minimum</label>
                         <input type="number" class="form-control @error('stok_minimum') is-invalid @enderror"
                             name="stok_minimum" value="{{ old('stok_minimum', $produk->stok_minimum) }}" required>
@@ -667,7 +658,6 @@
                         'barcode' => $v->barcode,
                         'harga_jual' => $v->harga_jual,
                         'harga_beli' => $v->harga_beli,
-                        'qty' => $v->qty,
                         'img_variant' => $v->img_variant,
                         'label' => $v->options->pluck('value')->join(' / '),
                     ],
@@ -744,7 +734,7 @@
                             <div class="input-group input-group-sm"><span class="input-group-text">Rp</span>
                             <input type="number" class="form-control" name="variants[${i}][harga_beli]" value="${existing.harga_beli ?? ''}" required></div>
                         </td>
-                        <td><input type="number" class="form-control form-control-sm" name="variants[${i}][qty]" value="${existing.qty ?? 0}" required></td>`;
+                        `;
                     tbody.appendChild(row);
 
                     row.querySelector(`#v-img-${i}`).addEventListener('change', function() {
