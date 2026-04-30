@@ -235,8 +235,8 @@ class MarketController extends Controller
      */
     public function produkDetail($slug)
     {
-        // PERBAIKAN: Eager load semua relasi yang mungkin ditampilkan di halaman detail.
-        $produk = Product::with(['category', 'brand', 'unit', 'garansi', 'pajak', 'user', 'images'])
+        // PERBAIKAN: Eager load variants beserta opsinya agar bisa dimanipulasi JS
+        $produk = Product::with(['category', 'brand', 'unit', 'garansi', 'pajak', 'user', 'images', 'variants.options'])
             ->where('slug', $slug)
             ->firstOrFail();
         $produkSerupa = Product::with('unit', 'promotions')

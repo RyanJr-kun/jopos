@@ -47,6 +47,18 @@
         @method('PUT')
         @csrf
 
+        {{-- Peringatan Error (Langkah 1 sebelumnya) --}}
+        @if ($errors->any())
+            <div class="alert alert-danger mb-4">
+                <h6 class="alert-heading fw-bold mb-1">Gagal Menyimpan!</h6>
+                <ul class="mb-0">
+                    @foreach ($errors->getMessages() as $field => $messages)
+                        <li><strong>Kolom ({{ $field }})</strong>: Data ini sudah digunakan / duplikat.</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         {{-- ============================================================ --}}
         {{-- CARD 1: INFORMASI DASAR PRODUK --}}
         {{-- ============================================================ --}}
@@ -167,11 +179,11 @@
         </div>
 
         {{-- ============================================================ --}}
-        {{-- CARD 2:   , HARGA & KODE --}}
+        {{-- CARD 2: STOK, HARGA & KODE --}}
         {{-- ============================================================ --}}
         <div class="card mb-4 rounded-2">
             <div class="card-header pt-3 pb-0">
-                <h6 class="m-0 font-weight-bold"> , Harga & Identitas</h6>
+                <h6 class="m-0 font-weight-bold">Stok, Harga & Identitas</h6>
             </div>
             <div class="card-body pt-3">
 
@@ -182,7 +194,7 @@
                         <label class="form-check-label fw-bold" for="toggle-variants">Aktifkan Varian Produk (Warna,
                             Ukuran, dll)</label>
                     </div>
-                    <small class="ms-auto">Centang ini jika produk memiliki variasi harga/ .</small>
+                    <small class="ms-auto">Centang ini jika produk memiliki variasi harga/stok.</small>
                 </div>
 
                 <div class="row g-3">
@@ -639,7 +651,9 @@
 
             document.getElementById('add-variant-type').addEventListener('click', () => createTypeRow());
 
-            // Load existing variant types dari server
+            // ============================================================
+            // 8. Load Tipe & Opsi Existing 
+            // ============================================================
             const existingTypes = @json(
                 $produk->variantTypes->map(fn($t) => [
                         'name' => $t->name,
@@ -648,23 +662,27 @@
             existingTypes.forEach(type => createTypeRow(type.name, type.options));
 
             // ============================================================
-            // 9. VARIASI – GENERATE & RENDER KOMBINASI
+            // 9. VARIASI – GENERATE & RENDER KOMBINASI (PENCOCOKAN ABSOLUT)
             // ============================================================
-            const existingVariants = {!! $produk->variants->map(
-                    fn($v) => [
+
+            const existingVariants = {!! $produk->variants->map(function ($v) {
+                    // Ambil opsi, urutkan A-Z, lalu gabungkan dengan |
+                    $opts = $v->options->pluck('value')->toArray();
+                    sort($opts);
+            
+                    return [
                         'id' => $v->id,
                         'sku' => $v->sku,
                         'barcode' => $v->barcode,
                         'harga_jual' => $v->harga_jual,
                         'harga_beli' => $v->harga_beli,
                         'img_variant' => $v->img_variant,
-                        'label' => $v->options->pluck('value')->join(' / '),
-                    ],
-                )->toJson() !!};
+                        'match_key' => implode('|', $opts), // Contoh output: "Biru|L"
+                    ];
+                })->values()->toJson() !!};
 
             document.getElementById('generate-combinations').addEventListener('click', generateCombinations);
 
-            // Auto-generate jika ada variasi existing
             if (existingVariants.length > 0) generateCombinations();
 
             function generateCombinations() {
@@ -702,10 +720,18 @@
             function renderCombinations(combinations) {
                 const tbody = document.getElementById('combinations-tbody');
                 tbody.innerHTML = '';
+                const baseSku = document.getElementById('sku').value || 'SKU';
 
                 combinations.forEach((combo, i) => {
-                    const label = combo.map(c => c.value).join(' / ');
-                    const existing = existingVariants.find(v => v.label === label) || {};
+                    const label = combo.map(c => c.value).join(' / '); // Label tampilan (Merah / L)
+
+                    // BUAT MATCH KEY DI JAVASCRIPT
+                    const currentVals = combo.map(c => c.value);
+                    currentVals.sort(); // Urutkan A-Z
+                    const formMatchKey = currentVals.join('|'); // Output: "Biru|L"
+
+                    // CARI MATCH KEY YANG SAMA PERSIS DI DATA DATABASE
+                    const existing = existingVariants.find(v => v.match_key === formMatchKey) || {};
 
                     const row = document.createElement('tr');
                     row.innerHTML =
@@ -713,7 +739,7 @@
                         <td>
                             <span class="badge bg-label-info">${label}</span>
                             ${existing.id ? `<input type="hidden" name="variants[${i}][id]" value="${existing.id}">` : ''}
-                            ${combo.map(c => `<input type="hidden" name="variants[${i}][option_ids][]" data-type="${c.type}" data-value="${c.value}">`).join('')}
+                            ${combo.map(c => `<input type="hidden" name="variants[${i}][option_ids][]" data-type="${c.type}" value="${c.value}">`).join('')}
                         </td>
                         <td class="text-center">
                             <input type="file" class="variant-img-input" id="v-img-${i}" accept="image/*" style="display:none;">
@@ -723,7 +749,7 @@
                                 : `<img id="v-preview-${i}" src="" style="display:none;max-height:48px;border-radius:4px;" class="ms-1">`}
                             <input type="hidden" name="variants[${i}][img_variant]" id="v-path-${i}" value="${existing.img_variant ?? ''}">
                         </td>
-                        <td><input type="text" class="form-control form-control-sm" name="variants[${i}][sku]" value="${existing.sku ?? ''}" required></td>
+                        <td><input type="text" class="form-control form-control-sm" name="variants[${i}][sku]" value="${existing.sku ?? baseSku + '-' + label.replace(/ \/ /g, '-')}" required></td>
                         <td><input type="text" class="form-control form-control-sm" name="variants[${i}][barcode]" value="${existing.barcode ?? ''}"></td>
                         <td>
                             <div class="input-group input-group-sm"><span class="input-group-text">Rp</span>

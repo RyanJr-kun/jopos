@@ -3,33 +3,11 @@
 @section('title', 'Detail Produk - ' . $produk->name_product)
 
 @section('vendor-style')
-    <!-- CSS Swiper (Gunakan CDN agar aman dieksekusi langsung di Blade) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    @vite('resources/assets/vendor/libs/swiper/swiper.scss')
+@endsection
 
-    <style>
-        /* Styling khusus untuk Thumbnail Swiper */
-        .mySwiper .swiper-slide {
-            opacity: 0.5;
-            transition: opacity 0.3s ease;
-            cursor: pointer;
-        }
-
-        /* State saat thumbnail sedang aktif/diklik */
-        .mySwiper .swiper-slide-thumb-active {
-            opacity: 1;
-            border: 2px solid #696cff !important;
-            /* Warna primary Sneat */
-            border-radius: 0.375rem;
-        }
-
-        /* Styling panah navigasi */
-        .swiper-button-next::after,
-        .swiper-button-prev::after {
-            font-size: 1.5rem !important;
-            color: #696cff;
-            text-shadow: 0px 0px 5px rgba(255, 255, 255, 0.8);
-        }
-    </style>
+@section('vendor-script')
+    @vite('resources/assets/vendor/libs/swiper/swiper.js')
 @endsection
 
 @section('content')
@@ -71,7 +49,7 @@
                                     @endforeach
                                 @else
                                     <div class="swiper-slide text-center">
-                                        <img src="{{ asset('assets/img/produk.webp') }}" class="img-fluid rounded shadow-sm"
+                                        <img src="{{ asset('assets/img/produk.png') }}" class="img-fluid rounded shadow-sm"
                                             style="height: 350px; width: 100%; object-fit: contain; background-color: #f8f9fa;"
                                             alt="Default">
                                     </div>
@@ -273,9 +251,6 @@
 @endsection
 
 @section('page-script')
-    <!-- Script Swiper.js via CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof Swiper !== 'undefined') {

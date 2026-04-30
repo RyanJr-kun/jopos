@@ -248,14 +248,15 @@ class ProductController extends Controller
             'variants.*.sku'        => [
                 'required_with:variants',
                 'string',
-                // Izinkan SKU yang sudah ada milik variant ini
-                function ($attribute, $value, $fail) use ($request) {
-                    $index = explode('.', $attribute)[1];
-                    $variantId = $request->input("variants.{$index}.id");
+                function ($attribute, $value, $fail) use ($produk) {
+                    // Cukup pastikan SKU tidak dipakai oleh PRODUK LAIN
                     $exists = ProductVariant::where('sku', $value)
-                        ->when($variantId, fn($q) => $q->where('id', '!=', $variantId))
+                        ->where('product_id', '!=', $produk->id)
                         ->exists();
-                    if ($exists) $fail("SKU variasi sudah digunakan.");
+                        
+                    if ($exists) {
+                        $fail("SKU variasi sudah digunakan oleh produk lain.");
+                    }
                 }
             ],
             'variants.*.barcode'    => 'nullable|string',
@@ -298,9 +299,13 @@ class ProductController extends Controller
 
             // ---- Update variasi ----
             if ($request->filled('variant_types')) {
-                $produk->variants()->each(function ($v) {
-                    if ($v->img_variant) Storage::disk('public')->delete($v->img_variant);
-                    $v->delete();
+                $keptVariantImages = collect($request->input('variants', []))->pluck('img_variant')->filter()->toArray();
+
+                $produk->variants()->each(function ($v) use ($keptVariantImages) {
+                    if ($v->img_variant && !in_array($v->img_variant, $keptVariantImages)) {
+                        Storage::disk('public')->delete($v->img_variant);
+                    }
+                    $v->delete(); 
                 });
                 $produk->variantTypes()->delete();
 
@@ -454,9 +459,14 @@ class ProductController extends Controller
             // Handle variant image
             $imgPath = null;
             $tmpImg = $varData['img_variant'] ?? null;
-            if ($tmpImg && str_starts_with($tmpImg, 'tmp/') && Storage::disk('public')->exists($tmpImg)) {
-                $imgPath = 'produk/variants/' . basename($tmpImg);
-                Storage::disk('public')->move($tmpImg, $imgPath);
+            
+            if ($tmpImg) {
+                if (str_starts_with($tmpImg, 'tmp/') && Storage::disk('public')->exists($tmpImg)) {
+                    $imgPath = 'produk/variants/' . basename($tmpImg);
+                    Storage::disk('public')->move($tmpImg, $imgPath);
+                } else {
+                    $imgPath = $tmpImg;
+                }
             }
             
             $variant = ProductVariant::create([

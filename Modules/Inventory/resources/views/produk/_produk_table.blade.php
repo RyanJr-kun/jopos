@@ -85,15 +85,15 @@
                     {{-- Kolom 6: Aksi --}}
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
-                            <a href="{{ route('produk.show', $products->slug) }}"
-                                class="btn btn-sm btn-icon btn-outline-info" data-bs-toggle="tooltip" title="Detail">
+                            <a href="{{ route('produk.show', $products->slug) }}" class="btn btn-sm  btn-outline-info"
+                                data-bs-toggle="tooltip" title="Detail">
                                 <i class="bx bx-show"></i>
                             </a>
                             <a href="{{ route('produk.edit', $products->slug) }}"
-                                class="btn btn-sm btn-icon btn-outline-primary" data-bs-toggle="tooltip" title="Edit">
+                                class="btn btn-sm  btn-outline-primary" data-bs-toggle="tooltip" title="Edit">
                                 <i class="bx bx-edit-alt"></i>
                             </a>
-                            <button type="button" class="btn btn-sm btn-icon btn-outline-danger delete-product-btn"
+                            <button type="button" class="btn btn-sm  btn-outline-danger delete-product-btn"
                                 data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal"
                                 data-product-slug="{{ $products->slug }}" title="Hapus">
                                 <i class="bx bx-trash"></i>
