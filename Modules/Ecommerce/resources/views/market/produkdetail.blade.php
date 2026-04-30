@@ -175,15 +175,29 @@
             {{-- Bagian Kiri: Galeri Gambar dengan Swiper --}}
             <div class="col-lg-6" data-aos="fade-right">
                 @php
-                    // Pastikan gambar utama ditaruh di awal array
-                    $sortedImages = $produk->images->sortByDesc('is_primary')->values();
+                    // 1. Ambil gambar galeri, urutkan yang primary di awal
+                    $galleryImages = $produk->images->sortByDesc('is_primary')->map(function ($img) {
+                        return (object) ['path' => $img->path];
+                    });
+
+                    // 2. Ambil gambar dari varian (yang tidak kosong)
+                    $variantImages = $produk->variants
+                        ->pluck('img_variant')
+                        ->filter()
+                        ->unique()
+                        ->map(function ($path) {
+                            return (object) ['path' => $path];
+                        });
+
+                    // 3. Gabungkan keduanya, lalu hapus duplikat path agar rapi
+                    $allImages = $galleryImages->concat($variantImages)->unique('path')->values();
                 @endphp
 
                 <!-- Swiper Utama (Besar) -->
                 <div class="swiper swiper-main shadow-sm">
                     <div class="swiper-wrapper">
-                        @if ($sortedImages->count() > 0)
-                            @foreach ($sortedImages as $img)
+                        @if ($allImages->count() > 0)
+                            @foreach ($allImages as $img)
                                 <div class="swiper-slide">
                                     <img src="{{ asset('storage/' . $img->path) }}" alt="{{ $produk->name_product }}"
                                         loading="lazy">
@@ -198,10 +212,10 @@
                 </div>
 
                 <!-- Swiper Thumbnail (Kecil) -->
-                @if ($sortedImages->count() > 1)
+                @if ($allImages->count() > 1)
                     <div class="swiper swiper-thumbs">
                         <div class="swiper-wrapper">
-                            @foreach ($sortedImages as $img)
+                            @foreach ($allImages as $img)
                                 <div class="swiper-slide">
                                     <img src="{{ asset('storage/' . $img->path) }}" alt="Thumb">
                                 </div>
