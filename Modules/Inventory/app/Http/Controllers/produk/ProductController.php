@@ -82,6 +82,12 @@ class ProductController extends Controller
     
     public function store(Request $request)
     {
+        // Debug: cek format gallery input
+        \Log::info("Product store - gallery debug", [
+            'gallery_raw' => $request->input('gallery'),
+            'gallery_sample' => collect($request->input('gallery', []))->take(1)->toArray(),
+            'is_html' => collect($request->input('gallery', []))->contains(fn($v) => str_starts_with($v ?? '', '<!DOCTYPE')),
+        ]);
         $request->validate([
             'name_product'  => 'required|string|max:255',
             'slug'          => 'required|string|unique:products,slug',
@@ -92,8 +98,8 @@ class ProductController extends Controller
             'unit'          => 'required|exists:units,id',
             'description'   => 'nullable|string',
             'specification' => 'nullable|string',
-            'harga_jual'    => 'required|numeric',
-            'harga_beli'    => 'required|numeric',
+            'harga_jual'    => 'nullable|numeric',
+            'harga_beli'    => 'nullable|numeric',
             'garansi'       => 'required|exists:warranties,id',
             'stok_minimum'  => 'required|integer',
             'pajak'         => 'nullable|exists:taxes,id',
@@ -117,7 +123,6 @@ class ProductController extends Controller
             'variants.*.barcode'             => 'nullable|string|unique:product_variants,barcode',
             'variants.*.harga_jual'          => 'required_with:variants|numeric',
             'variants.*.harga_beli'          => 'required_with:variants|numeric',
-            'variants.*.qty'                 => 'required_with:variants|integer',
             'variants.*.img_variant'         => 'nullable|string',
         ]);
 
@@ -129,9 +134,9 @@ class ProductController extends Controller
                 'barcode'       => $request->barcode,
                 'sku'           => $request->sku,
                 'description'   => $request->description,
-                'specification' => $request->specification,
-                'harga_jual'    => $request->harga_jual,
-                'harga_beli'    => $request->harga_beli,
+                'specification' => $this->packSpecification($request),
+                'harga_jual'    => $request->harga_jual ?? 0,
+                'harga_beli'    => $request->harga_beli ?? 0,
                 'stok_minimum'  => $request->stok_minimum,
                 'wajib_seri'    => $request->boolean('wajib_seri'),
                 'category_id'   => $request->kategori,
@@ -199,6 +204,14 @@ class ProductController extends Controller
     
     public function update(Request $request, Product $produk)
     {
+
+            // Di ProductController::store(), sebelum DB::transaction()
+        \Log::info("Product store debug", [
+            'gallery_input' => $request->input('gallery'),
+            'primary_image' => $request->input('primary_image'),
+            'variant_types_count' => count($request->input('variant_types', [])),
+            'variants_count' => count($request->input('variants', [])),
+        ]);
         $request->validate([
             'name_product'  => 'required|string|max:255',
             'slug'          => ['required', 'string', Rule::unique('products', 'slug')->ignore($produk->id)],
@@ -209,8 +222,8 @@ class ProductController extends Controller
             'unit'          => 'required|exists:units,id',
             'description'   => 'nullable|string',
             'specification' => 'nullable|string',
-            'harga_jual'    => 'required|numeric',
-            'harga_beli'    => 'required|numeric',
+            'harga_jual'    => 'nullable|numeric',
+            'harga_beli'    => 'nullable|numeric',
             'garansi'       => 'nullable|exists:warranties,id',
             'stok_minimum'  => 'required|integer',
             'pajak'         => 'nullable|exists:taxes,id',
@@ -248,7 +261,6 @@ class ProductController extends Controller
             'variants.*.barcode'    => 'nullable|string',
             'variants.*.harga_jual' => 'required_with:variants|numeric',
             'variants.*.harga_beli' => 'required_with:variants|numeric',
-            'variants.*.qty'        => 'required_with:variants|integer',
             'variants.*.img_variant' => 'nullable|string',
         ]);
 
@@ -261,9 +273,9 @@ class ProductController extends Controller
                 'barcode'       => $request->barcode,
                 'sku'           => $request->sku,
                 'description'   => $request->description,
-                'specification' => $request->specification,
-                'harga_jual'    => $request->harga_jual,
-                'harga_beli'    => $request->harga_beli,
+                'specification' => $this->packSpecification($request),
+                'harga_jual'    => $request->harga_jual ?? 0,
+                'harga_beli'    => $request->harga_beli ?? 0,
                 'stok_minimum'  => $request->stok_minimum,
                 'wajib_seri'    => $request->boolean('wajib_seri'),
                 'category_id'   => $request->kategori,
@@ -321,42 +333,93 @@ class ProductController extends Controller
         return redirect()->route('produk.index')->with('success', 'Product Berhasil Dihapus.');
     }
 
+    /**
+ * Pack specification arrays into JSON string
+ * Format: [{"key":"Warna","value":"Merah"},{"key":"Ukuran","value":"XL"}]
+ */
+    private function packSpecification(Request $request): ?string
+    {
+        $keys = $request->input('spec_keys', []);
+        $values = $request->input('spec_values', []);
+        
+        // Jika tidak ada spec, return null
+        if (empty($keys) || empty($values) || count($keys) !== count($values)) {
+            return null;
+        }
+        
+        $specs = [];
+        foreach ($keys as $index => $key) {
+            $key = trim($key);
+            $value = trim($values[$index] ?? '');
+            
+            // Skip jika key atau value kosong
+            if ($key === '' || $value === '') {
+                continue;
+            }
+            
+            $specs[] = [
+                'key'   => $key,
+                'value' => $value
+            ];
+        }
+        
+        return !empty($specs) ? json_encode($specs, JSON_UNESCAPED_UNICODE) : null;
+    }
+
     // -------------------------------------------------------
     // HELPER PRIVATE: simpan galeri
     // -------------------------------------------------------
     private function saveGallery(Product $product, array $galleryPaths, ?string $primaryPath): void
     {
         $order = $product->images()->max('sort_order') + 1;
-
-        // Tentukan apakah sudah ada primary
         $hasPrimary = $product->images()->where('is_primary', true)->exists();
-
-        // Gabungkan primary_image ke gallery supaya diproses bersamaan
+        
         $allPaths = collect($galleryPaths);
         if ($primaryPath && !$allPaths->contains($primaryPath)) {
             $allPaths->prepend($primaryPath);
         }
-
+        
+        // ✅ SATU LOOP SAJA
         foreach ($allPaths as $tmpPath) {
-            if (!$tmpPath || !str_starts_with($tmpPath, 'tmp/')) continue;
-            if (!Storage::disk('public')->exists($tmpPath)) continue;
-
+            if (!$tmpPath || !str_starts_with($tmpPath, 'tmp/')) {
+                \Log::warning("Gallery skip - invalid tmpPath: $tmpPath");
+                continue;
+            }
+            
+            if (!Storage::disk('public')->exists($tmpPath)) {
+                \Log::error("Gallery file not found: $tmpPath");
+                continue;
+            }
+            
             $newPath = 'produk/gallery/' . basename($tmpPath);
-            Storage::disk('public')->move($tmpPath, $newPath);
-
-            $isPrimary = (!$hasPrimary && $tmpPath === $primaryPath)
-                || (!$hasPrimary && $order === 1);
-
+            $dir = dirname($newPath);
+            
+            if (!Storage::disk('public')->exists($dir)) {
+                Storage::disk('public')->makeDirectory($dir);
+            }
+            
+            $moved = Storage::disk('public')->move($tmpPath, $newPath);
+            
+            if (!$moved) {
+                \Log::error("Failed to move gallery file: $tmpPath -> $newPath");
+                continue;
+            }
+            
+            \Log::info("Gallery file moved successfully: $newPath");
+            
+            $isPrimary = (!$hasPrimary && $tmpPath === $primaryPath) 
+                    || (!$hasPrimary && $order === 1);
+            
             $product->images()->create([
                 'path'       => $newPath,
                 'is_primary' => $isPrimary,
                 'sort_order' => $order++,
             ]);
-
+            
             if ($isPrimary) $hasPrimary = true;
         }
-
-        // Jika masih belum ada primary, jadikan foto pertama sebagai primary
+        
+        // Fallback: jika belum ada primary, set yang pertama
         if (!$product->images()->where('is_primary', true)->exists()) {
             $first = $product->images()->orderBy('sort_order')->first();
             if ($first) $first->update(['is_primary' => true]);
@@ -366,18 +429,16 @@ class ProductController extends Controller
     // -------------------------------------------------------
     // HELPER PRIVATE: simpan variasi
     // -------------------------------------------------------
-    private function saveVariants(Product $product, array $variantTypes, array $variantCombinations): void
+        private function saveVariants(Product $product, array $variantTypes, array $variantCombinations): void
     {
-        // Buat tipe & simpan mapping name -> [option_value -> option_id]
-        $optionMap = []; // ['Warna']['Merah'] = option_id
-
+        // 1. Buat variant types & options (kode existing tetap)
+        $optionMap = [];
         foreach ($variantTypes as $typeIndex => $typeData) {
             $type = ProductVariantType::create([
                 'product_id' => $product->id,
                 'name'       => $typeData['name'],
                 'sort_order' => $typeIndex,
             ]);
-
             foreach ($typeData['options'] as $optIndex => $optValue) {
                 $option = ProductVariantOption::create([
                     'variant_type_id' => $type->id,
@@ -387,57 +448,49 @@ class ProductController extends Controller
                 $optionMap[$typeData['name']][$optValue] = $option->id;
             }
         }
-
-        // Buat kombinasi variant
+        
+        // 2. ✅ SATU LOOP untuk buat variant combinations
         foreach ($variantCombinations as $varData) {
-            // Tangani foto variant
+            // Handle variant image
             $imgPath = null;
             $tmpImg = $varData['img_variant'] ?? null;
             if ($tmpImg && str_starts_with($tmpImg, 'tmp/') && Storage::disk('public')->exists($tmpImg)) {
                 $imgPath = 'produk/variants/' . basename($tmpImg);
                 Storage::disk('public')->move($tmpImg, $imgPath);
             }
-
+            
             $variant = ProductVariant::create([
-                'product_id' => $product->id,
-                'sku'        => $varData['sku'],
-                'barcode'    => $varData['barcode'] ?? null,
-                'harga_jual' => $varData['harga_jual'],
-                'harga_beli' => $varData['harga_beli'],
-                'img_variant' => $imgPath,
-                'is_active'  => true,
+                'product_id'    => $product->id,
+                'sku'           => $varData['sku'],
+                'barcode'       => $varData['barcode'] ?? null,
+                'harga_jual'    => $varData['harga_jual'],
+                'harga_beli'    => $varData['harga_beli'],
+                'img_variant'   => $imgPath,
+                'is_active'     => true,
             ]);
-
-            // Attach option IDs ke pivot
-            // option_ids berisi array of option_id (dikirim dari frontend)
+            
+            // Attach options ke pivot menggunakan ID dari $optionMap
             if (!empty($varData['option_ids'])) {
-                $variant->options()->attach($varData['option_ids']);
+                $idsToAttach = [];
+                
+                // $varData['option_ids'] berisi teks dari JS (contoh: "Merah", "XL")
+                foreach ($varData['option_ids'] as $optValue) {
+                    
+                    // Cocokkan teks tersebut dengan ID yang ada di $optionMap
+                    foreach ($optionMap as $typeName => $options) {
+                        if (isset($options[$optValue])) {
+                            $idsToAttach[] = $options[$optValue];
+                            break; // Hentikan loop jika ID sudah ketemu
+                        }
+                    }
+                }
+                
+                // Simpan kumpulan ID yang sudah diconvert ke database
+                if (!empty($idsToAttach)) {
+                    $variant->options()->attach($idsToAttach);
+                }
             }
-        }
-
-        foreach ($variantCombinations as $varData) {
-            // Tangani foto variant
-            $imgPath = null;
-            $tmpImg = $varData['img_variant'] ?? null;
-            if ($tmpImg && str_starts_with($tmpImg, 'tmp/') && Storage::disk('public')->exists($tmpImg)) {
-                $imgPath = 'produk/variants/' . basename($tmpImg);
-                Storage::disk('public')->move($tmpImg, $imgPath);
-            }
-
-            $variant = ProductVariant::create([
-                'product_id' => $product->id,
-                'sku'        => $varData['sku'],
-                'barcode'    => $varData['barcode'] ?? null,
-                'harga_jual' => $varData['harga_jual'],
-                'harga_beli' => $varData['harga_beli'],
-                'img_variant'=> $imgPath,
-                'is_active'  => true,
-            ]);
-
-            // Attach option IDs ke pivot
-            if (!empty($varData['option_ids'])) {
-                $variant->options()->attach($varData['option_ids']);
-            }
+            
         }
     }
 
@@ -446,13 +499,49 @@ class ProductController extends Controller
     // -------------------------------------------------------
     public function upload(Request $request)
     {
-        $request->validate(['file' => 'required|file|mimes:jpg,jpeg,png,webp,svg|max:2048']);
+        try {
+            // 1. Ambil semua file dari request (menghindari error nama key tidak cocok)
+            $files = $request->allFiles();
+            
+            if (empty($files)) {
+                return response()->json(['error' => 'Tidak ada file yang diunggah.'], 400);
+            }
 
-        $path = $request->file('file')->store('tmp', 'public');
-        if ($path) {
-            return $path;
+            // 2. Ambil file pertama terlepas dari nama input-nya ('file' atau 'gallery_files')
+            $fileKey = array_key_first($files);
+            $uploadedFile = $files[$fileKey];
+
+            // Handle jika array dikirimkan (misal: name="gallery_files[]")
+            if (is_array($uploadedFile)) {
+                $uploadedFile = $uploadedFile[0];
+            }
+
+            // 3. Validasi ekstensi dan ukuran secara manual agar lebih aman
+            $extension = strtolower($uploadedFile->getClientOriginalExtension());
+            $validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'svg'];
+            
+            if (!in_array($extension, $validExtensions)) {
+                return response()->json(['error' => 'Format file tidak didukung. Gunakan JPG, PNG, WEBP, atau SVG.'], 422);
+            }
+            
+            if ($uploadedFile->getSize() > 2048 * 1024) { // Maksimal 2MB
+                return response()->json(['error' => 'Ukuran file maksimal 2MB.'], 422);
+            }
+
+            // 4. Simpan ke storage 'tmp'
+            $path = $uploadedFile->store('tmp', 'public');
+            
+            if ($path) {
+                // 5. Kembalikan plain text agar serverId terbaca benar oleh FilePond
+                return response($path, 200)->header('Content-Type', 'text/plain');
+            }
+            
+            return response()->json(['error' => 'Gagal menyimpan file ke server.'], 500);
+            
+        } catch (\Exception $e) {
+            \Log::error("Upload error: " . $e->getMessage());
+            return response()->json(['error' => 'Sistem Error: ' . $e->getMessage()], 500);
         }
-        return response('Gagal mengunggah.', 500);
     }
 
     public function revert(Request $request)

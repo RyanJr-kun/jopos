@@ -106,17 +106,11 @@ class Product extends Model
         return $this->hasOne(PurchaseItem::class)->latestOfMany();
     }
 
-    // -------------------------------------------------------
-    // RELASI BARU
-    // -------------------------------------------------------
-
-    /** Galeri foto produk utama */
-    public function images(): HasMany
+    public function images()
     {
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
-    /** Foto utama (primary) */
     public function primaryImage()
     {
         return $this->hasOne(ProductImage::class)->where('is_primary', true);

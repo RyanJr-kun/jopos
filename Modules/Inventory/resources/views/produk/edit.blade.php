@@ -316,7 +316,6 @@
                                     <th width="15%">Barcode</th>
                                     <th width="15%">Hrg Jual</th>
                                     <th width="15%">Hrg Beli</th>
-                                    <th width="15%">Stok</th>
                                 </tr>
                             </thead>
                             <tbody id="combinations-tbody"></tbody>
@@ -432,11 +431,11 @@
                 row.querySelector('.remove-spec').addEventListener('click', () => row.remove());
             }
 
-            const existingSpecs = {!! $produk->specification ? $produk->specification : '[]' !!};
-            if (existingSpecs.length > 0) {
+            const existingSpecs = @js($produk->specification ? json_decode($produk->specification, true) : []);
+            if (Array.isArray(existingSpecs) && existingSpecs.length > 0) {
                 existingSpecs.forEach(spec => addSpecRow(spec.key, spec.value));
             } else {
-                addSpecRow();
+                addSpecRow(); // Tambah 1 row kosong default
             }
 
             // ============================================================

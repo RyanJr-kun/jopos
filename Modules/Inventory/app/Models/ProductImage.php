@@ -13,6 +13,7 @@ class ProductImage extends Model
     {
         return $this->belongsTo(Product::class);
     }
+    
 
     // Helper: URL publik gambar
     public function getUrlAttribute(): string

@@ -1,105 +1,309 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Cards basic - UI elements')
+@section('title', 'Detail Produk - ' . $produk->name_product)
+
+@section('vendor-style')
+    <!-- CSS Swiper (Gunakan CDN agar aman dieksekusi langsung di Blade) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+    <style>
+        /* Styling khusus untuk Thumbnail Swiper */
+        .mySwiper .swiper-slide {
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+
+        /* State saat thumbnail sedang aktif/diklik */
+        .mySwiper .swiper-slide-thumb-active {
+            opacity: 1;
+            border: 2px solid #696cff !important;
+            /* Warna primary Sneat */
+            border-radius: 0.375rem;
+        }
+
+        /* Styling panah navigasi */
+        .swiper-button-next::after,
+        .swiper-button-prev::after {
+            font-size: 1.5rem !important;
+            color: #696cff;
+            text-shadow: 0px 0px 5px rgba(255, 255, 255, 0.8);
+        }
+    </style>
+@endsection
+
 @section('content')
-    <div class="container-fluid p-3">
-        <div class="card">
-            <div class="card-header pb-0">
-                <div class="d-md-flex d-block justify-content-between align-items-center">
-                    <h5 class="mb-3">Detail Product: {{ $produk->name_product }}</h5>
-                    <div>
-                        <a href="{{ route('produk.edit', $produk->slug) }}" class="btn btn-sm btn-info mb-0">Edit</a>
-                        <a href="{{ route('produk.index') }}" class="btn btn-sm btn-outline-secondary mb-0">Kembali</a>
+    <div class="container-fluid p-0">
+
+        {{-- Header Navigation --}}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold py-1 mb-0"><span class="text-muted fw-light">Inventaris /</span> Detail Produk</h4>
+            <div class="d-flex gap-2">
+                <a href="{{ route('produk.index') }}" class="btn btn-outline-secondary"><i class="bx bx-arrow-back me-1"></i>
+                    Kembali</a>
+                <a href="{{ route('produk.edit', $produk->slug) }}" class="btn btn-primary"><i
+                        class="bx bx-edit-alt me-1"></i> Edit Produk</a>
+            </div>
+        </div>
+
+        <div class="row">
+            {{-- Bagian Kiri: Gambar & Galeri (Dengan Swiper) --}}
+            <div class="col-xl-4 col-lg-5 col-md-5 mb-4">
+                <div class="card h-100">
+                    <div class="card-body p-3">
+
+                        @php
+                            // Urutkan gambar agar is_primary selalu tampil pertama di Slider
+                            $sortedImages = $produk->images->sortByDesc('is_primary')->values();
+                        @endphp
+
+                        {{-- 1. Main Slider (Gambar Besar) --}}
+                        <div class="swiper mySwiper2 mb-3">
+                            <div class="swiper-wrapper">
+                                @if ($sortedImages->count() > 0)
+                                    @foreach ($sortedImages as $img)
+                                        <div class="swiper-slide text-center">
+                                            <img src="{{ asset('storage/' . $img->path) }}"
+                                                class="img-fluid rounded shadow-sm"
+                                                style="height: 350px; width: 100%; object-fit: contain; background-color: #f8f9fa;"
+                                                alt="{{ $produk->name_product }}">
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="swiper-slide text-center">
+                                        <img src="{{ asset('assets/img/produk.webp') }}" class="img-fluid rounded shadow-sm"
+                                            style="height: 350px; width: 100%; object-fit: contain; background-color: #f8f9fa;"
+                                            alt="Default">
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Tampilkan tombol Next/Prev hanya jika gambar > 1 --}}
+                            @if ($sortedImages->count() > 1)
+                                <div class="swiper-button-next"></div>
+                                <div class="swiper-button-prev"></div>
+                            @endif
+                        </div>
+
+                        {{-- 2. Thumbnail Slider (Gambar Kecil di bawah) --}}
+                        @if ($sortedImages->count() > 1)
+                            <div class="swiper mySwiper">
+                                <div class="swiper-wrapper">
+                                    @foreach ($sortedImages as $img)
+                                        <div class="swiper-slide">
+                                            <img src="{{ asset('storage/' . $img->path) }}" class="rounded border"
+                                                style="width: 100%; height: 70px; object-fit: cover;" alt="Thumbnail">
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
                     </div>
                 </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    {{-- Kolom Kiri: Detail Product dalam Tabel --}}
-                    <div class="col-lg-7">
+
+            {{-- Bagian Kanan: Informasi Utama --}}
+            <div class="col-xl-8 col-lg-7 col-md-7 mb-4">
+                <div class="card h-100">
+                    <div class="card-header border-bottom">
+                        <h5 class="card-title mb-0">{{ $produk->name_product }}</h5>
+                    </div>
+                    <div class="card-body pt-3">
+                        <div class="row mb-3">
+                            <div class="col-sm-6 mb-3 mb-sm-0">
+                                <small class="text-muted text-uppercase d-block mb-1">SKU</small>
+                                <span class="fw-bold text-dark">{{ $produk->sku }}</span>
+                            </div>
+                            <div class="col-sm-6">
+                                <small class="text-muted text-uppercase d-block mb-1">Barcode</small>
+                                <span class="fw-bold text-dark">{{ $produk->barcode ?? '-' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 bg-light p-3 rounded">
+                            <div class="col-sm-4 mb-2 mb-sm-0">
+                                <small class="text-muted d-block mb-1">Harga Beli Dasar</small>
+                                <span class="fw-bold text-danger">Rp
+                                    {{ number_format($produk->harga_beli, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="col-sm-4 mb-2 mb-sm-0">
+                                <small class="text-muted d-block mb-1">Harga Jual Dasar</small>
+                                <span class="fw-bold text-success fs-5">Rp
+                                    {{ number_format($produk->harga_jual, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="col-sm-4">
+                                <small class="text-muted d-block mb-1">Total Stok Tersedia</small>
+                                @php $totalStok = $produk->stocks->sum('qty') ?? 0; @endphp
+                                <span
+                                    class="badge {{ $totalStok <= $produk->stok_minimum ? 'bg-danger' : 'bg-primary' }} fs-6">
+                                    {{ $totalStok }} {{ $produk->unit->singkat ?? 'Unit' }}
+                                </span>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
-                            <table class="table table-borderless">
+                            <table class="table table-borderless table-sm">
                                 <tbody>
                                     <tr>
-                                        <td class="fw-bold" style="width: 30%;">Nama Product</td>
-                                        <td>: {{ $produk->name_product }}</td>
+                                        <td class="text-muted w-25">Kategori</td>
+                                        <td class="fw-bold">: {{ $produk->category->name ?? '-' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-bold">SKU (Stock Keeping Unit)</td>
-                                        <td>: {{ $produk->sku }}</td>
+                                        <td class="text-muted">Brand</td>
+                                        <td class="fw-bold">: {{ $produk->brand->name ?? '-' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-bold">Barcode</td>
-                                        <td>: {{ $produk->barcode ?? '-' }}</td>
+                                        <td class="text-muted">Pajak</td>
+                                        <td class="fw-bold">: {{ $produk->pajak->name_taxe ?? 'Tidak ada pajak' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-bold">Kategori</td>
-                                        <td>: {{ $produk->category->name }}</td>
+                                        <td class="text-muted">Garansi</td>
+                                        <td class="fw-bold">: {{ $produk->garansi->name ?? 'Tidak bergaransi' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-bold">Brand</td>
-                                        <td>: {{ $produk->brand->name }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">Unit</td>
-                                        <td>: {{ $produk->unit->name }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">Harga Jual</td>
-                                        <td>: Rp.{{ number_format($produk->harga_jual, 0, ',', '.') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">Harga Beli</td>
-                                        <td>: Rp.{{ number_format($produk->harga_beli, 0, ',', '.') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">Stock Saat Ini</td>
-                                        <td>: {{ $produk->qty }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">Stock Minimum</td>
-                                        <td>: {{ $produk->stok_minimum }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">Warrantie</td>
-                                        <td>: {{ $produk->garansi?->name ?? 'Tidak ada garansi' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">Taxe</td>
-                                        <td>: {{ $produk->pajak?->name_taxe ?? 'Tidak ada' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">Dibuat oleh</td>
-                                        <td>: {{ $produk->user->name }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold align-text-top">Description</td>
-                                        <td class="align-text-top">:<div
-                                                style="white-space: normal; word-wrap: break-word;"> {!! $produk->description ?? '-' !!}
-                                            </div>
+                                        <td class="text-muted">Batas Stok Min.</td>
+                                        <td class="fw-bold">: <span class="text-warning">{{ $produk->stok_minimum }}</span>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    {{-- Kolom Kanan: Gambar Product --}}
-                    <div class="col-lg-5 mt-4 mt-lg-0">
-                        <h5 class="ms-2">Gambar Product :</h5>
-                        <div class="text-start ms-2 my-3">
-                            @if ($produk->img_produk && Storage::disk('public')->exists($produk->img_produk))
-                                <img src="{{ asset('storage/' . $produk->img_produk) }}"
-                                    class="img-fluid border-radius-lg shadow-lg" style="max-height: 500px;"
-                                    alt="Gambar Product {{ $produk->name_product }}">
-                            @else
-                                <img src="{{ asset('assets/img/produk.webp') }}" class="img-fluid border-radius-lg"
-                                    alt="Gambar produk default">
-                            @endif
+        {{-- Baris Bawah: Deskripsi, Spesifikasi & Variasi --}}
+        <div class="row">
+            {{-- Kolom Kiri Bawah: Deskripsi & Spek --}}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header border-bottom">
+                        <h6 class="card-title mb-0">Deskripsi & Spesifikasi</h6>
+                    </div>
+                    <div class="card-body pt-3">
+                        <div class="mb-4">
+                            <small class="text-muted text-uppercase fw-bold">Deskripsi Produk</small>
+                            <div class="mt-2 text-dark" style="font-size: 0.9rem;">
+                                {!! $produk->description ?? '<em>Tidak ada deskripsi.</em>' !!}
+                            </div>
                         </div>
+
+                        @php
+                            $specs = $produk->specification ? json_decode($produk->specification, true) : null;
+                        @endphp
+
+                        @if ($specs && is_array($specs) && count($specs) > 0)
+                            <div>
+                                <small class="text-muted text-uppercase fw-bold">Spesifikasi Teknis</small>
+                                <table class="table table-sm table-bordered mt-2">
+                                    <tbody>
+                                        @foreach ($specs as $spec)
+                                            <tr>
+                                                <td class="bg-light text-muted" style="width: 35%;">{{ $spec['key'] }}
+                                                </td>
+                                                <td class="fw-bold">{{ $spec['value'] }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Kolom Kanan Bawah: Tabel Varian Produk (Jika Ada) --}}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header border-bottom">
+                        <h6 class="card-title mb-0">Variasi Produk</h6>
+                    </div>
+                    <div class="card-body pt-3 p-0">
+                        @if ($produk->variants->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover m-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Varian</th>
+                                            <th>SKU</th>
+                                            <th>Harga Jual</th>
+                                            <th class="text-center">Stok</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($produk->variants as $variant)
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        @if ($variant->img_variant && Storage::disk('public')->exists($variant->img_variant))
+                                                            <img src="{{ asset('storage/' . $variant->img_variant) }}"
+                                                                class="rounded me-2"
+                                                                style="width: 32px; height: 32px; object-fit: cover;">
+                                                        @endif
+                                                        <span class="badge bg-label-info">
+                                                            {{ $variant->options->pluck('value')->join(' / ') }}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td><small class="text-dark fw-bold">{{ $variant->sku }}</small></td>
+                                                <td><small class="text-success fw-bold">Rp
+                                                        {{ number_format($variant->harga_jual, 0, ',', '.') }}</small></td>
+                                                <td class="text-center">
+                                                    @php $varStok = $produk->stocks->where('product_variant_id', $variant->id)->sum('qty') ?? 0; @endphp
+                                                    <span class="badge bg-secondary">{{ $varStok }}</span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center py-5">
+                                <i class="bx bx-layer text-muted mb-2" style="font-size: 2.5rem;"></i>
+                                <p class="text-muted mb-0">Produk ini tidak memiliki variasi.</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
     </div>
+@endsection
+
+@section('page-script')
+    <!-- Script Swiper.js via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof Swiper !== 'undefined') {
+
+                // 1. Inisialisasi Thumbnail Slider (Bawah)
+                var swiperThumbs = new Swiper(".mySwiper", {
+                    spaceBetween: 10,
+                    slidesPerView: 4, // Tampilkan 4 kotak gambar kecil
+                    freeMode: true,
+                    watchSlidesProgress: true,
+                });
+
+                // 2. Inisialisasi Main Slider (Atas)
+                var swiperMain = new Swiper(".mySwiper2", {
+                    spaceBetween: 10,
+                    loop: true, // Biar bisa digeser (swipe) terus berputar
+                    navigation: {
+                        nextEl: ".swiper-button-next",
+                        prevEl: ".swiper-button-prev",
+                    },
+                    thumbs: {
+                        swiper: swiperThumbs, // Menghubungkan klik thumbnail ke gambar utama
+                    },
+                });
+
+            } else {
+                console.warn('Swiper.js gagal dimuat.');
+            }
+        });
+    </script>
 @endsection

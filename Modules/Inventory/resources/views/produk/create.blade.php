@@ -46,6 +46,16 @@
 @endsection
 
 @section('content')
+    @if ($errors->any())
+        <div class="alert alert-danger mb-4">
+            <h6 class="alert-heading fw-bold mb-1">Gagal Menyimpan!</h6>
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <form id="addform" method="POST" action="{{ route('produk.store') }}" enctype="multipart/form-data">
         @csrf
 
@@ -59,7 +69,7 @@
             <div class="card-body pt-3">
                 <div class="row g-3">
                     {{-- Nama --}}
-                    <div class="col-md-6">
+                    <div class="col-12">
                         <label class="form-label">Nama Produk <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('name_product') is-invalid @enderror"
                             id="name_product" name="name_product" value="{{ old('name_product') }}" required autofocus>
@@ -122,6 +132,13 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Spesifikasi Teknis</label>
+                        <div id="specification-container"></div>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="btn-add-spec">
+                            <i class="bx bx-plus"></i> Tambah Baris Spesifikasi
+                        </button>
                     </div>
 
                     {{-- Deskripsi Pakai Quill --}}
@@ -240,7 +257,6 @@
                                     <th width="20%">SKU</th>
                                     <th width="20%">Hrg Beli</th>
                                     <th width="20%">Hrg Jual</th>
-                                    <th width="15%">Stok Awal</th>
                                 </tr>
                             </thead>
                             <tbody id="combinations-tbody"></tbody>
@@ -384,6 +400,23 @@
                 }
             });
 
+            // specification dynamic rows
+            const specContainer = document.getElementById('specification-container');
+            document.getElementById('btn-add-spec').addEventListener('click', () => addSpecRow());
+
+            function addSpecRow(key = '', value = '') {
+                const row = document.createElement('div');
+                row.className = 'd-flex gap-2 mb-2 align-items-center spec-row';
+                row.innerHTML = `
+                    <input type="text" name="spec_keys[]" class="form-control" placeholder="Cth: Warna" value="${key}" required>
+                    <input type="text" name="spec_values[]" class="form-control" placeholder="Cth: Merah Merona" value="${value}" required>
+                    <button type="button" class="btn btn-icon btn-danger btn-sm remove-spec" title="Hapus">
+                        <i class="bx bx-trash"></i>
+                    </button>`;
+                specContainer.appendChild(row);
+                row.querySelector('.remove-spec').addEventListener('click', () => row.remove());
+            }
+
             // 5. GENERATE VARIAN ROW (Versi Rapi)
             const typesContainer = document.getElementById('variant-types-container');
             let typeCount = 0;
@@ -472,15 +505,15 @@
                     row.innerHTML = `
                         <td>
                             <span class="badge bg-label-info">${label}</span>
-                            ${combo.map(c => `<input type="hidden" name="variants[${i}][option_ids][]" data-type="${c.type}" data-value="${c.value}">`).join('')}
+                            ${combo.map(c => `<input type="hidden" name="variants[${i}][option_ids][]" value="${c.value}">`).join('')}
                         </td>
                         <td class="text-center">
                             <input type="file" id="v-img-${i}" accept="image/*" style="display:none;">
                             <label for="v-img-${i}" class="btn btn-sm btn-icon btn-outline-secondary"><i class="bx bx-camera"></i></label>
                             <img id="v-preview-${i}" src="" style="display:none; width:30px; height:30px; object-fit:cover; border-radius:4px;">
                             <input type="hidden" name="variants[${i}][img_variant]" id="v-path-${i}">
-                        </td>
-                        <td><input type="text" class="form-control form-control-sm" name="variants[${i}][sku]" value="${baseSku}-${label}" required></td>
+                            </td>
+                            <td><input type="text" class="form-control form-control-sm" name="variants[${i}][sku]" value="${baseSku}-${label}" required></td>
                         <td><input type="number" class="form-control form-control-sm" name="variants[${i}][harga_beli]" required></td>
                         <td><input type="number" class="form-control form-control-sm" name="variants[${i}][harga_jual]" required></td>
                         
