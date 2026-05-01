@@ -297,20 +297,13 @@ class ProductController extends Controller
             // Tambah foto baru
             $this->saveGallery($produk, $request->input('gallery', []), $request->input('primary_image'));
 
+            
             // ---- Update variasi ----
             if ($request->filled('variant_types')) {
-                $keptVariantImages = collect($request->input('variants', []))->pluck('img_variant')->filter()->toArray();
-
-                $produk->variants()->each(function ($v) use ($keptVariantImages) {
-                    if ($v->img_variant && !in_array($v->img_variant, $keptVariantImages)) {
-                        Storage::disk('public')->delete($v->img_variant);
-                    }
-                    $v->delete(); 
-                });
-                $produk->variantTypes()->delete();
-
+                // Panggil langsung saveVariants, logika update/create/delete ada di dalamnya
                 $this->saveVariants($produk, $request->input('variant_types'), $request->input('variants', []));
             } else {
+                // Jika user mematikan toggle varian sepenuhnya, barulah kita hapus semuanya
                 $produk->variants()->each(function ($v) {
                     if ($v->img_variant) Storage::disk('public')->delete($v->img_variant);
                     $v->delete();
@@ -434,9 +427,12 @@ class ProductController extends Controller
     // -------------------------------------------------------
     // HELPER PRIVATE: simpan variasi
     // -------------------------------------------------------
-        private function saveVariants(Product $product, array $variantTypes, array $variantCombinations): void
+    private function saveVariants(Product $product, array $variantTypes, array $variantCombinations): void
     {
-        // 1. Buat variant types & options (kode existing tetap)
+        // 1. Buat ulang variant types & options
+        // Tidak masalah dihapus, karena ID Varian utamanya (ProductVariant) akan kita pertahankan
+        $product->variantTypes()->delete(); 
+
         $optionMap = [];
         foreach ($variantTypes as $typeIndex => $typeData) {
             $type = ProductVariantType::create([
@@ -454,9 +450,11 @@ class ProductController extends Controller
             }
         }
         
-        // 2. ✅ SATU LOOP untuk buat variant combinations
+        // Array untuk melacak ID varian mana saja yang masih dipakai
+        $keptVariantIds = [];
+
+        // 2. Loop kombinasi variasi dari form
         foreach ($variantCombinations as $varData) {
-            // Handle variant image
             $imgPath = null;
             $tmpImg = $varData['img_variant'] ?? null;
             
@@ -469,39 +467,64 @@ class ProductController extends Controller
                 }
             }
             
-            $variant = ProductVariant::create([
-                'product_id'    => $product->id,
-                'sku'           => $varData['sku'],
-                'barcode'       => $varData['barcode'] ?? null,
-                'harga_jual'    => $varData['harga_jual'],
-                'harga_beli'    => $varData['harga_beli'],
-                'img_variant'   => $imgPath,
-                'is_active'     => true,
-            ]);
+            // CEK APAKAH INI VARIAN LAMA (Diedit) ATAU BARU (Ditambah)
+            if (isset($varData['id']) && $varData['id']) {
+                $variant = ProductVariant::find($varData['id']);
+                
+                // Hapus file gambar lama jika user mengunggah gambar baru
+                if ($imgPath && $variant->img_variant && $imgPath !== $variant->img_variant) {
+                    Storage::disk('public')->delete($variant->img_variant);
+                }
+
+                // Lakukan UPDATE, bukan CREATE, agar ID tidak berubah dan Stok tetap aman
+                $variant->update([
+                    'sku'           => $varData['sku'],
+                    'barcode'       => $varData['barcode'] ?? null,
+                    'harga_jual'    => $varData['harga_jual'],
+                    'harga_beli'    => $varData['harga_beli'],
+                    'img_variant'   => $imgPath ?? $variant->img_variant, 
+                ]);
+            } else {
+                // Buat varian baru karena tidak ada ID (biasanya karena user klik "Generate" lagi)
+                $variant = ProductVariant::create([
+                    'product_id'    => $product->id,
+                    'sku'           => $varData['sku'],
+                    'barcode'       => $varData['barcode'] ?? null,
+                    'harga_jual'    => $varData['harga_jual'],
+                    'harga_beli'    => $varData['harga_beli'],
+                    'img_variant'   => $imgPath,
+                    'is_active'     => true,
+                ]);
+            }
             
-            // Attach options ke pivot menggunakan ID dari $optionMap
+            $keptVariantIds[] = $variant->id;
+
+            // Bersihkan relasi opsi pivot yang lama, lalu pasang yang baru
+            $variant->options()->detach();
+
             if (!empty($varData['option_ids'])) {
                 $idsToAttach = [];
-                
-                // $varData['option_ids'] berisi teks dari JS (contoh: "Merah", "XL")
                 foreach ($varData['option_ids'] as $optValue) {
-                    
-                    // Cocokkan teks tersebut dengan ID yang ada di $optionMap
                     foreach ($optionMap as $typeName => $options) {
                         if (isset($options[$optValue])) {
                             $idsToAttach[] = $options[$optValue];
-                            break; // Hentikan loop jika ID sudah ketemu
+                            break; 
                         }
                     }
                 }
-                
-                // Simpan kumpulan ID yang sudah diconvert ke database
                 if (!empty($idsToAttach)) {
                     $variant->options()->attach($idsToAttach);
                 }
             }
-            
         }
+
+        // 3. Hapus HANYA varian yang benar-benar dibuang oleh user dari form
+        $product->variants()->whereNotIn('id', $keptVariantIds)->each(function ($v) {
+            if ($v->img_variant) {
+                Storage::disk('public')->delete($v->img_variant);
+            }
+            $v->delete(); // Ini baru aman dihapus beserta stoknya, karena memang sengaja di-remove user
+        });
     }
 
     // -------------------------------------------------------
@@ -579,16 +602,105 @@ class ProductController extends Controller
     public function getData(Request $request)
     {
         $search = $request->query('search');
-        $query  = Product::with('pajak')->orderBy('qty', 'asc');
+        
+        // Ambil ID Toko dari user yang login (sesuai logika Anda di cekStock)
+        $storeId = Auth::user()->employeeProfile->store_id ?? null;
 
-        if ($search) {
-            $query->where('name_product', 'LIKE', '%' . $search . '%');
-        }
-        if ($request->boolean('wajib_seri')) {
-            $query->where('wajib_seri', true);
+        // Load relasi pajak, varian, dan opsi variannya
+        $query = Product::with(['pajak', 'primaryImage', 'variants' => function($q) {
+                // Pastikan memuat opsi untuk membentuk nama varian (misal: "Merah / XL")
+                $q->where('is_active', 1)->with('options'); 
+            }])
+            ->when($search, function ($q, $search) {
+                $q->where(function($subQ) use ($search) {
+                    $subQ->where('name_product', 'like', "%{$search}%")
+                         ->orWhere('sku', 'like', "%{$search}%")
+                         ->orWhere('barcode', 'like', "%{$search}%")
+                         ->orWhereHas('variants', function($qv) use ($search) {
+                             $qv->where('sku', 'like', "%{$search}%")
+                                ->orWhere('barcode', 'like', "%{$search}%");
+                         });
+                });
+            })
+            ->when($request->boolean('wajib_seri'), function($q) {
+                $q->where('wajib_seri', true);
+            })
+            ->latest(); // Gunakan latest, jangan orderBy qty karena qty ada di tabel product_stocks
+
+        $products = $query->paginate(15);
+
+        $formattedData = [];
+
+        foreach ($products as $product) {
+            // Skenario 1: Produk memiliki varian
+            if ($product->variants && $product->variants->count() > 0) {
+                foreach ($product->variants as $variant) {
+                    
+                    // Bentuk nama varian dari opsi (misal: "Hitam / XL")
+                    $variantOptions = [];
+                    if ($variant->relationLoaded('options') && $variant->options->count() > 0) {
+                        foreach ($variant->options as $opt) {
+                            $variantOptions[] = $opt->value;
+                        }
+                    }
+                    $variantName = !empty($variantOptions) ? implode(' / ', $variantOptions) : "SKU: " . $variant->sku;
+                    
+                    // Hitung stok varian spesifik di toko saat ini
+                    $stockQuery = ProductStock::where('product_id', $product->id)
+                                    ->where('product_variant_id', $variant->id);
+                    if ($storeId) {
+                        $stockQuery->where('store_id', $storeId);
+                    }
+                    $stokVarian = $stockQuery->sum('qty');
+
+                    $formattedData[] = [
+                        'id' => $product->id, // ID Produk Induk
+                        'variant_id' => $variant->id,
+                        'name_product' => $product->name_product,
+                        'variant_name' => $variantName, 
+                        'sku' => $variant->sku,
+                        'qty' => $stokVarian,
+                        'harga_beli' => $variant->harga_beli,
+                        'harga_jual' => $variant->harga_jual,
+                        // Gunakan gambar varian, jika tidak ada fallback ke primary image produk
+                        'img_produk' => $variant->img_variant ?? $product->primaryImage->path ?? null,
+                        'taxe_id' => $product->taxe_id,
+                        'pajak' => $product->pajak ? ['rate' => $product->pajak->rate] : null
+                    ];
+                }
+            } 
+            // Skenario 2: Produk Simple (Tanpa Varian)
+            else {
+                 // Hitung stok produk induk (dimana product_variant_id adalah null)
+                 $stockQuery = ProductStock::where('product_id', $product->id)
+                                ->whereNull('product_variant_id');
+                 if ($storeId) {
+                     $stockQuery->where('store_id', $storeId);
+                 }
+                 $stokProduk = $stockQuery->sum('qty');
+
+                $formattedData[] = [
+                    'id' => $product->id,
+                    'variant_id' => null,
+                    'name_product' => $product->name_product,
+                    'variant_name' => null,
+                    'sku' => $product->sku,
+                    'qty' => $stokProduk,
+                    'harga_beli' => $product->harga_beli,
+                    'harga_jual' => $product->harga_jual,
+                    'img_produk' => $product->primaryImage->path ?? null,
+                    'taxe_id' => $product->taxe_id,
+                    'pajak' => $product->pajak ? ['rate' => $product->pajak->rate] : null
+                ];
+            }
         }
 
-        return response()->json($query->paginate(10));
+        // Return JSON yang sudah sesuai dengan ekspektasi Select2 di blade Anda
+        return response()->json([
+            'data' => $formattedData,
+            'current_page' => $products->currentPage(),
+            'next_page_url' => $products->nextPageUrl(),
+        ]);
     }
 
     public function cekStock(Request $request)

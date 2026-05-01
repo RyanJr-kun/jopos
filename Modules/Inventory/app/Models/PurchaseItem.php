@@ -14,16 +14,25 @@ class PurchaseItem extends Model
      * @var array<int, string>
      */
     protected $guarded = ['id'];
+
     public function pembelian(): BelongsTo
     {
         return $this->belongsTo(Purchase::class);
     }
+
     public function produk(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        // Tambahkan 'product_id'
+        return $this->belongsTo(Product::class, 'product_id');
     }
+
     public function pajak(): BelongsTo
     {
         return $this->belongsTo(Taxe::class);
+    }
+
+    public function varian(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

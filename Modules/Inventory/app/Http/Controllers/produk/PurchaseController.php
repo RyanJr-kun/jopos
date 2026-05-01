@@ -4,6 +4,7 @@ namespace Modules\Inventory\Http\Controllers\produk;
 
 
 use App\Http\Controllers\Controller;
+use App\Models\ProductStock;
 use App\Models\Store;
 use App\Models\Taxe;
 use Barryvdh\DomPDF\Facade\Pdf as Pdf;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Models\Product;
+use Modules\Inventory\Models\ProductVariant;
 use Modules\Inventory\Models\Purchase;
 use Modules\Inventory\Models\Supplier;
 
@@ -60,6 +62,7 @@ class PurchaseController extends Controller
     public function create(Request $request)
     {
         $statuses = Purchase::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
+        
         return view('inventory::pembelian.create', [
             'title' => 'Tambah Invoice Purchase',
             'supplier' => Supplier::all(),
@@ -95,6 +98,9 @@ class PurchaseController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -102,13 +108,15 @@ class PurchaseController extends Controller
             'tanggal' => 'required|date',
             'referensi' => 'required|string|max:255|unique:purchases',
             'status_barang' => 'required|in:Diterima,Belum Diterima,Dibatalkan',
-            'status_pembayaran' => 'required|in:Lunas,Belum Lunas', // Lunas Sebagian dihapus dari input manual
+            'status_pembayaran' => 'required|in:Lunas,Belum Lunas',
             'jumlah_dibayar' => 'nullable|numeric|min:0',
             'ongkir' => 'nullable|numeric|min:0',
             'diskon_tambahan' => 'nullable|numeric|min:0',
             'catatan' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
+            // Tambahan validasi untuk varian (nullable karena bisa jadi produk simple)
+            'items.*.product_variant_id' => 'nullable|exists:product_variants,id', 
             'items.*.qty' => 'required|integer|min:1',
             'items.*.harga_beli' => 'required|numeric|min:0',
             'items.*.diskon' => 'nullable|numeric|min:0',
@@ -116,19 +124,27 @@ class PurchaseController extends Controller
         ]);
 
         try {
-            // Ambil data pajak yang relevan dalam satu query untuk efisiensi
             $pajakIds = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
             $taxesData = Taxe::whereIn('id', $pajakIds)->get()->keyBy('id');
 
             $pembelian = DB::transaction(function () use ($validatedData, $request, $taxesData) {
-                // 1. Ambil semua produk yang relevan dalam satu query
-                $produkIds = collect($validatedData['items'])->pluck('product_id');
+                // AMBIL DATA STORE
+                // Karena tabel purchases butuh store_id, kita asumsikan ambil dari Store::first() 
+                // atau sesuaikan jika user login terikat dengan store tertentu.
+                $defaultStore = Store::first();
+                $storeId = $defaultStore ? $defaultStore->id : 1;
+
+                // 1. Ambil semua produk dan varian yang relevan
+                $produkIds = collect($validatedData['items'])->pluck('product_id')->unique();
                 $products = Product::whereIn('id', $produkIds)->get()->keyBy('id');
 
-                // 2. Hitung total dari sisi server untuk keamanan
+                $variantIds = collect($validatedData['items'])->pluck('product_variant_id')->filter()->unique();
+                $variants = ProductVariant::whereIn('id', $variantIds)->get()->keyBy('id');
+
+                // 2. Hitung total dari sisi server
                 $subtotal_keseluruhan = 0;
                 $total_pajak_item = 0;
-                $itemsForDetail = []; // Array untuk menyimpan data item yang sudah dihitung
+                $itemsForDetail = [];
 
                 foreach ($validatedData['items'] as $itemData) {
                     $harga_beli = $itemData['harga_beli'];
@@ -151,19 +167,17 @@ class PurchaseController extends Controller
                 $total_akhir = $subtotal_keseluruhan - $diskon_tambahan + $ongkir;
                 $jumlah_dibayar = $validatedData['jumlah_dibayar'] ?? 0;
 
-                // 3. Tentukan status pembayaran dan sisa hutang secara otomatis
+                // 3. Tentukan status pembayaran
                 $sisa = $total_akhir - $jumlah_dibayar;
-                $status_pembayaran = 'Belum Lunas'; // Default status
+                $status_pembayaran = 'Belum Lunas';
 
-                // Jika pembayaran pas atau lebih (ada kembalian), statusnya Lunas.
                 if ($jumlah_dibayar >= $total_akhir) {
                     $status_pembayaran = 'Lunas';
-                } else if ($jumlah_dibayar > 0 && $jumlah_dibayar < $total_akhir) {
-                    $status_pembayaran = 'Belum Lunas';
                 }
 
-                // 3. Buat record Purchase
+                // 4. Buat record Purchase
                 $pembelian = Purchase::create([
+                    'store_id' => $storeId, // Wajib diisi berdasarkan struktur tabel purchases
                     'supplier_id' => $validatedData['supplier_id'],
                     'user_id' => Auth::id(),
                     'referensi' => $validatedData['referensi'],
@@ -174,34 +188,56 @@ class PurchaseController extends Controller
                     'ongkir' => $ongkir,
                     'total_akhir' => $total_akhir,
                     'jumlah_dibayar' => $jumlah_dibayar,
-                    'sisa_hutang' => $sisa, // Simpan sisa, bisa positif (hutang) atau negatif (kembalian)
-                    'status_pembayaran' => $status_pembayaran, // Gunakan status yang sudah ditentukan
+                    'sisa_hutang' => $sisa, 
+                    'status_pembayaran' => $status_pembayaran,
                     'status_barang' => $validatedData['status_barang'],
                     'catatan' => $validatedData['catatan'],
                 ]);
 
-                // 4. Buat record PurchaseItem, update stok, dan update harga beli produk
+                // 5. Buat record PurchaseItem, update stok, dan update harga beli
                 foreach ($itemsForDetail as $itemData) {
-                    // Buat detail pembelian
+                    $variantId = $itemData['product_variant_id'] ?? null;
+
+                    // A. Buat detail pembelian
                     $pembelian->details()->create([
                         'product_id' => $itemData['product_id'],
+                        'product_variant_id' => $variantId, // Simpan ID Varian jika ada
                         'qty' => $itemData['qty'],
                         'harga_beli' => $itemData['harga_beli'],
                         'diskon' => $itemData['diskon'] ?? 0,
                         'taxe_id' => $itemData['taxe_id'] ?? null,
-                        'subtotal' => $itemData['subtotal'], // Gunakan subtotal yang sudah dihitung (termasuk pajak)
+                        'subtotal' => $itemData['subtotal'], 
                     ]);
-                    // Ambil model produk yang sesuai
-                    $produk = $products->get($itemData['product_id']);
 
-                    // Update data di tabel produk master
-                    $produk->harga_beli = $itemData['harga_beli'];
-
-                    // Tambah stok hanya jika status barang 'Diterima'
-                    if ($validatedData['status_barang'] === 'Diterima') {
-                        $produk->qty += $itemData['qty'];
+                    // B. Update data harga beli produk master atau varian
+                    if ($variantId && $variants->has($variantId)) {
+                        // Jika varian, update harga beli di tabel product_variants
+                        $varian = $variants->get($variantId);
+                        $varian->harga_beli = $itemData['harga_beli'];
+                        $varian->save();
+                    } else {
+                        // Jika produk simple, update harga beli di tabel products
+                        $produk = $products->get($itemData['product_id']);
+                        if ($produk) {
+                            $produk->harga_beli = $itemData['harga_beli'];
+                            $produk->save();
+                        }
                     }
-                    $produk->save(); // Simpan perubahan (harga beli, harga jual, dan/atau stok)
+
+                    // C. Tambah stok menggunakan tabel `product_stocks`
+                    if ($validatedData['status_barang'] === 'Diterima') {
+                        // Cari baris stok yang sudah ada, atau buat baru jika belum ada di toko ini
+                        $stockRecord = ProductStock::firstOrCreate(
+                            [
+                                'store_id' => $storeId,
+                                'product_id' => $itemData['product_id'],
+                                'product_variant_id' => $variantId,
+                            ],
+                            ['qty' => 0] // Nilai default jika harus create baru
+                        );
+
+                        $stockRecord->increment('qty', $itemData['qty']);
+                    }
                 }
 
                 return $pembelian;
@@ -235,14 +271,19 @@ class PurchaseController extends Controller
      */
     public function edit(Purchase $pembelian)
     {
-        // Eager load relasi untuk efisiensi
-        $pembelian->load('details.produk', 'details.pajak');
+        // Eager load relasi untuk efisiensi, termasuk varian dan gambarnya
+        $pembelian->load([
+            'details.produk.primaryImage', 
+            'details.pajak',
+            'details.varian.options' // Asumsi nama relasi di PurchaseItem adalah 'varian'
+        ]);
+        
         $statuses = Purchase::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
 
         return view('inventory::pembelian.edit', [
             'title' => 'Edit Invoice Purchase: ' . $pembelian->referensi,
             'pembelian' => $pembelian,
-            'supplier' => Supplier::all(),
+            'pemasok' => \Modules\Inventory\Models\Supplier::where('status', 1)->get(), // Diubah menjadi 'pemasok' agar sesuai dengan view
             'taxes' => Taxe::all(),
             'statuses' => $statuses,
         ]);
@@ -253,15 +294,25 @@ class PurchaseController extends Controller
      */
     public function update(Request $request, Purchase $pembelian)
     {
+        // Karena tabel purchases butuh store_id (seperti di fungsi store)
+        $storeId = $pembelian->store_id; 
+
         // --- LOGIKA PEMBATALAN CEPAT DARI HALAMAN INDEX ---
         if ($request->input('status_pembayaran') === 'Dibatalkan' && !$request->has('items')) {
             if ($pembelian->status_pembayaran !== 'Dibatalkan') {
                 try {
-                    DB::transaction(function () use ($pembelian) {
-
+                    DB::transaction(function () use ($pembelian, $storeId) {
+                        // Jika barangnya pernah diterima, kurangi stoknya dari product_stocks
                         if ($pembelian->status_barang === 'Diterima') {
                             foreach ($pembelian->details as $detail) {
-                                Product::where('id', $detail->product_id)->decrement('qty', $detail->qty);
+                                $stockRecord = \App\Models\ProductStock::where('store_id', $storeId)
+                                    ->where('product_id', $detail->product_id)
+                                    ->where('product_variant_id', $detail->product_variant_id)
+                                    ->first();
+
+                                if ($stockRecord && $stockRecord->qty >= $detail->qty) {
+                                    $stockRecord->decrement('qty', $detail->qty);
+                                }
                             }
                         }
                         // Update status dan reset pembayaran
@@ -296,6 +347,7 @@ class PurchaseController extends Controller
             'catatan' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_variant_id' => 'nullable|exists:product_variants,id', 
             'items.*.qty' => 'required|integer|min:1',
             'items.*.harga_beli' => 'required|numeric|min:0',
             'items.*.diskon' => 'nullable|numeric|min:0',
@@ -306,38 +358,55 @@ class PurchaseController extends Controller
             $pajakIds = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
             $taxesData = Taxe::whereIn('id', $pajakIds)->get()->keyBy('id');
 
-            DB::transaction(function () use ($validatedData, $pembelian, $taxesData) {
+            DB::transaction(function () use ($validatedData, $pembelian, $taxesData, $storeId) {
                 $statusLama = $pembelian->status_pembayaran;
                 $statusBaru = $validatedData['status_pembayaran'];
                 $statusBarangLama = $pembelian->status_barang;
                 $statusBarangBaru = $validatedData['status_barang'];
 
                 // --- MANAJEMEN STOK ---
-                // Ambil semua produk yang relevan untuk data baru dalam satu query
-                $newProductIds = collect($validatedData['items'])->pluck('product_id');
-                $products = Product::whereIn('id', $newProductIds)->get()->keyBy('id');
+                $newProductIds = collect($validatedData['items'])->pluck('product_id')->unique();
+                $products = \Modules\Inventory\Models\Product::whereIn('id', $newProductIds)->get()->keyBy('id');
+                
+                $variantIds = collect($validatedData['items'])->pluck('product_variant_id')->filter()->unique();
+                $variants = \Modules\Inventory\Models\ProductVariant::whereIn('id', $variantIds)->get()->keyBy('id');
 
-                // 1. Kembalikan stok lama jika transaksi sebelumnya aktif (bukan dibatalkan) dan barang sudah diterima
+                // 1. Kembalikan stok lama (Reset) dari product_stocks
                 if ($statusLama !== 'Dibatalkan' && $statusBarangLama === 'Diterima') {
                     foreach ($pembelian->details as $oldDetail) {
-                        Product::where('id', $oldDetail->product_id)->decrement('qty', $oldDetail->qty);
+                        $stockRecord = \App\Models\ProductStock::where('store_id', $storeId)
+                            ->where('product_id', $oldDetail->product_id)
+                            ->where('product_variant_id', $oldDetail->product_variant_id)
+                            ->first();
+
+                        if ($stockRecord && $stockRecord->qty >= $oldDetail->qty) {
+                            $stockRecord->decrement('qty', $oldDetail->qty);
+                        }
                     }
                 }
 
                 // 2. Tambah stok baru jika transaksi baru aktif dan barang diterima
                 if ($statusBaru !== 'Dibatalkan' && $statusBarangBaru === 'Diterima') {
-                    // Validasi stok tidak diperlukan untuk pembelian, hanya penambahan
                     foreach ($validatedData['items'] as $itemData) {
-                        Product::where('id', $itemData['product_id'])->increment('qty', $itemData['qty']);
+                        $variantId = $itemData['product_variant_id'] ?? null;
+                        
+                        $stockRecord = \App\Models\ProductStock::firstOrCreate(
+                            [
+                                'store_id' => $storeId,
+                                'product_id' => $itemData['product_id'],
+                                'product_variant_id' => $variantId,
+                            ],
+                            ['qty' => 0]
+                        );
+
+                        $stockRecord->increment('qty', $itemData['qty']);
                     }
                 }
 
-                if ($statusLama === 'Dibatalkan' && $statusBaru !== 'Dibatalkan') {
-                }
                 // --- PENGHITUNGAN ULANG TOTAL (SERVER-SIDE) ---
                 $subtotal_keseluruhan = 0;
                 $total_pajak_item = 0;
-                $itemsForDetail = []; // Array untuk menyimpan data item yang sudah dihitung
+                $itemsForDetail = [];
 
                 foreach ($validatedData['items'] as $itemData) {
                     $taxe_id = $itemData['taxe_id'] ?? null;
@@ -357,20 +426,18 @@ class PurchaseController extends Controller
                 $total_akhir = $subtotal_keseluruhan - $diskon_tambahan + $ongkir;
                 $jumlah_dibayar = $validatedData['jumlah_dibayar'] ?? 0;
 
-                // Tentukan status pembayaran dan sisa hutang secara otomatis (konsisten dengan method store)
+                // Tentukan status pembayaran
                 $sisa = $total_akhir - $jumlah_dibayar;
-                $status_pembayaran_server = 'Belum Lunas'; // Default status
+                $status_pembayaran_server = 'Belum Lunas';
                 if ($jumlah_dibayar >= $total_akhir) {
                     $status_pembayaran_server = 'Lunas';
-                } else if ($jumlah_dibayar > 0 && $jumlah_dibayar < $total_akhir) {
-                    $status_pembayaran_server = 'Belum Lunas';
                 }
 
                 // --- UPDATE DATA PEMBELIAN ---
                 $pembelian->update([
                     'supplier_id' => $validatedData['supplier_id'],
                     'tanggal_pembelian' => $validatedData['tanggal'],
-                    'user_id' => Auth::id(), // Tambahkan update user_id untuk melacak siapa yang mengedit
+                    'user_id' => Auth::id(), 
                     'subtotal' => $subtotal_keseluruhan,
                     'diskon' => $diskon_tambahan,
                     'pajak' => $total_pajak_item,
@@ -379,7 +446,7 @@ class PurchaseController extends Controller
                     'jumlah_dibayar' => $jumlah_dibayar,
                     'sisa_hutang' => $sisa,
                     'status_pembayaran' => $statusBaru === 'Dibatalkan' ? 'Dibatalkan' : $status_pembayaran_server,
-                    'status_barang' => $validatedData['status_barang'], // Status barang tetap dari input
+                    'status_barang' => $validatedData['status_barang'],
                     'catatan' => $validatedData['catatan'],
                 ]);
 
@@ -387,20 +454,29 @@ class PurchaseController extends Controller
                 $pembelian->details()->delete();
 
                 foreach ($itemsForDetail as $itemData) {
+                    $variantId = $itemData['product_variant_id'] ?? null;
+
                     $pembelian->details()->create([
                         'product_id' => $itemData['product_id'],
+                        'product_variant_id' => $variantId,
                         'qty' => $itemData['qty'],
                         'harga_beli' => $itemData['harga_beli'],
                         'diskon' => $itemData['diskon'] ?? 0,
                         'taxe_id' => $itemData['taxe_id'] ?? null,
-                        'subtotal' => $itemData['subtotal'], // Gunakan subtotal yang sudah dihitung (termasuk pajak)
+                        'subtotal' => $itemData['subtotal'], 
                     ]);
 
-                    // Update data master produk
-                    $produk = $products->get($itemData['product_id']);
-                    if ($produk) {
-                        $produk->harga_beli = $itemData['harga_beli'];
-                        $produk->save();
+                    // Update harga beli master (Produk Induk atau Varian)
+                    if ($variantId && $variants->has($variantId)) {
+                        $varian = $variants->get($variantId);
+                        $varian->harga_beli = $itemData['harga_beli'];
+                        $varian->save();
+                    } else {
+                        $produk = $products->get($itemData['product_id']);
+                        if ($produk) {
+                            $produk->harga_beli = $itemData['harga_beli'];
+                            $produk->save();
+                        }
                     }
                 }
             });
