@@ -42,7 +42,7 @@ class StoreController extends Controller
             'telepon' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:100',
             'pic_id' => 'nullable|exists:users,id',
-            'logo' => 'nullable|string', 
+            'logo' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
 
@@ -72,7 +72,7 @@ class StoreController extends Controller
     /**
      * Memperbarui data toko/gudang.
      */
-    public function update(Request $request, Store $toko)   
+    public function update(Request $request, Store $toko)
     {
         $validatedData = $request->validate([
             'name_toko' => 'required|string|max:100',
@@ -93,7 +93,6 @@ class StoreController extends Controller
 
         $validatedData['is_active'] = $request->has('is_active') ? true : false;
 
-        // Handle FilePond
         if ($request->filled('logo')) {
             $tempPath = $request->input('logo');
             if (Storage::disk('public')->exists($tempPath)) {
@@ -101,20 +100,18 @@ class StoreController extends Controller
                 Storage::disk('public')->move($tempPath, $newPath);
 
                 // Hapus logo lama jika ada
-                if ($toko->logo && Storage::disk('public')->exists($toko->logo)) {   
-                    Storage::disk('public')->delete($toko->logo);   
+                if ($toko->logo && Storage::disk('public')->exists($toko->logo)) {
+                    Storage::disk('public')->delete($toko->logo);
                 }
                 $validatedData['logo'] = $newPath;
             }
         } else {
-            // Jika form logo kosong (artinya dihapus)
-            if ($toko->logo && Storage::disk('public')->exists($toko->logo)) {   
-                Storage::disk('public')->delete($toko->logo);   
-            }
-            $validatedData['logo'] = null;
+            // FIX: Hapus kunci 'logo' dari array agar tidak ikut di-update ke DB
+            // Ini akan mempertahankan path gambar lama jika user tidak mengupload file baru
+            unset($validatedData['logo']);
         }
 
-        $toko->update($validatedData);   
+        $toko->update($validatedData);
 
         return redirect()->route('toko.index')->with('success', 'Profil lokasi berhasil diperbarui.');
     }
@@ -171,18 +168,18 @@ class StoreController extends Controller
     }
     // Tambahkan di App\Http\Controllers\dashboard\StoreController.php
 
-/**
- * Mengambil daftar semua karyawan dan status keanggotaan di toko tertentu (AJAX).
- */
+    /**
+     * Mengambil daftar semua karyawan dan status keanggotaan di toko tertentu (AJAX).
+     */
     public function getMembers($id)
     {
         $store = Store::findOrFail($id);
-        
+
         // Ambil semua user yang memiliki profil karyawan
         $allEmployees = User::has('profile')
             ->with('profile.store')
             ->get()
-            ->map(function($user) use ($id) {
+            ->map(function ($user) use ($id) {
                 return [
                     'id' => $user->id,
                     'name' => $user->name,

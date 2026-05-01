@@ -223,6 +223,11 @@
                     <div id="methodContainer"></div>
                     <div class="modal-body">
                         <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Nama Lokasi</label>
+                                <input type="text" name="name_toko" id="name_toko" class="form-control"
+                                    placeholder="Contoh: JOPOS Cabang Kartasura" required>
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Tipe Lokasi</label>
                                 <select name="type" id="type" class="form-select select2" required>
@@ -230,11 +235,7 @@
                                     <option value="gudang">Gudang</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Nama Lokasi</label>
-                                <input type="text" name="name_toko" id="name_toko" class="form-control"
-                                    placeholder="Contoh: JOPOS Cabang Kartasura" required>
-                            </div>
+
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">PIC (Kepala Toko/Gudang)</label>
                                 <select name="pic_id" id="pic_id" class="form-select select2"
@@ -244,6 +245,11 @@
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
                                     @endforeach
                                 </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="text" name="email" id="email" class="form-control"
+                                    placeholder="name@example.com">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Telepon</label>
@@ -313,6 +319,12 @@
 
                         <div class="mb-3">
                             <label class="form-label">Logo / Foto Lokasi</label>
+                            <div id="existing-logo-preview" class="mb-2" style="display: none;">
+                                <img id="preview-img" src="" alt="Current Logo"
+                                    style="max-height: 100px; border-radius: 8px; border: 1px solid #ddd; padding: 2px;">
+                                <p class="text-muted small mb-0 mt-1">Logo saat ini. Unggah file baru di bawah jika ingin
+                                    menggantinya.</p>
+                            </div>
                             <input type="file" name="logo" class="filepond">
                         </div>
 
@@ -650,6 +662,12 @@
                 methodContainer.innerHTML = '';
                 pond.removeFiles();
 
+                // FIX: Sembunyikan preview saat mode Tambah
+                const existingImageContainer = document.getElementById('existing-logo-preview');
+                if (existingImageContainer) {
+                    existingImageContainer.style.display = 'none';
+                }
+
                 // Reset wilayah ke kondisi awal
                 resetSelect(kabSelect, '-- Pilih Kabupaten/Kota --', true);
                 resetSelect(kecSelect, '-- Pilih Kecamatan --', true);
@@ -675,6 +693,7 @@
                     // Isi field biasa
                     document.getElementById('name_toko').value = data.name_toko || '';
                     document.getElementById('telepon').value = data.telepon || '';
+                    document.getElementById('email').value = data.email || '';
                     document.getElementById('alamat').value = data.alamat || '';
                     document.getElementById('map_url').value = data.map_url || '';
                     document.getElementById('latitude').value = data.latitude || '';
@@ -690,9 +709,17 @@
                         document.getElementById('pic_id').value = data.pic_id || '';
                     }
 
-                    // FIX: Isi dropdown wilayah secara async chain
-                    fillRegionForEdit(data);
+                    const previewContainer = document.getElementById('existing-logo-preview');
+                    const previewImg = document.getElementById('preview-img');
 
+                    if (data.logo_path) {
+                        previewImg.src = data.logo_path;
+                        previewContainer.style.display = 'block';
+                    } else {
+                        previewContainer.style.display = 'none';
+                    }
+
+                    fillRegionForEdit(data);
                     pond.removeFiles();
 
                     // Tampilkan modal
