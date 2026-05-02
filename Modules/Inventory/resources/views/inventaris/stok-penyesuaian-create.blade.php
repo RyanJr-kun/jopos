@@ -121,7 +121,7 @@
                                 sku: item.sku,
                                 img_url: item.img_produk ?
                                     `{{ asset('storage/') }}/${item.img_produk}` :
-                                    `{{ asset('assets/img/produk.webp') }}`
+                                    `{{ asset('assets/img/produk.png') }}`
                             })),
                             pagination: {
                                 more: data.next_page_url !== null

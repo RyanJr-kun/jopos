@@ -250,7 +250,7 @@
                             <li class="list-group-item border-0 d-flex justify-content-between ps-0 rounded">
                                 <div class="d-flex align-items-center justify-content-between w-100">
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.webp') }}"
+                                        <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
                                             class="avatar avatar-lg rounded-2 me-3" alt="Gambar produk">
                                         <div>
                                             <h6 class="mb-n1 text-dark text-sm">{{ $produk->name_product }}</h6>
@@ -306,7 +306,7 @@
                             <li class="list-group-item border-0 d-flex justify-content-between ps-0 rounded">
                                 <div class="d-flex align-items-center justify-content-between w-100">
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.webp') }}"
+                                        <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
                                             class="avatar avatar-lg rounded-2 me-3" alt="Gambar produk">
                                         <div>
                                             <h6 class="mb-n1 text-dark text-sm">{{ $produk->name_product }}</h6>

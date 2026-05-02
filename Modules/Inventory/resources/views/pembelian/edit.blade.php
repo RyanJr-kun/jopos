@@ -51,6 +51,17 @@
                             <div class="invalid-feedback text-sm">{{ $message }}</div>
                         @enderror
                     </div>
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <label for="tanggal_jatuh_tempo" class="form-label fw-semibold">Tanggal Jatuh Tempo</label>
+                        <input id="tanggal_jatuh_tempo" name="tanggal_jatuh_tempo" type="date"
+                            class="form-control @error('tanggal_jatuh_tempo') is-invalid @enderror"
+                            value="{{ old('tanggal_jatuh_tempo', \Carbon\Carbon::parse($pembelian->tanggal_jatuh_tempo)->format('Y-m-d')) }}">
+                        @error('tanggal_jatuh_tempo')
+                            <div class="invalid-feedback text-sm">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+
 
                     <div class="col-12 col-md-12 col-lg-4">
                         <label for="referensi" class="form-label fw-semibold">No Invoice</label>
@@ -110,13 +121,19 @@
                                         ? "{$detail->product_id}-{$detail->product_variant_id}"
                                         : $detail->product_id;
 
-                                    // Menentukan gambar dan nama varian
-                                    $imageUrl = asset('assets/img/produk.webp');
+                                    // Set fallback default
+                                    $imageUrl = asset('assets/img/produk.png');
                                     $namaVarian = '';
+
                                     if ($detail->product_variant_id && $detail->varian) {
-                                        $imageUrl = $detail->varian->img_variant
-                                            ? asset('storage/' . $detail->varian->img_variant)
-                                            : $detail->produk->primaryImage->path ?? asset('assets/img/produk.webp');
+                                        // 1. Cek gambar varian
+                                        if (!empty($detail->varian->img_variant)) {
+                                            $imageUrl = asset('storage/' . $detail->varian->img_variant);
+                                        }
+                                        // 2. Jika kosong, pakai cara jitu kamu: bungkus path primaryImage dengan asset(storage)
+                                        elseif (!empty($detail->produk->primaryImage->path)) {
+                                            $imageUrl = asset('storage/' . $detail->produk->primaryImage->path);
+                                        }
 
                                         // Susun nama varian jika ada relasi opsi
                                         $variantOpts = [];
@@ -129,8 +146,10 @@
                                             ? implode(' / ', $variantOpts)
                                             : 'SKU: ' . $detail->varian->sku;
                                     } else {
-                                        $imageUrl =
-                                            $detail->produk->primaryImage->path ?? asset('assets/img/produk.webp');
+                                        // Jika produk simple, sama: bungkus path primaryImage dengan asset(storage)
+                                        if (!empty($detail->produk->primaryImage->path)) {
+                                            $imageUrl = asset('storage/' . $detail->produk->primaryImage->path);
+                                        }
                                     }
                                 @endphp
                                 <tr data-row-id="{{ $rowId }}">
@@ -408,7 +427,7 @@
                 // Select2 untuk Cari Produk
                 function formatProduct(produk) {
                     if (!produk.id) return produk.text;
-                    var defaultImage = "{{ asset('assets/img/produk.webp') }}";
+                    var defaultImage = "{{ asset('assets/img/produk.png') }}";
                     var imageUrl = produk.img_produk ? `{{ asset('storage/') }}/${produk.img_produk}` :
                         defaultImage;
                     var variantBadge = produk.variant_id ?
@@ -516,7 +535,7 @@
                         currentQtyInput.val(newQty);
                         updateRowDisplay(existingRow);
                     } else {
-                        const defaultImage = "{{ asset('assets/img/produk.webp') }}";
+                        const defaultImage = "{{ asset('assets/img/produk.png') }}";
                         const imageUrl = produkImg ? `{{ asset('storage/') }}/${produkImg}` :
                             defaultImage;
 

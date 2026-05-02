@@ -145,7 +145,7 @@
                                             <img src="{{ asset('storage/' . $sn->produk->img_produk) }}"
                                                 class="avatar avatar-sm me-3" alt="{{ $sn->produk->name_product }}">
                                         @else
-                                            <img src="{{ asset('assets/img/produk.webp') }}"
+                                            <img src="{{ asset('assets/img/produk.png') }}"
                                                 class="avatar avatar-sm me-3" alt="Gambar produk default">
                                         @endif
                                         <h6 class="mb-0 text-sm">{{ $sn->produk->name_product }}</h6>
@@ -376,7 +376,7 @@
             // --- SELECT2 & EVENT HANDLING ---
             function formatProduct(produk) {
                 if (!produk.id) return produk.text;
-                const defaultImage = "{{ asset('assets/img/produk.webp') }}";
+                const defaultImage = "{{ asset('assets/img/produk.png') }}";
                 const imageUrl = produk.img_produk ? `{{ asset('storage/') }}/${produk.img_produk}` : defaultImage;
                 return $(
                     `<div class="d-flex align-items-center">

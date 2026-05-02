@@ -62,52 +62,6 @@
         </div>
     </div>
 
-
-    {{-- modal edit --}}
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n3">
-                    <h6 class="modal-title" id="editModalLabel">Edit Unit Product</h6>
-                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form method="post" action="">
-                        @method('put')
-                        @csrf
-                        <div class="row">
-                            <div class="form-group">
-                                <div class="mb-3">
-                                    <label for="edit_name" class="form-label">Nama</label>
-                                    <input id="edit_name" name="name" type="text" class="form-control" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="edit_slug" class="form-label">Slug</label>
-                                    <input id="edit_slug" name="slug" type="text" class="form-control" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="edit_singkat" class="form-label">Nama Pendek</label>
-                                    <input id="edit_singkat" name="singkat" type="text" class="form-control" required>
-                                </div>
-                                <div class="justify-content-end form-check form-switch form-check-reverse mt-3">
-                                    <label class="me-auto form-check-label" for="edit_status">Status</label>
-                                    <input id="edit_status" class="form-check-input" type="checkbox" name="status"
-                                        value="1">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer border-0 pb-0">
-                            <button type="submit" class="btn btn-info btn-sm">Simpan Perubahan</button>
-                            <button type="button" class="btn btn-danger btn-sm"
-                                data-bs-dismiss="modal">Batalkan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     {{-- Modal Batalkan Transaksi --}}
     <div class="modal fade" id="cancelConfirmationModal" tabindex="-1" aria-labelledby="cancelConfirmationModalLabel"
         aria-hidden="true">
@@ -207,10 +161,10 @@
                             date_to = dates[1].trim();
                         }
 
-                        $('#penjualan-table-container').css('opacity', 0.5);
+                        $('#pembelian-table-container').css('opacity', 0.5);
 
                         $.ajax({
-                            url: "{{ route('penjualan.index') }}",
+                            url: "{{ route('pembelian.index') }}",
                             type: "GET",
                             // PENTING: Header ini wajib agar $request->ajax() di controller merespon true
                             headers: {
@@ -225,7 +179,7 @@
                             },
                             success: function(response) {
                                 // Update isi tabel
-                                $('#penjualan-table-container').html(response).css('opacity',
+                                $('#pembelian-table-container').html(response).css('opacity',
                                     1);
 
                                 // PENTING: Inisialisasi ulang Tooltips Bootstrap agar tombol action tidak mati
@@ -241,7 +195,7 @@
                                 updateBrowserURL(page, search, status, date_from, date_to);
                             },
                             error: function(xhr) {
-                                $('#penjualan-table-container').css('opacity', 1);
+                                $('#pembelian-table-container').css('opacity', 1);
                                 console.error("Terjadi kesalahan: ", xhr.responseText);
                             }
                         });

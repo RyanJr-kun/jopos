@@ -28,4 +28,19 @@ class Purchase extends Model
     {
         return $this->hasMany(PurchaseItem::class);
     }
+    // Tambahkan attribute ini
+    public function getPersentaseBayarAttribute()
+    {
+        $total = $this->total_akhir > 0 ? $this->total_akhir : 1; 
+        $persentase = round(($this->jumlah_dibayar / $total) * 100);
+        return $persentase > 100 ? 100 : $persentase;
+    }
+
+    public function getIsOverdueAttribute()
+    {
+        if (!$this->tanggal_jatuh_tempo || $this->status_pembayaran === 'Lunas' || $this->status_pembayaran === 'Dibatalkan') {
+            return false;
+        }
+        return \Carbon\Carbon::now()->startOfDay()->gt(\Carbon\Carbon::parse($this->tanggal_jatuh_tempo)->startOfDay());
+    }
 }

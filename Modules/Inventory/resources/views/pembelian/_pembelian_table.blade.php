@@ -25,23 +25,59 @@
                         </div>
                     </td>
 
-                    <!-- 2. KEUANGAN (Gabungan Total, Dibayar, Sisa) -->
+                    <!-- 2. KEUANGAN (Gabungan Total, Dibayar, Sisa, & Progress Bar Hutang) -->
                     <td>
-                        <div class="d-flex flex-column">
-                            <span class="text-primary text-sm fw-bold mb-1" title="Total Akhir">
-                                Rp {{ number_format($item->total_akhir, 0, ',', '.') }}
-                            </span>
-                            <small class="text-muted mb-1" title="Dibayar">
-                                Bayar: Rp {{ number_format($item->jumlah_dibayar, 0, ',', '.') }}
-                            </small>
+                        @php
+                            $persentase = $item->persentase_bayar;
+                            $isJatuhTempo = $item->is_overdue;
 
-                            @if ($item->sisa_hutang > 0)
-                                <small class="text-danger fw-semibold" title="Sisa Hutang">
-                                    Sisa: Rp {{ number_format($item->sisa_hutang, 0, ',', '.') }}
-                                </small>
-                            @else
-                                <small class="text-success fw-semibold" title="Lunas">Sisa: Rp 0</small>
-                            @endif
+                            // Tentukan warna Bar
+                            $barColor = 'bg-info';
+                            if ($item->status_pembayaran == 'Lunas') {
+                                $barColor = 'bg-success';
+                            } elseif ($item->status_pembayaran == 'Dibatalkan') {
+                                $barColor = 'bg-secondary';
+                                $persentase = 0;
+                            } elseif ($isJatuhTempo) {
+                                $barColor = 'bg-danger';
+                            } else {
+                                $barColor = 'bg-warning';
+                            }
+                        @endphp
+
+                        <div class="d-flex flex-column" style="min-width: 170px;">
+                            <!-- Teks Nominal Atas -->
+                            <div class="d-flex justify-content-between text-xs mb-1">
+                                <span class="fw-bold text-dark" title="Total Tagihan">Rp
+                                    {{ number_format($item->total_akhir, 0, ',', '.') }}</span>
+                                @if ($item->sisa_hutang > 0)
+                                    <span class="text-danger fw-semibold" title="Sisa Hutang">- Rp
+                                        {{ number_format($item->sisa_hutang, 0, ',', '.') }}</span>
+                                @else
+                                    <span class="text-success fw-semibold" title="Lunas">Lunas</span>
+                                @endif
+                            </div>
+
+                            <!-- Progress Bar Visual -->
+                            <div class="progress shadow-none border mb-1" style="height: 6px;">
+                                <div class="progress-bar {{ $barColor }}" role="progressbar"
+                                    style="width: {{ $persentase }}%" aria-valuenow="{{ $persentase }}"
+                                    aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+
+                            <!-- Teks Informasi Bawah -->
+                            <div class="d-flex justify-content-between align-items-center" style="font-size: 0.7rem;">
+                                <span class="text-muted" title="Sudah Dibayar">Bayar: Rp
+                                    {{ number_format($item->jumlah_dibayar, 0, ',', '.') }}</span>
+
+                                <!-- Indikator Jatuh Tempo (Hanya tampil jika belum lunas & punya tempo) -->
+                                @if ($item->status_pembayaran == 'Belum Lunas' && $item->tanggal_jatuh_tempo)
+                                    <span class="{{ $isJatuhTempo ? 'text-danger fw-bold' : 'text-muted' }}">
+                                        Tempo: {{ \Carbon\Carbon::parse($item->tanggal_jatuh_tempo)->format('d/m/y') }}
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </td>
 

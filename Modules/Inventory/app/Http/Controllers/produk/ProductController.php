@@ -803,7 +803,7 @@ class ProductController extends Controller
                 return [
                     'name_product' => \Illuminate\Support\Str::limit($produk->name_product, 30),
                     'needed'       => $produk->qty - $produk->sn_tercatat_count,
-                    'img_url'      => $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.webp'),
+                    'img_url'      => $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png'),
                     'url'          => route('serialNumber.index', ['produk_slug' => $produk->slug])
                 ];
             })

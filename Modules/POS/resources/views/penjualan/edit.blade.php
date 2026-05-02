@@ -319,7 +319,7 @@
                 if (produk.loading) {
                     return produk.text;
                 }
-                const defaultImage = "{{ asset('assets/img/produk.webp') }}";
+                const defaultImage = "{{ asset('assets/img/produk.png') }}";
                 const imageUrl = produk.img_produk ? `/storage/${produk.img_produk}` : defaultImage;
                 const markup = `
                         <div class="d-flex align-items-center">

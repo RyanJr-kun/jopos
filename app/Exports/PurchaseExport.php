@@ -54,7 +54,7 @@ class PurchaseExport implements FromCollection, WithHeadings, WithMapping, Shoul
         return [
             Carbon::parse($pembelian->tanggal_pembelian)->format('d-m-Y'),
             $pembelian->referensi,
-            $pembelian->pemasok->name ?? 'N/A',
+            $pembelian->supplier->name ?? 'N/A',
             $pembelian->status_pembayaran,
             $pembelian->status_barang,
             $pembelian->total_akhir,

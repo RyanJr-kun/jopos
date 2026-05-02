@@ -21,7 +21,7 @@
             <div class="card-body p-4">
                 <!-- HEADER INFO -->
                 <div class="row g-3 mb-4">
-                    <div class="col-12 col-md-6 col-lg-4">
+                    <div class="col-12 col-md-6 col-lg-3">
                         <label for="Supplier" class="form-label fw-semibold">Supplier <span
                                 class="text-danger">*</span></label>
                         <div class="d-flex gap-2">
@@ -43,7 +43,7 @@
                         @enderror
                     </div>
 
-                    <div class="col-12 col-md-6 col-lg-4">
+                    <div class="col-12 col-md-6 col-lg-3">
                         <label for="tanggal" class="form-label fw-semibold">Tanggal <span
                                 class="text-danger">*</span></label>
                         <input id="tanggal" name="tanggal" type="date"
@@ -53,8 +53,17 @@
                             <div class="invalid-feedback text-sm">{{ $message }}</div>
                         @enderror
                     </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label for="tanggal_jatuh_tempo" class="form-label fw-semibold">Tanggal Jatuh Tempo</label>
+                        <input id="tanggal_jatuh_tempo" name="tanggal_jatuh_tempo" type="date"
+                            class="form-control @error('tanggal_jatuh_tempo') is-invalid @enderror"
+                            value="{{ old('tanggal_jatuh_tempo') }}">
+                        @error('tanggal_jatuh_tempo')
+                            <div class="invalid-feedback text-sm">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                    <div class="col-12 col-md-12 col-lg-4">
+                    <div class="col-12 col-md-12 col-lg-3">
                         <label for="referensi" class="form-label fw-semibold">No Invoice <span
                                 class="text-danger">*</span></label>
                         <input type="text" class="form-control bg-light @error('referensi') is-invalid @enderror"
@@ -199,7 +208,8 @@
                     <a href="{{ route('pembelian.index') }}" id="cancel-button"
                         class="btn btn-label-secondary w-100 w-sm-auto order-2 order-sm-1">Batalkan</a>
                     <button id="saveBtn" type="submit"
-                        class="btn btn-info w-100 w-sm-auto order-1 order-sm-2 px-4">Buat Transaksi</button>
+                        class="btn btn-info w-100 w-sm-auto order-1 order-sm-2 px-4">Buat
+                        Transaksi</button>
                 </div>
             </div>
         </div>
@@ -475,7 +485,7 @@
                 // --- Inisialisasi Select2 Pencarian Produk ---
                 function formatProduct(produk) {
                     if (!produk.id) return produk.text;
-                    var defaultImage = "{{ asset('assets/img/produk.webp') }}";
+                    var defaultImage = "{{ asset('assets/img/produk.png') }}";
                     var imageUrl = produk.img_produk ? `{{ asset('storage/') }}/${produk.img_produk}` :
                         defaultImage;
                     var variantBadge = produk.variant_id ?
@@ -585,7 +595,7 @@
                         currentQtyInput.val(newQty);
                         updateRowDisplay(existingRow);
                     } else {
-                        const defaultImage = "{{ asset('assets/img/produk.webp') }}";
+                        const defaultImage = "{{ asset('assets/img/produk.png') }}";
                         const imageUrl = produkImg ? `{{ asset('storage/') }}/${produkImg}` :
                             defaultImage;
 
@@ -659,7 +669,7 @@
                         const hargaBeli = parseFloat($(this).find(".item-harga-hidden").val()) || 0;
                         const diskon = parseFloat($(this).find(".item-diskon-hidden").val()) || 0;
                         const pajakRate = parseFloat($(this).find(".item-pajak-rate-hidden")
-                        .val()) || 0;
+                            .val()) || 0;
 
                         const subtotalItem = (qty * hargaBeli) - diskon;
                         const pajakItem = subtotalItem * (pajakRate / 100);
@@ -742,7 +752,7 @@
                     row.find(".item-qty, .item-qty-hidden").val($("#edit-item-qty").val());
                     row.find(".item-harga-hidden").val(parseCurrency($("#edit-item-harga").val()));
                     row.find(".item-diskon-hidden").val(parseCurrency($("#edit-item-diskon")
-                .val()));
+                        .val()));
 
                     const selectedTaxe = $("#edit-item-pajak-id option:selected");
                     row.find(".item-pajak-id-hidden").val(selectedTaxe.val());
@@ -801,7 +811,7 @@
                         if (typeof Swal !== 'undefined') {
                             window.showToast('warning',
                                 'Pembayaran kurang dari total akhir. Mohon ubah status pembayaran Anda atau lunasi pembayaran.'
-                                );
+                            );
                         } else {
                             alert('Pembayaran kurang dari total akhir.');
                         }
@@ -812,7 +822,7 @@
                         if (typeof Swal !== 'undefined') {
                             window.showToast('warning',
                                 'Pembayaran sudah lunas. Mohon ubah status pembayaran menjadi "Lunas".'
-                                );
+                            );
                         } else {
                             alert('Ubah status pembayaran menjadi "Lunas".');
                         }

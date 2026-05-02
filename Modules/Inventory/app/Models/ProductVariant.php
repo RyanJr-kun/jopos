@@ -47,6 +47,6 @@ class ProductVariant extends Model
 
         return $primary
             ? asset('storage/' . $primary->path)
-            : asset('assets/img/produk.webp');
+            : asset('assets/img/produk.png');
     }
 }

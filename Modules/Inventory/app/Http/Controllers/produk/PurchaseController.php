@@ -106,6 +106,7 @@ class PurchaseController extends Controller
         $validatedData = $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'tanggal' => 'required|date',
+            'tanggal_jatuh_tempo' => 'nullable|date|after:tanggal',
             'referensi' => 'required|string|max:255|unique:purchases',
             'status_barang' => 'required|in:Diterima,Belum Diterima,Dibatalkan',
             'status_pembayaran' => 'required|in:Lunas,Belum Lunas',
@@ -182,6 +183,7 @@ class PurchaseController extends Controller
                     'user_id' => Auth::id(),
                     'referensi' => $validatedData['referensi'],
                     'tanggal_pembelian' => $validatedData['tanggal'],
+                    'tanggal_jatuh_tempo' => $validatedData['tanggal_jatuh_tempo'] ?? null,
                     'subtotal' => $subtotal_keseluruhan,
                     'diskon' => $diskon_tambahan,
                     'pajak' => $total_pajak_item,
@@ -283,7 +285,7 @@ class PurchaseController extends Controller
         return view('inventory::pembelian.edit', [
             'title' => 'Edit Invoice Purchase: ' . $pembelian->referensi,
             'pembelian' => $pembelian,
-            'pemasok' => \Modules\Inventory\Models\Supplier::where('status', 1)->get(), // Diubah menjadi 'pemasok' agar sesuai dengan view
+            'pemasok' => Supplier::where('status', 1)->get(), 
             'taxes' => Taxe::all(),
             'statuses' => $statuses,
         ]);
@@ -339,6 +341,7 @@ class PurchaseController extends Controller
         $validatedData = $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'tanggal' => 'required|date',
+            'tanggal_jatuh_tempo' => 'nullable|date|after:tanggal',
             'status_pembayaran' => 'required|in:Lunas,Belum Lunas,Dibatalkan',
             'status_barang' => 'required|in:Diterima,Belum Diterima,Dibatalkan',
             'jumlah_dibayar' => 'nullable|numeric|min:0',
@@ -437,6 +440,7 @@ class PurchaseController extends Controller
                 $pembelian->update([
                     'supplier_id' => $validatedData['supplier_id'],
                     'tanggal_pembelian' => $validatedData['tanggal'],
+                    'tanggal_jatuh_tempo' => $validatedData['tanggal_jatuh_tempo'] ?? null,
                     'user_id' => Auth::id(), 
                     'subtotal' => $subtotal_keseluruhan,
                     'diskon' => $diskon_tambahan,

@@ -19,6 +19,7 @@ return new class extends Migration
                 $table->foreignId('supplier_id')->constrained('suppliers');
                 $table->string('referensi', 50)->unique();
                 $table->dateTime('tanggal_pembelian');
+                $table->dateTime('tanggal_jatuh_tempo')->nullable();
                 $table->decimal('subtotal', 15, 0);
                 $table->decimal('diskon', 15, 0)->default(0);
                 $table->decimal('pajak', 15, 0)->default(0);

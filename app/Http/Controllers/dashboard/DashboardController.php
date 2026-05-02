@@ -217,7 +217,7 @@ class DashboardController extends Controller
             ->take(11)
             ->get();
 
-        $recentPurchases = Purchase::with('pemasok')
+        $recentPurchases = Purchase::with('supplier')
             ->latest('tanggal_pembelian')
             ->take(11)
             ->get();
