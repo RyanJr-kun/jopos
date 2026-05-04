@@ -1,30 +1,68 @@
 <?php
 
+use Modules\Ecommerce\Http\Controllers\auth\CustomerAuthController;
+use Modules\Ecommerce\Http\Controllers\auth\GoogleController;
 use Illuminate\Support\Facades\Route;
 use Modules\Ecommerce\Http\Controllers\EcommerceController;
 use Modules\Ecommerce\Http\Controllers\event\BannerController;
 use Modules\Ecommerce\Http\Controllers\event\PromotionController;
 use Modules\Ecommerce\Http\Controllers\MarketController;
 
+// Ambil domain utama dari file .env
+$domain = env('APP_DOMAIN', 'jocomputer.com');
 
-// Rute untuk Web Market (Publik)
-Route::get('/', [MarketController::class, 'index']);
-Route::get('/market/produk', [MarketController::class, 'produk'])->name('market.produk');
-Route::get('/market/produk/{slug}', [MarketController::class, 'produkDetail'])->name('market.produk.detail');
-Route::get('/market/layanan', [MarketController::class, 'layanan'])->name('market.layanan');
-Route::get('/market/tentang', [MarketController::class, 'tentang'])->name('market.tentang');
-Route::get('/market/live-search', [MarketController::class, 'liveSearch'])->name('market.liveSearch');
+// =========================================================
+// 1. ROUTING DOMAIN UTAMA (Khusus Market / Publik / Customer)
+// =========================================================
+Route::domain($domain)->group(function () {
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('ecommerces', EcommerceController::class)->names('ecommerce');
+    Route::middleware('guest:customer')->group(function () {
+        // Autentikasi Standar
+        Route::get('/auth/customers/login', [CustomerAuthController::class, 'showLoginForm'])->name('customer.login');
+        Route::post('/auth/customers/login', [CustomerAuthController::class, 'login'])->name('customer.login.post');
+        
+        Route::get('/auth/customers/register', [CustomerAuthController::class, 'showRegisterForm'])->name('customer.register');
+        Route::post('/auth/customers/register', [CustomerAuthController::class, 'register'])->name('customer.register.post');
 
-    Route::resource('promo', PromotionController::class);
-    Route::post('promo/validate-code', [PromotionController::class, 'validateCode'])->name('promo.validateCode');
-    Route::patch('/promo/{promo}/update-status/', [PromotionController::class, 'updateStatus'])->name('promo.updateStatus');
+        // Autentikasi via Google OAuth
+        Route::get('/auth/google/redirect', [GoogleController::class, 'redirectToGoogle'])->name('customer.google.login');
+        Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+    });
+    
+    Route::middleware('auth')->group(function () {
+        Route::post('/auth/customers/logout', [CustomerAuthController::class, 'logout'])->name('customer.logout');
+    });
+    
+    // Rute untuk Web Market (Publik)[cite: 6]
+    Route::get('/', [MarketController::class, 'index']);
+    Route::get('/market/produk', [MarketController::class, 'produk'])->name('market.produk');
+    Route::get('/market/produk/{slug}', [MarketController::class, 'produkDetail'])->name('market.produk.detail');
+    Route::get('/market/layanan', [MarketController::class, 'layanan'])->name('market.layanan');
+    Route::get('/market/tentang', [MarketController::class, 'tentang'])->name('market.tentang');
+    Route::get('/market/live-search', [MarketController::class, 'liveSearch'])->name('market.liveSearch');
+});
 
-    // Banner
-    Route::get('/banner/{banner}/json', [BannerController::class, 'getJson'])->name('banner.getjson');
-    Route::post('/banner/upload', [BannerController::class, 'upload'])->name('banner.upload');
-    Route::delete('/banner/revert', [BannerController::class, 'revert'])->name('banner.revert');
-    Route::resource('banner', BannerController::class)->except(['show', 'create', 'edit']);
+
+// =========================================================
+// 2. ROUTING SUBDOMAIN (JOPOS - Khusus Manajemen oleh Admin)
+// =========================================================
+Route::domain('jopos.' . $domain)->group(function () {
+    
+    // Rute ini hanya bisa diakses oleh Karyawan/Admin yang sudah login[cite: 6]
+    Route::middleware(['auth', 'verified'])->group(function () {
+        
+        Route::resource('ecommerces', EcommerceController::class)->names('ecommerce');
+
+        // Manajemen Promo[cite: 6]
+        Route::resource('promo', PromotionController::class);
+        Route::post('promo/validate-code', [PromotionController::class, 'validateCode'])->name('promo.validateCode');
+        Route::patch('/promo/{promo}/update-status/', [PromotionController::class, 'updateStatus'])->name('promo.updateStatus');
+
+        // Manajemen Banner[cite: 6]
+        Route::get('/banner/{banner}/json', [BannerController::class, 'getJson'])->name('banner.getjson');
+        Route::post('/banner/upload', [BannerController::class, 'upload'])->name('banner.upload');
+        Route::delete('/banner/revert', [BannerController::class, 'revert'])->name('banner.revert');
+        Route::resource('banner', BannerController::class)->except(['show', 'create', 'edit']);
+        
+    });
 });

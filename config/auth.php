@@ -71,6 +71,19 @@ return [
         // ],
     ],
 
+    'guards' => [
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'users', // Karyawan & Customer sama-sama pakai tabel users
+        ],
+
+        // TAMBAHKAN INI: Guard khusus untuk Customer
+        'customer' => [
+            'driver' => 'session',
+            'provider' => 'users', 
+        ],
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Resetting Passwords

@@ -245,7 +245,7 @@
                     </li>
 
                     <li>
-                        <form action="{{ route('logout') }}" method="post">
+                        <form action="{{ route('employee.logout') }}" method="post">
                             @csrf
 
                             <button type="submit" class="dropdown-item text-danger">

@@ -65,6 +65,7 @@
                         </div>
                     </a>
 
+                    {{-- 3. Action Icons (Lanjutan baris 81)    --}}
                     @auth
                         <a href="javascript:void(0);" class="nav-link dropdown-toggle hide-arrow p-0 ms-3"
                             data-bs-toggle="dropdown">
@@ -80,23 +81,60 @@
                             </div>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ route('dashboard') }}">
-                                    <i class="bx bx-home-smile me-2"></i>Dashboard</a></li>
-                            <li><a class="dropdown-item" href="{{ route('penjualan.create') }}">
-                                    <i class="bx bx-tv me-2"></i>Point Of Sales</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <form action="{{ route('logout') }}" method="post">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="bx bx-power-off me-2"></i>Log Out</button>
-                                </form>
-                            </li>
+
+                            {{-- PENGECEKAN ROLE/PROFIL --}}
+                            {{-- Jika user adalah karyawan (punya relasi employeeProfile) --}}
+                            @if (auth()->user()->employeeProfile)
+                                <li>
+                                    {{-- Menggunakan subdomain dinamis --}}
+                                    @php $adminDomain = 'http://jopos.' . env('APP_DOMAIN', 'jocomputer.test'); @endphp
+                                    <a class="dropdown-item" href="{{ $adminDomain }}/dashboard">
+                                        <i class="bx bx-home-smile me-2"></i>Dashboard Admin
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ $adminDomain }}/penjualan/create">
+                                        <i class="bx bx-tv me-2"></i>Point Of Sales
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <form action="{{ route('employee.logout') }}" method="post">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bx bx-power-off me-2"></i>Log Out</button>
+                                    </form>
+                                </li>
+
+                                {{-- Jika user adalah pelanggan biasa --}}
+                            @else
+                                <li>
+                                    <a class="dropdown-item" href="#">
+                                        <i class="bx bx-user me-2"></i>Profil Saya
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#">
+                                        <i class="bx bx-cart me-2"></i>Pesanan Saya
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <form action="{{ route('customer.logout') }}" method="post">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bx bx-power-off me-2"></i>Log Out</button>
+                                    </form>
+                                </li>
+                            @endif
                         </ul>
                     @else
-                        <a href="{{ route('login') }}"
+                        {{-- Jika Belum Login, Arahkan ke Login Customer --}}
+                        <a href="{{ route('customer.login') }}"
                             class="nav-link badge bg-label-primary fw-bold d-flex align-items-center ms-3">
                             <i class="bx bx-user icon-md"></i>
                             <span class="d-none d-lg-block ms-2">Login</span>
