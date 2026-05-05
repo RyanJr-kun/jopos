@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\hrd;
 
+use App\Enums\Jabatan;
 use App\Http\Controllers\Controller;
-use Spatie\Permission\Models\Role;
+use App\Models\EmployeeProfile;
+use App\Models\Store;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -17,41 +21,32 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with('roles')->orderBy('id', 'DESC');
+        $query = User::with(['roles', 'employee.store'])->orderBy('id', 'DESC');
 
-        // 1. Filter Pencarian (Ganti parameter dari 'q' ke 'search' sesuai input frontend)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                    ->orWhere('email', 'LIKE', "%{$search}%") // Opsional: tambah filter via email
+                    ->orWhere('email', 'LIKE', "%{$search}%")
                     ->orWhere('username', 'LIKE', "%{$search}%");
             });
         }
 
-        // 2. Filter Select Role
         if ($request->filled('role')) {
             $query->role($request->role);
         }
 
-        // 3. Filter Status (Konversi value 'Aktif'/'Tidak Aktif' ke boolean 1/0)
         if ($request->filled('status')) {
             $status = $request->status === 'Aktif' ? 1 : 0;
             $query->where('status', $status);
         }
 
-        $data = $query->get();
+        $data  = $query->get();
         $roles = Role::pluck('name', 'name')->all();
 
-        // 4. Deteksi Request AJAX (The Pro Way)
         if ($request->ajax()) {
-            // Mengambil potongan view pada bagian @fragment('user-table-body') saja
             $html = view('content.hrd.user.index', compact('data', 'roles'))->fragment('user-table-body');
-
-            return response()->json([
-                'html' => $html,
-                'total' => $data->count() // Kirim total data untuk update card Total Pengguna
-            ]);
+            return response()->json(['html' => $html, 'total' => $data->count()]);
         }
 
         return view('content.hrd.user.index', compact('data', 'roles'));
@@ -60,67 +55,103 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
+    public function create()
     {
         return view('content.hrd.user.create', [
-            'roles' => Role::all()
+            'roles'  => Role::all(),
+            'stores' => Store::where('is_active', true)->orderBy('name_toko')->get(),
+            'jabatans' => Jabatan::cases(),
         ]);
     }
 
     /**
-     * nyetor data baru ke penyimpanan.
+     * Store a newly created resource in storage.
+     * Membuat user baru sekaligus employee_profile-nya dalam satu transaksi.
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|max:255',
-            'username' => 'required|min:3|max:255|unique:users',
-            'email' => 'required|email:dns|unique:users',
-            'password' => 'required|min:5|max:255',
-            'role_name'   => ['required', Rule::exists('roles', 'name')],
-            'kontak' => 'nullable|min:9|max:14|unique:users',
-            'mulai_kerja' => 'required|date',
-            'status' => 'required|boolean',
-            'avatar' => 'nullable|string', // Diubah dari 'image' menjadi 'string'
+        // --- Validasi ---
+        $validated = $request->validate([
+            // Data users
+            'name'          => 'required|max:255',
+            'username'      => 'required|min:3|max:100|unique:users',
+            'email'         => 'required|email:dns|unique:users',
+            'password'      => 'required|min:5|max:255',
+            'status'        => 'required|boolean',
+            'role_name'     => ['required', Rule::exists('roles', 'name')],
+
+            // Data employee_profiles
+            'store_id'          => 'nullable|exists:stores,id',
+            'kontak'            => 'nullable|min:9|max:20',
+            'alamat'            => 'nullable|string|max:500',
+            'jabatan'           => ['nullable', Rule::enum(Jabatan::class)],
+            'nik'               => 'nullable|string|max:50|unique:employee_profiles,nik',
+            'tanggal_bergabung' => 'nullable|date',
+            'avatar'            => 'nullable|string',   // path tmp dari FilePond
         ]);
 
-        // Pindahkan gambar dari temp ke folder user-images
-        if ($request->avatar) {
-            $tempPath = $request->avatar;
-            // Pastikan file ada di folder temporary
-            if (Storage::disk('public')->exists($tempPath)) {
-                // Buat path baru dan pindahkan file
-                $newPath = str_replace('tmp/user-images/', 'user-images/', $tempPath);
-                Storage::disk('public')->move($tempPath, $newPath);
-                $validatedData['avatar'] = $newPath;
+        DB::transaction(function () use ($validated, $request) {
+            // 1. Pindahkan avatar dari folder tmp ke folder permanen
+            $avatarPath = null;
+            if (!empty($validated['avatar'])) {
+                $tempPath = $validated['avatar'];
+                if (Storage::disk('public')->exists($tempPath)) {
+                    $newPath = str_replace('tmp/user-images/', 'user-images/', $tempPath);
+                    Storage::disk('public')->move($tempPath, $newPath);
+                    $avatarPath = $newPath;
+                }
             }
-        }
 
-        $validatedData['password'] = bcrypt($validatedData['password']);
-        $roleName = $validatedData['role_name'];
-        unset($validatedData['role_name']);
+            // 2. Buat user
+            $user = User::create([
+                'name'     => $validated['name'],
+                'username' => $validated['username'],
+                'email'    => $validated['email'],
+                'password' => bcrypt($validated['password']),
+                'status'   => $validated['status'],
+            ]);
 
-        $user = User::create($validatedData);
-        $user->syncRoles($roleName);
+            // 3. Assign role (Spatie)
+            $user->syncRoles($validated['role_name']);
+
+            // 4. Buat employee_profile
+            EmployeeProfile::create([
+                'user_id'           => $user->id,
+                'store_id'          => $validated['store_id'] ?? null,
+                'kontak'            => $validated['kontak'] ?? null,
+                'alamat'            => $validated['alamat'] ?? null,
+                'jabatan'           => $validated['jabatan'] ?? null,
+                'nik'               => $validated['nik'] ?? null,
+                'tanggal_bergabung' => $validated['tanggal_bergabung'] ?? null,
+                'avatar'            => $avatarPath,
+            ]);
+        });
+
         return redirect()->route('users.index')->with('success', 'User Baru Berhasil Ditambahkan.');
     }
 
     /**
-     * Display the specified resource. iki durung kangge bjir
+     * Display the specified resource.
      */
-    public function show(user $user)
+    public function show(User $user)
     {
-        //
+        $user->load(['roles', 'employee.store']);
+        return view('content.hrd.user.show', compact('user'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(User $user)
+   public function edit(User $user)
     {
+        // Load relasi profil dan toko KHUSUS untuk user ini saja
+        $user->load('employee.store');
+
         return view('content.hrd.user.edit', [
-            'user' => $user,
-            'roles' => Role::all()
+            'user'     => $user,
+            'roles'    => Role::all(),
+            'stores'   => Store::where('is_active', true)->orderBy('name_toko')->get(),
+            'jabatans' => Jabatan::cases(),
         ]);
     }
 
@@ -129,60 +160,87 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        // Cek jika pengguna yang sedang login mencoba mengubah role-nya sendiri
+        // Cegah user mengubah role-nya sendiri
         if (Auth::id() === $user->id && $request->role_name !== $user->getRoleNames()->first()) {
             return back()->withInput()->with('warning', 'Anda tidak dapat mengubah role Anda sendiri.');
         }
 
-        $rules = [
-            'name' => 'required|max:255',
-            'username' => ['required', 'min:3', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'email' => ['required', 'email:dns', Rule::unique('users')->ignore($user->id)],
+        $validated = $request->validate([
+            // Data users
+            'name'     => 'required|max:255',
+            'username' => ['required', 'min:3', 'max:100', Rule::unique('users')->ignore($user->id)],
+            'email'    => ['required', 'email:dns', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|min:5|max:255',
-            'role_name'   => ['required', Rule::exists('roles', 'name')],
-            'kontak' => ['nullable', 'min:9', 'max:14', Rule::unique('users')->ignore($user->id)],
-            'mulai_kerja' => 'required|date',
-            'status' => 'required|boolean',
-            'avatar' => 'nullable|string',
-        ];
+            'status'   => 'required|boolean',
+            'role_name'=> ['required', Rule::exists('roles', 'name')],
 
-        $validatedData = $request->validate($rules);
+            // Data employee_profiles
+            'store_id'          => 'nullable|exists:stores,id',
+            'kontak'            => 'nullable|min:9|max:20',
+            'alamat'            => 'nullable|string|max:500',
+            'jabatan'           => ['nullable', Rule::enum(Jabatan::class)],
+            'nik'               => ['nullable', 'string', 'max:50', Rule::unique('employee_profiles', 'nik')->ignore($user->employee?->id)],
+            'tanggal_bergabung' => 'nullable|date',
+            'avatar'            => 'nullable|string',
+        ]);
 
-        // Cek apakah ada gambar baru yang diunggah (path dimulai dengan 'tmp/')
-        if ($request->filled('avatar') && str_starts_with($request->avatar, 'tmp/')) {
-            $tempPath = $request->avatar;
-            if (Storage::disk('public')->exists($tempPath)) {
-                // Hapus gambar lama jika ada
-                if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                    Storage::disk('public')->delete($user->avatar);
+        DB::transaction(function () use ($validated, $request, $user) {
+            $profile = $user->employee ?? new EmployeeProfile(['user_id' => $user->id]);
+
+            // --- Tangani Avatar ---
+            if ($request->filled('avatar') && str_starts_with($request->avatar, 'tmp/')) {
+                // Ada gambar baru dari FilePond
+                $tempPath = $request->avatar;
+                if (Storage::disk('public')->exists($tempPath)) {
+                    // Hapus avatar lama
+                    if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+                        Storage::disk('public')->delete($profile->avatar);
+                    }
+                    $newPath = str_replace('tmp/user-images/', 'user-images/', $tempPath);
+                    Storage::disk('public')->move($tempPath, $newPath);
+                    $validated['avatar'] = $newPath;
                 }
-                // Pindahkan gambar baru dari tmp ke folder user-images
-                $newPath = str_replace('tmp/user-images/', 'user-images/', $tempPath);
-                Storage::disk('public')->move($tempPath, $newPath);
-                $validatedData['avatar'] = $newPath;
+            } elseif ($request->exists('avatar') && $request->input('avatar') === null) {
+                // Pengguna menghapus avatar
+                if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+                    Storage::disk('public')->delete($profile->avatar);
+                }
+                $validated['avatar'] = null;
+            } else {
+                // Tidak ada perubahan avatar — jangan timpa path yang ada
+                unset($validated['avatar']);
             }
-            // Cek jika pengguna menghapus gambar (input ada tapi nilainya kosong/null)
-        } elseif ($request->exists('avatar') && $request->input('avatar') === null) {
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
-                $validatedData['avatar'] = null;
+
+            // --- Update tabel users ---
+            $userData = [
+                'name'     => $validated['name'],
+                'username' => $validated['username'],
+                'email'    => $validated['email'],
+                'status'   => $validated['status'],
+            ];
+            if (!empty($validated['password'])) {
+                $userData['password'] = bcrypt($validated['password']);
             }
-        } else {
-            // Jika tidak ada perubahan gambar, hapus dari data yang divalidasi agar tidak menimpa path yang ada
-            unset($validatedData['avatar']);
-        }
+            $user->update($userData);
 
-        if ($request->filled('password')) {
-            $validatedData['password'] = bcrypt($validatedData['password']);
-        } else {
-            unset($validatedData['password']);
-        }
+            // --- Update role ---
+            $user->syncRoles($validated['role_name']);
 
-        $roleName = $validatedData['role_name'];
-        unset($validatedData['role_name']);
-
-        $user->update($validatedData);
-        $user->syncRoles($roleName);
+            // --- Update employee_profile ---
+            $profileData = [
+                'user_id'           => $user->id,
+                'store_id'          => $validated['store_id'] ?? null,
+                'kontak'            => $validated['kontak'] ?? null,
+                'alamat'            => $validated['alamat'] ?? null,
+                'jabatan'           => $validated['jabatan'] ?? null,
+                'nik'               => $validated['nik'] ?? null,
+                'tanggal_bergabung' => $validated['tanggal_bergabung'] ?? null,
+            ];
+            if (isset($validated['avatar'])) {
+                $profileData['avatar'] = $validated['avatar'];
+            }
+            $profile->fill($profileData)->save();
+        });
 
         return redirect()->route('users.index')->with('success', 'Data Pengguna Berhasil Diperbarui.');
     }
@@ -192,10 +250,17 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
-        }
-        $user->delete();
+        DB::transaction(function () use ($user) {
+            // Hapus avatar dari storage jika ada
+            if ($user->employee?->avatar) {
+                Storage::disk('public')->delete($user->employee->avatar);
+            }
+            // employee_profile akan terhapus otomatis jika ada cascade di migration,
+            // jika tidak, hapus manual:
+            $user->employee?->delete();
+            $user->delete();
+        });
+
         return redirect()->route('users.index')->with('success', 'Data Pengguna Berhasil Dihapus.');
     }
 
@@ -206,15 +271,11 @@ class UserController extends Controller
     {
         if ($request->hasFile('avatar')) {
             $request->validate([
-                'avatar' => 'required|image|mimes:jpeg,png,jpg,svg,webp|max:2048',
+                'avatar' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
             ]);
-            $file = $request->file('avatar');
-            // Simpan ke storage/app/public/tmp/user-images
-            $path = $file->store('tmp/user-images', 'public');
-            // Kembalikan path sebagai response text, FilePond akan menangkap ini
+            $path = $request->file('avatar')->store('tmp/user-images', 'public');
             return $path;
         }
-        // Jika gagal
         return response('Gagal mengunggah.', 500);
     }
 
@@ -223,14 +284,11 @@ class UserController extends Controller
      */
     public function revert(Request $request)
     {
-        // FilePond mengirimkan path file sebagai konten body request
         $filePath = $request->getContent();
-
         if ($filePath && Storage::disk('public')->exists($filePath)) {
             Storage::disk('public')->delete($filePath);
-            return response()->noContent(); // Berhasil, tidak ada konten untuk dikembalikan
+            return response()->noContent();
         }
-
-        return response()->json(['error' => 'File not found or path is missing.'], 404);
+        return response()->json(['error' => 'File not found.'], 404);
     }
 }

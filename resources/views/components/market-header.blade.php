@@ -83,8 +83,8 @@
                         <ul class="dropdown-menu dropdown-menu-end">
 
                             {{-- PENGECEKAN ROLE/PROFIL --}}
-                            {{-- Jika user adalah karyawan (punya relasi employeeProfile) --}}
-                            @if (auth()->user()->employeeProfile)
+                            {{-- Jika user adalah karyawan (punya relasi employee) --}}
+                            @if (auth()->user()->employee)
                                 <li>
                                     {{-- Menggunakan subdomain dinamis --}}
                                     @php $adminDomain = 'http://jopos.' . env('APP_DOMAIN', 'jocomputer.test'); @endphp

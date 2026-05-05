@@ -13,13 +13,8 @@ return new class extends Migration
     {
         Schema::create('employee_profiles', function (Blueprint $table) {
             $table->id();
-
-            // Relasi utama ke tabel users (One-to-One)
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-
-            // Relasi penempatan karyawan ke tabel stores (Toko/Gudang mana dia bekerja)
             $table->foreignId('store_id')->nullable()->constrained('stores')->nullOnDelete();
-
             // Biodata & Kontak
             $table->string('kontak', 20)->unique()->nullable();
             $table->text('alamat')->nullable();

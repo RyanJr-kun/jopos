@@ -61,7 +61,7 @@ class DashboardController extends Controller
         // --- DATA UNTUK STATS CARDS ---
 
        /// Ambil ID Toko user yang sedang login
-        $currentStoreId = Auth::user()->profile->store_id;
+        $currentStoreId = Auth::user()->employee->store_id;
 
         // 1. Siapkan Query Dasar
         // withSum berfungsi agar variabel 'total_stok' otomatis tersedia saat di-looping di Blade

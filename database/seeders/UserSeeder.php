@@ -34,7 +34,7 @@ class UserSeeder extends Seeder
             'status' => 1,
         ]);
 
-        // 3. Hubungkan ke Employee Profile
+        // 3. Hubungkan ke Employee employee
         // Di sini kita menyatukan user_id dan store_id
         EmployeeProfile::create([
             'user_id'           => $admin->id,

@@ -74,7 +74,7 @@
                 </div>
 
                 @auth
-                    {{-- [DRY] Komponen avatar profile dipusatkan logikanya --}}
+                    {{-- [DRY] Komponen avatar employee dipusatkan logikanya --}}
                     @php
                         $profileImg = auth()->user()->avatar
                             ? asset('storage/' . auth()->user()->avatar)

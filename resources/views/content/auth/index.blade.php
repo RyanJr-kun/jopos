@@ -19,12 +19,12 @@
                 <div class="el-accent-bar"></div>
 
                 <div class="el-brand-logo">
-                    <img src="{{ asset('assets/img/logo.png') }}" alt="JOPOS Logo" class="el-logo-img" />
+                    <img src="{{ asset('assets/img/LM-Default.png') }}" alt="JOPOS Logo" class="el-logo-img" />
                 </div>
 
                 <div class="el-brand-copy">
                     <p class="el-brand-eyebrow">Portal Karyawan</p>
-                    <h1 class="el-brand-name">JOPOS</h1>
+                    <h1 class="el-brand-name">JO POS</h1>
                     <div class="el-brand-rule"></div>
                     <p class="el-brand-desc">
                         Sistem manajemen terpadu untuk seluruh operasional tim Anda.

@@ -176,16 +176,16 @@ class StoreController extends Controller
         $store = Store::findOrFail($id);
 
         // Ambil semua user yang memiliki profil karyawan
-        $allEmployees = User::has('profile')
-            ->with('profile.store')
+        $allEmployees = User::has('employee')
+            ->with('employee.store')
             ->get()
             ->map(function ($user) use ($id) {
                 return [
                     'id' => $user->id,
                     'name' => $user->name,
-                    'jabatan' => $user->profile->jabatan ?? '-',
-                    'is_member' => $user->profile->store_id == $id,
-                    'current_store' => $user->profile->store->name_toko ?? 'Belum Ditempatkan'
+                    'jabatan' => $user->employee->jabatan ?? '-',
+                    'is_member' => $user->employee->store_id == $id,
+                    'current_store' => $user->employee->store->name_toko ?? 'Belum Ditempatkan'
                 ];
             });
 

@@ -48,7 +48,7 @@ class User extends Authenticatable
     ];
   }
 
-  public function employeeProfile()
+  public function employee()
   {
     return $this->hasOne(EmployeeProfile::class, 'user_id');
   }
@@ -107,11 +107,6 @@ class User extends Authenticatable
   public function ledStore()
   {
     return $this->hasOne(Store::class, 'pic_id');
-  }
-
-  public function profile()
-  {
-    return $this->hasOne(EmployeeProfile::class, 'user_id');
   }
 
 }

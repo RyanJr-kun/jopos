@@ -4,27 +4,29 @@
 // =====================================================
 
 // ── Google Fonts ───────────────────────────────────
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Space+Grotesk:wght@300..700&display=swap');
 
 // ── Design tokens ─────────────────────────────────
 $c-bg : #f7f5f2; // warm off-white
 $c-surface : #ffffff;
-$c-brand-bg : #f0ede8; // slightly warmer panel
+$c-brand-bg : #ffffff; // slightly warmer panel
 $c-red : #c0261e; // deep crimson (from logo)
 $c-red-hover : #a31e17;
 $c-navy : #1c3d8c; // deep navy (from logo blue)
 $c-ink : #1a1a1a; // near-black text
 $c-text : #3a3a3a;
 $c-muted : #8a8680;
-$c-subtle : #b8b4af;
+$c-subtle : #b8afaf;
 $c-border : #e4e0db;
 $c-border-focus: $c-navy;
 
-$f-display : 'Cormorant Garamond',
-Georgia,
-serif;
+$f-display : 'Space Grotesk',
+sans-serif;
 $f-body : 'Outfit',
 'Segoe UI',
+sans-serif;
+$f-poppins : 'Poppins',
 sans-serif;
 
 $radius : 12px;
@@ -153,10 +155,9 @@ body {
 }
 
 .el-logo-img {
-  width: 130px;
+  width: 330px;
   height: 130px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 16px rgba($c-red, 0.15));
   transition: transform $dur $ease, filter $dur $ease;
 
   &:hover {
@@ -654,8 +655,7 @@ body {
 }
 
 .fp-logo-img {
-  width: 40px;
-  height: 40px;
+  width: 100%;
   object-fit: contain;
 }
 

@@ -604,7 +604,7 @@ class ProductController extends Controller
         $search = $request->query('search');
         
         // Ambil ID Toko dari user yang login (sesuai logika Anda di cekStock)
-        $storeId = Auth::user()->employeeProfile->store_id ?? null;
+        $storeId = Auth::user()->employee->store_id ?? null;
 
         // Load relasi pajak, varian, dan opsi variannya
         $query = Product::with(['pajak', 'primaryImage', 'variants' => function($q) {
@@ -706,7 +706,7 @@ class ProductController extends Controller
     public function cekStock(Request $request)
     {
         $productId = $request->query('id');
-        $storeId = Auth::user()->employeeProfile->store_id ?? null; // Sesuaikan dengan auth user
+        $storeId = Auth::user()->employee->store_id ?? null; // Sesuaikan dengan auth user
         
         $query = ProductStock::where('product_id', $productId);
         if ($storeId) {
@@ -735,7 +735,7 @@ class ProductController extends Controller
     // -------------------------------------------------------
     public function getLowStockNotifications()
     {
-        $storeId = Auth::user()->employeeProfile->store_id ?? null;
+        $storeId = Auth::user()->employee->store_id ?? null;
     
         $lowStockProducts = Product::select('products.*')
             ->join('product_stocks', 'products.id', '=', 'product_stocks.product_id')
