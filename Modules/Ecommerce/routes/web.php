@@ -24,6 +24,14 @@ Route::domain($domain)->group(function () {
         Route::get('/auth/customers/register', [CustomerAuthController::class, 'showRegisterForm'])->name('customer.register');
         Route::post('/auth/customers/register', [CustomerAuthController::class, 'register'])->name('customer.register.post');
 
+        // Rute Lupa Password Customer
+        Route::get('/auth/customers/forgot-password', [CustomerAuthController::class, 'showForgotForm'])->name('customer.password.request');
+        Route::post('/auth/customers/forgot-password', [CustomerAuthController::class, 'sendResetLink'])->name('customer.password.email');
+        
+        // Rute Reset Password Customer (dari link email)
+        Route::get('/auth/customers/reset-password/{token}', [CustomerAuthController::class, 'showResetForm'])->name('customer.password.reset');
+        Route::post('/auth/customers/reset-password', [CustomerAuthController::class, 'resetPassword'])->name('customer.password.update');
+
         // Autentikasi via Google OAuth
         Route::get('/auth/google/redirect', [GoogleController::class, 'redirectToGoogle'])->name('customer.google.login');
         Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);

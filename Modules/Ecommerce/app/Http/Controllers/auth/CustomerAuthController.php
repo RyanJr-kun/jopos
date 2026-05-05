@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Password;
 use Modules\Inventory\Models\Category;
 
 class CustomerAuthController extends Controller
@@ -125,5 +126,68 @@ class CustomerAuthController extends Controller
 
         // Kembalikan ke halaman utama e-commerce setelah logout
         return redirect('/')->with('success', 'Anda telah berhasil logout.');
+    }
+
+    // 1. Menampilkan form minta link reset
+    public function showForgotForm()
+    {
+        $kategoris = Category::with('children')->whereNull('parent_id')->get();
+        return view('ecommerce::auth.forgot-pass', compact('kategoris'));
+    }
+
+    // 2. Memproses pengiriman email via Brevo
+    public function sendResetLink(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        // Kita pastikan email ini milik customer, bukan murni karyawan
+        $isCustomer = DB::table('customers')->where('email', $request->email)->exists();
+        if (!$isCustomer) {
+            return back()->withErrors(['email' => 'Kami tidak menemukan akun pelanggan dengan email tersebut.']);
+        }
+
+        $status = Password::broker()->sendResetLink($request->only('email'));
+
+        return $status === Password::RESET_LINK_SENT
+                    ? back()->with(['status' => __($status)])
+                    : back()->withErrors(['email' => __($status)]);
+    }
+
+    // 3. Menampilkan form input password baru (dari link email)
+   // 3. Menampilkan form input password baru (dari link email)
+    public function showResetForm(Request $request, $token) 
+    {
+        // Ambil data kategori untuk dikirimkan ke <x-market-header>
+        $kategoris = Category::with('children')->whereNull('parent_id')->get();
+        
+        return view('ecommerce::auth.reset', [
+            'token' => $token, 
+            'email' => $request->email,
+            'kategoris' => $kategoris // Tambahkan ini
+        ]);
+    }
+
+    // 4. Memproses penyimpanan password baru ke database
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $status = Password::broker()->reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->password = Hash::make($password);
+                $user->save();
+            }
+        );
+
+        if ($status == Password::PASSWORD_RESET) {
+            return redirect()->route('customer.login')->with('success', 'Password berhasil direset! Silakan login.');
+        }
+
+        return back()->withErrors(['email' => __($status)]);
     }
 }

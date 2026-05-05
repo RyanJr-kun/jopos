@@ -1,41 +1,27 @@
-@extends('layouts/blankLayout')
+@isset($pageConfigs)
+    {!! Helper::updatePageConfig($pageConfigs) !!}
+@endisset
 
+@extends('layouts/commonMaster')
 @section('title', 'Lupa Password — JOPOS')
 
-@section('vendor-style')
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-@endsection
-
-@section('vendor-script')
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-@endsection
 
 @section('page-style')
     @vite(['resources/assets/vendor/scss/pages/page-auth.scss'])
 @endsection
 
-@section('content')
-    <div class="fp-wrapper">
+@section('layoutContent')
+    @yield('content')
+
+    <x-market-header :kategoris="$kategoris"></x-market-header>
+
+    <div class="fp-wrapper" data-aos="fade-up">
 
         {{-- Decorative background shapes --}}
         <div class="fp-geo fp-geo--tl"></div>
         <div class="fp-geo fp-geo--br"></div>
 
         <div class="fp-card">
-
-            {{-- Logo --}}
-            <div class="fp-logo">
-                <img src="{{ asset('assets/img/logo.png') }}" alt="JOPOS" class="fp-logo-img" />
-                <span class="fp-logo-name">JOPOS</span>
-            </div>
-
-            {{-- Icon lock --}}
-            <div class="fp-icon-wrap">
-                <svg class="fp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-            </div>
 
             <header class="fp-header">
                 <p class="fp-eyebrow">Pemulihan Akses</p>
@@ -73,7 +59,8 @@
                 </div>
             @endif
 
-            <form id="formAuthentication" class="fp-form" action="{{ route('password.email') }}" method="POST" novalidate>
+            <form id="formAuthentication" class="fp-form" action="{{ route('customer.password.email') }}" method="POST"
+                novalidate>
                 @csrf
 
                 <div class="el-field">
@@ -102,7 +89,7 @@
             </form>
 
             <div class="fp-back">
-                <a href="{{ route('employee.login') }}" class="fp-back-link">
+                <a href="{{ route('customer.login') }}" class="fp-back-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                     </svg>
@@ -112,4 +99,15 @@
 
         </div>
     </div>
+    <x-market-footer></x-market-footer>
+
+@endsection
+
+@section('page-script')
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+    </script>
 @endsection

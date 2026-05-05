@@ -13,90 +13,131 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 @endsection
 
+@section('page-style')
+    @vite(['resources/assets/vendor/scss/pages/page-log-reg.scss'])
+@endsection
+
 @section('layoutContent')
     @yield('content')
     <x-market-header :kategoris="$kategoris"></x-market-header>
 
-    <section id="register" class="section-py bg-body">
-        <div class="container-fluid">
-            <div class="row justify-content-center">
-                <div class="col-md-8 col-lg-5 col-xl-4" data-aos="fade-up">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body p-5">
-                            <div class="text-center mb-4">
-                                <h3 class="fw-bold mb-2">Mulai Belanja! 🚀</h3>
-                                <p class="text-muted">Buat akun untuk melacak pesanan dan mendapatkan promo menarik.</p>
-                            </div>
+    <section class="auth-page my-0">
+        <div class="auth-card auth-card--register" data-aos="fade-up" data-aos-duration="700">
 
-                            @if ($errors->any())
-                                <div class="alert alert-danger mb-4">
-                                    <ul class="mb-0 ps-3">
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
+            {{-- ── Left Decorative Panel ──────────────────────────── --}}
+            <div class="auth-panel">
+                <div class="auth-panel__inner-circle"></div>
 
-                            <form action="{{ route('customer.register.post') }}" method="POST" class="mb-4">
-                                @csrf
-                                <div class="mb-3">
-                                    <label for="name" class="form-label">Nama Lengkap</label>
-                                    <input type="text" class="form-control" id="name" name="name"
-                                        placeholder="John Doe" value="{{ old('name') }}" required autofocus>
-                                </div>
+                {{-- Logo --}}
+                <div class="auth-panel__logo">
+                    JO Computer
+                </div>
 
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email"
-                                        placeholder="email@contoh.com" value="{{ old('email') }}" required>
-                                </div>
+                {{-- Main content --}}
+                <div class="auth-panel__content">
+                    <div class="auth-panel__eyebrow">
+                        <span>Bergabung Sekarang</span>
+                    </div>
+                    <h2 class="auth-panel__heading">
+                        Daftar dan<br>
+                        Nikmati Promo
+                    </h2>
+                    <p class="auth-panel__tagline">
+                        Buat akun gratis dan dapatkan akses ke penawaran eksklusif serta pelacakan pesanan real-time.
+                    </p>
+                </div>
+            </div>
 
-                                <div class="mb-3 form-password-toggle">
-                                    <label class="form-label" for="password">Password</label>
-                                    <div class="input-group input-group-merge">
-                                        <input type="password" id="password" class="form-control" name="password"
-                                            placeholder="Minimal 8 karakter" required>
-                                        <span class="input-group-text cursor-pointer"><i
-                                                class="icon-base bx bx-hide"></i></span>
-                                    </div>
-                                </div>
+            {{-- ── Form Side ──────────────────────────────────────── --}}
+            <div class="auth-form-side">
 
-                                <div class="mb-4 form-password-toggle">
-                                    <label class="form-label" for="password_confirmation">Konfirmasi Password</label>
-                                    <div class="input-group input-group-merge">
-                                        <input type="password" id="password_confirmation" class="form-control"
-                                            name="password_confirmation" placeholder="Ulangi password" required>
-                                        <span class="input-group-text cursor-pointer"><i
-                                                class="icon-base bx bx-hide"></i></span>
-                                    </div>
-                                </div>
+                {{-- Header --}}
+                <div class="auth-header">
+                    <h1 class="auth-header__title">Buat Akun</h1>
+                    <p class="auth-header__sub">Isi data di bawah ini untuk membuat akun baru Anda.</p>
+                </div>
 
-                                <button class="btn btn-primary d-grid w-100" type="submit">Daftar Akun</button>
-                            </form>
+                {{-- Validation Errors --}}
+                @if ($errors->any())
+                    <div class="auth-alert">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
-                            <div class="divider my-4">
-                                <div class="divider-text text-muted">atau daftar dengan</div>
-                            </div>
+                {{-- Form --}}
+                <form action="{{ route('customer.register.post') }}" method="POST" class="auth-form">
+                    @csrf
 
-                            <!-- Tombol Investasi Google OAuth -->
-                            <div class="d-grid gap-2">
-                                <a href="{{ route('customer.google.login') }}"
-                                    class="btn btn-outline-secondary d-flex justify-content-center align-items-center gap-2">
-                                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google"
-                                        width="20">
-                                    Daftar dengan Google
-                                </a>
-                            </div>
+                    {{-- Full Name --}}
+                    <div class="auth-field">
+                        <label for="name" class="auth-field__label">Nama Lengkap</label>
+                        <input type="text" id="name" name="name"
+                            class="auth-input @error('name') auth-input--error @enderror" placeholder="Nama lengkap Anda"
+                            value="{{ old('name') }}" required autofocus>
+                    </div>
 
-                            <p class="text-center mt-4 mb-0">
-                                Sudah punya akun?
-                                <a href="{{ route('customer.login') }}"
-                                    class="text-primary fw-bold text-decoration-none">Login di sini</a>
-                            </p>
+                    {{-- Email --}}
+                    <div class="auth-field">
+                        <label for="email" class="auth-field__label">Alamat Email</label>
+                        <input type="email" id="email" name="email"
+                            class="auth-input @error('email') auth-input--error @enderror" placeholder="nama@email.com"
+                            value="{{ old('email') }}" required>
+                    </div>
+
+                    {{-- Password --}}
+                    <div class="auth-field">
+                        <label for="password" class="auth-field__label">Password</label>
+                        <div class="auth-field__input-wrap auth-field__input-wrap--group">
+                            <input type="password" id="password" name="password"
+                                class="auth-input @error('password') auth-input--error @enderror"
+                                placeholder="Minimal 8 karakter" required>
+                            <button type="button" class="auth-field__toggle" id="togglePassword"
+                                aria-label="Tampilkan password">
+                                <i class="bx bx-hide" id="toggleIcon"></i>
+                            </button>
                         </div>
                     </div>
+
+                    {{-- Password Confirmation --}}
+                    <div class="auth-field">
+                        <label for="password_confirmation" class="auth-field__label">Konfirmasi Password</label>
+                        <div class="auth-field__input-wrap auth-field__input-wrap--group">
+                            <input type="password" id="password_confirmation" name="password_confirmation"
+                                class="auth-input" placeholder="Ulangi password Anda" required>
+                            <button type="button" class="auth-field__toggle" id="toggleConfirm"
+                                aria-label="Tampilkan konfirmasi password">
+                                <i class="bx bx-hide" id="toggleIconConfirm"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Submit --}}
+                    <button type="submit" class="auth-btn">
+                        Buat Akun
+                    </button>
+                </form>
+
+                {{-- Divider --}}
+                <div class="auth-divider">
+                    <span>atau daftar dengan</span>
                 </div>
+
+                {{-- Google OAuth --}}
+                <a href="{{ route('customer.google.login') }}" class="auth-btn-google">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google">
+                    Daftar dengan Google
+                </a>
+
+                {{-- Login Link --}}
+                <p class="auth-footer-link">
+                    Sudah punya akun?
+                    <a href="{{ route('customer.login') }}">Login di sini</a>
+                </p>
+
             </div>
         </div>
     </section>
@@ -107,8 +148,25 @@
 @section('page-script')
     <script>
         AOS.init({
-            duration: 800,
-            once: true
+            duration: 700,
+            once: true,
+            easing: 'ease-out-cubic'
         });
+
+        // Password toggle helper
+        function makeToggle(btnId, inputId, iconId) {
+            const btn = document.getElementById(btnId);
+            const inp = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (!btn) return;
+            btn.addEventListener('click', () => {
+                const hidden = inp.type === 'password';
+                inp.type = hidden ? 'text' : 'password';
+                icon.className = hidden ? 'bx bx-show' : 'bx bx-hide';
+            });
+        }
+
+        makeToggle('togglePassword', 'password', 'toggleIcon');
+        makeToggle('toggleConfirm', 'password_confirmation', 'toggleIconConfirm');
     </script>
 @endsection

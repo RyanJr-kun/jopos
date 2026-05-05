@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\DB;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -50,6 +52,25 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('notifications', $notifications)
                 ->with('unreadCount', $unreadCount);
+        });
+
+        ResetPassword::createUrlUsing(function ($user, string $token) {
+            // Cek apakah email ini milik pelanggan
+            $isCustomer = DB::table('customers')->where('email', $user->email)->exists();
+
+            if ($isCustomer) {
+                // Arahkan ke rute reset password khusus Customer
+                return route('customer.password.reset', [
+                    'token' => $token,
+                    'email' => $user->email,
+                ]);
+            }
+
+            // Jika karyawan, arahkan ke rute reset password Karyawan
+            return route('password.reset', [
+                'token' => $token,
+                'email' => $user->email,
+            ]);
         });
     }
 }
