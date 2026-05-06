@@ -185,7 +185,7 @@ class CustomerAuthController extends Controller
         );
 
         if ($status == Password::PASSWORD_RESET) {
-            return redirect()->route('customer.login')->with('success', 'Password berhasil direset! Silakan login.');
+            return redirect()->route('login')->with('success', 'Password berhasil direset! Silakan login.');
         }
 
         return back()->withErrors(['email' => __($status)]);

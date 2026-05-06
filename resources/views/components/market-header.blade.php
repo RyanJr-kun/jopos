@@ -134,7 +134,7 @@
                         </ul>
                     @else
                         {{-- Jika Belum Login, Arahkan ke Login Customer --}}
-                        <a href="{{ route('customer.login') }}"
+                        <a href="{{ route('login') }}"
                             class="nav-link badge bg-label-primary fw-bold d-flex align-items-center ms-3">
                             <i class="bx bx-user icon-md"></i>
                             <span class="d-none d-lg-block ms-2">Login</span>

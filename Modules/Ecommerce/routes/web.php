@@ -18,7 +18,7 @@ Route::domain($domain)->group(function () {
 
     Route::middleware('guest:customer')->group(function () {
         // Autentikasi Standar
-        Route::get('/auth/customers/login', [CustomerAuthController::class, 'showLoginForm'])->name('customer.login');
+        Route::get('/login', [CustomerAuthController::class, 'showLoginForm'])->name('login');
         Route::post('/auth/customers/login', [CustomerAuthController::class, 'login'])->name('customer.login.post');
         
         Route::get('/auth/customers/register', [CustomerAuthController::class, 'showRegisterForm'])->name('customer.register');

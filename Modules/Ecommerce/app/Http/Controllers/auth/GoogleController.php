@@ -61,7 +61,7 @@ class GoogleController extends Controller
                     DB::commit();
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    return redirect()->route('customer.login')->withErrors(['error' => 'Gagal mendaftar via Google.']);
+                    return redirect()->route('login')->withErrors(['error' => 'Gagal mendaftar via Google.']);
                 }
             } else {
                 // JIKA AKUN SUDAH ADA, pastikan dia punya profil customer
@@ -85,7 +85,7 @@ class GoogleController extends Controller
 
         } catch (\Exception $e) {
             // Jika user menekan "Cancel" atau terjadi error lain
-            return redirect()->route('customer.login')->withErrors(['error' => 'Proses autentikasi Google dibatalkan atau gagal.']);
+            return redirect()->route('login')->withErrors(['error' => 'Proses autentikasi Google dibatalkan atau gagal.']);
         }
     }
 }
