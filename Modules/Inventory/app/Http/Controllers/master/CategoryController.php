@@ -75,8 +75,8 @@ class CategoryController extends Controller
             $fileName   = basename($sourcePath);
             $destinationPath = 'kategori-images/' . $fileName;
 
-            if (Storage::disk('public')->exists($sourcePath)) {
-                Storage::disk('public')->move($sourcePath, $destinationPath);
+            if (Storage::disk('r2')->exists($sourcePath)) {
+                Storage::disk('r2')->move($sourcePath, $destinationPath);
                 $validatedData['img_kategori'] = $destinationPath;
             } else {
                 unset($validatedData['img_kategori']);
@@ -132,19 +132,19 @@ class CategoryController extends Controller
         if ($request->filled('img_kategori')) {
             $sourcePath = $request->input('img_kategori');
 
-            if (str_starts_with($sourcePath, 'tmp/') && Storage::disk('public')->exists($sourcePath)) {
+            if (str_starts_with($sourcePath, 'tmp/') && Storage::disk('r2')->exists($sourcePath)) {
                 if ($kategoriproduk->img_kategori) {
-                    Storage::disk('public')->delete($kategoriproduk->img_kategori);
+                    Storage::disk('r2')->delete($kategoriproduk->img_kategori);
                 }
                 $fileName        = basename($sourcePath);
                 $destinationPath = 'kategori-images/' . $fileName;
-                Storage::disk('public')->move($sourcePath, $destinationPath);
+                Storage::disk('r2')->move($sourcePath, $destinationPath);
                 $validatedData['img_kategori'] = $destinationPath;
             }
         } elseif ($request->exists('img_kategori') && $request->input('img_kategori') === null) {
             // Pengguna menghapus gambar
-            if ($kategoriproduk->img_kategori && Storage::disk('public')->exists($kategoriproduk->img_kategori)) {
-                Storage::disk('public')->delete($kategoriproduk->img_kategori);
+            if ($kategoriproduk->img_kategori && Storage::disk('r2')->exists($kategoriproduk->img_kategori)) {
+                Storage::disk('r2')->delete($kategoriproduk->img_kategori);
                 $validatedData['img_kategori'] = null;
             }
         } else {
@@ -186,7 +186,7 @@ class CategoryController extends Controller
         }
 
         if ($kategoriproduk->img_kategori) {
-            Storage::disk('public')->delete($kategoriproduk->img_kategori);
+            Storage::disk('r2')->delete($kategoriproduk->img_kategori);
         }
 
         $kategoriproduk->delete();
@@ -228,8 +228,8 @@ class CategoryController extends Controller
     public function revert(Request $request)
     {
         $filePath = $request->getContent();
-        if ($filePath && Storage::disk('public')->exists($filePath)) {
-            Storage::disk('public')->delete($filePath);
+        if ($filePath && Storage::disk('r2')->exists($filePath)) {
+            Storage::disk('r2')->delete($filePath);
             return response()->noContent();
         }
 

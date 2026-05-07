@@ -95,9 +95,9 @@ class UserController extends Controller
             $avatarPath = null;
             if (!empty($validated['avatar'])) {
                 $tempPath = $validated['avatar'];
-                if (Storage::disk('public')->exists($tempPath)) {
+                if (Storage::disk('r2')->exists($tempPath)) {
                     $newPath = str_replace('tmp/user-images/', 'user-images/', $tempPath);
-                    Storage::disk('public')->move($tempPath, $newPath);
+                    Storage::disk('r2')->move($tempPath, $newPath);
                     $avatarPath = $newPath;
                 }
             }
@@ -191,19 +191,19 @@ class UserController extends Controller
             if ($request->filled('avatar') && str_starts_with($request->avatar, 'tmp/')) {
                 // Ada gambar baru dari FilePond
                 $tempPath = $request->avatar;
-                if (Storage::disk('public')->exists($tempPath)) {
+                if (Storage::disk('r2')->exists($tempPath)) {
                     // Hapus avatar lama
-                    if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-                        Storage::disk('public')->delete($profile->avatar);
+                    if ($profile->avatar && Storage::disk('r2')->exists($profile->avatar)) {
+                        Storage::disk('r2')->delete($profile->avatar);
                     }
                     $newPath = str_replace('tmp/user-images/', 'user-images/', $tempPath);
-                    Storage::disk('public')->move($tempPath, $newPath);
+                    Storage::disk('r2')->move($tempPath, $newPath);
                     $validated['avatar'] = $newPath;
                 }
             } elseif ($request->exists('avatar') && $request->input('avatar') === null) {
                 // Pengguna menghapus avatar
-                if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-                    Storage::disk('public')->delete($profile->avatar);
+                if ($profile->avatar && Storage::disk('r2')->exists($profile->avatar)) {
+                    Storage::disk('r2')->delete($profile->avatar);
                 }
                 $validated['avatar'] = null;
             } else {
@@ -253,7 +253,7 @@ class UserController extends Controller
         DB::transaction(function () use ($user) {
             // Hapus avatar dari storage jika ada
             if ($user->employee?->avatar) {
-                Storage::disk('public')->delete($user->employee->avatar);
+                Storage::disk('r2')->delete($user->employee->avatar);
             }
             // employee_profile akan terhapus otomatis jika ada cascade di migration,
             // jika tidak, hapus manual:
@@ -285,8 +285,8 @@ class UserController extends Controller
     public function revert(Request $request)
     {
         $filePath = $request->getContent();
-        if ($filePath && Storage::disk('public')->exists($filePath)) {
-            Storage::disk('public')->delete($filePath);
+        if ($filePath && Storage::disk('r2')->exists($filePath)) {
+            Storage::disk('r2')->delete($filePath);
             return response()->noContent();
         }
         return response()->json(['error' => 'File not found.'], 404);

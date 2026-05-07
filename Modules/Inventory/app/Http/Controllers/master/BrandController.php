@@ -67,8 +67,8 @@ class BrandController extends Controller
             $fileName = basename($sourcePath);
             $destinationPath = 'brand-images/' . $fileName;
 
-            if (Storage::disk('public')->exists($sourcePath)) {
-                Storage::disk('public')->move($sourcePath, $destinationPath);
+            if (Storage::disk('r2')->exists($sourcePath)) {
+                Storage::disk('r2')->move($sourcePath, $destinationPath);
                 $validatedData['img_brand'] = $destinationPath;
             } else {
                 unset($validatedData['img_brand']);
@@ -118,19 +118,19 @@ class BrandController extends Controller
         if ($request->filled('img_brand')) {
             $sourcePath = $request->input('img_brand');
 
-            if (strpos($sourcePath, 'tmp/') === 0 && Storage::disk('public')->exists($sourcePath)) {
+            if (strpos($sourcePath, 'tmp/') === 0 && Storage::disk('r2')->exists($sourcePath)) {
                 if ($brand->img_brand) {
-                    Storage::disk('public')->delete($brand->img_brand);
+                    Storage::disk('r2')->delete($brand->img_brand);
                 }
 
                 $fileName = basename($sourcePath);
                 $destinationPath = 'brand-images/' . $fileName;
-                Storage::disk('public')->move($sourcePath, $destinationPath);
+                Storage::disk('r2')->move($sourcePath, $destinationPath);
                 $validatedData['img_brand'] = $destinationPath;
             }
         } elseif ($request->exists('img_brand') && $request->input('img_brand') === null) {
-            if ($brand->img_brand && Storage::disk('public')->exists($brand->img_brand)) {
-                Storage::disk('public')->delete($brand->img_brand);
+            if ($brand->img_brand && Storage::disk('r2')->exists($brand->img_brand)) {
+                Storage::disk('r2')->delete($brand->img_brand);
                 $validatedData['img_brand'] = null;
             }
         }
@@ -156,7 +156,7 @@ class BrandController extends Controller
         }
 
         if ($brand->img_brand) {
-            Storage::disk('public')->delete($brand->img_brand);
+            Storage::disk('r2')->delete($brand->img_brand);
         }
 
         $brand->delete();
@@ -202,8 +202,8 @@ class BrandController extends Controller
     public function revert(Request $request)
     {
         $filePath = $request->getContent();
-        if ($filePath && Storage::disk('public')->exists($filePath)) {
-            Storage::disk('public')->delete($filePath);
+        if ($filePath && Storage::disk('r2')->exists($filePath)) {
+            Storage::disk('r2')->delete($filePath);
             return response()->noContent();
         }
 

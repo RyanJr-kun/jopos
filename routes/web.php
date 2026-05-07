@@ -13,6 +13,7 @@ use App\Http\Controllers\finance\IncomeController;
 use App\Http\Controllers\finance\KeuanganController;
 use App\Http\Controllers\finance\TransactionCategoryController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 // Mengambil variabel domain dari .env
 $domain = env('APP_DOMAIN', 'jocomputer.com');

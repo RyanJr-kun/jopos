@@ -52,9 +52,9 @@ class StoreController extends Controller
         // Handle FilePond Upload
         if ($request->filled('logo')) {
             $tempPath = $request->input('logo');
-            if (Storage::disk('public')->exists($tempPath)) {
+            if (Storage::disk('r2')->exists($tempPath)) {
                 $newPath = 'profil-toko/' . basename($tempPath);
-                Storage::disk('public')->move($tempPath, $newPath);
+                Storage::disk('r2')->move($tempPath, $newPath);
                 $validatedData['logo'] = $newPath;
             } else {
                 $validatedData['logo'] = null;
@@ -95,13 +95,13 @@ class StoreController extends Controller
 
         if ($request->filled('logo')) {
             $tempPath = $request->input('logo');
-            if (Storage::disk('public')->exists($tempPath)) {
+            if (Storage::disk('r2')->exists($tempPath)) {
                 $newPath = 'profil-toko/' . basename($tempPath);
-                Storage::disk('public')->move($tempPath, $newPath);
+                Storage::disk('r2')->move($tempPath, $newPath);
 
                 // Hapus logo lama jika ada
-                if ($toko->logo && Storage::disk('public')->exists($toko->logo)) {
-                    Storage::disk('public')->delete($toko->logo);
+                if ($toko->logo && Storage::disk('r2')->exists($toko->logo)) {
+                    Storage::disk('r2')->delete($toko->logo);
                 }
                 $validatedData['logo'] = $newPath;
             }
@@ -160,8 +160,8 @@ class StoreController extends Controller
             return response()->json(['error' => 'Invalid path provided.'], 400);
         }
 
-        if ($filePath && Storage::disk('public')->exists($filePath) && str_starts_with($filePath, 'tmp/')) {
-            Storage::disk('public')->delete($filePath);
+        if ($filePath && Storage::disk('r2')->exists($filePath) && str_starts_with($filePath, 'tmp/')) {
+            Storage::disk('r2')->delete($filePath);
             return response()->noContent();
         }
         return response()->json(['error' => 'File not found.'], 404); // Tetap JSON untuk error

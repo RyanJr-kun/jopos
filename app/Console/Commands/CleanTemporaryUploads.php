@@ -38,7 +38,7 @@ class CleanTemporaryUploads extends Command
         $totalDeleted = 0;
 
         foreach ($directories as $directory) {
-            $files = Storage::disk('public')->files($directory);
+            $files = Storage::disk('r2')->files($directory);
             $deletedCount = 0;
 
             foreach ($files as $file) {
@@ -47,8 +47,8 @@ class CleanTemporaryUploads extends Command
                     continue;
                 }
 
-                if (Storage::disk('public')->lastModified($file) < $cutoff) {
-                    Storage::disk('public')->delete($file);
+                if (Storage::disk('r2')->lastModified($file) < $cutoff) {
+                    Storage::disk('r2')->delete($file);
                     $deletedCount++;
                 }
             }

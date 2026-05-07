@@ -291,7 +291,7 @@ class ProductController extends Controller
             $keepIds = $request->input('existing_images', []);
             // Hapus foto lama yang tidak di-keep
             $produk->images()->whereNotIn('id', $keepIds)->each(function ($img) {
-                Storage::disk('public')->delete($img->path);
+                Storage::disk('r2')->delete($img->path);
                 $img->delete();
             });
             // Tambah foto baru
@@ -305,7 +305,7 @@ class ProductController extends Controller
             } else {
                 // Jika user mematikan toggle varian sepenuhnya, barulah kita hapus semuanya
                 $produk->variants()->each(function ($v) {
-                    if ($v->img_variant) Storage::disk('public')->delete($v->img_variant);
+                    if ($v->img_variant) Storage::disk('r2')->delete($v->img_variant);
                     $v->delete();
                 });
                 $produk->variantTypes()->delete();
@@ -320,11 +320,11 @@ class ProductController extends Controller
     {
         // Hapus semua foto galeri
         $produk->images()->each(function ($img) {
-            Storage::disk('public')->delete($img->path);
+            Storage::disk('r2')->delete($img->path);
         });
         // Hapus foto variasi
         $produk->variants()->each(function ($v) {
-            if ($v->img_variant) Storage::disk('public')->delete($v->img_variant);
+            if ($v->img_variant) Storage::disk('r2')->delete($v->img_variant);
         });
         $produk->delete();
 
@@ -384,7 +384,7 @@ class ProductController extends Controller
                 continue;
             }
             
-            if (!Storage::disk('public')->exists($tmpPath)) {
+            if (!Storage::disk('r2')->exists($tmpPath)) {
                 \Log::error("Gallery file not found: $tmpPath");
                 continue;
             }
@@ -392,11 +392,11 @@ class ProductController extends Controller
             $newPath = 'produk/gallery/' . basename($tmpPath);
             $dir = dirname($newPath);
             
-            if (!Storage::disk('public')->exists($dir)) {
-                Storage::disk('public')->makeDirectory($dir);
+            if (!Storage::disk('r2')->exists($dir)) {
+                Storage::disk('r2')->makeDirectory($dir);
             }
             
-            $moved = Storage::disk('public')->move($tmpPath, $newPath);
+            $moved = Storage::disk('r2')->move($tmpPath, $newPath);
             
             if (!$moved) {
                 \Log::error("Failed to move gallery file: $tmpPath -> $newPath");
@@ -459,9 +459,9 @@ class ProductController extends Controller
             $tmpImg = $varData['img_variant'] ?? null;
             
             if ($tmpImg) {
-                if (str_starts_with($tmpImg, 'tmp/') && Storage::disk('public')->exists($tmpImg)) {
+                if (str_starts_with($tmpImg, 'tmp/') && Storage::disk('r2')->exists($tmpImg)) {
                     $imgPath = 'produk/variants/' . basename($tmpImg);
-                    Storage::disk('public')->move($tmpImg, $imgPath);
+                    Storage::disk('r2')->move($tmpImg, $imgPath);
                 } else {
                     $imgPath = $tmpImg;
                 }
@@ -473,7 +473,7 @@ class ProductController extends Controller
                 
                 // Hapus file gambar lama jika user mengunggah gambar baru
                 if ($imgPath && $variant->img_variant && $imgPath !== $variant->img_variant) {
-                    Storage::disk('public')->delete($variant->img_variant);
+                    Storage::disk('r2')->delete($variant->img_variant);
                 }
 
                 // Lakukan UPDATE, bukan CREATE, agar ID tidak berubah dan Stok tetap aman
@@ -521,7 +521,7 @@ class ProductController extends Controller
         // 3. Hapus HANYA varian yang benar-benar dibuang oleh user dari form
         $product->variants()->whereNotIn('id', $keptVariantIds)->each(function ($v) {
             if ($v->img_variant) {
-                Storage::disk('public')->delete($v->img_variant);
+                Storage::disk('r2')->delete($v->img_variant);
             }
             $v->delete(); // Ini baru aman dihapus beserta stoknya, karena memang sengaja di-remove user
         });
@@ -580,8 +580,8 @@ class ProductController extends Controller
     public function revert(Request $request)
     {
         $filePath = $request->getContent();
-        if ($filePath && Storage::disk('public')->exists($filePath)) {
-            Storage::disk('public')->delete($filePath);
+        if ($filePath && Storage::disk('r2')->exists($filePath)) {
+            Storage::disk('r2')->delete($filePath);
             return response()->noContent();
         }
         return response()->json(['error' => 'File not found or path is missing.'], 404);

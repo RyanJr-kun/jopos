@@ -257,7 +257,7 @@
                 },
                 {{-- Load avatar yang sudah ada dari employee_profiles --}}
                 files: [
-                    @if ($user->employee?->avatar && Storage::disk('public')->exists($user->employee->avatar))
+                    @if ($user->employee?->avatar && Storage::disk('r2')->exists($user->employee->avatar))
                         '{{ asset('storage/' . $user->employee->avatar) }}'
                     @endif
                 ]

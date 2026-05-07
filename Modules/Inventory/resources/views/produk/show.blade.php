@@ -215,7 +215,7 @@
                                             <tr>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        @if ($variant->img_variant && Storage::disk('public')->exists($variant->img_variant))
+                                                        @if ($variant->img_variant && Storage::disk('r2')->exists($variant->img_variant))
                                                             <img src="{{ asset('storage/' . $variant->img_variant) }}"
                                                                 class="rounded me-2"
                                                                 style="width: 32px; height: 32px; object-fit: cover;">

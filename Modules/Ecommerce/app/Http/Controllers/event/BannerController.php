@@ -42,8 +42,8 @@ class BannerController extends Controller
             $destinationPath = 'banners/' . $fileName;
 
             // Pindahkan file dari tmp ke direktori tujuan
-            if (Storage::disk('public')->exists($sourcePath)) {
-                Storage::disk('public')->move($sourcePath, $destinationPath);
+            if (Storage::disk('r2')->exists($sourcePath)) {
+                Storage::disk('r2')->move($sourcePath, $destinationPath);
                 $validatedData['img_banner'] = $destinationPath; // Simpan path baru
             } else {
                 // Hapus path jika file tidak ditemukan untuk mencegah error
@@ -82,22 +82,22 @@ class BannerController extends Controller
             $sourcePath = $request->input('img_banner');
 
             // Pastikan ini adalah file baru dari tmp, bukan path file lama
-            if (strpos($sourcePath, 'tmp/') === 0 && Storage::disk('public')->exists($sourcePath)) {
+            if (strpos($sourcePath, 'tmp/') === 0 && Storage::disk('r2')->exists($sourcePath)) {
                 // Hapus gambar lama jika ada
                 if ($banner->img_banner) {
-                    Storage::disk('public')->delete($banner->img_banner);
+                    Storage::disk('r2')->delete($banner->img_banner);
                 }
 
                 // Pindahkan gambar baru dari tmp ke lokasi permanen
                 $fileName = basename($sourcePath);
                 $destinationPath = 'banners/' . $fileName;
-                Storage::disk('public')->move($sourcePath, $destinationPath);
+                Storage::disk('r2')->move($sourcePath, $destinationPath);
                 $validatedData['img_banner'] = $destinationPath;
             }
             // Menangani kasus jika pengguna menghapus gambar yang ada melalui FilePond
         } elseif ($request->input('img_banner') === null) {
-            if ($banner->img_banner && Storage::disk('public')->exists($banner->img_banner)) {
-                Storage::disk('public')->delete($banner->img_banner);
+            if ($banner->img_banner && Storage::disk('r2')->exists($banner->img_banner)) {
+                Storage::disk('r2')->delete($banner->img_banner);
                 $validatedData['img_banner'] = null;
             }
         }
@@ -114,8 +114,8 @@ class BannerController extends Controller
 
     public function destroy(Banner $banner)
     {
-        if ($banner->img_banner && Storage::disk('public')->exists($banner->img_banner)) {
-            Storage::disk('public')->delete($banner->img_banner);
+        if ($banner->img_banner && Storage::disk('r2')->exists($banner->img_banner)) {
+            Storage::disk('r2')->delete($banner->img_banner);
         }
         $banner->delete();
 
@@ -141,8 +141,8 @@ class BannerController extends Controller
     public function revert(Request $request)
     {
         $filePath = $request->getContent();
-        if ($filePath && Storage::disk('public')->exists($filePath)) {
-            Storage::disk('public')->delete($filePath);
+        if ($filePath && Storage::disk('r2')->exists($filePath)) {
+            Storage::disk('r2')->delete($filePath);
             return response()->noContent();
         }
         return response()->json(['error' => 'File not found.'], 404);
