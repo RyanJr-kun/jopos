@@ -1,12 +1,14 @@
 <footer class="footer-market text-white pt-5 pb-4">
     <div class="container-market pb-md-2">
-        <div class="row justify-content-lg-between">
+        <div class="d-flex justify-content-start align-items-center mt-3">
+            <a class="navbar-brand d-inline-block mb-3" href="{{ url('/') }}">
+                <img src="{{ asset('assets/img/LM-Putih.png') }}" alt="Logo Jo Computer Putih"
+                    class="img-fluid footer-logo">
+            </a>
+        </div>
+        <div class="row d-flex justify-content-lg-between">
             {{-- Kolom 1: Tentang Toko --}}
             <div class="col-12 col-md-4 mb-4 mb-md-0 mt-md-3">
-                <a class="navbar-brand d-inline-block mb-3" href="{{ url('/') }}">
-                    <img src="{{ asset('assets/img/LM-Putih.png') }}" alt="Logo Jo Computer Putih"
-                        class="img-fluid footer-logo">
-                </a>
                 <p style="font-size: 0.9rem;" class="mb-4 text-white-50">
                     Toko komponen dan aksesoris komputer terpercaya. Kami menyediakan produk berkualitas dengan harga
                     terbaik untuk kebutuhan perakitan dan upgrade PC Anda.
@@ -14,14 +16,8 @@
                 {{-- Alamat Pusat Solo --}}
                 <p class="small d-flex align-items-start mb-2">
                     <i class="bx bxs-map me-2 flex-shrink-0 mt-1 text-white"></i>
-                    <span><strong>JO Computer Solo</strong> (Pusat)<br>Jl. Slamet Riyadi Somodinalan No.250,
-                        Sukoharjo</span>
-                </p>
-                {{-- Alamat Cabang Baturetno --}}
-                <p class="small d-flex align-items-start mb-3">
-                    <i class="bx bxs-map me-2 flex-shrink-0 mt-1 text-white"></i>
-                    <span><strong>JO Computer Baturetno</strong> (Cabang)<br>Jl. Raya Baturetno-Batuwarno,
-                        Wonogiri</span>
+                    <span><strong>JO Computer</strong><br>Jl. Slamet Riyadi Somodinalan No.250,
+                        Somodinatan, Ngadirejo, Kec. Kartasura, Kabupaten Sukoharjo, Jawa Tengah 57169</span>
                 </p>
                 <div class="d-flex flex-column gap-2 mb-4 mb-md-0">
                     <a href="mailto:cs@jocomputer.com"
@@ -37,10 +33,10 @@
             <div class="col-6 col-md-2 mt-md-3">
                 <h6 class="text-uppercase mb-4 font-weight-bold text-white fs-6">Tautan Cepat</h6>
                 <div class="d-flex flex-column gap-2">
-                    <a href="{{ url('/') }}" class="footer-link small">Beranda</a>
-                    <a href="{{ route('market.produk') }}" class="footer-link small">Product</a>
-                    <a href="{{ route('market.layanan') }}" class="footer-link small">Layanan</a>
-                    <a href="{{ route('market.tentang') }}" class="footer-link small">Tentang Kami</a>
+                    <a href="{{ url('/') }}" class="link link-white small">Beranda</a>
+                    <a href="{{ route('market.produk') }}" class="link link-white small">Product</a>
+                    <a href="{{ route('market.layanan') }}" class="link link-white small">Layanan</a>
+                    <a href="{{ route('market.tentang') }}" class="link link-white small">Tentang Kami</a>
                 </div>
             </div>
 
@@ -51,7 +47,7 @@
                     @if (isset($bestSellingCategories) && $bestSellingCategories->isNotEmpty())
                         @foreach ($bestSellingCategories as $kategori)
                             <a href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}"
-                                class="footer-link small">{{ $kategori->name }}</a>
+                                class="link link-white small">{{ $kategori->name }}</a>
                         @endforeach
                     @else
                         <span class="small text-muted">Kategori belum tersedia.</span>

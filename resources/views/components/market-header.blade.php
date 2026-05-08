@@ -31,7 +31,7 @@
             <div class="d-flex align-items-center justify-content-end">
                 <div class="dropdown d-flex align-items-center">
 
-                    {{-- Dark Mode Toggle (Desktop) --}}
+                    {{-- Dark Mode Toggle (Desktop) 
                     <button type="button" class="theme-toggle-btn border-none d-lg-inline-flex" id="themeToggleDesktop"
                         aria-label="Toggle dark mode" title="Toggle dark mode">
                         <span class="theme-toggle-icon">
@@ -54,7 +54,7 @@
                                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                             </svg>
                         </span>
-                    </button>
+                    </button> --}}
 
                     <a class="d-flex text-success rounded-2 px-2 align-items-center" href="https://wa.me/6281318000699"
                         target="_blank" rel="noopener noreferrer">

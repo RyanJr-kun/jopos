@@ -244,9 +244,9 @@
         <div class="container-market">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bolder tg-blue-v2 mb-0">JELAJAHI KATEGORI</h3>
-                <a href="{{ route('market.produk') }}" class="btn btn-outline-secondary px-2"> <i
-                        class="bx bx-category"></i>
-                    <span class="d-none d-lg-block ms-2">Lihat Semua</span>
+                <a href="{{ route('market.produk') }}"
+                    class="link link-blue px-2 align-items-center justify-content-center">
+                    <i class="bx bx-category me-2"></i><span>Lihat Semua</span>
                 </a>
             </div>
             <div class="position-relative category-scroll-wrapper">
@@ -354,11 +354,11 @@
                                                     <div class="product-card-actions">
                                                         @if ($produk->qty > 0)
                                                             <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                                                                target="_blank" class="btn btn-dark w-100">
+                                                                target="_blank" class="btn btn-blue btn-sm w-100">
                                                                 <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
                                                             </a>
                                                         @else
-                                                            <button type="button" class="btn btn-dark w-100">Stock
+                                                            <button type="button" class="btn btn-blue btn-sm w-100">Stock
                                                                 Habis</button>
                                                         @endif
                                                     </div>
@@ -507,7 +507,7 @@
                                             <div class="product-card-actions">
                                                 @if ($produk->qty > 0)
                                                     <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                                                        target="_blank" class="btn btn-dark w-100">
+                                                        target="_blank" class="btn btn-blue btn-sm w-100">
                                                         <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
                                                     </a>
                                                 @else
@@ -601,11 +601,11 @@
                                 <div class="product-card-actions">
                                     @if ($produk->qty > 0)
                                         <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                                            target="_blank" class="btn btn-dark w-100">
+                                            target="_blank" class="btn btn-blue btn-sm w-100">
                                             <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
                                         </a>
                                     @else
-                                        <button type="button" class="btn btn-dark w-100">Stock Habis</button>
+                                        <button type="button" class="btn btn-blue btn-sm w-100">Stock Habis</button>
                                     @endif
                                 </div>
                             </div>

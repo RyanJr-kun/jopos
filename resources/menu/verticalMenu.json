@@ -67,7 +67,7 @@
       ]
     },
     {
-      "menuHeader": "Product"
+      "menuHeader": "Data Master"
     },
     {
       "url": "kategoriproduk?type=utama",
@@ -93,9 +93,12 @@
     },
     {
       "url": "garansi",
-      "name": "Warrantie",
+      "name": "Garansi",
       "icon": "menu-icon icon-base bx bx-warranty",
       "slug": "garansi.index"
+    },
+    {
+      "menuHeader": "Inventaris"
     },
     {
       "url": "produk",
@@ -112,9 +115,6 @@
       "name": "Serial Number",
       "icon": "menu-icon icon-base bx bx-serial",
       "slug": "serialNumber.index"
-    },
-    {
-      "menuHeader": "Inventaris"
     },
     {
       "url": "stok-penyesuaian",
@@ -145,6 +145,9 @@
       "name": "Stock Rendah",
       "icon": "menu-icon icon-base bx bx-line-chart-down",
       "slug": "stok.rendah"
+    },
+    {
+      "menuHeader": "E-Commerce"
     },
     {
       "url": "promo",

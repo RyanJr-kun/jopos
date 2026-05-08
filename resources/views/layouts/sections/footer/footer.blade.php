@@ -13,7 +13,7 @@
                 </script>, made with ❤️ by <a
                     href="{{ !empty(config('variables.creatorUrl')) ? config('variables.creatorUrl') : '' }}"
                     target="_blank"
-                    class="footer-link">{{ !empty(config('variables.creatorName')) ? config('variables.creatorName') : '' }}</a>
+                    class="link">{{ !empty(config('variables.creatorName')) ? config('variables.creatorName') : '' }}</a>
             </div>
         </div>
     </div>

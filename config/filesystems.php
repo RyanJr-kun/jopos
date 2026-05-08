@@ -69,7 +69,8 @@ return [
             'url' => env('CLOUDFLARE_R2_URL'),
             'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'),
             'use_path_style_endpoint' => true, // Ini wajib true untuk R2
-            'throw' => true,
+            'throw' => false,
+            'visibility' => 'public',
         ],
 
     ],

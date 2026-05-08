@@ -273,7 +273,7 @@ class UserController extends Controller
             $request->validate([
                 'avatar' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
             ]);
-            $path = $request->file('avatar')->store('tmp/user-images', 'public');
+            $path = $request->file('avatar')->store('tmp/user-images', 'r2');
             return $path;
         }
         return response('Gagal mengunggah.', 500);
@@ -285,10 +285,21 @@ class UserController extends Controller
     public function revert(Request $request)
     {
         $filePath = $request->getContent();
-        if ($filePath && Storage::disk('r2')->exists($filePath)) {
-            Storage::disk('r2')->delete($filePath);
-            return response()->noContent();
+
+        if ($filePath) {
+            try {
+                // Langsung sikat hapus tanpa perlu exists()
+                Storage::disk('r2')->delete($filePath);
+                
+                // Selalu kembalikan sukses agar FilePond mereset tampilannya
+                return response()->noContent();
+            } catch (\Exception $e) {
+                // Jika file memang sudah tidak ada atau R2 error,
+                // abaikan saja dan tetap suruh FilePond mereset UI-nya
+                return response()->noContent();
+            }
         }
-        return response()->json(['error' => 'File not found.'], 404);
+
+        return response()->json(['error' => 'Path file tidak dikirim.'], 400);
     }
 }

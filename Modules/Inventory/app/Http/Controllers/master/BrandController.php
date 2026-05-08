@@ -186,7 +186,7 @@ class BrandController extends Controller
 
             $file = $request->file('img_brand');
             // Simpan file ke direktori 'tmp' di dalam 'storage/app/public'
-            $path = $file->store('tmp/brand-images', 'public');
+            $path = $file->store('tmp/brand-images', 'r2');
 
             // Kembalikan path file sebagai plain text
             return $path;

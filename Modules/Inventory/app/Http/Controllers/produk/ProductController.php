@@ -562,7 +562,7 @@ class ProductController extends Controller
             }
 
             // 4. Simpan ke storage 'tmp'
-            $path = $uploadedFile->store('tmp', 'public');
+            $path = $uploadedFile->store('tmp', 'r2');
             
             if ($path) {
                 // 5. Kembalikan plain text agar serverId terbaca benar oleh FilePond

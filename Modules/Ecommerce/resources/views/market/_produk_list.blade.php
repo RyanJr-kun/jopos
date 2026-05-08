@@ -38,14 +38,14 @@
                         {{-- Badge Promotion --}}
                         @if ($produk->qty < 1)
                             <div class="product-badge">
-                                <span class="badge bg-label-danger">Stock Habis</span>
+                                <span class="badge bg-danger badge-sm">Stok Habis</span>
                             </div>
                         @elseif($produk->promotions->isNotEmpty() && ($promo = $produk->promotions->first()))
                             <div class="product-badge">
                                 @if ($promo->type == 'percentage')
-                                    <span class="badge bg-label-danger">{{ (int) $promo->nilai_diskon }}% OFF</span>
+                                    <span class="badge bg-danger badge-sm">{{ (int) $promo->nilai_diskon }}% OFF</span>
                                 @else
-                                    <span class="badge bg-label-info">PROMO</span>
+                                    <span class="badge bg-info badge-sm">PROMO</span>
                                 @endif
                             </div>
                         @endif
@@ -53,11 +53,11 @@
                     <div class="product-card-actions">
                         @if ($produk->qty > 0)
                             <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                                target="_blank" class="btn btn-dark btn-sm w-100">
+                                target="_blank" class="btn btn-blue btn-sm w-100">
                                 <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
                             </a>
                         @else
-                            <button type="button" class="btn btn-dark btn-sm w-100">Stock Habis</button>
+                            <button type="button" class="btn btn-blue btn-sm w-100">Stok Habis</button>
                         @endif
                     </div>
                 </div>

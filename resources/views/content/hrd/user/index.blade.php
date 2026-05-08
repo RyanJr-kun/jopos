@@ -212,7 +212,7 @@
                                                     <div class="d-flex align-items-center gap-3">
                                                         {{-- Avatar --}}
                                                         @if ($employee?->avatar)
-                                                            <img src="{{ asset('storage/' . $employee->avatar) }}"
+                                                            <img src="{{ $employee->avatar ? Storage::url($employee->avatar) : asset('assets/img/avatars/default.png') }}"
                                                                 class="rounded-circle shadow-sm"
                                                                 style="width:40px;height:40px;object-fit:cover;flex-shrink:0;"
                                                                 alt="{{ $user->name }}">

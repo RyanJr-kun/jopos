@@ -35,18 +35,15 @@ class BannerController extends Controller
             'urutan' => 'required|integer|min:0',
         ]);
 
-        // Jika ada file yang diunggah melalui FilePond
-        if ($request->filled('img_banner')) {
-            $sourcePath = $request->input('img_banner'); // Path dari folder tmp
+        if (!empty($validatedData['img_banner'])) {
+            $sourcePath = $validatedData['img_banner'];
             $fileName = basename($sourcePath);
             $destinationPath = 'banners/' . $fileName;
 
-            // Pindahkan file dari tmp ke direktori tujuan
-            if (Storage::disk('r2')->exists($sourcePath)) {
+            try {
                 Storage::disk('r2')->move($sourcePath, $destinationPath);
-                $validatedData['img_banner'] = $destinationPath; // Simpan path baru
-            } else {
-                // Hapus path jika file tidak ditemukan untuk mencegah error
+                $validatedData['img_banner'] = $destinationPath; 
+            } catch (\Exception $e) {
                 unset($validatedData['img_banner']);
             }
         }
@@ -77,29 +74,34 @@ class BannerController extends Controller
             'urutan' => 'required|integer|min:0',
         ]);
 
-        // Cek apakah ada file baru yang diunggah
-        if ($request->filled('img_banner')) {
-            $sourcePath = $request->input('img_banner');
+        if ($request->filled('img_banner') && str_starts_with($request->img_banner, 'tmp/')) {
+            // 1. Gambar baru diunggah dari komputer
+            $sourcePath = $request->img_banner;
+            $fileName = basename($sourcePath);
+            $destinationPath = 'banners/' . $fileName;
 
-            // Pastikan ini adalah file baru dari tmp, bukan path file lama
-            if (strpos($sourcePath, 'tmp/') === 0 && Storage::disk('r2')->exists($sourcePath)) {
-                // Hapus gambar lama jika ada
+            try {
+                // Hapus yang lama dulu
                 if ($banner->img_banner) {
-                    Storage::disk('r2')->delete($banner->img_banner);
+                    try { Storage::disk('r2')->delete($banner->img_banner); } catch (\Exception $e) {}
                 }
-
-                // Pindahkan gambar baru dari tmp ke lokasi permanen
-                $fileName = basename($sourcePath);
-                $destinationPath = 'banners/' . $fileName;
+                // Pindah yang baru
                 Storage::disk('r2')->move($sourcePath, $destinationPath);
                 $validatedData['img_banner'] = $destinationPath;
+            } catch (\Exception $e) {
+                // Biarkan jika gagal
             }
-            // Menangani kasus jika pengguna menghapus gambar yang ada melalui FilePond
-        } elseif ($request->input('img_banner') === null) {
-            if ($banner->img_banner && Storage::disk('r2')->exists($banner->img_banner)) {
-                Storage::disk('r2')->delete($banner->img_banner);
-                $validatedData['img_banner'] = null;
+
+        } elseif ($request->input('remove_banner') == '1') {
+            // 2. Tombol X ditekan
+            if ($banner->img_banner) {
+                try { Storage::disk('r2')->delete($banner->img_banner); } catch (\Exception $e) {}
             }
+            $validatedData['img_banner'] = null; // Kosongkan field di database
+
+        } else {
+            // 3. Tidak ada aksi pada gambar (filepond tidak disentuh, tombol X tidak ditekan)
+            unset($validatedData['img_banner']);
         }
 
         $validatedData['is_active'] = $request->has('is_active');
@@ -114,8 +116,8 @@ class BannerController extends Controller
 
     public function destroy(Banner $banner)
     {
-        if ($banner->img_banner && Storage::disk('r2')->exists($banner->img_banner)) {
-            Storage::disk('r2')->delete($banner->img_banner);
+        if ($banner->img_banner) {
+            try { Storage::disk('r2')->delete($banner->img_banner); } catch (\Exception $e) {}
         }
         $banner->delete();
 
@@ -132,7 +134,7 @@ class BannerController extends Controller
                 'img_banner' => 'required|image|mimes:jpeg,png,jpg,svg,webp|max:2048',
             ]);
             $file = $request->file('img_banner');
-            $path = $file->store('tmp/banners', 'public');
+            $path = $file->store('tmp/banners', 'r2');
             return $path;
         }
         return response('Gagal mengunggah.', 500);
@@ -141,9 +143,14 @@ class BannerController extends Controller
     public function revert(Request $request)
     {
         $filePath = $request->getContent();
-        if ($filePath && Storage::disk('r2')->exists($filePath)) {
-            Storage::disk('r2')->delete($filePath);
-            return response()->noContent();
+        if ($filePath) {
+            try {
+                Storage::disk('r2')->delete($filePath);
+                return response()->noContent();
+            } catch (\Exception $e) {
+                // Abaikan error (bohongi Filepond agar reset UI)
+                return response()->noContent();
+            }
         }
         return response()->json(['error' => 'File not found.'], 404);
     }

@@ -140,7 +140,7 @@ class StoreController extends Controller
         // Simpan file
         if ($request->hasFile($inputName)) {
             $file = $request->file($inputName);
-            $path = $file->store('tmp/profil-toko', 'public');
+            $path = $file->store('tmp/profil-toko', 'r2');
 
             return response($path, 200)->header('Content-Type', 'text/plain');
         }

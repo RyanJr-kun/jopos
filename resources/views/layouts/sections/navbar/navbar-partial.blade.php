@@ -175,12 +175,15 @@
                 <a href="javascript:void(0);" class="nav-link dropdown-toggle hide-arrow p-0" id="userDropdown"
                     data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                        @if (auth()->user()->avatar)
-                            <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="Profile"
-                                class="w-px-40 h-auto rounded-circle">
+                        @if (auth()->user()->employee?->avatar)
+                            {{-- Jika user punya relasi employee DAN punya avatar --}}
+                            <img src="{{ Storage::url(auth()->user()->employee->avatar) }}" alt="Profile"
+                                class="w-px-40 h-auto rounded-circle" style="object-fit: cover; aspect-ratio: 1/1;">
                         @else
-                            <span
-                                class="avatar-initial rounded-circle bg-label-primary">{{ substr(Auth::user()->name, 0, 2) }}</span>
+                            {{-- Jika tidak punya avatar, tampilkan inisial nama --}}
+                            <span class="avatar-initial rounded-circle bg-label-primary flex-shrink-0">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                            </span>
                         @endif
                     </div>
                 </a>
@@ -190,12 +193,16 @@
                             <div class="d-flex">
                                 <div class="flex-shrink-0 me-3">
                                     <div class="avatar avatar-online">
-                                        @if (auth()->user()->avatar)
-                                            <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="Profile"
-                                                class="w-px-40 h-auto rounded-circle">
+                                        @if (auth()->user()->employee?->avatar)
+                                            {{-- Jika user punya relasi employee DAN punya avatar --}}
+                                            <img src="{{ Storage::url(auth()->user()->employee->avatar) }}" alt="Profile"
+                                                class="w-px-40 h-auto rounded-circle"
+                                                style="object-fit: cover; aspect-ratio: 1/1;">
                                         @else
-                                            <span
-                                                class="avatar-initial rounded-circle bg-label-primary">{{ substr(Auth::user()->name, 0, 2) }}</span>
+                                            {{-- Jika tidak punya avatar, tampilkan inisial nama --}}
+                                            <span class="avatar-initial rounded-circle bg-label-primary flex-shrink-0">
+                                                {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                                            </span>
                                         @endif
                                     </div>
                                 </div>

@@ -215,7 +215,7 @@ class CategoryController extends Controller
             ]);
 
             $file = $request->file('img_kategori');
-            $path = $file->store('tmp/kategori-images', 'public');
+            $path = $file->store('tmp/kategori-images', 'r2');
             return $path;
         }
 
