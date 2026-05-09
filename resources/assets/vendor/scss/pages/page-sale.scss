@@ -1,0 +1,970 @@
+// ============================================================
+//  page-sale.scss
+//  POS JO Computer — Responsive Layout
+//  Mobile → Tablet → Laptop → Monitor
+// ============================================================
+
+// ── Variables ────────────────────────────────────────────────
+$navbar-h : 64px;
+$panel-radius : 12px;
+$card-radius : 10px;
+$transition-fast : 0.2s ease;
+$transition-med : 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+// ── Base Reset ───────────────────────────────────────────────
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    overflow: hidden; // Kita handle scroll per-panel
+}
+
+// ============================================================
+//  NAVBAR POS
+// ============================================================
+.pos-navbar {
+    height: $navbar-h;
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 0, 0, .08) !important;
+    z-index: 1030;
+
+    .navbar-brand-logo {
+        height: 38px;
+        width: auto;
+    }
+
+    .pos-clock-badge {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 20px;
+        letter-spacing: .04em;
+        white-space: nowrap;
+    }
+}
+
+// ============================================================
+//  POS WRAPPER — Kontainer utama dua panel
+// ============================================================
+.pos-wrapper {
+    display: flex;
+    height: calc(100dvh - #{$navbar-h});
+    overflow: hidden;
+    background: #f4f5fa;
+
+    // ── Panel Kiri: Produk ────────────────────────────────────
+    .pos-products-panel {
+        flex: 1 1 0%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #fff;
+        border-right: 1px solid rgba(0, 0, 0, .07);
+        transition: transform $transition-med;
+    }
+
+    // ── Panel Kanan: Keranjang ────────────────────────────────
+    .pos-cart-panel {
+        width: 400px;
+        min-width: 340px;
+        max-width: 460px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #fff;
+        transition: transform $transition-med, box-shadow $transition-med;
+    }
+}
+
+// ============================================================
+//  PANEL HEADER (Search + Greeting)
+// ============================================================
+.pos-products-header {
+    padding: 14px 18px 0;
+    flex-shrink: 0;
+
+    .pos-greeting {
+        font-size: .8rem;
+        color: #566a7f;
+        margin-bottom: 1px;
+
+        span {
+            font-weight: 700;
+            color: #ffab00;
+        }
+    }
+
+    .pos-date {
+        font-size: .72rem;
+        color: #a0aab4;
+        margin: 0;
+    }
+
+    .pos-search-wrap {
+        position: relative;
+        margin-top: 10px;
+
+        .pos-search-icon {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aab4;
+            font-size: 1.1rem;
+            pointer-events: none;
+        }
+
+        input {
+            padding-left: 34px;
+            border-radius: 8px;
+            font-size: .85rem;
+            border: 1.5px solid #e4e6ea;
+            transition: border-color $transition-fast, box-shadow $transition-fast;
+
+            &:focus {
+                border-color: #696cff;
+                box-shadow: 0 0 0 3px rgba(105, 108, 255, .12);
+            }
+        }
+    }
+}
+
+// ============================================================
+//  CATEGORY FILTER (Perfect Scrollbar horizontal)
+// ============================================================
+.pos-category-bar {
+    flex-shrink: 0;
+    padding: 8px 18px 4px;
+    position: relative;
+
+    // Container dengan PerfectScrollbar
+    .category-scroll-inner {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+        position: relative;
+        overflow: hidden; // PS takes over
+        padding-bottom: 6px;
+    }
+}
+
+.category-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1.5px solid #e4e6ea;
+    background: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: .75rem;
+    font-weight: 600;
+    color: #566a7f;
+    transition: all $transition-fast;
+    user-select: none;
+    flex-shrink: 0;
+
+    img {
+        width: 18px;
+        height: 18px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    &:hover {
+        border-color: #696cff;
+        color: #696cff;
+        background: rgba(105, 108, 255, .06);
+    }
+
+    &.category-active {
+        background: #696cff;
+        border-color: #696cff;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(105, 108, 255, .35);
+
+        i {
+            color: #fff;
+        }
+    }
+
+    // Focus ring untuk accessibility
+    &:focus-visible {
+        outline: 2px solid #696cff;
+        outline-offset: 2px;
+    }
+}
+
+// ============================================================
+//  PRODUCT GRID (Perfect Scrollbar vertical)
+// ============================================================
+.pos-product-scroll {
+    flex: 1 1 0%;
+    overflow: hidden; // PS takes over
+    padding: 8px 12px 12px;
+    position: relative;
+
+    // PerfectScrollbar track styling (match Sneat)
+    .ps__rail-y {
+        width: 6px !important;
+    }
+
+    .ps__thumb-y {
+        width: 4px !important;
+        border-radius: 4px;
+        background: #696cff !important;
+        right: 1px !important;
+    }
+}
+
+#product-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    align-content: start;
+}
+
+// ── Product Card ──────────────────────────────────────────────
+.product-card {
+    border: 1.5px solid #f0f1f5;
+    border-radius: $card-radius;
+    background: #fff;
+    cursor: pointer;
+    transition: transform $transition-fast, box-shadow $transition-fast, border-color $transition-fast;
+    overflow: hidden;
+    padding: 0 !important;
+    position: relative;
+
+    &:hover:not([data-disabled="true"]) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(105, 108, 255, .18);
+        border-color: #696cff;
+    }
+
+    &:active:not([data-disabled="true"]) {
+        transform: scale(0.97);
+    }
+
+    &[data-disabled="true"] {
+        opacity: .55;
+        cursor: not-allowed;
+    }
+
+    // Gambar produk — aspect ratio 4:3
+    .product-img-wrap {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        background: #f4f5fa;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+    }
+
+    &:hover .product-img-wrap img {
+        transform: scale(1.04);
+    }
+
+    // Badge (stok habis / promo)
+    .product-badge {
+        position: absolute;
+        top: 7px;
+        left: 7px;
+        z-index: 2;
+
+        .badge {
+            font-size: .65rem;
+            padding: 3px 7px;
+            border-radius: 6px;
+        }
+    }
+
+    // Konten teks
+    .product-info {
+        padding: 8px 9px;
+
+        .product-category {
+            font-size: .65rem;
+            color: #a0aab4;
+            margin-bottom: 2px;
+        }
+
+        .product-name {
+            font-size: .78rem;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .product-price-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 4px;
+
+            .price-main {
+                font-size: .78rem;
+                font-weight: 700;
+                color: #696cff;
+            }
+
+            .price-original {
+                font-size: .65rem;
+                color: #a0aab4;
+                text-decoration: line-through;
+            }
+
+            .stock-info {
+                font-size: .65rem;
+                color: #a0aab4;
+                margin-left: auto;
+            }
+        }
+    }
+}
+
+// ============================================================
+//  PANEL KANAN — KERANJANG
+// ============================================================
+.pos-cart-panel {
+    .pos-cart-header {
+        padding: 14px 16px 10px;
+        border-bottom: 1px solid #f0f1f5;
+        flex-shrink: 0;
+
+        .invoice-badge {
+            font-size: .7rem;
+            color: #a0aab4;
+
+            span {
+                color: #566a7f;
+                font-weight: 600;
+            }
+        }
+
+        .cart-count-badge {
+            font-size: .72rem;
+        }
+
+        .btn-reset-cart {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 7px;
+        }
+    }
+
+    // ── Customer Select ─────────────────────────────────────────
+    .pos-customer-section {
+        padding: 10px 16px;
+        border-bottom: 1px solid #f0f1f5;
+        flex-shrink: 0;
+
+        label {
+            font-size: .75rem;
+            font-weight: 600;
+            color: #566a7f;
+            margin-bottom: 5px;
+        }
+
+        .customer-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+
+            select {
+                font-size: .82rem;
+                border-radius: 8px;
+                flex: 1;
+            }
+
+            .btn-add-customer {
+                width: 34px;
+                height: 34px;
+                padding: 0;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+        }
+    }
+
+    // ── Cart Items Scroll ───────────────────────────────────────
+    .pos-cart-scroll {
+        flex: 1 1 0%;
+        overflow: hidden; // PS takes over
+        position: relative;
+
+        .ps__rail-y {
+            width: 6px !important;
+        }
+
+        .ps__thumb-y {
+            width: 4px !important;
+            background: #696cff !important;
+            right: 1px !important;
+        }
+    }
+
+    // ── Cart Table ──────────────────────────────────────────────
+    .cart-table {
+        width: 100%;
+        font-size: .78rem;
+        border-collapse: collapse;
+
+        thead tr {
+            background: #f8f9fa;
+
+            th {
+                padding: 8px 10px;
+                font-size: .7rem;
+                font-weight: 700;
+                color: #566a7f;
+                text-transform: uppercase;
+                letter-spacing: .03em;
+                border-bottom: 1px solid #e9ecef;
+                white-space: nowrap;
+            }
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f0f1f5;
+            transition: background $transition-fast;
+
+            &:hover {
+                background: rgba(105, 108, 255, .04);
+            }
+
+            td {
+                padding: 8px 10px;
+                vertical-align: middle;
+                font-size: .78rem;
+            }
+        }
+    }
+
+    // ── Empty Cart ──────────────────────────────────────────────
+    .cart-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #a0aab4;
+        padding: 20px;
+
+        i {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        p {
+            font-size: .82rem;
+            margin: 0;
+        }
+    }
+
+    // ── Qty Control ─────────────────────────────────────────────
+    .qty-control {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .btn-qty {
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            font-size: .7rem;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #dee2e6;
+            background: #fff;
+            cursor: pointer;
+            transition: all $transition-fast;
+
+            &:hover {
+                border-color: #696cff;
+                color: #696cff;
+            }
+        }
+
+        .qty-value {
+            min-width: 24px;
+            text-align: center;
+            font-weight: 700;
+            font-size: .8rem;
+        }
+    }
+
+    // ── Totals Section ──────────────────────────────────────────
+    .pos-totals {
+        padding: 10px 16px;
+        border-top: 1px solid #f0f1f5;
+        flex-shrink: 0;
+        background: #fff;
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+
+            &.clickable {
+                cursor: pointer;
+                border-radius: 6px;
+                padding: 3px 6px;
+                margin: 0 -6px 4px;
+
+                &:hover {
+                    background: rgba(105, 108, 255, .07);
+
+                    .totals-label::after {
+                        content: ' ✎';
+                        font-size: .65rem;
+                        color: #696cff;
+                    }
+                }
+            }
+
+            .totals-label {
+                font-size: .78rem;
+                color: #566a7f;
+            }
+
+            .totals-value {
+                font-size: .8rem;
+                font-weight: 600;
+                color: #333;
+            }
+        }
+
+        .totals-grand {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            padding-top: 8px;
+            border-top: 2px solid #e9ecef;
+
+            .grand-label {
+                font-size: .9rem;
+                font-weight: 700;
+                color: #333;
+            }
+
+            .grand-value {
+                font-size: 1.05rem;
+                font-weight: 800;
+                color: #696cff;
+            }
+        }
+    }
+
+    // ── Payment Section ─────────────────────────────────────────
+    .pos-payment {
+        padding: 10px 16px 14px;
+        border-top: 1px solid #f0f1f5;
+        flex-shrink: 0;
+        background: #fff;
+
+        .payment-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            gap: 10px;
+
+            label {
+                font-size: .78rem;
+                color: #566a7f;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            input {
+                font-size: .82rem;
+                text-align: right;
+                border-radius: 7px;
+                max-width: 150px;
+                font-weight: 600;
+            }
+
+            .change-value {
+                font-size: .85rem;
+                font-weight: 700;
+                color: #71dd37;
+
+                &.negative {
+                    color: #ff3e1d;
+                }
+            }
+        }
+
+        .payment-method-row {
+            margin-bottom: 8px;
+
+            label {
+                font-size: .72rem;
+                font-weight: 600;
+                color: #566a7f;
+                display: block;
+                margin-bottom: 4px;
+            }
+
+            select {
+                width: 100%;
+                font-size: .82rem;
+                border-radius: 7px;
+            }
+        }
+
+        .catatan-row {
+            margin-bottom: 10px;
+
+            label {
+                font-size: .72rem;
+                font-weight: 600;
+                color: #566a7f;
+                display: block;
+                margin-bottom: 4px;
+            }
+
+            textarea {
+                font-size: .82rem;
+                border-radius: 7px;
+                resize: none;
+            }
+        }
+
+        // Action buttons
+        .pos-action-row {
+            display: flex;
+            gap: 8px;
+
+            .btn-pay-exact {
+                flex: 1;
+                border-radius: 8px;
+                font-size: .82rem;
+                font-weight: 600;
+                padding: 9px 0;
+            }
+
+            .btn-save-transaction {
+                flex: 2;
+                border-radius: 8px;
+                font-size: .82rem;
+                font-weight: 700;
+                padding: 9px 0;
+                background: #333;
+                border-color: #333;
+                transition: background $transition-fast;
+
+                &:not(:disabled):hover {
+                    background: #696cff;
+                    border-color: #696cff;
+                }
+
+                &:disabled {
+                    opacity: .5;
+                }
+            }
+        }
+    }
+}
+
+// ============================================================
+//  MOBILE CART FAB & BOTTOM SHEET
+// ============================================================
+.btn-cart-fab {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 18px;
+    z-index: 1040;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #696cff;
+    border: none;
+    box-shadow: 0 4px 20px rgba(105, 108, 255, .45);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: transform $transition-fast, box-shadow $transition-fast;
+
+    i {
+        font-size: 1.4rem;
+        color: #fff;
+    }
+
+    .fab-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: #ff3e1d;
+        color: #fff;
+        font-size: .65rem;
+        font-weight: 700;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+        border: 2px solid #fff;
+    }
+
+    &:hover {
+        transform: scale(1.08);
+        box-shadow: 0 6px 24px rgba(105, 108, 255, .5);
+    }
+}
+
+// Mobile overlay untuk cart
+.pos-cart-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .4);
+    z-index: 1041;
+    opacity: 0;
+    transition: opacity $transition-med;
+
+    &.visible {
+        opacity: 1;
+    }
+}
+
+// ============================================================
+//  RESPONSIVE BREAKPOINTS
+// ============================================================
+
+// ── Mobile (< 768px) ─────────────────────────────────────────
+@media (max-width: 767.98px) {
+
+    html,
+    body {
+        overflow: hidden;
+    }
+
+    .pos-wrapper {
+        flex-direction: column;
+        height: calc(100dvh - #{$navbar-h});
+    }
+
+    // Products panel = full screen
+    .pos-products-panel {
+        width: 100%;
+        flex: 1 1 0%;
+        border-right: none;
+        border-bottom: none;
+    }
+
+    // Cart = Bottom Sheet
+    .pos-cart-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: unset !important;
+        height: 88dvh;
+        border-radius: 18px 18px 0 0;
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, .18);
+        z-index: 1042;
+        transform: translateY(100%);
+        transition: transform $transition-med;
+        overflow: hidden;
+
+        // Handle drag bar
+        &::before {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 4px;
+            background: #dee2e6;
+            border-radius: 4px;
+            margin: 10px auto 6px;
+            flex-shrink: 0;
+        }
+
+        &.pos-cart-open {
+            transform: translateY(0);
+        }
+    }
+
+    // FAB visible on mobile
+    .btn-cart-fab {
+        display: flex;
+    }
+
+    .pos-cart-overlay {
+        display: block;
+    }
+
+    // Product grid — 2 kolom di mobile
+    #product-list {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .pos-products-header {
+        padding: 10px 14px 0;
+    }
+
+    .pos-category-bar {
+        padding: 6px 14px 2px;
+    }
+}
+
+// ── Tablet (768px – 1023px) ──────────────────────────────────
+@media (min-width: 768px) and (max-width: 1023.98px) {
+    .pos-cart-panel {
+        width: 320px;
+        min-width: 300px;
+    }
+
+    #product-list {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    }
+
+    // Sembunyikan some actions di panel header
+    .pos-cart-panel .pos-payment .catatan-row {
+        display: none; // Pindah ke drawer / collapsed
+    }
+}
+
+// ── Laptop (1024px – 1439px) ─────────────────────────────────
+@media (min-width: 1024px) and (max-width: 1439.98px) {
+    .pos-cart-panel {
+        width: 380px;
+    }
+
+    #product-list {
+        grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    }
+}
+
+// ── Wide Monitor (≥ 1440px) ──────────────────────────────────
+@media (min-width: 1440px) {
+    .pos-cart-panel {
+        width: 440px;
+        max-width: 480px;
+    }
+
+    #product-list {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+// ============================================================
+//  TOAST (global feedback)
+// ============================================================
+.toast-container-pos {
+    position: fixed;
+    bottom: 80px;
+    right: 16px;
+    z-index: 9999;
+
+    .toast {
+        min-width: 240px;
+        border-radius: 10px;
+        font-size: .82rem;
+        border: none;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
+    }
+}
+
+// ============================================================
+//  UTILITIES & MISC
+// ============================================================
+
+// PerfectScrollbar hide on short containers
+.ps {
+    .ps__rail-x {
+        display: none;
+    }
+
+    &.ps--active-y .ps__rail-y {
+        opacity: .8;
+    }
+}
+
+// Animasi fade-in produk
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.product-card-wrap {
+    animation: fadeInUp .25s ease forwards;
+    opacity: 0;
+
+    @for $i from 1 through 30 {
+        &:nth-child(#{$i}) {
+            animation-delay: #{$i * 0.03}s;
+        }
+    }
+}
+
+// Catatan section — collapsible on tablet
+.catatan-collapse-toggle {
+    display: none;
+    font-size: .72rem;
+    cursor: pointer;
+    color: #696cff;
+
+    @media (min-width: 768px) and (max-width: 1023.98px) {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 4px;
+    }
+}
+
+// Scrollbar track untuk kategori horizontal (PerfectScrollbar)
+.ps-category {
+    .ps__rail-x {
+        display: block !important;
+        height: 4px !important;
+        background: transparent !important;
+    }
+
+    .ps__thumb-x {
+        height: 3px !important;
+        background: #696cff !important;
+    }
+}

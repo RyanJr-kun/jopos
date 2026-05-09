@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Modules\Inventory\Models\Category;
 use Modules\Inventory\Models\SerialNumber;
 use Illuminate\Support\Carbon;
+use App\Models\ProductStock;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -67,29 +68,46 @@ class SaleController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
+    public function create(Request $request)
+{
+    // 1. INISIALISASI QUERY BUILDER (Jangan pakai ->get() atau ->paginate() dulu)
+    $query = Product::with(['category', 'unit', 'promotions'])
+        ->select('products.*')
+        ->whereRaw('(SELECT COALESCE(SUM(qty), 0) FROM product_stocks WHERE product_stocks.product_id = products.id) > 0');
 
-        // PERBAIKAN: Eager load relasi untuk efisiensi dan ketersediaan data di view
-        $products = Product::with(['category', 'unit', 'promotions'])
-            ->where('qty', '>', 0)
-            ->orderBy('name_product')
-            ->get();
-        $customers = Customer::where('status', 1)->orderBy('name')->get();
-        $kategoris = Category::with('children')
-            ->whereNull('parent_id')
-            ->get();
-        $taxes = Taxe::all(); // Ambil semua data pajak
+    // 2. TERAPKAN FILTER KATEGORI (Jika ada request)
+    if ($request->filled('kategori')) {
+        $categoryId = $request->kategori;
 
-        return view('pos::penjualan.create', [
-            'title' => 'Kasir',
-            'products' => $products,
-            'customers' => $customers,
-            'kategoris' => $kategoris,
-            'taxes' => $taxes, // Teruskan data pajak ke view
-            'referensi' => $this->generateInvoiceNumber() // Variabel ini diteruskan ke view
-        ]);
+        // Ambil ID kategori itu sendiri + ID semua anaknya (sub-kategori)
+        $categoryIds = Category::where('id', $categoryId)
+            ->orWhere('parent_id', $categoryId)
+            ->pluck('id');
+
+        $query->whereIn('category_id', $categoryIds);
     }
+
+    // 3. EKSEKUSI QUERY
+    // Catatan: Untuk halaman Kasir (POS), umumnya menggunakan ->get() agar semua produk 
+    // bisa difilter via JavaScript. Gunakan ->paginate(12) HANYA jika frontend kasir Anda 
+    // sudah dirancang untuk mendukung tombol "Next Page".
+    $products = $query->orderBy('name_product', 'asc')->get(); 
+
+    // 4. AMBIL DATA PENDUKUNG LAINNYA
+    $customers = Customer::where('status', 1)->orderBy('name')->get();
+    
+    // Ambil kategori parent untuk menu filter
+    $kategoris = Category::whereNull('parent_id')
+        ->with('children')
+        ->get();
+        
+    $taxes = Taxe::all();
+    
+    // Jangan lupakan fungsi generate invoice!
+    $referensi = $this->generateInvoiceNumber();
+
+    return view('pos::penjualan.create', compact('products', 'customers', 'kategoris', 'taxes', 'referensi'));
+}
 
     private function generateInvoiceNumber()
     {
@@ -259,9 +277,14 @@ class SaleController extends Controller
                         'subtotal' => $dpp_item, // Subtotal sudah benar (DPP yang didiskon)
                     ]);
 
-                    // Kurangi stok produk hanya jika transaksi tidak dibatalkan
-                    // Status 'Dibatalkan' tidak bisa dibuat dari sini, jadi stok selalu dikurangi.
-                    $produk->decrement('qty', $itemData['jumlah']);
+                    $storeId = Auth::user()->employee->store_id ?? null;
+                    $stockRecord = ProductStock::where('product_id', $produk->id)
+                        ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+                        ->first();
+
+                    if ($stockRecord) {
+                        $stockRecord->decrement('qty', $itemData['jumlah']);
+                    }
 
                     // PENYESUAIAN LOGIKA NOMOR SERI
                     if ($produk->wajib_seri && isset($itemData['serial_numbers'])) {
@@ -425,14 +448,19 @@ class SaleController extends Controller
                     // Status diubah menjadi Dibatalkan -> Kembalikan stok item lama
                     if ($statusLama !== 'Dibatalkan') {
                         foreach ($penjualan->items as $oldItem) {
-                            // Jika status diubah jadi Dibatalkan, semua SN juga harus dikembalikan
-                            // (Logika ini sudah tercakup di `array_diff` di atas karena $newSerialNumbers akan kosong)
-                            // Namun, kita tambahkan di sini untuk penanganan pembatalan cepat.
+                            
                             SerialNumber::where('item_sale_id', $oldItem->id)->update([
                                 'status' => 'Tersedia',
                                 'item_sale_id' => null
                             ]);
-                            Product::where('id', $oldItem->product_id)->increment('qty', $oldItem->jumlah);
+                            $storeId = Auth::user()->employee->store_id ?? null;
+                            $stockRecord = ProductStock::where('product_id', $oldItem->product_id)
+                                ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+                                ->first();
+                                
+                            if ($stockRecord) {
+                                $stockRecord->increment('qty', $oldItem->jumlah);
+                            }
                         }
                     }
                 } else { // $statusBaru adalah 'Lunas' atau 'Belum Lunas'
@@ -440,21 +468,31 @@ class SaleController extends Controller
                     // untuk menghitung ulang stok berdasarkan item baru.
                     if ($statusLama !== 'Dibatalkan') {
                         foreach ($penjualan->items as $oldItem) {
-                            Product::where('id', $oldItem->product_id)->increment('qty', $oldItem->jumlah);
+                            $storeId = Auth::user()->employee->store_id ?? null;
+                            $stockRecord = ProductStock::where('product_id', $oldItem->product_id)
+                                ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+                                ->first();
+                                
+                            if ($stockRecord) {
+                                $stockRecord->increment('qty', $oldItem->jumlah);
+                            }
                         }
                     }
 
                     // --- PERBAIKAN LOGIKA & N+1 ---
                     // 1. Pre-fetch current quantities of all products involved in the new transaction
                     $newProductIds = collect($validatedData['items'])->pluck('product_id');
-                    $produkQtysSaatIni = Product::whereIn('id', $newProductIds)->pluck('qty', 'id');
+                    $produkQtysSaatIni = ProductStock::whereIn('product_id', $newProductIds)
+                        ->selectRaw('product_id, SUM(qty) as total_qty')
+                        ->groupBy('product_id')
+                        ->pluck('total_qty', 'product_id');
 
                     // 2. Validasi semua stok sebelum melakukan perubahan
                     foreach ($validatedData['items'] as $itemData) {
                         $produk = $products->get($itemData['product_id']);
                         $stokTersedia = $produkQtysSaatIni->get($itemData['product_id'], 0);
                         if (!$produk || $stokTersedia < $itemData['jumlah']) {
-                            throw new \Exception("Stock untuk produk '{$produk->name_product}' tidak mencukupi (tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']}).");
+                            throw new \Exception("Stock untuk produk '{$produk->nama_produk}' tidak mencukupi (tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']}).");
                         }
 
                         // Validasi ulang nomor seri yang dikirim

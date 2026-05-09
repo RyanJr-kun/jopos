@@ -27,7 +27,7 @@
     ================================================================ --}}
     <div class="page-header">
         <div class="page-header-title">
-            <h4><i class="bx bx-image me-2 text-primary"></i>Manajemen Banner</h4>
+            <h4 class="mb-0">Manajemen Banner</h4>
             <p>Kelola gambar banner untuk setiap posisi di halaman depan toko.</p>
         </div>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
@@ -192,7 +192,7 @@
                                     </div>
                                     <div class="banner-title-cell">
                                         <div class="title-text">{{ $banner->judul ?? 'Tanpa Judul' }}</div>
-                                        <div class="title-sub">ID #{{ $banner->id }}</div>
+                                        <div class="title-sub">ID : {{ $banner->id }}</div>
                                     </div>
                                 </div>
                             </td>
@@ -587,7 +587,7 @@
                     </div>
                     <div class="banner-title-cell">
                         <div class="title-text">${banner.judul || 'Tanpa Judul'}</div>
-                        <div class="title-sub">ID #${banner.id}</div>
+                        <div class="title-sub">ID : ${banner.id}</div>
                     </div>
                 </div>
             </td>

@@ -69,7 +69,7 @@
                 </li>
                 <li class="dropdown-notifications-list scrollable-container ps">
                     <ul class="list-group list-group-flush">
-                        {{-- @forelse($notifications as $notif)
+                        @forelse($notifications as $notif)
                             <li
                                 class="list-group-item list-group-item-action dropdown-notifications-item {{ $notif->read_at ? '' : 'marked-as-read' }}">
                                 <a href="{{ $notif->data['url'] ?? '#' }}" class="d-flex">
@@ -99,13 +99,13 @@
                             <li class="list-group-item text-center small text-muted py-4">
                                 Tidak ada notifikasi baru.
                             </li>
-                        @endforelse --}}
+                        @endforelse
                     </ul>
                 </li>
                 <li class="border-top">
                     <div class="d-grid p-4">
                         {{-- {{ route('notifikasi') }} --}}
-                        <a class="btn btn-primary btn-sm d-flex" href="#">
+                        <a class="btn btn-primary btn-sm d-flex" href="{{ route('notifications.all') }}">
                             <small class="align-middle">Lihat Semua Notifikasi</small>
                         </a>
                     </div>

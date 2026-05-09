@@ -812,11 +812,29 @@ class ProductController extends Controller
 
     public function allNotifications()
     {
-        $lowStockProducts = Product::whereColumn('qty', '<=', 'stok_minimum')->orderBy('qty', 'asc')->get();
-        $productsNeedingSerials = Product::where('wajib_seri', true)
+        // Kueri 1: Produk Stok Rendah
+        $lowStockProducts = Product::select('products.*')
+            ->selectSub(function ($query) {
+                // Menambahkan alias total_qty agar tetap bisa dipanggil di view blade
+                $query->selectRaw('COALESCE(SUM(qty), 0)')
+                    ->from('product_stocks')
+                    ->whereColumn('product_stocks.product_id', 'products.id');
+            }, 'total_qty')
+            // PERBAIKAN: Ganti havingRaw menjadi whereRaw dengan subquery langsung
+            ->whereRaw('(SELECT COALESCE(SUM(qty), 0) FROM product_stocks WHERE product_stocks.product_id = products.id) <= products.stok_minimum')
+            ->orderBy('total_qty', 'asc')
+            ->get();
+
+        // Kueri 2: Produk Wajib Seri yang belum didaftarkan
+        $productsNeedingSerials = Product::select('products.*')
+            ->where('wajib_seri', true)
+            // withSum dan withCount tetap dipanggil agar propertinya bisa dipakai di blade
+            ->withSum('stocks as total_stok', 'qty')
             ->withCount(['serialNumbers as sn_tercatat_count' => fn($q) => $q->whereNotIn('status', ['Terjual', 'Hilang'])])
-            ->whereRaw('products.qty > (select count(*) from serial_numbers where products.id = serial_numbers.product_id and status NOT IN (?, ?))', ['Terjual', 'Hilang'])
-            ->orderBy('updated_at', 'desc')->get();
+            // PERBAIKAN: Ganti havingRaw menjadi whereRaw dengan perbandingan 2 subquery 
+            ->whereRaw('(SELECT COALESCE(SUM(qty), 0) FROM product_stocks WHERE product_stocks.product_id = products.id) > (SELECT COUNT(*) FROM serial_numbers WHERE serial_numbers.product_id = products.id AND status NOT IN ("Terjual", "Hilang"))')
+            ->orderBy('updated_at', 'desc')
+            ->get();
 
         return view('content.dashboard.all', [
             'title'                  => 'Semua Notifikasi',
@@ -827,6 +845,7 @@ class ProductController extends Controller
 
     public function laporanStockRendah(Request $request)
     {
+        // Subquery untuk tanggal penjualan terakhir (tetap sama)
         $lastSaleDateSubquery = SaleItem::select('sales.tanggal_penjualan')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->whereColumn('sale_items.product_id', 'products.id')
@@ -834,16 +853,28 @@ class ProductController extends Controller
             ->orderBy('sales.tanggal_penjualan', 'desc')
             ->limit(1);
 
+        // Query utama Product
         $query = Product::with('category')
-            ->whereColumn('qty', '<=', 'stok_minimum')
-            ->addSelect(['*', 'last_sale_date' => $lastSaleDateSubquery])
-            ->orderBy('qty', 'asc');
+            ->select('products.*')
+            // Tetap select alias total_qty agar bisa ditampilkan di blade (view)
+            ->selectSub(function ($query) {
+                $query->selectRaw('COALESCE(SUM(qty), 0)')
+                    ->from('product_stocks')
+                    ->whereColumn('product_stocks.product_id', 'products.id');
+            }, 'total_qty')
+            // PERBAIKAN: Ganti havingRaw menjadi whereRaw dan jalankan subquery langsung di dalamnya
+            ->whereRaw('(SELECT COALESCE(SUM(qty), 0) FROM product_stocks WHERE product_stocks.product_id = products.id) <= products.stok_minimum')
+            ->addSelect(['last_sale_date' => $lastSaleDateSubquery])
+            ->orderBy('total_qty', 'asc');
 
+        // Filter Pencarian
         if ($request->filled('search')) {
-            $query->where('name_product', 'like', '%' . $request->search . '%');
+            $query->where('products.nama_produk', 'like', '%' . $request->search . '%');
         }
+        
+        // Filter Kategori
         if ($request->filled('kategori')) {
-            $query->where('category_id', $request->kategori);
+            $query->where('products.category_id', $request->kategori);
         }
 
         $products  = $query->paginate(15)->withQueryString();
