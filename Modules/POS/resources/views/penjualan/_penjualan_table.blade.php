@@ -48,7 +48,7 @@
                     <td>
                         <div title="foto & name user" class="d-flex align-items-center px-2 py-1">
                             @if ($item->user->avatar)
-                                <img src="{{ asset('storage/' . $item->user->avatar) }}" class="avatar avatar-sm me-3"
+                                <img src="{{ Storage::url($item->user->avatar) }}" class="avatar avatar-sm me-3"
                                     alt="user_img">
                             @else
                                 <img src="{{ asset('assets/img/user.webp') }}" class="avatar avatar-sm me-3"

@@ -142,7 +142,7 @@
                                 <td>
                                     <div class="d-flex ms-2 px-2 py-1 align-items-center">
                                         @if ($sn->produk->img_produk)
-                                            <img src="{{ asset('storage/' . $sn->produk->img_produk) }}"
+                                            <img src="{{ Storage::url($sn->produk->img_produk) }}"
                                                 class="avatar avatar-sm me-3" alt="{{ $sn->produk->name_product }}">
                                         @else
                                             <img src="{{ asset('assets/img/produk.png') }}"

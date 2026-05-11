@@ -22,7 +22,7 @@
                         @forelse ($productsNeedingSerials as $produk)
                             <div class="list-group-item d-flex justify-content-between align-items-center px-4">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
+                                    <img src="{{ $produk->img_produk ? Storage::url($produk->img_produk) : asset('assets/img/produk.png') }}"
                                         class="avatar avatar-lg me-3" alt="product image">
                                     <div class="d-flex flex-column justify-content-center">
                                         <h6 class="mb-1 text-sm">{{ $produk->name_product }}</h6>
@@ -75,7 +75,7 @@
                         @forelse ($lowStockProducts as $produk)
                             <div class="list-group-item d-flex justify-content-between align-items-center px-4">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
+                                    <img src="{{ $produk->img_produk ? Storage::url($produk->img_produk) : asset('assets/img/produk.png') }}"
                                         class="avatar avatar-lg me-3" alt="product image">
                                     <div class="d-flex flex-column justify-content-center">
                                         <h6 class="mb-0 text-sm">{{ $produk->name_product }}</h6>

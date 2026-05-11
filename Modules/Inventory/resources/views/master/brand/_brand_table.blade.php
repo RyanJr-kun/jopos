@@ -16,7 +16,7 @@
                     <td>
                         <div class="d-flex align-items-center">
                             @if ($brand->img_brand)
-                                <img src="{{ asset('storage/' . $brand->img_brand) }}" class="avatar avatar-sm me-3"
+                                <img src="{{ Storage::url($brand->img_brand) }}" class="avatar avatar-sm me-3"
                                     alt="{{ $brand->name }}">
                             @else
                                 <img src="{{ asset('assets/img/produk.png') }}" class="avatar avatar-sm me-3"

@@ -18,7 +18,7 @@
                         <div class="d-flex align-items-center">
                             <div class="me-3">
                                 @if ($products->primaryImage)
-                                    <img src="{{ asset('storage/' . $products->primaryImage->path) }}" class="rounded"
+                                    <img src="{{ Storage::url($products->primaryImage->path) }}" class="rounded"
                                         style="width: 50px; height: 50px; object-fit: cover;"
                                         alt="{{ $products->name_product }}">
                                 @else
@@ -71,7 +71,7 @@
                     <td>
                         <div class="d-flex align-items-center">
                             @if ($products->user && $products->user->avatar)
-                                <img src="{{ asset('storage/' . $products->user->avatar) }}"
+                                <img src="{{ Storage::url($products->user->avatar) }}"
                                     class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;"
                                     alt="user">
                             @else

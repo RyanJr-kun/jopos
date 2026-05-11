@@ -178,7 +178,7 @@
                                             class="form-check-input mobile-brand-check mt-0 flex-shrink-0"
                                             {{ in_array($brand->id, (array) request('brand', [])) ? 'checked' : '' }}>
                                         @if ($brand->logo)
-                                            <img src="{{ asset('storage/' . $brand->logo) }}" alt="{{ $brand->name }}"
+                                            <img src="{{ Storage::url($brand->logo) }}" alt="{{ $brand->name }}"
                                                 class="brand-logo-thumb" onerror="this.style.display='none'">
                                         @else
                                             <span
@@ -336,7 +336,7 @@
                                                                 class="form-check-input filter-change mt-0 flex-shrink-0"
                                                                 {{ in_array($brand->id, (array) request('brand', [])) ? 'checked' : '' }}>
                                                             @if ($brand->logo)
-                                                                <img src="{{ asset('storage/' . $brand->logo) }}"
+                                                                <img src="{{ Storage::url($brand->logo) }}"
                                                                     alt="{{ $brand->name }}" class="brand-logo-thumb"
                                                                     onerror="this.style.display='none'">
                                                             @else

@@ -29,14 +29,14 @@
                 <div class="product-card-img-container">
                     <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                         <img src="{{ $produk->primaryImage
-                            ? asset('storage/' . $produk->primaryImage->path)
+                            ? Storage::url($produk->primaryImage->path)
                             : ($produk->img_produk
-                                ? asset('storage/' . $produk->img_produk)
+                                ? Storage::url($produk->img_produk)
                                 : asset('assets/img/produk.png')) }}"
                             alt="{{ $produk->name_product }}" loading="lazy" class="card-img-top"
                             alt="{{ $produk->name_product }}">
                         {{-- Badge Promotion --}}
-                        @if ($produk->qty < 1)
+                        @if ($produk->stocks->sum('qty') < 1)
                             <div class="product-badge">
                                 <span class="badge bg-danger badge-sm">Stok Habis</span>
                             </div>
@@ -51,7 +51,7 @@
                         @endif
                     </a>
                     <div class="product-card-actions">
-                        @if ($produk->qty > 0)
+                        @if ($produk->stocks->sum('qty') > 0)
                             <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
                                 target="_blank" class="btn btn-blue btn-sm w-100">
                                 <i class="bx bxl-whatsapp me-1"></i> Pesan via WA

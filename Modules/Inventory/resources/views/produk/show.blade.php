@@ -41,7 +41,7 @@
                                 @if ($sortedImages->count() > 0)
                                     @foreach ($sortedImages as $img)
                                         <div class="swiper-slide text-center">
-                                            <img src="{{ asset('storage/' . $img->path) }}"
+                                            <img src="{{ Storage::url($img->path) }}"
                                                 class="img-fluid rounded shadow-sm"
                                                 style="height: 350px; width: 100%; object-fit: contain; background-color: #f8f9fa;"
                                                 alt="{{ $produk->name_product }}">
@@ -69,7 +69,7 @@
                                 <div class="swiper-wrapper">
                                     @foreach ($sortedImages as $img)
                                         <div class="swiper-slide">
-                                            <img src="{{ asset('storage/' . $img->path) }}" class="rounded border"
+                                            <img src="{{ Storage::url($img->path) }}" class="rounded border"
                                                 style="width: 100%; height: 70px; object-fit: cover;" alt="Thumbnail">
                                         </div>
                                     @endforeach
@@ -216,7 +216,7 @@
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         @if ($variant->img_variant && Storage::disk('r2')->exists($variant->img_variant))
-                                                            <img src="{{ asset('storage/' . $variant->img_variant) }}"
+                                                            <img src="{{ Storage::url($variant->img_variant) }}"
                                                                 class="rounded me-2"
                                                                 style="width: 32px; height: 32px; object-fit: cover;">
                                                         @endif

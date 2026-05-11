@@ -201,7 +201,7 @@
                                 data-name="{{ e($produk->name_product) }}"
                                 data-harga="{{ $produk->harga_diskon ?? $produk->harga_jual }}"
                                 data-harga-asli="{{ $produk->harga_jual }}"
-                                data-img="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
+                                data-img="{{ $produk->primaryImage ? Storage::url($produk->primaryImage->path) : asset('assets/img/produk.png') }}"
                                 data-stok="{{ $produk->stocks->sum('qty') }}"
                                 data-wajib-seri="{{ $produk->wajib_seri ? 'true' : 'false' }}"
                                 data-pajak-id="{{ $produk->taxe_id }}" data-pajak-rate="{{ $produk->pajak->rate ?? 0 }}"
@@ -211,7 +211,7 @@
 
                                 {{-- Gambar --}}
                                 <div class="product-img-wrap">
-                                    <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
+                                    <img src="{{ $produk->primaryImage ? Storage::url($produk->primaryImage->path) : asset('assets/img/produk.png') }}"
                                         alt="Gambar {{ e($produk->name_product) }}" loading="lazy">
                                 </div>
 

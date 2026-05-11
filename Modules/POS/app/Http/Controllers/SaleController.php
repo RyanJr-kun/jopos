@@ -73,7 +73,9 @@ class SaleController extends Controller
     // 1. INISIALISASI QUERY BUILDER (Jangan pakai ->get() atau ->paginate() dulu)
     $query = Product::with(['category', 'unit', 'promotions'])
         ->select('products.*')
-        ->whereRaw('(SELECT COALESCE(SUM(qty), 0) FROM product_stocks WHERE product_stocks.product_id = products.id) > 0');
+        ->whereHas('stocks', function ($query) {
+            $query->where('qty', '>', 0);
+        });
 
     // 2. TERAPKAN FILTER KATEGORI (Jika ada request)
     if ($request->filled('kategori')) {
@@ -87,23 +89,16 @@ class SaleController extends Controller
         $query->whereIn('category_id', $categoryIds);
     }
 
-    // 3. EKSEKUSI QUERY
-    // Catatan: Untuk halaman Kasir (POS), umumnya menggunakan ->get() agar semua produk 
-    // bisa difilter via JavaScript. Gunakan ->paginate(12) HANYA jika frontend kasir Anda 
-    // sudah dirancang untuk mendukung tombol "Next Page".
-    $products = $query->orderBy('name_product', 'asc')->get(); 
+    $products = $query->orderBy('name_product', 'asc')->get();
 
-    // 4. AMBIL DATA PENDUKUNG LAINNYA
     $customers = Customer::where('status', 1)->orderBy('name')->get();
-    
-    // Ambil kategori parent untuk menu filter
+
     $kategoris = Category::whereNull('parent_id')
         ->with('children')
         ->get();
-        
+
     $taxes = Taxe::all();
-    
-    // Jangan lupakan fungsi generate invoice!
+
     $referensi = $this->generateInvoiceNumber();
 
     return view('pos::penjualan.create', compact('products', 'customers', 'kategoris', 'taxes', 'referensi'));

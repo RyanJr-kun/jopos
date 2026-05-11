@@ -110,7 +110,7 @@
                     <td class="d-none d-md-table-cell">
                         <div class="d-flex align-items-center">
                             @if ($item->user && $item->user->employee && $item->user->employee->avatar)
-                                <img src="{{ asset('storage/' . $item->user->employee->avatar) }}"
+                                <img src="{{ Storage::url($item->user->employee->avatar) }}"
                                     class="avatar avatar-sm rounded-circle me-2" alt="user_img">
                             @else
                                 <!-- Fallback Avatar Inisial yang lebih modern ala Sneat -->

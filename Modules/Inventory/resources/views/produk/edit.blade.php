@@ -354,8 +354,9 @@
                         <div class="d-flex flex-wrap gap-2" id="existing-gallery">
                             @foreach ($produk->images as $img)
                                 <div class="position-relative existing-img-wrapper" data-id="{{ $img->id }}">
-                                    <img src="{{ asset('storage/' . $img->path) }}" alt=""
-                                        style="width:100px;height:100px;object-fit:cover;border-radius:8px;{{ $img->is_primary ? 'border:3px solid #696cff;' : '' }}">
+                                    <img src="{{ $img->path ? Storage::url($img->path) : asset('assets/img/produk.png') }}"
+                                        alt="GambarProduk"
+                                        style="width:100px; height:100px; object-fit:cover; border-radius:8px;">
                                     @if ($img->is_primary)
                                         <span class="badge bg-primary position-absolute bottom-0 start-0 m-1"
                                             style="font-size:9px;">Utama</span>
@@ -401,6 +402,7 @@
 
 @section('page-script')
     <script>
+        const storageBaseUrl = "{{ rtrim(Storage::disk('r2')->url(''), '/') }}";
         document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
@@ -745,7 +747,7 @@
                             <input type="file" class="variant-img-input" id="v-img-${i}" accept="image/*" style="display:none;">
                             <label for="v-img-${i}" class="btn btn-sm btn-icon btn-outline-secondary"><i class="bx bx-camera"></i></label>
                             ${existing.img_variant
-                                ? `<img src="/storage/${existing.img_variant}" id="v-preview-${i}" style="max-height:48px;border-radius:4px;" class="ms-1">`
+                                ? `<img src="${storageBaseUrl}/${existing.img_variant}" id="v-preview-${i}" style="max-height:48px;border-radius:4px;" class="ms-1">`
                                 : `<img id="v-preview-${i}" src="" style="display:none;max-height:48px;border-radius:4px;" class="ms-1">`}
                             <input type="hidden" name="variants[${i}][img_variant]" id="v-path-${i}" value="${existing.img_variant ?? ''}">
                         </td>
@@ -764,8 +766,19 @@
 
                     row.querySelector(`#v-img-${i}`).addEventListener('change', function() {
                         if (!this.files[0]) return;
+
+                        const fileInput = this;
+                        const label = row.querySelector(`label[for="v-img-${i}"]`);
+                        const preview = document.getElementById(`v-preview-${i}`);
+                        const pathInput = document.getElementById(`v-path-${i}`);
+
+                        // Tampilkan loading di label tombol kamera
+                        label.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
+                        label.disabled = true;
+
                         const fd = new FormData();
-                        fd.append('file', this.files[0]);
+                        fd.append('file', fileInput.files[0]);
+
                         fetch('/produk/upload', {
                                 method: 'POST',
                                 headers: {
@@ -773,13 +786,30 @@
                                 },
                                 body: fd
                             })
-                            .then(r => r.text()).then(path => {
-                                document.getElementById(`v-path-${i}`).value = path;
-                                const preview = document.getElementById(`v-preview-${i}`);
-                                preview.src = `/storage/${path}`;
+                            .then(r => {
+                                if (!r.ok) return r.json().then(err => {
+                                    throw new Error(err.error || 'Upload gagal');
+                                });
+                                return r.text();
+                            })
+                            .then(path => {
+                                // Simpan path tmp ke hidden input agar bisa dikirim saat form submit
+                                pathInput.value = path.trim();
+                                // Update preview menggunakan storageBaseUrl (R2 URL)
+                                // path = 'tmp/filename.jpg', storageBaseUrl sudah tanpa trailing slash
+                                preview.src = `${storageBaseUrl}/${path.trim()}`;
                                 preview.style.display = 'inline-block';
+                            })
+                            .catch(err => {
+                                alert('Gagal upload gambar varian: ' + err.message);
+                            })
+                            .finally(() => {
+                                // Kembalikan ikon kamera
+                                label.innerHTML = `<i class="bx bx-camera"></i>`;
+                                label.disabled = false;
                             });
                     });
+
                 });
 
                 document.getElementById('combinations-container').style.display = 'block';
@@ -814,7 +844,6 @@
 
         });
     </script>
-
     <script type="module">
         const initSelect2 = () => {
             if (typeof $ !== 'undefined' && $.fn.select2) {

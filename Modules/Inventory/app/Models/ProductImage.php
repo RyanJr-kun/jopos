@@ -4,6 +4,7 @@ namespace Modules\Inventory\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class ProductImage extends Model
 {
@@ -15,9 +16,11 @@ class ProductImage extends Model
     }
     
 
-    // Helper: URL publik gambar
     public function getUrlAttribute(): string
     {
-        return asset('storage/' . $this->path);
+        if (empty($this->path)) {
+            return asset('assets/img/produk.png'); 
+        }
+        return Storage::disk('r2')->url($this->path);
     }
 }

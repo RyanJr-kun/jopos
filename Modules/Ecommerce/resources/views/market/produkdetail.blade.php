@@ -199,7 +199,7 @@
                         @if ($allImages->count() > 0)
                             @foreach ($allImages as $img)
                                 <div class="swiper-slide">
-                                    <img src="{{ asset('storage/' . $img->path) }}" alt="{{ $produk->name_product }}"
+                                    <img src="{{ Storage::url($img->path) }}" alt="{{ $produk->name_product }}"
                                         loading="lazy">
                                 </div>
                             @endforeach
@@ -217,7 +217,7 @@
                         <div class="swiper-wrapper">
                             @foreach ($allImages as $img)
                                 <div class="swiper-slide">
-                                    <img src="{{ asset('storage/' . $img->path) }}" alt="Thumb">
+                                    <img src="{{ Storage::url($img->path) }}" alt="Thumb">
                                 </div>
                             @endforeach
                         </div>
@@ -261,7 +261,7 @@
                             @foreach ($produk->variants as $index => $variant)
                                 @php
                                     // Ambil gambar varian atau fallback ke gambar utama
-                                    $imgVar = $variant->img_variant ? asset('storage/' . $variant->img_variant) : null;
+                                    $imgVar = $variant->img_variant ? Storage::url($variant->img_variant) : null;
                                 @endphp
                                 <button type="button" class="variant-btn {{ $index === 0 ? 'active' : '' }}"
                                     data-harga="Rp {{ number_format($variant->harga_jual, 0, ',', '.') }}"
@@ -279,8 +279,8 @@
                     <div class="d-flex align-items-center">
                         <i class="bx bx-package fs-5 me-2 text-primary"></i>
                         <span class="fw-medium me-2">Status Stok:</span>
-                        @if ($produk->qty > 0)
-                            <span class="badge bg-success">Tersedia ({{ $produk->qty }}
+                        @if ($produk->stocks->sum('qty') > 0)
+                            <span class="badge bg-success">Tersedia ({{ $produk->stocks->sum('qty') }}
                                 {{ $produk->unit->singkat ?? '' }})</span>
                         @else
                             <span class="badge bg-danger">Habis</span>
@@ -298,7 +298,7 @@
 
                 {{-- Tombol Aksi --}}
                 <div class="d-grid gap-2">
-                    @if ($produk->qty > 0)
+                    @if ($produk->stocks->sum('qty') > 0)
                         <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
                             target="_blank"
                             class="btn btn-wa btn-lg fw-bold shadow-sm d-flex justify-content-center align-items-center gap-2">
@@ -378,9 +378,9 @@
                                 <div class="position-relative overflow-hidden" style="border-radius: 12px 12px 0 0;">
                                     <a href="{{ route('market.produk.detail', ['slug' => $serupa->slug]) }}">
                                         <img src="{{ $serupa->primaryImage
-                                            ? asset('storage/' . $serupa->primaryImage->path)
+                                            ? Storage::url($serupa->primaryImage->path)
                                             : ($serupa->img_produk
-                                                ? asset('storage/' . $serupa->img_produk)
+                                                ? Storage::url($serupa->img_produk)
                                                 : asset('assets/img/produk.png')) }}"
                                             alt="{{ $serupa->name_product }}" loading="lazy" class="card-img-top w-100"
                                             style="height: 200px; object-fit: contain; background: #fff;">

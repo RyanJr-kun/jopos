@@ -71,7 +71,7 @@
                             data-bs-toggle="dropdown">
                             <div class="avatar avatar-online">
                                 @if (auth()->user()->avatar)
-                                    <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="Profile"
+                                    <img src="{{ Storage::url(auth()->user()->avatar) }}" alt="Profile"
                                         class="w-px-40 h-auto rounded-circle">
                                 @else
                                     <span class="avatar-initial rounded-circle bg-label-primary">
@@ -193,7 +193,7 @@
                                 <ul class="list-unstyled mb-0">
                                     @forelse ($kategoris as $parent)
                                         <li class="category-item" data-slug="{{ $parent->slug }}"
-                                            data-image="{{ $parent->img_kategori ? asset('storage/' . $parent->img_kategori) : asset('assets/img/produk.png') }}">
+                                            data-image="{{ $parent->img_kategori ? Storage::url($parent->img_kategori) : asset('assets/img/produk.png') }}">
 
                                             {{-- Link parent kategori --}}
                                             <a class="dropdown-item"
@@ -214,7 +214,7 @@
                                                         <li>
                                                             <a class="dropdown-item"
                                                                 href="{{ route('market.produk', ['kategori' => $child->slug]) }}"
-                                                                data-image="{{ $child->img_kategori ? asset('storage/' . $child->img_kategori) : asset('assets/img/produk.png') }}">
+                                                                data-image="{{ $child->img_kategori ? Storage::url($child->img_kategori) : asset('assets/img/produk.png') }}">
                                                                 {{ $child->name }}
                                                             </a>
                                                         </li>
@@ -382,7 +382,7 @@
                                         const detailUrl =
                                             `{{ url('market/produk') }}/${produk.slug}`;
                                         const imageUrl = produk.img_produk ?
-                                            `{{ asset('storage') }}/${produk.img_produk}` :
+                                            `{{ Storage::url('') }}${produk.img_produk}` :
                                             `{{ asset('assets/img/produk.png') }}`;
                                         const harga = produk.harga_diskon ?
                                             formatCurrency(produk

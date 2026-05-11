@@ -67,7 +67,7 @@
                                     <td>
                                         <div class="d-flex px-2 py-1">
                                             <div>
-                                                <img src="{{ $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png') }}"
+                                                <img src="{{ $produk->img_produk ? Storage::url($produk->img_produk) : asset('assets/img/produk.png') }}"
                                                     class="avatar avatar-sm me-3" alt="produk image">
                                             </div>
                                             <div class="d-flex flex-column justify-content-start">

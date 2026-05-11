@@ -80,7 +80,7 @@
                                 <td>
                                     <div class="d-flex px-2 py-1">
                                         <div>
-                                            <img src="{{ $detail->produk->img_produk ? asset('storage/' . $detail->produk->img_produk) : asset('assets/img/produk.png') }}"
+                                            <img src="{{ $detail->produk->img_produk ? Storage::url($detail->produk->img_produk) : asset('assets/img/produk.png') }}"
                                                 class="avatar avatar-sm me-3" alt="product image">
                                         </div>
                                         <div class="d-flex flex-column justify-content-center">

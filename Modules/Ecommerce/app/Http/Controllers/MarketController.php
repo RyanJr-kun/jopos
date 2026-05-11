@@ -27,6 +27,7 @@ class MarketController extends Controller
     {
         // Ambil produk terbaru dengan eager loading untuk performa
         $products = Product::with(['category', 'unit', 'brand', 'promotions', 'primaryImage'])
+            ->withSum('stocks', 'qty')
             ->latest()
             ->paginate(10);
 
@@ -114,7 +115,6 @@ class MarketController extends Controller
         $kategoris = Category::with('children')
             ->whereNull('parent_id')
             ->get();
-
 
 
         return view('ecommerce::market.beranda', [

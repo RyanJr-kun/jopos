@@ -61,10 +61,10 @@ return [
         ],
         
         'r2' => [
-            'driver' => 's3', // Driver-nya tetap wajib 's3' karena R2 menggunakan protokol yang sama
+            'driver' => 's3',
             'key' => env('CLOUDFLARE_R2_ACCESS_KEY_ID'),
             'secret' => env('CLOUDFLARE_R2_SECRET_ACCESS_KEY'),
-            'region' => 'auto', // R2 selalu menggunakan 'auto'
+            'region' => 'auto', 
             'bucket' => env('CLOUDFLARE_R2_BUCKET'),
             'url' => env('CLOUDFLARE_R2_URL'),
             'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'),

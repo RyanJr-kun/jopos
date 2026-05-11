@@ -31,7 +31,7 @@
                                 @foreach ($mainImg as $b)
                                     <div class="swiper-slide w-100 h-100">
                                         <a href="{{ $b->url_tujuan ?? '#' }}" class="d-block w-100 h-100">
-                                            <img src="{{ asset('storage/' . $b->img_banner) }}" class="w-100 h-100"
+                                            <img src="{{ Storage::url($b->img_banner) }}" class="w-100 h-100"
                                                 style="object-fit: cover;" alt="Main Banner">
                                         </a>
                                     </div>
@@ -49,7 +49,7 @@
                                     @foreach ($main2Img as $b)
                                         <div class="swiper-slide w-100 h-100">
                                             <a href="{{ $b->url_tujuan ?? '#' }}" class="d-block w-100 h-100">
-                                                <img src="{{ asset('storage/' . $b->img_banner) }}"
+                                                <img src="{{ Storage::url($b->img_banner) }}"
                                                     class="w-100 h-100 transition-all" style="object-fit: cover;">
                                             </a>
                                         </div>
@@ -66,7 +66,7 @@
                                     @foreach ($main3Img as $b)
                                         <div class="swiper-slide w-100 h-100">
                                             <a href="{{ $b->url_tujuan ?? '#' }}" class="d-block w-100 h-100">
-                                                <img src="{{ asset('storage/' . $b->img_banner) }}"
+                                                <img src="{{ Storage::url($b->img_banner) }}"
                                                     class="w-100 h-100 transition-all" style="object-fit: cover;">
                                             </a>
                                         </div>
@@ -257,7 +257,7 @@
                                 <a href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}"
                                     class="text-decoration-none text-dark">
                                     <div class="card category-card overflow-hidden">
-                                        <img src="{{ $kategori->img_kategori ? asset('storage/' . $kategori->img_kategori) : asset('assets/img/produk.png') }}"
+                                        <img src="{{ $kategori->img_kategori ? Storage::url($kategori->img_kategori) : asset('assets/img/produk.png') }}"
                                             class="card-img-top" alt="{{ $kategori->name }}">
                                     </div>
                                     <div class="card-body p-2 text-center">
@@ -297,7 +297,7 @@
                                     @foreach ($promoImg as $banner)
                                         <div class="swiper-slide">
                                             <a href="{{ $banner->url_tujuan ?? '#' }}" class="d-block w-100 h-100">
-                                                <img src="{{ asset('storage/' . $banner->img_banner) }}"
+                                                <img src="{{ Storage::url($banner->img_banner) }}"
                                                     class="d-block w-100 h-100" style="object-fit: cover;"
                                                     alt="{{ $banner->judul ?? 'Promotion' }}">
                                             </a>
@@ -321,14 +321,14 @@
                                                     <a
                                                         href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                                                         <img src="{{ $produk->primaryImage
-                                                            ? asset('storage/' . $produk->primaryImage->path)
+                                                            ? Storage::url($produk->primaryImage->path)
                                                             : ($produk->img_produk
-                                                                ? asset('storage/' . $produk->img_produk)
+                                                                ? Storage::url($produk->img_produk)
                                                                 : asset('assets/img/produk.png')) }}"
                                                             alt="{{ $produk->name_product }}" loading="eager"
                                                             class="card-img-top" alt="{{ $produk->name_product }}">
 
-                                                        @if ($produk->qty < 1)
+                                                        @if ($produk->stocks->sum('qty') < 1)
                                                             <div class="product-badge">
                                                                 <span class="badge bg-danger">Habis</span>
                                                             </div>
@@ -352,7 +352,7 @@
                                                     </a>
 
                                                     <div class="product-card-actions">
-                                                        @if ($produk->qty > 0)
+                                                        @if ($produk->stocks->sum('qty') > 0)
                                                             <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
                                                                 target="_blank" class="btn btn-blue btn-sm w-100">
                                                                 <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
@@ -430,7 +430,7 @@
                                     @foreach ($bestsellerImg as $banner)
                                         <div class="swiper-slide">
                                             <a href="{{ $banner->url_tujuan ?? route('market.produk') }}">
-                                                <img src="{{ asset('storage/' . $banner->img_banner) }}" loading="lazy"
+                                                <img src="{{ Storage::url($banner->img_banner) }}" loading="lazy"
                                                     class="d-block w-100 h-100" style="object-fit: cover;"
                                                     alt="{{ $banner->judul ?? 'Bestseller Banner' }}">
                                             </a>
@@ -450,8 +450,8 @@
                                     @foreach ($bestsellerMobileImg as $bannerMobile)
                                         <div class="swiper-slide">
                                             <a href="{{ $bannerMobile->url_tujuan ?? route('market.produk') }}">
-                                                <img src="{{ asset('storage/' . $bannerMobile->img_banner) }}"
-                                                    loading="lazy" class="d-block w-100 h-100" style="object-fit: cover;"
+                                                <img src="{{ Storage::url($bannerMobile->img_banner) }}" loading="lazy"
+                                                    class="d-block w-100 h-100" style="object-fit: cover;"
                                                     alt="{{ $bannerMobile->judul ?? 'Bestseller Banner Mobile' }}">
                                             </a>
                                         </div>
@@ -476,14 +476,14 @@
                                         <div class="product-card-img-container">
                                             <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                                                 <img src="{{ $produk->primaryImage
-                                                    ? asset('storage/' . $produk->primaryImage->path)
+                                                    ? Storage::url($produk->primaryImage->path)
                                                     : ($produk->img_produk
-                                                        ? asset('storage/' . $produk->img_produk)
+                                                        ? Storage::url($produk->img_produk)
                                                         : asset('assets/img/produk.png')) }}"
                                                     loading="eager" class="card-img-top"
                                                     alt="{{ $produk->name_product }}">
 
-                                                @if ($produk->qty < 1)
+                                                @if ($produk->stocks->sum('qty') < 1)
                                                     <div class="product-badge">
                                                         <span class="badge bg-danger fw-bolder rounded-4">Habis</span>
                                                     </div>
@@ -505,7 +505,7 @@
                                                 @endif
                                             </a>
                                             <div class="product-card-actions">
-                                                @if ($produk->qty > 0)
+                                                @if ($produk->stocks->sum('qty') > 0)
                                                     <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
                                                         target="_blank" class="btn btn-blue btn-sm w-100">
                                                         <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
@@ -573,13 +573,13 @@
                             <div class="product-card-img-container">
                                 <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                                     <img src="{{ $produk->primaryImage
-                                        ? asset('storage/' . $produk->primaryImage->path)
+                                        ? Storage::url($produk->primaryImage->path)
                                         : ($produk->img_produk
-                                            ? asset('storage/' . $produk->img_produk)
+                                            ? Storage::url($produk->img_produk)
                                             : asset('assets/img/produk.png')) }}"
                                         alt="{{ $produk->name_product }}" loading="eager" class="card-img-top"
                                         alt="{{ $produk->name_product }}">
-                                    @if ($produk->qty < 1)
+                                    @if ($produk->stocks->sum('qty') < 1)
                                         <div class="product-badge">
                                             <span class="badge bg-danger fw-bold rounded-4">Habis</span>
                                         </div>
@@ -599,7 +599,7 @@
                                     @endif
                                 </a>
                                 <div class="product-card-actions">
-                                    @if ($produk->qty > 0)
+                                    @if ($produk->stocks->sum('qty') > 0)
                                         <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
                                             target="_blank" class="btn btn-blue btn-sm w-100">
                                             <i class="bx bxl-whatsapp me-1"></i> Pesan via WA

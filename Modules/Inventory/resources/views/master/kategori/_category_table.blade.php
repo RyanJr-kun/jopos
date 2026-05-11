@@ -23,7 +23,7 @@
                     <td>
                         <div title="image & Nama Kategori" class="d-flex align-items-center">
                             @if ($kategori->img_kategori)
-                                <img src="{{ asset('storage/' . $kategori->img_kategori) }}"
+                                <img src="{{ Storage::url($kategori->img_kategori) }}"
                                     class="avatar avatar-sm me-3" alt="{{ $kategori->name }}">
                             @else
                                 <img src="{{ asset('assets/img/produk.png') }}" class="avatar avatar-sm me-3"
