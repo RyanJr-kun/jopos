@@ -91,7 +91,7 @@ class SaleController extends Controller
 
     $products = $query->orderBy('name_product', 'asc')->get();
 
-    $customers = Customer::where('status', 1)->orderBy('name')->get();
+    $customers = Customer::query()->where('status', 1)->orderBy('name', 'asc')->get();
 
     $kategoris = Category::whereNull('parent_id')
         ->with('children')
@@ -160,7 +160,7 @@ class SaleController extends Controller
         try {
             // Ambil data pajak yang relevan dalam satu query untuk efisiensi
             $pajakIds = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
-            $taxesData = Taxe::whereIn('id', $pajakIds)->get()->keyBy('id');
+            $taxesData = Taxe::findMany($pajakIds)->keyBy('id');
 
             // Memulai Database Transaction
             $penjualan = DB::transaction(function () use ($validatedData, $taxesData) {
@@ -273,7 +273,7 @@ class SaleController extends Controller
                     ]);
 
                     $storeId = Auth::user()->employee->store_id ?? null;
-                    $stockRecord = ProductStock::where('product_id', $produk->id)
+                    $stockRecord = ProductStock::query()->where('product_id', $produk->id)
                         ->when($storeId, fn($q) => $q->where('store_id', $storeId))
                         ->first();
 
@@ -311,7 +311,7 @@ class SaleController extends Controller
     {
         // Eager load relasi untuk menghindari N+1 problem
         $penjualan->load('items.product', 'items.serialNumbers', 'customer', 'user');
-        $profilToko = Store::first();
+        $profilToko = Store::query()->first();
 
         return view('pos::penjualan.show', [
             'title' => 'Faktur Sale: ' . $penjualan->referensi,
@@ -329,7 +329,7 @@ class SaleController extends Controller
         $penjualan->load('items.product', 'customer', 'user');
 
         // Ambil data yang dibutuhkan untuk form, mirip seperti method create()
-        $customers = Customer::where('status', 1)->orderBy('name')->get();
+        $customers = Customer::query()->where('status', 1)->orderBy('name', 'asc')->get();
         $taxes = Taxe::all();
 
         return view('pos::penjualan.edit', [
@@ -403,7 +403,7 @@ class SaleController extends Controller
 
         try {
             $pajakIds = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
-            $taxesData = Taxe::whereIn('id', $pajakIds)->get()->keyBy('id');
+            $taxesData = Taxe::findMany($pajakIds)->keyBy('id');
 
             $penjualan = DB::transaction(function () use ($request, $penjualan, $validatedData, $taxesData) {
                 // --- MANAJEMEN NOMOR SERI ---
@@ -449,7 +449,7 @@ class SaleController extends Controller
                                 'item_sale_id' => null
                             ]);
                             $storeId = Auth::user()->employee->store_id ?? null;
-                            $stockRecord = ProductStock::where('product_id', $oldItem->product_id)
+                            $stockRecord = ProductStock::query()->where('product_id', $oldItem->product_id)
                                 ->when($storeId, fn($q) => $q->where('store_id', $storeId))
                                 ->first();
                                 
@@ -464,7 +464,7 @@ class SaleController extends Controller
                     if ($statusLama !== 'Dibatalkan') {
                         foreach ($penjualan->items as $oldItem) {
                             $storeId = Auth::user()->employee->store_id ?? null;
-                            $stockRecord = ProductStock::where('product_id', $oldItem->product_id)
+                            $stockRecord = ProductStock::query()->where('product_id', $oldItem->product_id)
                                 ->when($storeId, fn($q) => $q->where('store_id', $storeId))
                                 ->first();
                                 
@@ -477,10 +477,11 @@ class SaleController extends Controller
                     // --- PERBAIKAN LOGIKA & N+1 ---
                     // 1. Pre-fetch current quantities of all products involved in the new transaction
                     $newProductIds = collect($validatedData['items'])->pluck('product_id');
-                    $produkQtysSaatIni = ProductStock::whereIn('product_id', $newProductIds)
-                        ->selectRaw('product_id, SUM(qty) as total_qty')
-                        ->groupBy('product_id')
-                        ->pluck('total_qty', 'product_id');
+                    $produkQtysSaatIni = ProductStock::query()
+                    ->whereIn('product_id', $newProductIds, 'and', false) 
+                    ->selectRaw('product_id, SUM(qty) as total_qty')
+                    ->groupBy('product_id')
+                    ->pluck('total_qty', 'product_id');
 
                     // 2. Validasi semua stok sebelum melakukan perubahan
                     foreach ($validatedData['items'] as $itemData) {
@@ -616,7 +617,7 @@ class SaleController extends Controller
     {
         // Eager load relasi untuk efisiensi
         $penjualan->load('customer', 'user', 'items.product', 'items.serialNumbers');
-        $profilToko = Store::first();
+        $profilToko = Store::query()->first();
 
         // Data yang akan dikirim ke view
         $data = [
@@ -655,14 +656,14 @@ class SaleController extends Controller
     /**
      * Menampilkan struk thermal untuk penjualan.
      *
-     * @param  \App\Models\Sale  $penjualan
+     * @param  Sale  $penjualan
      * @return \Illuminate\View\View
      */
     public function printThermal(Sale $penjualan)
     {
         // Eager load relasi yang dibutuhkan untuk efisiensi
         $penjualan->load('customer', 'user', 'items.product', 'items.serialNumbers');
-        $profilToko = Store::first();
+        $profilToko = Store::query()->first();
 
         return view('pos::penjualan.thermal', compact('penjualan', 'profilToko'));
     }

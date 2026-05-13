@@ -482,24 +482,28 @@
                 let itemCounter = 0;
                 const editItemModal = new bootstrap.Modal(document.getElementById('editItemModal'));
 
-                // --- Inisialisasi Select2 Pencarian Produk ---
                 function formatProduct(produk) {
                     if (!produk.id) return produk.text;
                     var defaultImage = "{{ asset('assets/img/produk.png') }}";
-                    var imageUrl = produk.img_produk ? `{{ asset('storage/') }}/${produk.img_produk}` :
-                        defaultImage;
+
+                    // Ambil URL dasar dari konfigurasi disk R2 Laravel
+                    var r2BaseUrl = "{{ config('filesystems.disks.r2.url') }}";
+
+                    // Gabungkan Base URL R2 dengan path gambar produk
+                    var imageUrl = produk.img_produk ? `${r2BaseUrl}/${produk.img_produk}` : defaultImage;
+
                     var variantBadge = produk.variant_id ?
                         `<span class="badge bg-label-info text-xs mt-1"><i class="bx bx-list-ul ms-n1 me-1"></i>Varian</span>` :
                         '';
                     return $(`
-                        <div class="d-flex align-items-center">
-                            <img src="${imageUrl}" class="avatar avatar-sm me-3" />
-                            <div>
-                                <h6 class="mb-0 text-sm">${produk.text}</h6>
-                                <p class="text-xs text-muted mb-0">Stock: ${produk.qty} ${variantBadge}</p>
-                            </div>
-                        </div>
-                    `);
+                                <div class="d-flex align-items-center">
+                                    <img src="${imageUrl}" class="avatar avatar-sm me-3" />
+                                    <div>
+                                        <h6 class="mb-0 text-sm">${produk.text}</h6>
+                                        <p class="text-xs text-muted mb-0">Stock: ${produk.qty} ${variantBadge}</p>
+                                    </div>
+                                </div>
+                            `);
                 }
 
                 $('#select2').select2({
@@ -596,8 +600,8 @@
                         updateRowDisplay(existingRow);
                     } else {
                         const defaultImage = "{{ asset('assets/img/produk.png') }}";
-                        const imageUrl = produkImg ? `{{ asset('storage/') }}/${produkImg}` :
-                            defaultImage;
+                        const r2BaseUrl = "{{ config('filesystems.disks.r2.url') }}";
+                        const imageUrl = produkImg ? `${r2BaseUrl}/${produkImg}` : defaultImage;
 
                         const subtotalAwal = (hargaBeli * qtyToAdd);
                         const pajakAwal = subtotalAwal * (pajakRate / 100);

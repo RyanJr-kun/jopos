@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Modules\Inventory\Models\Brand;
 use Modules\Inventory\Models\Category;
@@ -73,9 +74,11 @@ class ProductController extends Controller
             'brand'   => Brand::where('status', 1)->orderBy('name')->get(),
             'unit'    => Unit::where('status', 1)->orderBy('name')->get(),
             'garansi' => Warrantie::where('status', 1)->orderBy('name')->get(),
-            'pajak'   => Taxe::orderBy('name_taxe')->get(),
+            'pajak'   => Taxe::orderBy('name_taxe', 'asc')->get(),
             // BARU: Kirim data toko untuk pilihan lokasi stok awal
-            'stores'  => Store::where('is_active', 1)->orderBy('name_toko')->get(), 
+            'stores'  => Store::query()
+            ->where('is_active', 1)
+            ->orderBy('name_toko', 'asc')->get(), 
         ]);
     }
 
@@ -195,9 +198,12 @@ class ProductController extends Controller
             'brands'    => Brand::where('status', 1)->orderBy('name')->get(),
             'units'     => Unit::where('status', 1)->orderBy('name')->get(),
             'warranties'=> Warrantie::where('status', 1)->orderBy('name')->get(),
-            'pajak'     => Taxe::orderBy('name_taxe')->get(),
+            'pajak'     => Taxe::orderBy('name_taxe', 'asc')->get(),
             // BARU: Kirim data toko
-            'stores'    => Store::where('is_active', 1)->orderBy('name_toko')->get(),
+            'stores'    => Store::query()
+                ->where('is_active', 1)
+                ->orderBy('name_toko', 'asc')
+                ->get(),
         ]);
     }
 
@@ -646,7 +652,7 @@ class ProductController extends Controller
                     $variantName = !empty($variantOptions) ? implode(' / ', $variantOptions) : "SKU: " . $variant->sku;
                     
                     // Hitung stok varian spesifik di toko saat ini
-                    $stockQuery = ProductStock::where('product_id', $product->id)
+                    $stockQuery = ProductStock::query()->where('product_id', $product->id)
                                     ->where('product_variant_id', $variant->id);
                     if ($storeId) {
                         $stockQuery->where('store_id', $storeId);
@@ -672,8 +678,10 @@ class ProductController extends Controller
             // Skenario 2: Produk Simple (Tanpa Varian)
             else {
                  // Hitung stok produk induk (dimana product_variant_id adalah null)
-                 $stockQuery = ProductStock::where('product_id', $product->id)
-                                ->whereNull('product_variant_id');
+                $stockQuery = ProductStock::query()
+                ->where('product_id', $product->id)
+                ->where('product_variant_id', '=', null);
+
                  if ($storeId) {
                      $stockQuery->where('store_id', $storeId);
                  }
@@ -708,7 +716,7 @@ class ProductController extends Controller
         $productId = $request->query('id');
         $storeId = Auth::user()->employee->store_id ?? null; // Sesuaikan dengan auth user
         
-        $query = ProductStock::where('product_id', $productId);
+        $query = ProductStock::query()->where('product_id', $productId);
         if ($storeId) {
             $query->where('store_id', $storeId);
         }
@@ -717,7 +725,7 @@ class ProductController extends Controller
         return response()->json($totalStok);
     }
 
-    public function getByBarcode($barcode)
+    public function getByBarcode(String $barcode)
     {
         $produk = Product::with(['pajak'])->where('barcode', $barcode)->first();
 

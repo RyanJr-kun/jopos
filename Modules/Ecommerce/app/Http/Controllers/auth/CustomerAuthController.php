@@ -31,7 +31,7 @@ class CustomerAuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::query()->where('email', $request->email)->first();
 
         if ($user && Hash::check($request->password, $user->password)) {
             
@@ -81,7 +81,7 @@ class CustomerAuthController extends Controller
             // Generate username unik otomatis dari nama (karena DB mewajibkan username)
             $baseUsername = Str::slug($request->name, '');
             $username = $baseUsername . rand(100, 999);
-            while (User::where('username', $username)->exists()) {
+            while (User::query()->where('username', $username)->exists()) {
                 $username = $baseUsername . rand(1000, 9999);
             }
 

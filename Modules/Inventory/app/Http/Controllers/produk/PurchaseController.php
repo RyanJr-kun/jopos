@@ -126,13 +126,13 @@ class PurchaseController extends Controller
 
         try {
             $pajakIds = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
-            $taxesData = Taxe::whereIn('id', $pajakIds)->get()->keyBy('id');
+            $taxesData = Taxe::findMany($pajakIds)->keyBy('id');
 
             $pembelian = DB::transaction(function () use ($validatedData, $request, $taxesData) {
                 // AMBIL DATA STORE
                 // Karena tabel purchases butuh store_id, kita asumsikan ambil dari Store::first() 
                 // atau sesuaikan jika user login terikat dengan store tertentu.
-                $defaultStore = Store::first();
+                $defaultStore = Store::query()->first();
                 $storeId = $defaultStore ? $defaultStore->id : 1;
 
                 // 1. Ambil semua produk dan varian yang relevan
@@ -258,7 +258,7 @@ class PurchaseController extends Controller
     {
         // Eager load relasi untuk efisiensi query dan menghindari N+1 problem
         $pembelian->load('supplier', 'user', 'details.produk');
-        $profilToko = Store::first();
+        $profilToko = Store::query()->first();
 
         return view('inventory::pembelian.show', [
             'title' => 'Detail Purchase: ' . $pembelian->referensi,
@@ -307,7 +307,8 @@ class PurchaseController extends Controller
                         // Jika barangnya pernah diterima, kurangi stoknya dari product_stocks
                         if ($pembelian->status_barang === 'Diterima') {
                             foreach ($pembelian->details as $detail) {
-                                $stockRecord = \App\Models\ProductStock::where('store_id', $storeId)
+                                $stockRecord = ProductStock::query()
+                                    ->where('store_id', $storeId)
                                     ->where('product_id', $detail->product_id)
                                     ->where('product_variant_id', $detail->product_variant_id)
                                     ->first();
@@ -359,7 +360,7 @@ class PurchaseController extends Controller
 
         try {
             $pajakIds = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
-            $taxesData = Taxe::whereIn('id', $pajakIds)->get()->keyBy('id');
+            $taxesData = Taxe::findMany($pajakIds)->keyBy('id');
 
             DB::transaction(function () use ($validatedData, $pembelian, $taxesData, $storeId) {
                 $statusLama = $pembelian->status_pembayaran;
@@ -377,7 +378,8 @@ class PurchaseController extends Controller
                 // 1. Kembalikan stok lama (Reset) dari product_stocks
                 if ($statusLama !== 'Dibatalkan' && $statusBarangLama === 'Diterima') {
                     foreach ($pembelian->details as $oldDetail) {
-                        $stockRecord = \App\Models\ProductStock::where('store_id', $storeId)
+                        $stockRecord = ProductStock::query()
+                            ->where('store_id', $storeId)
                             ->where('product_id', $oldDetail->product_id)
                             ->where('product_variant_id', $oldDetail->product_variant_id)
                             ->first();
@@ -516,7 +518,7 @@ class PurchaseController extends Controller
     {
         // Eager load relasi yang dibutuhkan
         $pembelian->load('supplier', 'details.produk');
-        $profilToko = Store::first();
+        $profilToko = Store::query()->first();
 
         return view('inventory::pembelian.thermal', compact('pembelian', 'profilToko'));
     }
@@ -528,7 +530,7 @@ class PurchaseController extends Controller
     {
         // Eager load relasi untuk efisiensi
         $pembelian->load('supplier', 'user', 'details.produk', 'details.pajak');
-        $profilToko = Store::first();
+        $profilToko = Store::query()->first();
 
         // Data yang akan dikirim ke view
         $data = [

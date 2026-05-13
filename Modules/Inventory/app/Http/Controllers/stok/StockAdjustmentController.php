@@ -132,7 +132,7 @@ class StockAdjustmentController extends Controller
     /**
      * Menampilkan detail dari riwayat penyesuaian stok.
      */
-    public function show($kode_penyesuaian)
+    public function show(String $kode_penyesuaian)
     {
         // Cari penyesuaian berdasarkan kode unik, bukan ID.
         $stok_penyesuaian = StockAdjustment::where('kode_penyesuaian', $kode_penyesuaian)->firstOrFail();
@@ -149,7 +149,7 @@ class StockAdjustmentController extends Controller
     /**
      * Membatalkan & menghapus penyesuaian stok, serta mengembalikan stok produk.
      *
-     * @param  \App\Models\StockAdjustment  $stok_penyesuaian
+     * @param StockAdjustment $stok_penyesuaian
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(StockAdjustment $stok_penyesuaian)

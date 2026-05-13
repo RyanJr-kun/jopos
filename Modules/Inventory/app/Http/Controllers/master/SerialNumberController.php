@@ -176,12 +176,11 @@ class SerialNumberController extends Controller
 
     /**
      * Mengambil informasi detail produk untuk halaman manajemen Serial Number.
-     * Didesain untuk dipanggil via AJAX.
      *
-     * @param  \App\Models\Product  $produk
+     * @param  string  $product_id  // Samakan namanya jadi $product_id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getProductInfoForSerial($product_id)
+    public function getProductInfoForSerial(string $product_id)
     {
         $produk = Product::find($product_id);
 
@@ -285,7 +284,7 @@ class SerialNumberController extends Controller
         }
     }
 
-    public function getByProduct($product_id)
+    public function getByProduct(String $product_id)
     {
         // Pastikan ini adalah request AJAX untuk keamanan
         if (!request()->ajax()) {

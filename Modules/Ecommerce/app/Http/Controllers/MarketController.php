@@ -143,11 +143,20 @@ class MarketController extends Controller
     {
         $query = Product::with(['category', 'unit', 'brand', 'promotions']);
 
-        // Filter Kategori 
+        // Filter Kategori (Mencakup Parent & Child)
         if ($request->filled('kategori')) {
-            $query->whereHas('category', function ($q) use ($request) {
-                $q->where('slug', $request->kategori);
-            });
+            $kategoriTarget = Category::where('slug', $request->kategori)->first();
+
+            if ($kategoriTarget) {
+                // Ambil ID dari kategori target dan gabungkan dengan ID semua child-nya
+                $kategoriIds = Category::where('parent_id', $kategoriTarget->id)
+                    ->pluck('id')
+                    ->push($kategoriTarget->id)
+                    ->toArray();
+
+                // Filter menggunakan whereIn ke foreign key category_id agar lebih cepat
+                $query->whereIn('category_id', $kategoriIds);
+            }
         }
 
         // Filter Brand (checkbox — bisa multiple)
@@ -203,21 +212,15 @@ class MarketController extends Controller
         $products = $query->paginate(20)->withQueryString();
         $kategorisForFilter = Category::whereHas('products')->orderBy('name')->get();
 
-        // AJAX: kembalikan hanya partial
         if ($request->ajax()) {
             return view('ecommerce::market._produk_list', compact('products'))->render();
         }
 
         $kategoris = Category::with('children')->whereNull('parent_id')->get();
 
-        // ── Ambil semua brand yang memiliki produk, urutkan nama ──────
-        // Gunakan model Brand jika ada, atau ambil via join dari products
         $brands = Brand::whereHas('products')
             ->orderBy('name')
             ->get();
-        // Catatan: jika nama model Brand berbeda (misal "Brands"), sesuaikan.
-        // Fallback alternatif jika tidak ada model Brand:
-        // $brands = \App\Models\Brand::orderBy('name')->get();
 
         return view('ecommerce::market.produk', compact(
             'products',
