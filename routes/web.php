@@ -38,7 +38,7 @@ Route::domain('jopos.' . $domain)->group(function () {
     });
 
     // Akses Karyawan (Sudah Login)
-    Route::middleware(['auth'])->group(function () {
+    Route::middleware(['auth', 'verified', 'employee'])->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('employee.logout');
         
         // Dashboard & Fitur Admin

@@ -3,7 +3,7 @@
 return [
   "creatorName" => "Store Owner",
   "creatorUrl" => "https://example.com",
-  "templateName" => "jopos",
+  "templateName" => "JO Computer",
   "templateSuffix" => "Point of Sale Management System",
   "templateVersion" => "1.0.0",
   "templateFree" => false,
@@ -15,7 +15,7 @@ return [
   "support" => "",
   "adminTemplates" => "",
   "bootstrapDashboard" => "",
-  "ogTitle" => "jopos - Point of Sale Management System",
+  "ogTitle" => "JO Computer",
   "ogImage" => "",
   "ogType" => "website",
   "documentation" => "",

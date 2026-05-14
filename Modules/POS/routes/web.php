@@ -11,7 +11,7 @@ $domain = env('APP_DOMAIN', 'jocomputer.com');
 // ROUTING SUBDOMAIN (JOPOS - Khusus Manajemen Inventory)
 // =========================================================
 Route::domain('jopos.' . $domain)->group(function () {
-    Route::middleware(['auth', 'verified'])->group(function () {
+    Route::middleware(['auth', 'verified', 'employee'])->group(function () {
         Route::resource('pos', POSController::class)->names('pos');
     
         //transaksi penjualan

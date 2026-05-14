@@ -12,6 +12,10 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/perfect-scrollbar/1.5.5/css/perfect-scrollbar.min.css">
 @endsection
 
+@section('page-style')
+    @vite(['resources/assets/vendor/scss/pages/page-product.scss'])
+@endsection
+
 @section('vendor-script')
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     {{-- Perfect Scrollbar --}}

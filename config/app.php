@@ -53,6 +53,7 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+    'main_web_url' => env('MAIN_WEB_URL', 'http://jocomputer.test'),
 
     /*
     |--------------------------------------------------------------------------

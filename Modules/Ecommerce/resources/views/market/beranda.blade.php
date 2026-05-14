@@ -3,7 +3,7 @@
 @endisset
 
 @extends('layouts/commonMaster')
-@section('title', 'Beranda - JO Computer')
+@section('title', 'Toko Laptop & Komputer')
 
 @section('vendor-style')
     @vite('resources/assets/vendor/libs/swiper/swiper.scss')
@@ -284,9 +284,9 @@
             <div class="container-market">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="fw-bolder  mb-0"><span class="tg-red-blue">PROMO TERBATAS</span></h3>
-                    <a href="{{ route('market.produk') }}" class="btn btn-outline-secondary px-2">
-                        <i class="bx bx-category"></i>
-                        <span class="d-none d-lg-block ms-2">Lihat Semua</span>
+                    <a href="{{ route('market.produk') }}"
+                        class="link link-secondary px-2 align-items-center justify-content-center">
+                        <i class="bx bx-category me-2"></i><span>Lihat Semua</span>
                     </a>
                 </div>
                 <div class="row g-4 align-items-center">
@@ -562,9 +562,10 @@
         <div class="container-market">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bolder tg-red mb-0">PRODUK TERBARU</h3>
-                <a href="{{ route('market.produk') }}" class="btn btn-outline-secondary px-2"> <i
-                        class="bx bx-category"></i>
-                    <span class="d-none d-lg-block ms-2">Lihat Semua</span></a>
+                <a href="{{ route('market.produk') }}"
+                    class="link link-danger px-2 align-items-center justify-content-center">
+                    <i class="bx bx-category me-2"></i><span>Lihat Semua</span>
+                </a>
             </div>
             <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3">
                 @foreach ($products as $produk)

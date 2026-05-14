@@ -16,7 +16,7 @@ $domain = env('APP_DOMAIN', 'jocomputer.com');
 // =========================================================
 Route::domain($domain)->group(function () {
 
-    Route::middleware('guest:customer')->group(function () {
+    Route::middleware('guest')->group(function () {
         // Autentikasi Standar
         Route::get('/login', [CustomerAuthController::class, 'showLoginForm'])->name('login');
         Route::post('/auth/customers/login', [CustomerAuthController::class, 'login'])->name('customer.login.post');
@@ -57,7 +57,7 @@ Route::domain($domain)->group(function () {
 Route::domain('jopos.' . $domain)->group(function () {
     
     // Rute ini hanya bisa diakses oleh Karyawan/Admin yang sudah login[cite: 6]
-    Route::middleware(['auth', 'verified'])->group(function () {
+    Route::middleware(['auth', 'verified', 'employee'])->group(function () {
         
         Route::resource('ecommerces', EcommerceController::class)->names('ecommerce');
 

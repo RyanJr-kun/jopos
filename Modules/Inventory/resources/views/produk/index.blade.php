@@ -1,6 +1,6 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Cards basic - UI elements')
+@section('title', 'Manajemen Produk')
 @section('content')
 
     <div class="row g-3 align-items-stretch">

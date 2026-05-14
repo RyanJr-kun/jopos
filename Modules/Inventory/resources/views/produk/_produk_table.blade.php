@@ -71,9 +71,8 @@
                     <td>
                         <div class="d-flex align-items-center">
                             @if ($products->user && $products->user->avatar)
-                                <img src="{{ Storage::url($products->user->avatar) }}"
-                                    class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;"
-                                    alt="user">
+                                <img src="{{ Storage::url($products->user->avatar) }}" class="rounded-circle me-2"
+                                    style="width: 30px; height: 30px; object-fit: cover;" alt="user">
                             @else
                                 <img src="{{ asset('assets/img/user.webp') }}" class="rounded-circle me-2"
                                     style="width: 30px; height: 30px; object-fit: cover;" alt="user">
@@ -85,17 +84,17 @@
                     {{-- Kolom 6: Aksi --}}
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
-                            <a href="{{ route('produk.show', $products->slug) }}" class="btn btn-sm  btn-outline-info"
+                            <a href="{{ route('produk.show', $products->slug) }}" class="action-btn text-info"
                                 data-bs-toggle="tooltip" title="Detail">
                                 <i class="bx bx-show"></i>
                             </a>
-                            <a href="{{ route('produk.edit', $products->slug) }}"
-                                class="btn btn-sm  btn-outline-primary" data-bs-toggle="tooltip" title="Edit">
+                            <a href="{{ route('produk.edit', $products->slug) }}" class="action-btn text-secondary"
+                                data-bs-toggle="tooltip" title="Edit">
                                 <i class="bx bx-edit-alt"></i>
                             </a>
-                            <button type="button" class="btn btn-sm  btn-outline-danger delete-product-btn"
-                                data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal"
-                                data-product-slug="{{ $products->slug }}" title="Hapus">
+                            <button type="button" class="action-btn text-danger" data-bs-toggle="modal"
+                                data-bs-target="#deleteConfirmationModal" data-product-slug="{{ $products->slug }}"
+                                title="Hapus">
                                 <i class="bx bx-trash"></i>
                             </button>
                         </div>

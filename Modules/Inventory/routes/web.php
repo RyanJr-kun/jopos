@@ -21,7 +21,7 @@ $domain = env('APP_DOMAIN', 'jocomputer.com');
 Route::domain('jopos.' . $domain)->group(function () {
     
     // Semua rute inventory memerlukan login dan verifikasi
-    Route::middleware(['auth', 'verified'])->group(function () {
+    Route::middleware(['auth', 'verified', 'employee'])->group(function () {
 
         // ---------------------------------------------------------
         // 1. MANAJEMEN STOK (Stock Management)

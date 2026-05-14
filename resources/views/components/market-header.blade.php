@@ -30,32 +30,6 @@
             {{-- 3. Action Icons --}}
             <div class="d-flex align-items-center justify-content-end">
                 <div class="dropdown d-flex align-items-center">
-
-                    {{-- Dark Mode Toggle (Desktop) 
-                    <button type="button" class="theme-toggle-btn border-none d-lg-inline-flex" id="themeToggleDesktop"
-                        aria-label="Toggle dark mode" title="Toggle dark mode">
-                        <span class="theme-toggle-icon">
-                            <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="5" />
-                                <line x1="12" y1="1" x2="12" y2="3" />
-                                <line x1="12" y1="21" x2="12" y2="23" />
-                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                                <line x1="1" y1="12" x2="3" y2="12" />
-                                <line x1="21" y1="12" x2="23" y2="12" />
-                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                            </svg>
-                            <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                            </svg>
-                        </span>
-                    </button> --}}
-
                     <a class="d-flex text-success rounded-2 px-2 align-items-center" href="https://wa.me/6281318000699"
                         target="_blank" rel="noopener noreferrer">
                         <i class="bx bx-bxl-whatsapp icon-md text-success"></i>
@@ -81,19 +55,20 @@
                             </div>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-
-                            {{-- PENGECEKAN ROLE/PROFIL --}}
-                            {{-- Jika user adalah karyawan (punya relasi employee) --}}
                             @if (auth()->user()->employee)
                                 <li>
-                                    {{-- Menggunakan subdomain dinamis --}}
-                                    @php $adminDomain = 'http://jopos.' . env('APP_DOMAIN', 'jocomputer.test'); @endphp
+                                    {{-- PERBAIKAN: Deteksi otomatis http atau https --}}
+                                    @php
+                                        $protocol = request()->secure() ? 'https://' : 'http://';
+                                        $adminDomain = $protocol . 'jopos.' . env('APP_DOMAIN', 'jocomputer.test');
+                                    @endphp
                                     <a class="dropdown-item" href="{{ $adminDomain }}/dashboard">
                                         <i class="bx bx-home-smile me-2"></i>Dashboard Admin
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ $adminDomain }}/penjualan/create">
+                                    {{-- PERBAIKAN: Gunakan $adminDomain agar POS mengarah ke subdomain yang benar --}}
+                                    <a class="dropdown-item" href="{{ $adminDomain }}/penjualan">
                                         <i class="bx bx-tv me-2"></i>Point Of Sales
                                     </a>
                                 </li>
@@ -104,15 +79,16 @@
                                     <form action="{{ route('employee.logout') }}" method="post">
                                         @csrf
                                         <button type="submit" class="dropdown-item text-danger">
-                                            <i class="bx bx-power-off me-2"></i>Log Out</button>
+                                            <i class="bx bx-power-off me-2"></i>Log Out
+                                        </button>
                                     </form>
                                 </li>
 
-                                {{-- Jika user adalah pelanggan biasa --}}
-                            @else
+                                {{-- 2. Jika punya profil Customer --}}
+                            @elseif (auth()->user()->customer)
                                 <li>
                                     <a class="dropdown-item" href="#">
-                                        <i class="bx bx-user me-2"></i>Profil Saya
+                                        <i class="bx bx-user me-2"></i>Profil Saya (Customer)
                                     </a>
                                 </li>
                                 <li>
@@ -127,7 +103,28 @@
                                     <form action="{{ route('customer.logout') }}" method="post">
                                         @csrf
                                         <button type="submit" class="dropdown-item text-danger">
-                                            <i class="bx bx-power-off me-2"></i>Log Out</button>
+                                            <i class="bx bx-power-off me-2"></i>Log Out
+                                        </button>
+                                    </form>
+                                </li>
+
+                                {{-- 3. Jika belum punya profil di keduanya (Fallback) --}}
+                            @else
+                                <li>
+                                    <span class="dropdown-item text-muted">
+                                        Profil belum lengkap
+                                    </span>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    {{-- Gunakan route logout default Laravel/Breeze/Jetstream jika ada --}}
+                                    <form action="{{ route('logout') }}" method="post">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bx bx-power-off me-2"></i>Log Out
+                                        </button>
                                     </form>
                                 </li>
                             @endif

@@ -1,6 +1,129 @@
-// ================================================================================================
-// ? TIP:  It is recommended to use this file for overriding component variables (_components/_variables.scss).
-// Copy and paste variables as needed, modify their values, and remove the !default flag.
-// ================================================================================================
+// style untuk tombol aksi (detail, edit, hapus) dengan ukuran 30x30px, border-radius 6px, dan efek hover
 
-// $menu-color: #000 !default;
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    transition: background 0.12s, color 0.12s;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: rgba(105, 108, 255, 0.08);
+}
+
+.action-btn.del:hover {
+    background: rgba(255, 62, 29, 0.08);
+}
+
+
+// style untuk link dengan efek underline yang muncul saat hover
+
+.link {
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    padding-bottom: 2px;
+
+    &::after {
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 1px;
+        display: block;
+        margin-top: 2px;
+        right: 0;
+        transition: width 0.3s ease;
+    }
+
+    &:hover {
+        &::after {
+            width: 100%;
+            left: 0;
+        }
+    }
+}
+
+/* Loop untuk men-generate warna (link-primary, link-dark, dll) */
+@each $color, $value in $theme-colors {
+    .link-#{$color} {
+        /* Menggunakan rgba dengan warna dari bootstrap, opacity 0.7 */
+        color: rgba($value, 0.7);
+
+        &::after {
+            /* Garis bawah menggunakan warna solid */
+            background-color: $value;
+        }
+
+        &:hover {
+            /* Saat di-hover, text menjadi solid (opacity 1) */
+            color: $value;
+        }
+    }
+}
+
+// style untuk swiper di bagian fitur, memastikan slide tidak terpotong dan pagination dots menggunakan warna primary dengan efek 
+
+.myFeaturesSwiper {
+    .swiper-slide {
+        // Pastikan slide tidak terpotong
+        height: auto;
+    }
+
+    // Pagination dots warna primary
+    .features-pagination {
+        position: relative;
+        margin-top: 1rem;
+
+        .swiper-pagination-bullet {
+            background: var(--bs-primary);
+            opacity: 0.3;
+        }
+
+        .swiper-pagination-bullet-active {
+            opacity: 1;
+            width: 20px;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+    }
+}
+
+// style untuk quill editor, memastikan tampilan yang bersih dan konsisten dengan tema 
+
+.quill-wrapper {
+    background-color: #fff;
+    border-radius: 0.375rem;
+    border: 1px solid #d9dee3;
+}
+
+.ql-container.ql-snow {
+    border: none !important;
+    height: 200px;
+    border-bottom-left-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+}
+
+.ql-toolbar.ql-snow {
+    border: none !important;
+    border-bottom: 1px solid #d9dee3 !important;
+    border-top-left-radius: 0.375rem;
+    border-top-right-radius: 0.375rem;
+    background-color: #f8f9fa;
+}
+
+.ql-editor {
+    word-break: break-word;
+}
+
+#combinations-table th,
+#combinations-table td {
+    vertical-align: middle;
+    padding: 0.5rem;
+}

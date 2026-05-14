@@ -15,6 +15,10 @@
     <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
 @endsection
 
+@section('page-style')
+    @vite(['resources/assets/vendor/scss/pages/page-store.scss'])
+@endsection
+
 @section('content')
     {{-- ── Page Header ── --}}
     <div class="loc-page-header">

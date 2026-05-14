@@ -321,28 +321,6 @@
     display: block;
 }
 
-.action-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 6px;
-    border: none;
-    background: transparent;
-    transition: background 0.12s, color 0.12s;
-    font-size: 1rem;
-    cursor: pointer;
-}
-
-.action-btn:hover {
-    background: rgba(105, 108, 255, 0.08);
-}
-
-.action-btn.del:hover {
-    background: rgba(255, 62, 29, 0.08);
-}
-
 /* ── Empty State ── */
 .empty-state {
     padding: 3.5rem 1rem;

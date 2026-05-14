@@ -6,43 +6,6 @@
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
     <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
     <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
-
-    <style>
-        .quill-wrapper {
-            background-color: #fff;
-            border-radius: 0.375rem;
-            border: 1px solid #d9dee3;
-        }
-
-        /* Mengunci editor agar bisa di-scroll jika kepanjangan, tidak luber */
-        .ql-container.ql-snow {
-            border: none !important;
-            height: 200px;
-            /* Tinggi pasti agar tidak over */
-            border-bottom-left-radius: 0.375rem;
-            border-bottom-right-radius: 0.375rem;
-        }
-
-        .ql-toolbar.ql-snow {
-            border: none !important;
-            border-bottom: 1px solid #d9dee3 !important;
-            border-top-left-radius: 0.375rem;
-            border-top-right-radius: 0.375rem;
-            background-color: #f8f9fa;
-        }
-
-        .ql-editor {
-            word-break: break-word;
-            /* Mencegah stiker kepanjangan ke samping */
-        }
-
-        /* Merapikan tabel variasi agar tidak dempet */
-        #combinations-table th,
-        #combinations-table td {
-            vertical-align: middle;
-            padding: 0.5rem;
-        }
-    </style>
 @endsection
 
 @section('content')
