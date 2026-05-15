@@ -8,136 +8,10 @@
 @section('vendor-style')
     @vite('resources/assets/vendor/libs/swiper/swiper.scss')
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <style>
-        /* Modern Container & Typography */
-        .container-market {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
+@endsection
 
-        .product-title {
-            font-size: clamp(1.5rem, 2.5vw, 2.2rem);
-            line-height: 1.2;
-            color: #2c3e50;
-        }
-
-        .product-price {
-            font-size: clamp(1.4rem, 2vw, 1.8rem);
-            color: #e74c3c;
-        }
-
-        /* Swiper Custom Styling */
-        .swiper-main {
-            border-radius: 12px;
-            overflow: hidden;
-            background: #f8f9fa;
-            border: 1px solid #eee;
-        }
-
-        .swiper-main .swiper-slide img {
-            width: 100%;
-            height: 450px;
-            object-fit: contain;
-            mix-blend-mode: multiply;
-            /* Menghilangkan background putih gambar jika ada */
-        }
-
-        .swiper-thumbs {
-            margin-top: 1rem;
-            padding: 0.25rem;
-        }
-
-        .swiper-thumbs .swiper-slide {
-            opacity: 0.5;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border-radius: 8px;
-            border: 2px solid transparent;
-            height: 80px;
-            background: #f8f9fa;
-        }
-
-        .swiper-thumbs .swiper-slide-thumb-active {
-            opacity: 1;
-            border-color: #696cff;
-            /* Primary color */
-        }
-
-        .swiper-thumbs .swiper-slide img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            padding: 4px;
-        }
-
-        /* Responsive Swiper Height */
-        @media (max-width: 991px) {
-            .swiper-main .swiper-slide img {
-                height: 350px;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .swiper-main .swiper-slide img {
-                height: 280px;
-            }
-
-            .swiper-thumbs .swiper-slide {
-                height: 60px;
-            }
-        }
-
-        /* Varian Selection */
-        .variant-btn {
-            border: 1px solid #ddd;
-            background: #fff;
-            color: #333;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
-
-        .variant-btn:hover {
-            border-color: #696cff;
-            color: #696cff;
-        }
-
-        .variant-btn.active {
-            background: #696cff;
-            color: #fff;
-            border-color: #696cff;
-        }
-
-        /* Description & Spec Tables */
-        .product-description {
-            color: #555;
-            line-height: 1.8;
-            font-size: 1rem;
-        }
-
-        .spec-table th {
-            background-color: #f8f9fa;
-            color: #495057;
-            font-weight: 600;
-            width: 35%;
-        }
-
-        /* WhatsApp Button Pulse Effect */
-        .btn-wa {
-            background-color: #25D366;
-            color: white;
-            border: none;
-            transition: transform 0.2s;
-        }
-
-        .btn-wa:hover {
-            background-color: #128C7E;
-            transform: translateY(-2px);
-            color: white;
-        }
-    </style>
+@section('page-style')
+    @vite(['resources/assets/vendor/scss/pages/page-produk-detail.scss'])
 @endsection
 
 @section('vendor-script')
@@ -150,7 +24,7 @@
     <x-market-header :kategoris="$kategoris"></x-market-header>
 
     {{-- Breadcrumb --}}
-    <div class="bg-light py-2 border-bottom">
+    <div class="bg-white py-2 border-bottom">
         <div class="container-market">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 fs-7">
@@ -170,348 +44,654 @@
         </div>
     </div>
 
-    <div class="container-market py-4 py-lg-5">
-        <div class="row g-4 g-lg-5">
-            {{-- Bagian Kiri: Galeri Gambar dengan Swiper --}}
-            <div class="col-lg-6" data-aos="fade-right">
-                @php
-                    // 1. Ambil gambar galeri, urutkan yang primary di awal
-                    $galleryImages = $produk->images->sortByDesc('is_primary')->map(function ($img) {
-                        return (object) ['path' => $img->path];
-                    });
-
-                    // 2. Ambil gambar dari varian (yang tidak kosong)
-                    $variantImages = $produk->variants
-                        ->pluck('img_variant')
-                        ->filter()
-                        ->unique()
-                        ->map(function ($path) {
-                            return (object) ['path' => $path];
+    <section id="Produk-detail" class="section-py bg-white">
+        <div class="container-market">
+            <div class="row g-4 g-lg-5">
+                <div class="col-lg-6" data-aos="fade-right">
+                    @php
+                        // 1. Ambil gambar galeri, urutkan yang primary di awal
+                        $galleryImages = $produk->images->sortByDesc('is_primary')->map(function ($img) {
+                            return (object) ['path' => $img->path];
                         });
 
-                    // 3. Gabungkan keduanya, lalu hapus duplikat path agar rapi
-                    $allImages = $galleryImages->concat($variantImages)->unique('path')->values();
-                @endphp
+                        // 2. Ambil gambar dari varian (yang tidak kosong)
+                        $variantImages = $produk->variants
+                            ->pluck('img_variant')
+                            ->filter()
+                            ->unique()
+                            ->map(function ($path) {
+                                return (object) ['path' => $path];
+                            });
 
-                <!-- Swiper Utama (Besar) -->
-                <div class="swiper swiper-main shadow-sm">
-                    <div class="swiper-wrapper">
-                        @if ($allImages->count() > 0)
-                            @foreach ($allImages as $img)
-                                <div class="swiper-slide">
-                                    <img src="{{ Storage::url($img->path) }}" alt="{{ $produk->name_product }}"
-                                        loading="lazy">
+                        // 3. Gabungkan keduanya, lalu hapus duplikat path agar rapi
+                        $allImages = $galleryImages->concat($variantImages)->unique('path')->values();
+                    @endphp
+                    <div class="product-gallery-wrapper">
+                        <div class="swiper swiper-main" style="order:1">
+                            <div class="swiper-wrapper">
+                                @if ($allImages->count() > 0)
+                                    @foreach ($allImages as $img)
+                                        <div class="swiper-slide">
+                                            <img src="{{ Storage::url($img->path) }}" alt="{{ $produk->name_product }}"
+                                                loading="lazy">
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="swiper-slide">
+                                        <img src="{{ asset('assets/img/produk.png') }}" alt="Default" loading="lazy">
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        @if ($allImages->count() > 1)
+                            <div class="swiper swiper-thumbs" style="order:2">
+                                <div class="swiper-wrapper">
+                                    @foreach ($allImages as $img)
+                                        <div class="swiper-slide">
+                                            <img src="{{ Storage::url($img->path) }}" alt="Thumb">
+                                        </div>
+                                    @endforeach
                                 </div>
-                            @endforeach
-                        @else
-                            <div class="swiper-slide">
-                                <img src="{{ asset('assets/img/produk.png') }}" alt="Default" loading="lazy">
                             </div>
                         @endif
+
+                    </div>{{-- end .product-gallery-wrapper --}}
+                </div>
+
+                {{-- ═══════════════════════════════════════════════════
+                     Bagian Kanan: Detail & Info Produk
+                     ═══════════════════════════════════════════════════ --}}
+                <div class="col-lg-6 " data-aos="fade-left">
+                    <div class="d-flex flex-wrap align-items-center gap-2 my-3">
+                        @if ($produk->category)
+                            <span class="badge bg-label-blue px-3 py-2">{{ $produk->category->name }}</span>
+                        @endif
+                        @if ($produk->brand)
+                            <span class="badge bg-label-danger px-3 py-2">{{ $produk->brand->name }}</span>
+                        @endif
                     </div>
-                </div>
 
-                <!-- Swiper Thumbnail (Kecil) -->
-                @if ($allImages->count() > 1)
-                    <div class="swiper swiper-thumbs">
-                        <div class="swiper-wrapper">
-                            @foreach ($allImages as $img)
-                                <div class="swiper-slide">
-                                    <img src="{{ Storage::url($img->path) }}" alt="Thumb">
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-            </div>
+                    <h3 class="text-product-title fw-bolder mb-3">{{ $produk->name_product }}</h3>
 
-            {{-- Bagian Kanan: Detail & Info Produk --}}
-            <div class="col-lg-6" data-aos="fade-left">
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                    @if ($produk->category)
-                        <span class="badge bg-label-primary px-3 py-2 rounded-pill">{{ $produk->category->name }}</span>
-                    @endif
-                    @if ($produk->brand)
-                        <span class="badge bg-label-secondary px-3 py-2 rounded-pill">{{ $produk->brand->name }}</span>
-                    @endif
-                </div>
-
-                <h1 class="product-title fw-bolder mb-3">{{ $produk->name_product }}</h1>
-
-                {{-- Harga --}}
-                <div class="mb-4 bg-light p-3 rounded-3 border">
-                    @if ($produk->harga_diskon)
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <span class="badge bg-danger">Diskon</span>
-                            <span
-                                class="text-muted text-decoration-line-through fs-6">{{ $produk->harga_formatted }}</span>
-                        </div>
-                        <div class="product-price fw-bolder">Rp {{ number_format($produk->harga_diskon, 0, ',', '.') }}
-                        </div>
-                    @else
-                        <div class="product-price fw-bolder" id="display-harga">{{ $produk->harga_formatted }}</div>
-                    @endif
-                </div>
-
-
-                @if ($produk->variants && $produk->variants->count() > 0)
+                    {{-- Harga --}}
                     <div class="mb-4">
-                        <h6 class="fw-bold mb-2">Pilih Varian:</h6>
-                        <div class="d-flex flex-wrap gap-2" id="variant-container">
-                            @foreach ($produk->variants as $index => $variant)
-                                @php
-                                    // Ambil gambar varian atau fallback ke gambar utama
-                                    $imgVar = $variant->img_variant ? Storage::url($variant->img_variant) : null;
-                                @endphp
-                                <button type="button" class="variant-btn {{ $index === 0 ? 'active' : '' }}"
-                                    data-harga="Rp {{ number_format($variant->harga_jual, 0, ',', '.') }}"
-                                    data-img="{{ $imgVar }}"
-                                    data-stok="{{ $produk->stocks->where('product_variant_id', $variant->id)->sum('qty') ?? 0 }}"
-                                    title="SKU: {{ $variant->sku }}">
-                                    {{ $variant->options->pluck('value')->join(' / ') }}
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-                {{-- Status Stok & Garansi --}}
-                <div class="d-flex flex-column gap-2 mb-4 p-3 border rounded-3">
-                    <div class="d-flex align-items-center">
-                        <i class="bx bx-package fs-5 me-2 text-primary"></i>
-                        <span class="fw-medium me-2">Status Stok:</span>
-                        @if ($produk->stocks->sum('qty') > 0)
-                            <span class="badge bg-success">Tersedia ({{ $produk->stocks->sum('qty') }}
-                                {{ $produk->unit->singkat ?? '' }})</span>
+                        @if ($produk->harga_diskon)
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-danger">Diskon</span>
+                                <span
+                                    class="text-muted text-decoration-line-through text-discount">{{ $produk->harga_formatted }}</span>
+                            </div>
+                            <div class="fw-bolder text-price">Rp {{ number_format($produk->harga_diskon, 0, ',', '.') }}
+                            </div>
                         @else
-                            <span class="badge bg-danger">Habis</span>
+                            <div class="fw-bolder text-price" id="display-harga">{{ $produk->harga_formatted }}</div>
                         @endif
                     </div>
-                    @if ($produk->garansi)
-                        <div class="d-flex align-items-center">
-                            <i class="bx bx-shield-check fs-5 me-2 text-primary"></i>
-                            <span class="fw-medium me-2">Garansi:</span>
-                            <span class="text-dark">{{ $produk->garansi->name }}
-                                {{ $produk->garansi->formatted_duration }}</span>
+
+                    @if ($produk->variants && $produk->variants->count() > 0)
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-2">Pilih Varian:</h6>
+                            <div class="d-flex flex-wrap gap-2" id="variant-container">
+                                @foreach ($produk->variants as $index => $variant)
+                                    @php
+                                        $imgVar = $variant->img_variant ? Storage::url($variant->img_variant) : null;
+                                    @endphp
+                                    <button type="button" class="variant-btn {{ $index === 0 ? 'active' : '' }}"
+                                        data-harga="Rp {{ number_format($variant->harga_jual, 0, ',', '.') }}"
+                                        data-img="{{ $imgVar }}"
+                                        data-stok="{{ $produk->stocks->where('product_variant_id', $variant->id)->sum('qty') ?? 0 }}"
+                                        title="SKU: {{ $variant->sku }}">
+                                        {{ $variant->options->pluck('value')->join(' / ') }}
+                                    </button>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
-                </div>
 
-                {{-- Tombol Aksi --}}
-                <div class="d-grid gap-2">
-                    @if ($produk->stocks->sum('qty') > 0)
-                        <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                            target="_blank"
-                            class="btn btn-wa btn-lg fw-bold shadow-sm d-flex justify-content-center align-items-center gap-2">
-                            <i class="bx bxl-whatsapp fs-4"></i> Pesan via WhatsApp
-                        </a>
-                    @else
-                        <button type="button" class="btn btn-secondary btn-lg fw-bold" disabled>Stok Habis</button>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        {{-- Row Bawah: Tabs Deskripsi & Spesifikasi --}}
-        <div class="row mt-5" data-aos="fade-up">
-            <div class="col-12">
-                <div class="card shadow-none border">
-                    <div class="card-header bg-transparent border-bottom">
-                        <ul class="nav nav-tabs card-header-tabs" role="tablist">
-                            <li class="nav-item">
-                                <button class="nav-link active fw-bold px-4" data-bs-toggle="tab" data-bs-target="#desc-tab"
-                                    role="tab">Deskripsi</button>
-                            </li>
-                            @if ($produk->specification)
-                                <li class="nav-item">
-                                    <button class="nav-link fw-bold px-4" data-bs-toggle="tab" data-bs-target="#spec-tab"
-                                        role="tab">Spesifikasi</button>
-                                </li>
-                            @endif
-                        </ul>
-                    </div>
-                    <div class="card-body p-4 p-lg-5">
-                        <div class="tab-content p-0">
-                            {{-- Tab Deskripsi --}}
-                            <div class="tab-pane fade show active product-description" id="desc-tab" role="tabpanel">
-                                {!! $produk->description ?: '<p class="text-muted fst-italic">Tidak ada deskripsi untuk produk ini.</p>' !!}
+                    {{-- Status Stok & Garansi --}}
+                    <div class="d-flex flex-column gap-2 mb-4">
+                        @if ($produk->garansi)
+                            <div class="d-flex align-items-center">
+                                <i class="bx bx-shield-check fs-5 me-2 text-primary"></i>
+                                <span class="fw-medium me-2">Garansi:</span>
+                                <span class="text-dark">{{ $produk->garansi->name }}
+                                    {{ $produk->garansi->formatted_duration }}</span>
                             </div>
+                        @endif
+                        <div class="d-flex align-items-center">
+                            @if ($produk->stocks->sum('qty') > 0)
+                                <div class="d-flex rounded-pill align-items-center badge bg-label-success ">
+                                    <i class="bx bx-package fs-5 me-2"></i>
+                                    <span class="">In Stock</span>
+                                </div>
+                            @else
+                                <div class="d-flex rounded-pill align-items-center badge bg-label-danger ">
+                                    <i class="bx bx-package-x fs-5 me-2"></i>
+                                    <span>Out of Stock</span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
 
-                            {{-- Tab Spesifikasi --}}
-                            @if ($produk->specification)
-                                <div class="tab-pane fade" id="spec-tab" role="tabpanel">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-striped spec-table mb-0">
-                                            <tbody>
-                                                @php $specs = json_decode($produk->specification, true); @endphp
-                                                @if (is_array($specs))
-                                                    @foreach ($specs as $spec)
-                                                        <tr>
-                                                            <th>{{ $spec['key'] ?? '-' }}</th>
-                                                            <td>{{ $spec['value'] ?? '-' }}</td>
-                                                        </tr>
-                                                    @endforeach
-                                                @endif
-                                            </tbody>
-                                        </table>
+                    @php
+                        $stokTotal = $produk->stocks->sum('qty');
+                        $stockReady = $stokTotal > 0;
+                        $waMsg = urlencode('Halo, saya tertarik dengan produk: ' . $produk->name_product);
+                        $waUrl = 'https://wa.me/6281318000699?text=' . $waMsg;
+                    @endphp
+
+                    <div class="product-action-section">
+
+                        {{-- ── Stok Habis Banner ─────────────────────────────── --}}
+                        @unless ($stockReady)
+                            <div class="out-of-stock-banner mb-3">
+                                <i class="bx bx-sad" aria-hidden="true"></i>
+                                <div>
+                                    <div class="fw-semibold">Stok sedang habis</div>
+                                    <div style="font-size:12px;margin-top:1px;color:#9c2935">
+                                        Hubungi kami untuk info ketersediaan
                                     </div>
                                 </div>
+                            </div>
+                        @endunless
+
+                        {{-- ── Qty Control ───────────────────────────────────── --}}
+                        @if ($stockReady)
+                            <div class="product-qty-row">
+                                <span class="product-qty-label">Jumlah</span>
+                                <div class="qty-ctrl">
+                                    <button class="qty-ctrl__btn" id="btn-minus" onclick="changeQty(-1)"
+                                        aria-label="Kurangi jumlah" disabled>
+                                        <i class="bx bx-minus" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="qty-ctrl__val" id="qty-val" aria-live="polite">1</div>
+                                    <button class="qty-ctrl__btn" id="btn-plus" onclick="changeQty(1)"
+                                        aria-label="Tambah jumlah">
+                                        <i class="bx bx-plus" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                <span style="font-size:12px;color:#adb5bd" id="qty-info">
+                                    Maks. {{ $stokTotal }} {{ $produk->unit->singkat ?? '' }}
+                                </span>
+                            </div>
+                        @endif
+
+                        <hr class="my-3" style="opacity:.1">
+
+                        {{-- ── Primary CTA Buttons ───────────────────────────── --}}
+                        <div class="d-grid gap-2 d-flex">
+
+                            {{-- Tambah ke Keranjang --}}
+                            @if ($stockReady)
+                                <button type="button" class="btn-add-cart w-100" id="btn-add-cart"
+                                    onclick="handleAddToCart(this)">
+                                    <i class="bx bx-cart-add fs-5" aria-hidden="true"></i>
+                                    <span id="cart-label">Tambah ke keranjang</span>
+                                </button>
+                            @else
+                                <button type="button" class="btn-add-cart w-100" disabled
+                                    style="background:#adb5bd;cursor:not-allowed;opacity:.7">
+                                    <i class="bx bx-cart-add fs-5" aria-hidden="true"></i>
+                                    Tambah ke keranjang
+                                </button>
                             @endif
+
+                            {{-- Beli Sekarang (Checkout) --}}
+                            @if ($stockReady)
+                                <button type="button" class="btn-checkout w-100" onclick="handleCheckout()">
+                                    <i class="bx bx-zap fs-5" aria-hidden="true"></i>
+                                    Beli sekarang
+                                </button>
+                            @else
+                                <button type="button" class="btn-checkout w-100" disabled
+                                    style="background:#adb5bd;cursor:not-allowed;opacity:.7">
+                                    <i class="bx bx-zap fs-5" aria-hidden="true"></i>
+                                    Beli sekarang
+                                </button>
+                            @endif
+
+                        </div>
+                        <hr class="my-3" style="opacity:.1">
+
+                        {{-- ── Secondary Icon Actions ─────────────────────────── --}}
+                        <div class="d-flex justify-content-center flex-wrap">
+
+                            {{-- Wishlist --}}
+                            <button type="button" class="btn-icon-action" id="btn-wish" onclick="toggleWishlist(this)"
+                                aria-label="Tambah ke wishlist" data-product-id="{{ $produk->id }}">
+                                <i class="bx bx-heart" aria-hidden="true"></i>
+                                <span>Wishlist</span>
+                            </button>
+
+                            {{-- Bagikan --}}
+                            <button type="button" class="btn-icon-action mx-3" onclick="shareProduct(this)"
+                                aria-label="Bagikan produk ini">
+                                <i class="bx bx-share-alt" aria-hidden="true"></i>
+                                <span>Bagikan</span>
+                            </button>
+
+                            {{-- Bandingkan --}}
+                            <button type="button" class="btn-icon-action" onclick="addToCompare(this)"
+                                aria-label="Bandingkan produk ini" data-product-id="{{ $produk->id }}"
+                                data-product-name="{{ $produk->name_product }}">
+                                <i class="bx bx-transfer-alt" aria-hidden="true"></i>
+                                <span>Bandingkan</span>
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Row Bawah: Tabs Deskripsi & Spesifikasi --}}
+            <div class="row mt-5" data-aos="fade-up">
+                <div class="col-12">
+                    <div class="card shadow-none border">
+                        <div class="card-header bg-transparent border-bottom">
+                            <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active fw-bold px-4" data-bs-toggle="tab"
+                                        data-bs-target="#desc-tab" role="tab">Deskripsi</button>
+                                </li>
+                                @if ($produk->specification)
+                                    <li class="nav-item">
+                                        <button class="nav-link fw-bold px-4" data-bs-toggle="tab"
+                                            data-bs-target="#spec-tab" role="tab">Spesifikasi</button>
+                                    </li>
+                                @endif
+                            </ul>
+                        </div>
+                        <div class="card-body p-4 p-lg-5">
+                            <div class="tab-content p-0">
+                                {{-- Tab Deskripsi --}}
+                                <div class="tab-pane fade show active product-description" id="desc-tab"
+                                    role="tabpanel">
+                                    {!! $produk->description ?: '<p class="text-muted fst-italic">Tidak ada deskripsi untuk produk ini.</p>' !!}
+                                </div>
+
+                                {{-- Tab Spesifikasi --}}
+                                @if ($produk->specification)
+                                    <div class="tab-pane fade" id="spec-tab" role="tabpanel">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-striped spec-table mb-0">
+                                                <tbody>
+                                                    @php $specs = json_decode($produk->specification, true); @endphp
+                                                    @if (is_array($specs))
+                                                        @foreach ($specs as $spec)
+                                                            <tr>
+                                                                <th>{{ $spec['key'] ?? '-' }}</th>
+                                                                <td>{{ $spec['value'] ?? '-' }}</td>
+                                                            </tr>
+                                                        @endforeach
+                                                    @endif
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    {{-- Similar Products Section (Styling Disesuaikan) --}}
     @if ($produkSerupa->isNotEmpty())
-        <div class="py-5 bg-light mt-5">
+        <section id="produk-serupa" class="section-py bg-white">
             <div class="container-market">
-                <h3 class="fw-bold mb-4 border-start border-primary border-4 ps-3" data-aos="fade-right">Produk Serupa
-                </h3>
+                <div class="d-flex align-items-center justify-content-start mb-4">
+                    <h3 class="fw-bold mb-4 ps-3 border-start border-primary border-4" data-aos="fade-right">Produk Serupa
+                    </h3>
+                </div>
                 <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3 g-lg-4" data-aos="fade-up"
                     data-aos-delay="100">
                     @foreach ($produkSerupa as $serupa)
-                        <div class="col product-col">
-                            <div class="card product-card h-100 border-0 shadow-sm transition-all"
-                                style="border-radius: 12px; transition: transform 0.2s;">
-                                <div class="position-relative overflow-hidden" style="border-radius: 12px 12px 0 0;">
+                        <div class="col">
+                            <div class="card product-card overflow-hidden h-100 d-flex flex-column">
+                                <div class="product-card-img-container">
                                     <a href="{{ route('market.produk.detail', ['slug' => $serupa->slug]) }}">
                                         <img src="{{ $serupa->primaryImage
                                             ? Storage::url($serupa->primaryImage->path)
                                             : ($serupa->img_produk
                                                 ? Storage::url($serupa->img_produk)
                                                 : asset('assets/img/produk.png')) }}"
-                                            alt="{{ $serupa->name_product }}" loading="lazy" class="card-img-top w-100"
-                                            style="height: 200px; object-fit: contain; background: #fff;">
+                                            alt="{{ $serupa->name_product }}" loading="eager" class="card-img-top">
 
-                                        @if ($serupa->qty < 1)
-                                            <span class="badge bg-danger position-absolute top-0 end-0 m-2">Habis</span>
-                                        @elseif($serupa->promotions->isNotEmpty() && ($promo = $serupa->promotions->first()))
-                                            @if ($promo->type == 'percentage')
-                                                <span
-                                                    class="badge bg-danger position-absolute top-0 end-0 m-2">{{ (int) $promo->nilai_diskon }}%
-                                                    OFF</span>
-                                            @else
-                                                <span class="badge bg-info position-absolute top-0 end-0 m-2">PROMO</span>
-                                            @endif
+                                        @if ($serupa->stocks->sum('qty') < 1)
+                                            <div class="product-badge">
+                                                <span class="badge bg-danger fw-bold rounded-4">Habis</span>
+                                            </div>
+                                        @elseif($serupa->active_promotion)
+                                            @php $promo = $serupa->active_promotion @endphp
+                                            <div class="product-badge">
+                                                @if ($promo->type == 'percentage')
+                                                    <span class="badge bg-danger">{{ (int) $promo->nilai_diskon }}%
+                                                        OFF</span>
+                                                @else
+                                                    <span class="badge bg-info">PROMO</span>
+                                                @endif
+                                            </div>
                                         @endif
                                     </a>
-                                </div>
-                                <div class="card-body p-3 d-flex flex-column">
-                                    <a href="{{ route('market.produk.detail', ['slug' => $serupa->slug]) }}"
-                                        class="text-decoration-none text-dark mb-auto">
-                                        <h6 class="fw-semibold mb-2 text-truncate-2"
-                                            style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                            {{ $serupa->name_product }}</h6>
-                                    </a>
-                                    <div class="mt-2">
-                                        @if ($serupa->harga_diskon)
-                                            <div class="text-muted text-decoration-line-through"
-                                                style="font-size: 0.8rem;">{{ $serupa->harga_formatted }}</div>
-                                            <div class="fw-bold text-danger">Rp
-                                                {{ number_format($serupa->harga_diskon, 0, ',', '.') }}</div>
+                                    <div class="product-card-actions">
+                                        {{-- PERBAIKAN 1: Ganti $produk menjadi $serupa untuk cek stok --}}
+                                        @if ($serupa->stocks->sum('qty') > 0)
+                                            {{-- PERBAIKAN 2: Ganti $produk menjadi $serupa untuk nama produk di URL WA --}}
+                                            <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $serupa->name_product }}"
+                                                target="_blank" class="btn btn-blue btn-sm w-100">
+                                                <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
+                                            </a>
                                         @else
-                                            <div class="fw-bold text-dark">{{ $serupa->harga_formatted }}</div>
+                                            <button type="button" class="btn btn-blue btn-sm w-100">Stock Habis</button>
                                         @endif
                                     </div>
+                                </div>
+
+                                <div class="card-body border-top py-2">
+                                    <a href="{{ route('market.produk.detail', ['slug' => $serupa->slug]) }}"
+                                        class="text-decoration-none text-dark">
+                                        <p class="product-title fw-bold" title="{{ $serupa->name_product }}">
+                                            {{ $serupa->name_product }}</p>
+                                    </a>
+                                    @if ($serupa->harga_diskon)
+                                        <div>
+                                            <span class="text-muted text-decoration-line-through product-price-old">
+                                                {{ $serupa->harga_formatted }}</span>
+                                            <span class="fw-bold product-price-current text-hover">
+                                                {{ 'Rp ' . number_format($serupa->harga_diskon, 0, ',', '.') }}</span>
+                                        </div>
+                                    @else
+                                        <div>
+                                            <span class="fw-bold mb-0 product-price-current text-hover">
+                                                {{ $serupa->harga_formatted }}</span>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
             </div>
-        </div>
+        </section>
     @endif
+
+    {{-- Similar Products Section (Styling Disesuaikan) --}}
+
 
     <x-market-footer></x-market-footer>
 @endsection
 
 @section('page-script')
     <script>
+        (function() {
+            // ── State ──────────────────────────────────────────────
+            let qty = 1;
+            const maxQty = {{ $stokTotal }};
+
+            // ── Qty Control ───────────────────────────────────────
+            window.changeQty = function(delta) {
+                qty = Math.min(maxQty, Math.max(1, qty + delta));
+
+                const valEl = document.getElementById('qty-val');
+                const minBtn = document.getElementById('btn-minus');
+                const maxBtn = document.getElementById('btn-plus');
+
+                if (valEl) valEl.textContent = qty;
+                if (minBtn) minBtn.disabled = qty <= 1;
+                if (maxBtn) maxBtn.disabled = qty >= maxQty;
+            };
+
+            // ── Tambah Keranjang ──────────────────────────────────
+            window.handleAddToCart = function(btn) {
+                const label = document.getElementById('cart-label');
+
+                // TODO: kirim AJAX ke route keranjang Anda
+                // fetch('/keranjang', { method:'POST', body: JSON.stringify({ product_id: {{ $produk->id }}, qty }) ... })
+
+                // Feedback visual
+                btn.classList.add('added');
+                if (label) label.textContent = '✓ Ditambahkan (' + qty + ')';
+                btn.disabled = true;
+
+                setTimeout(() => {
+                    btn.classList.remove('added');
+                    if (label) label.textContent = 'Tambah ke keranjang';
+                    btn.disabled = false;
+                }, 2500);
+            };
+
+            // ── Beli Sekarang ─────────────────────────────────────
+            window.handleCheckout = function() {
+                // TODO: arahkan ke halaman checkout dengan produk & qty
+                // window.location.href = '/checkout?product={{ $produk->id }}&qty=' + qty;
+                alert('Redirect ke checkout – qty: ' + qty);
+            };
+
+            // ── Wishlist Toggle ───────────────────────────────────
+            window.toggleWishlist = function(btn) {
+                const wished = btn.classList.toggle('wish-active');
+                const icon = btn.querySelector('i');
+                const label = btn.querySelector('span');
+
+                if (icon) icon.className = wished ? 'bx bxs-heart' : 'bx bx-heart';
+                if (label) label.textContent = wished ? 'Tersimpan' : 'Wishlist';
+
+                // TODO: kirim AJAX ke route wishlist Anda
+                // fetch('/wishlist/toggle', { method:'POST', body: JSON.stringify({ product_id: btn.dataset.productId }) ... })
+            };
+
+            // ── Share ─────────────────────────────────────────────
+            window.shareProduct = function(btn) {
+                const label = btn.querySelector('span');
+                const url = window.location.href;
+
+                if (navigator.share) {
+                    navigator.share({
+                        title: document.title,
+                        url
+                    });
+                } else if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        if (label) label.textContent = 'Disalin!';
+                        setTimeout(() => {
+                            if (label) label.textContent = 'Bagikan';
+                        }, 2000);
+                    });
+                }
+            };
+
+            // ── Bandingkan ────────────────────────────────────────
+            window.addToCompare = function(btn) {
+                const label = btn.querySelector('span');
+                // TODO: simpan ke localStorage / sesi perbandingan
+                // const compares = JSON.parse(localStorage.getItem('compares') || '[]');
+                // if (!compares.includes(btn.dataset.productId)) compares.push(btn.dataset.productId);
+                // localStorage.setItem('compares', JSON.stringify(compares));
+
+                if (label) label.textContent = 'Ditambahkan';
+                btn.classList.add('wish-active');
+                setTimeout(() => {
+                    if (label) label.textContent = 'Bandingkan';
+                    btn.classList.remove('wish-active');
+                }, 2000);
+            };
+        })();
+    </script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize AOS Animation
+
+            // ── AOS ────────────────────────────────────────────────────
             AOS.init({
                 duration: 800,
                 once: true,
                 offset: 50
             });
 
-            // Initialize Swiper (jika ada class swiper-thumbs)
-            if (document.querySelector('.swiper-thumbs')) {
-                var swiperThumbs = new Swiper(".swiper-thumbs", {
-                    spaceBetween: 10,
-                    slidesPerView: 4,
-                    freeMode: true,
-                    watchSlidesProgress: true,
-                    breakpoints: {
-                        320: {
-                            slidesPerView: 4
-                        },
-                        576: {
-                            slidesPerView: 5
-                        },
-                        992: {
-                            slidesPerView: 4
-                        }
-                    }
-                });
+            // ── SWIPER GALLERY ─────────────────────────────────────────
+            // Referensi global agar bisa diakses oleh handler varian di bawah
+            let swiperMain = null;
+            let swiperThumbs = null;
 
-                var swiperMain = new Swiper(".swiper-main", {
-                    spaceBetween: 10,
-                    effect: "fade", // Transisi fade yang elegan
-                    thumbs: {
-                        swiper: swiperThumbs,
-                    },
-                });
-            } else if (document.querySelector('.swiper-main')) {
-                // Fallback jika cuma ada 1 gambar (tanpa thumbs)
-                var swiperMain = new Swiper(".swiper-main", {
-                    spaceBetween: 10,
-                });
+            const DESKTOP_BP = 992; // sama dengan lg Bootstrap
+
+            /**
+             * Apakah viewport saat ini termasuk ukuran desktop/laptop?
+             */
+            function isDesktop() {
+                return window.innerWidth >= DESKTOP_BP;
             }
 
-            // Simple Variant Button Toggle (Hanya untuk UI)
-            // Logika Varian Dinamis
+            /**
+             * Hancurkan instance Swiper yang ada (untuk re-init saat resize)
+             */
+            function destroySwipers() {
+                if (swiperThumbs) {
+                    swiperThumbs.destroy(true, true);
+                    swiperThumbs = null;
+                }
+                if (swiperMain) {
+                    swiperMain.destroy(true, true);
+                    swiperMain = null;
+                }
+            }
+
+            /**
+             * Setelah main swiper dirender, samakan tinggi thumbs container
+             * (diperlukan oleh Swiper mode vertikal)
+             */
+            function syncThumbsHeight() {
+                const mainEl = document.querySelector('.swiper-main');
+                const thumbsEl = document.querySelector('.swiper-thumbs');
+                if (!mainEl || !thumbsEl) return;
+
+                if (isDesktop()) {
+                    // Tinggi thumbs = tinggi main image (yang sudah 1:1 via CSS)
+                    thumbsEl.style.height = mainEl.offsetHeight + 'px';
+                    thumbsEl.style.width = ''; // biarkan CSS yang atur (84px)
+                } else {
+                    // Mobile: kembalikan ke auto agar CSS yang mengatur
+                    thumbsEl.style.height = '';
+                    thumbsEl.style.width = '';
+                }
+            }
+
+            /**
+             * Inisialisasi Swiper sesuai kondisi layar
+             */
+            function initGallerySwipers() {
+                const mainEl = document.querySelector('.swiper-main');
+                const thumbsEl = document.querySelector('.swiper-thumbs');
+
+                if (!mainEl) return; // halaman tanpa galeri
+
+                const desktop = isDesktop();
+
+                // ── Thumbs: ada lebih dari 1 gambar ───────────────────
+                if (thumbsEl) {
+                    // Atur ulang order via style (desktop: thumbs kiri, main kanan)
+                    if (desktop) {
+                        thumbsEl.style.order = '1';
+                        mainEl.style.order = '2';
+                    } else {
+                        thumbsEl.style.order = '2'; // di bawah
+                        mainEl.style.order = '1'; // di atas
+                    }
+
+                    // Sync tinggi sebelum init (butuh setTimeout agar layout settle)
+                    setTimeout(syncThumbsHeight, 0);
+
+                    swiperThumbs = new Swiper('.swiper-thumbs', {
+                        spaceBetween: 8,
+                        direction: desktop ? 'vertical' : 'horizontal',
+                        slidesPerView: desktop ? 'auto' : 4,
+                        freeMode: true,
+                        watchSlidesProgress: true,
+                        // Breakpoint horizontal (mobile saja)
+                        ...(desktop ? {} : {
+                            breakpoints: {
+                                576: {
+                                    slidesPerView: 5
+                                },
+                                768: {
+                                    slidesPerView: 6
+                                },
+                            }
+                        }),
+                    });
+
+                    swiperMain = new Swiper('.swiper-main', {
+                        spaceBetween: 10,
+                        effect: 'fade',
+                        thumbs: {
+                            swiper: swiperThumbs
+                        },
+                    });
+
+                } else {
+                    // Hanya 1 gambar → tidak ada thumbs
+                    swiperMain = new Swiper('.swiper-main', {
+                        spaceBetween: 10,
+                    });
+                }
+            }
+
+            // Jalankan pertama kali
+            initGallerySwipers();
+
+            // ── Re-init saat resize melintas breakpoint ─────────────
+            let lastDesktopState = isDesktop();
+            let resizeTimer;
+
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    const nowDesktop = isDesktop();
+
+                    if (nowDesktop !== lastDesktopState) {
+                        // Pindah breakpoint → hancurkan & init ulang
+                        lastDesktopState = nowDesktop;
+                        destroySwipers();
+                        initGallerySwipers();
+                    } else if (nowDesktop) {
+                        // Masih desktop, cukup sinkronkan tinggi
+                        syncThumbsHeight();
+                        if (swiperThumbs) swiperThumbs.update();
+                    }
+                }, 200);
+            });
+
+            // ── VARIANT BUTTON LOGIC ───────────────────────────────────
             const variantBtns = document.querySelectorAll('.variant-btn');
             const displayHarga = document.getElementById('display-harga');
             const swiperSlides = document.querySelectorAll('.swiper-main .swiper-slide img');
 
             variantBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
-                    // 1. Ubah tombol aktif
+                    // 1. Toggle tombol aktif
                     variantBtns.forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
 
-                    // 2. Update Harga
+                    // 2. Update harga
                     if (displayHarga) {
                         displayHarga.textContent = this.dataset.harga;
                     }
 
-                    // 3. Update Gambar (jika varian punya gambar khusus)
+                    // 3. Update gambar sesuai varian
                     const newImgSrc = this.dataset.img;
-                    if (newImgSrc) {
-                        // Jika Swiper tersedia
-                        if (typeof swiperMain !== 'undefined') {
-                            // Cek apakah gambar varian ini sudah ada di dalam slider
-                            let foundIndex = -1;
-                            swiperSlides.forEach((imgEl, i) => {
-                                if (imgEl.src === newImgSrc) foundIndex = i;
-                            });
+                    if (newImgSrc && swiperMain) {
+                        let foundIndex = -1;
+                        swiperSlides.forEach((imgEl, i) => {
+                            if (imgEl.src === newImgSrc) foundIndex = i;
+                        });
 
-                            if (foundIndex !== -1) {
-                                // Jika gambar sudah ada di galeri, langsung geser (Slide) ke gambar tersebut
-                                swiperMain.slideTo(foundIndex);
-                            } else {
-                                // Jika gambar tidak ada di galeri, ganti gambar slide yang sedang aktif secara instan
-                                const activeSlideImg = document.querySelector(
-                                    '.swiper-main .swiper-slide-active img');
-                                if (activeSlideImg) activeSlideImg.src = newImgSrc;
-                            }
+                        if (foundIndex !== -1) {
+                            swiperMain.slideTo(foundIndex);
                         } else {
-                            // Fallback jika swiper gagal dimuat
-                            const fallbackImg = document.getElementById('main-product-image');
-                            if (fallbackImg) fallbackImg.src = newImgSrc;
+                            const activeSlideImg = document.querySelector(
+                                '.swiper-main .swiper-slide-active img'
+                            );
+                            if (activeSlideImg) activeSlideImg.src = newImgSrc;
                         }
                     }
                 });

@@ -141,7 +141,7 @@ class MarketController extends Controller
 
     public function produk(\Illuminate\Http\Request $request)
     {
-        $query = Product::with(['category', 'unit', 'brand', 'promotions']);
+        $query = Product::with(['category', 'unit', 'brand', 'promotions', 'stocks']);
 
         // Filter Kategori (Mencakup Parent & Child)
         if ($request->filled('kategori')) {
@@ -239,10 +239,10 @@ class MarketController extends Controller
     public function produkDetail($slug)
     {
         // PERBAIKAN: Eager load variants beserta opsinya agar bisa dimanipulasi JS
-        $produk = Product::with(['category', 'brand', 'unit', 'garansi', 'pajak', 'user', 'images', 'variants.options'])
+        $produk = Product::with(['category', 'brand', 'unit', 'garansi', 'pajak', 'user', 'images', 'variants.options', 'stocks'])
             ->where('slug', $slug)
             ->firstOrFail();
-        $produkSerupa = Product::with('unit', 'promotions')
+        $produkSerupa = Product::with('unit', 'promotions', 'stocks')
             ->where('category_id', $produk->category_id)
             ->where('id', '!=', $produk->id)
             ->inRandomOrder()

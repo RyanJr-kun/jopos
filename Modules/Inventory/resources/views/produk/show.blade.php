@@ -41,8 +41,7 @@
                                 @if ($sortedImages->count() > 0)
                                     @foreach ($sortedImages as $img)
                                         <div class="swiper-slide text-center">
-                                            <img src="{{ Storage::url($img->path) }}"
-                                                class="img-fluid rounded shadow-sm"
+                                            <img src="{{ Storage::url($img->path) }}" class="img-fluid rounded shadow-sm"
                                                 style="height: 350px; width: 100%; object-fit: contain; background-color: #f8f9fa;"
                                                 alt="{{ $produk->name_product }}">
                                         </div>

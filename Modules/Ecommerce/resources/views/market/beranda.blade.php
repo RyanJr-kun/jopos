@@ -578,8 +578,7 @@
                                         : ($produk->img_produk
                                             ? Storage::url($produk->img_produk)
                                             : asset('assets/img/produk.png')) }}"
-                                        alt="{{ $produk->name_product }}" loading="eager" class="card-img-top"
-                                        alt="{{ $produk->name_product }}">
+                                        alt="{{ $produk->name_product }}" loading="eager" class="card-img-top">
                                     @if ($produk->stocks->sum('qty') < 1)
                                         <div class="product-badge">
                                             <span class="badge bg-danger fw-bold rounded-4">Habis</span>

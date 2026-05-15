@@ -465,7 +465,7 @@
                 imagePreviewHeight: 160,
                 maxFileSize: '2MB',
                 allowFileSizeValidation: true,
-                acceptedFileTypes: ['image/png', 'image/jpeg', 'image/webp'],
+                acceptedFileTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/jpg', 'image/svg'],
                 server: {
                     process: {
                         url: '/produk/upload',

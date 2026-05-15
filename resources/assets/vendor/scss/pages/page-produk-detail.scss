@@ -1,0 +1,366 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Space+Grotesk:wght@300..700&display=swap');
+
+
+$f-display : 'Space Grotesk',
+sans-serif;
+$f-body : 'Outfit',
+'Segoe UI',
+sans-serif;
+$f-poppins : 'Poppins',
+sans-serif;
+
+$radius : 12px;
+$radius-sm : 8px;
+
+/* ============================================================
+         * PRODUCT GALLERY – Layout & 1:1 Ratio
+         * Compatible dengan Sneat Free + Swiper.js
+         * ============================================================ */
+
+.text-product-title {
+    font-family: $f-display;
+    line-height: 1.2;
+    color: #212529;
+}
+
+.text-discount {
+    font-family: $f-poppins;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+.text-price {
+    font-family: $f-poppins;
+    font-size: 1.50rem;
+    color: #212529;
+}
+
+/* Wrapper utama galeri */
+.product-gallery-wrapper {
+    display: flex;
+    flex-direction: column;
+    /* Mobile: susun vertikal */
+    gap: 10px;
+    align-items: stretch;
+}
+
+/* ── Main Swiper ────────────────────────────────────────────── */
+.swiper-main {
+    width: 100%;
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, .06);
+}
+
+/* Paksa setiap slide ke rasio 1:1 */
+.swiper-main .swiper-slide {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+}
+
+.swiper-main .swiper-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 12px;
+}
+
+/* ── Thumbs Swiper ──────────────────────────────────────────── */
+
+/* Mobile: thumbnail horizontal, penuh lebar */
+.swiper-thumbs {
+    width: 100%;
+    padding: 4px 0 !important;
+    /* ruang border active */
+}
+
+.swiper-thumbs .swiper-slide {
+    aspect-ratio: 1 / 1;
+    /* 1:1 juga di thumbnail */
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    flex-shrink: 0;
+}
+
+.swiper-thumbs .swiper-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
+}
+
+/* Thumb aktif / hover */
+.swiper-thumbs .swiper-slide-thumb-active {
+    border-color: #696cff;
+    /* Sneat primary */
+    box-shadow: 0 0 0 2px rgba(105, 108, 255, .2);
+}
+
+.swiper-thumbs .swiper-slide:hover:not(.swiper-slide-thumb-active) {
+    border-color: #c5c7ff;
+}
+
+/* ── Desktop: thumbs VERTIKAL di KIRI main image ───────────── */
+@media (min-width: 992px) {
+
+    .product-gallery-wrapper {
+        flex-direction: row;
+        /* Susun horizontal */
+        align-items: flex-start;
+    }
+
+    /* Thumbs: lebar tetap, urutan pertama (kiri) */
+    .swiper-thumbs {
+        width: 84px !important;
+        flex-shrink: 0;
+        order: 1;
+        padding: 0 4px !important;
+        /* ruang border active */
+        /* Tinggi diset via JS agar sesuai swiper-main */
+    }
+
+    /* Dalam mode vertikal Swiper butuh height eksplisit */
+    .swiper-thumbs .swiper-wrapper {
+        flex-direction: column;
+    }
+
+    /* Setiap thumb: lebar & tinggi fixed 80px (1:1 otomatis) */
+    .swiper-thumbs .swiper-slide {
+        width: 76px !important;
+        height: 76px !important;
+        aspect-ratio: unset;
+        /* override, sudah set w/h */
+    }
+
+    /* Main image: sisa ruang, urutan kedua (kanan) */
+    .swiper-main {
+        flex: 1 1 0%;
+        min-width: 0;
+        order: 2;
+    }
+}
+
+/* ─── Qty Control ─────────────────────────────────────── */
+.product-qty-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1rem;
+}
+
+.product-qty-label {
+    font-size: 13px;
+    color: #6c757d;
+    white-space: nowrap;
+    min-width: 56px;
+}
+
+.qty-ctrl {
+    display: flex;
+    align-items: center;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.qty-ctrl__btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, opacity .15s;
+}
+
+.qty-ctrl__btn:hover {
+    background: #f8f9fa;
+}
+
+.qty-ctrl__btn:active {
+    transform: scale(.92);
+}
+
+.qty-ctrl__btn:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+.qty-ctrl__val {
+    width: 52px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #212529;
+    border-left: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    height: 40px;
+    line-height: 40px;
+    user-select: none;
+}
+
+/* ─── Primary Buttons ─────────────────────────────────── */
+.btn-add-cart {
+    background: #696cff;
+    /* Sneat primary */
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    height: 48px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .2s, transform .15s;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-add-cart:hover {
+    background: #5a5de8;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-add-cart:active {
+    transform: scale(.98);
+}
+
+.btn-add-cart.added {
+    background: #28a745;
+}
+
+.btn-wa {
+    background: #25d366;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    height: 48px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .2s, transform .15s;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-wa:hover {
+    background: #1db954;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-wa:active {
+    transform: scale(.98);
+}
+
+.btn-checkout {
+    background: #212529;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    height: 48px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity .2s, transform .15s;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-checkout:hover {
+    opacity: .85;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-checkout:active {
+    transform: scale(.98);
+}
+
+/* ─── Secondary Icon Row ──────────────────────────────── */
+.product-action-icons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: .5rem 0;
+}
+
+.btn-icon-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    color: #6c757d;
+    transition: all .18s;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.btn-icon-action i {
+    font-size: 16px;
+}
+
+.btn-icon-action:hover {
+    background: #f8f9fa;
+    color: #212529;
+    border-color: #adb5bd;
+}
+
+.btn-icon-action:active {
+    transform: scale(.96);
+}
+
+.btn-icon-action.wish-active {
+    color: #dc3545;
+    border-color: #dc3545;
+    background: #fff5f5;
+}
+
+/* ─── Stok Habis Banner ───────────────────────────────── */
+.out-of-stock-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #fff5f5;
+    border: 1px solid #f5c2c7;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #842029;
+}
+
+.out-of-stock-banner i {
+    font-size: 20px;
+    color: #dc3545;
+}
