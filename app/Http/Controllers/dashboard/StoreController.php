@@ -43,15 +43,15 @@ class StoreController extends Controller
             'email' => 'nullable|email|max:100',
             'pic_id' => 'nullable|exists:users,id',
             'logo' => 'nullable|string',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
         ]);
 
         // Default is_active = true jika tidak dikirim dari form
-        $validatedData['is_active'] = $request->has('is_active') ? true : false;
+        $validatedData['is_active'] = $request->has('is_active');
 
         // Handle FilePond Upload
-        if ($request->filled('logo')) {
-            $tempPath = $request->input('logo');
+        if (!empty($validatedData['logo'])) {
+            $tempPath = $validatedData['logo'];
             if (Storage::disk('r2')->exists($tempPath)) {
                 $newPath = 'profil-toko/' . basename($tempPath);
                 Storage::disk('r2')->move($tempPath, $newPath);
@@ -89,39 +89,40 @@ class StoreController extends Controller
             'email' => 'nullable|email|max:100',
             'pic_id' => 'nullable|exists:users,id',
             'logo' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        $validatedData['is_active'] = $request->has('is_active') ? true : false;
+        $validatedData['is_active'] = $request->has('is_active');
 
         if ($request->filled('logo')) {
-            $tempPath = $request->input('logo');
-            if (Storage::disk('r2')->exists($tempPath)) {
-                $newPath = 'profil-toko/' . basename($tempPath);
-                Storage::disk('r2')->move($tempPath, $newPath);
+        // Logika filepond upload (memindahkan dari tmp ke profil-toko)
+        $tempPath = $request->input('logo');
+        if (str_starts_with($tempPath, 'tmp/') && Storage::disk('r2')->exists($tempPath)) {
+            $newPath = 'profil-toko/' . basename($tempPath);
+            Storage::disk('r2')->move($tempPath, $newPath);
 
-                // Hapus logo lama jika ada
-                if ($toko->logo && Storage::disk('r2')->exists($toko->logo)) {
-                    Storage::disk('r2')->delete($toko->logo);
-                }
-                $validatedData['logo'] = $newPath;
+            if ($toko->logo && Storage::disk('r2')->exists($toko->logo)) {
+                Storage::disk('r2')->delete($toko->logo);
             }
-        } else {
-            // FIX: Hapus kunci 'logo' dari array agar tidak ikut di-update ke DB
-            // Ini akan mempertahankan path gambar lama jika user tidak mengupload file baru
-            unset($validatedData['logo']);
+            $validatedData['logo'] = $newPath;
         }
+    } else {
+        // JIKA USER MENEKAN TOMBOL "HAPUS LOGO (X)" DAN TIDAK UPLOAD YANG BARU
+        if ($request->input('remove_logo') == '1') {
+            if ($toko->logo && Storage::disk('r2')->exists($toko->logo)) {
+                Storage::disk('r2')->delete($toko->logo);
+            }
+            $validatedData['logo'] = null; // Set null di database
+        } else {
+            unset($validatedData['logo']); // Abaikan, biarkan logo lama tetap ada
+        }
+    }
 
         $toko->update($validatedData);
 
         return redirect()->route('toko.index')->with('success', 'Profil lokasi berhasil diperbarui.');
     }
 
-    /**
-     * Menyimpan file yang diunggah sementara oleh FilePond.
-     */
-    /**
-     * Menyimpan file yang diunggah sementara oleh FilePond.
-     */
     public function upload(Request $request)
     {
         // Deteksi nama field otomatis (apakah FilePond mengirim 'logo' atau 'filepond')

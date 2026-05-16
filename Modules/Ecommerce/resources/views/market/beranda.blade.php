@@ -285,7 +285,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="fw-bolder  mb-0"><span class="tg-red-blue">PROMO TERBATAS</span></h3>
                     <a href="{{ route('market.produk') }}"
-                        class="link link-secondary px-2 align-items-center justify-content-center">
+                        class="link link-dark px-2 align-items-center justify-content-center">
                         <i class="bx bx-category me-2"></i><span>Lihat Semua</span>
                     </a>
                 </div>
@@ -374,7 +374,7 @@
                                                     </a>
                                                     <div class="mt-auto">
                                                         @if ($produk->harga_diskon)
-                                                            <div>
+                                                            <div class="d-flex flex-column align-items-start">
                                                                 <span
                                                                     class="text-muted text-decoration-line-through product-price-old">
                                                                     {{ $produk->harga_formatted }}</span>
@@ -527,7 +527,7 @@
 
                                             <div class="mt-auto">
                                                 @if ($produk->harga_diskon)
-                                                    <div>
+                                                    <div class="d-flex flex-column align-items-start">
                                                         <span
                                                             class="text-muted text-decoration-line-through product-price-old">
                                                             {{ $produk->harga_formatted }}</span>
@@ -558,7 +558,7 @@
     @endif
 
     {{-- section : Produk Terbaru --}}
-    <section id="product" class="section-py">
+    <section id="product" class="section-py bg-white">
         <div class="container-market">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bolder tg-red mb-0">PRODUK TERBARU</h3>
@@ -616,7 +616,7 @@
                                         {{ $produk->name_product }}</p>
                                 </a>
                                 @if ($produk->harga_diskon)
-                                    <div>
+                                    <div class="d-flex flex-column align-items-start">
                                         <span class="text-muted text-decoration-line-through product-price-old">
                                             {{ $produk->harga_formatted }}</span>
                                         <span class="fw-bold product-price-current text-hover">

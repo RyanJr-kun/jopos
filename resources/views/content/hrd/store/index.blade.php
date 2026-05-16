@@ -66,7 +66,8 @@
                                         <div class="loc-card-header">
                                             <div class="d-flex align-items-center" style="min-width:0">
                                                 <div class="loc-logo-wrap me-3">
-                                                    <img src="{{ $toko->logo_path }}" alt="Logo" class="loc-logo">
+                                                    <img src="{{ $toko->logo ? Storage::url($toko->logo) : asset('assets/img/default-store.png') }}"
+                                                        alt="Logo" class="loc-logo">
                                                     <span class="loc-type-dot"></span>
                                                 </div>
                                                 <div class="loc-name-block">
@@ -87,7 +88,8 @@
                                                     </button>
                                                     <div class="dropdown-menu dropdown-menu-end">
                                                         <a class="dropdown-item btn-edit" href="javascript:void(0);"
-                                                            data-store='@json($toko)'>
+                                                            data-store='@json($toko)'
+                                                            data-logo-url="{{ $toko->logo ? Storage::url($toko->logo) : '' }}">
                                                             <i class="bx bx-edit-alt me-1 text-info"></i> Edit
                                                         </a>
                                                         {{-- FIX: Ganti inline confirm() dengan delete modal component --}}
@@ -146,7 +148,8 @@
                                         <div class="loc-card-header">
                                             <div class="d-flex align-items-center" style="min-width:0">
                                                 <div class="loc-logo-wrap me-3">
-                                                    <img src="{{ $gudang->logo_path }}" alt="Logo" class="loc-logo">
+                                                    <img src="{{ $gudang->logo ? Storage::url($gudang->logo) : asset('assets/img/default-store.png') }}"
+                                                        alt="Logo" class="loc-logo">
                                                     <span class="loc-type-dot"></span>
                                                 </div>
                                                 <div class="loc-name-block">
@@ -166,8 +169,9 @@
                                                 </button>
                                                 <div class="dropdown-menu dropdown-menu-end loc-dropdown-menu">
                                                     <a class="dropdown-item btn-edit" href="javascript:void(0);"
-                                                        data-store='@json($gudang)'>
-                                                        <i class="bx bx-edit-alt text-info"></i> Edit
+                                                        data-store='@json($gudang)'
+                                                        data-logo-url="{{ $gudang->logo ? Storage::url($gudang->logo) : '' }}">
+                                                        <i class="bx bx-edit-alt me-1 text-info"></i> Edit
                                                     </a>
                                                     {{-- FIX: Ganti inline confirm() dengan delete modal component --}}
                                                     <button type="button" class="dropdown-item btn-delete-trigger"
@@ -323,13 +327,30 @@
 
                         <div class="mb-3">
                             <label class="form-label">Logo / Foto Lokasi</label>
+
+                            {{-- Preview Logo Lama (Ditampilkan jika ada) --}}
                             <div id="existing-logo-preview" class="mb-2" style="display: none;">
-                                <img id="preview-img" src="" alt="Current Logo"
-                                    style="max-height: 100px; border-radius: 8px; border: 1px solid #ddd; padding: 2px;">
-                                <p class="text-muted small mb-0 mt-1">Logo saat ini. Unggah file baru di bawah jika ingin
-                                    menggantinya.</p>
+                                <div class="position-relative d-inline-block">
+                                    <img id="preview-img" src="" alt="Current Logo"
+                                        style="max-height: 120px; border-radius: 8px; border: 1px solid #ddd; padding: 4px;">
+                                    {{-- Tombol Silang (Delete) --}}
+                                    <button type="button" id="btn-remove-logo"
+                                        class="btn btn-sm btn-danger position-absolute top-0 start-100 translate-middle rounded-circle"
+                                        style="width: 24px; height: 24px; padding: 0; line-height: 1;" title="Hapus Logo">
+                                        <i class="bx bx-x"></i>
+                                    </button>
+                                </div>
+                                <p class="text-muted small mt-1">Logo saat ini. Klik tanda silang (X) untuk menghapus dan
+                                    mengunggah baru.</p>
                             </div>
-                            <input type="file" name="logo" class="filepond">
+
+                            {{-- Wrapper FilePond (Akan disembunyikan jika logo lama tampil) --}}
+                            <div id="filepond-wrapper">
+                                <input type="file" name="logo" class="filepond">
+                            </div>
+
+                            {{-- Input hidden sebagai penanda ke Controller apakah user menghapus logo lama --}}
+                            <input type="hidden" name="remove_logo" id="remove_logo" value="0">
                         </div>
 
                         <div class="form-check form-switch mt-3">
@@ -629,6 +650,8 @@
                 FilePondPluginImagePreview
             );
 
+
+
             const pond = FilePond.create(document.querySelector('.filepond'), {
                 acceptedFileTypes: ['image/png', 'image/jpeg', 'image/jpg'],
                 server: {
@@ -651,6 +674,16 @@
                 },
             });
 
+
+            document.getElementById('btn-remove-logo').addEventListener('click', function() {
+                // Sembunyikan preview gambar
+                document.getElementById('existing-logo-preview').style.display = 'none';
+                // Tampilkan area upload FilePond
+                document.getElementById('filepond-wrapper').style.display = 'block';
+                // Beri sinyal ke backend bahwa gambar lama dihapus
+                document.getElementById('remove_logo').value = '1';
+            });
+
             // ── Referensi form & elemen modal ────────────────────────────────
             // FIX: Sebelumnya menggunakan `formtoko` yang tidak pernah didefinisikan.
             //      Gunakan getElementById sesuai id form yang benar: 'formStore'.
@@ -666,11 +699,10 @@
                 methodContainer.innerHTML = '';
                 pond.removeFiles();
 
-                // FIX: Sembunyikan preview saat mode Tambah
-                const existingImageContainer = document.getElementById('existing-logo-preview');
-                if (existingImageContainer) {
-                    existingImageContainer.style.display = 'none';
-                }
+                // Reset tampilan gambar & filepond
+                document.getElementById('existing-logo-preview').style.display = 'none';
+                document.getElementById('filepond-wrapper').style.display = 'block';
+                document.getElementById('remove_logo').value = '0';
 
                 // Reset wilayah ke kondisi awal
                 resetSelect(kabSelect, '-- Pilih Kabupaten/Kota --', true);
@@ -689,6 +721,8 @@
             document.querySelectorAll('.btn-edit').forEach(button => {
                 button.addEventListener('click', function() {
                     const data = JSON.parse(this.getAttribute('data-store'));
+                    const logoUrl = this.getAttribute(
+                    'data-logo-url'); // <-- Mengambil URL lengkap gambar dari Blade
 
                     modalTitle.textContent = 'Edit Data Lokasi';
                     formStore.action = `toko/${data.id}`;
@@ -704,7 +738,7 @@
                     document.getElementById('longitude').value = data.longitude || '';
                     document.getElementById('is_active').checked = data.is_active == 1;
 
-                    // Select2 fields: set via jQuery agar UI Select2 ikut update
+                    // Select2 fields
                     if (typeof $ !== 'undefined' && $.fn.select2) {
                         $('#type').val(data.type || 'toko').trigger('change.select2');
                         $('#pic_id').val(data.pic_id || '').trigger('change.select2');
@@ -713,14 +747,23 @@
                         document.getElementById('pic_id').value = data.pic_id || '';
                     }
 
+                    // ── Perbaikan Logika Gambar Modal Edit ──
                     const previewContainer = document.getElementById('existing-logo-preview');
                     const previewImg = document.getElementById('preview-img');
+                    const filepondWrapper = document.getElementById(
+                    'filepond-wrapper'); // Ambil elemen filepond
 
-                    if (data.logo_path) {
-                        previewImg.src = data.logo_path;
-                        previewContainer.style.display = 'block';
+                    // Reset penanda hapus logo
+                    document.getElementById('remove_logo').value = '0';
+
+                    // Cek jika logoUrl berisi string (berarti gambar ada)
+                    if (logoUrl) {
+                        previewImg.src = logoUrl; // Masukkan URL asli R2
+                        previewContainer.style.display = 'block'; // Tampilkan gambar lama
+                        filepondWrapper.style.display = 'none'; // Sembunyikan FilePond
                     } else {
-                        previewContainer.style.display = 'none';
+                        previewContainer.style.display = 'none'; // Sembunyikan frame gambar
+                        filepondWrapper.style.display = 'block'; // Munculkan form unggah FilePond
                     }
 
                     fillRegionForEdit(data);

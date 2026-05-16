@@ -23,11 +23,6 @@
           "url": "penjualan",
           "name": "Faktur Sale",
           "slug": "penjualan.index"
-        },
-        {
-          "url": "pelanggan",
-          "name": "Customer",
-          "slug": "pelanggan.index"
         }
       ]
     },
@@ -237,9 +232,15 @@
       ]
     },
     {
-      "url": "users",
-      "name": "Pengguna",
+      "url": "pelanggan",
+      "name": "Pelanggan",
       "icon": "menu-icon icon-base bx bx-users",
+      "slug": "pelanggan.index"
+    },
+    {
+      "url": "users",
+      "name": "Karyawan",
+      "icon": "menu-icon icon-base bx bx-user-employee",
       "slug": "users.index"
     },
     {

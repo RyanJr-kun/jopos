@@ -167,19 +167,23 @@
                     @forelse ($banners as $banner)
                         @php
                             $posVal = $banner->posisi;
-                            $thumbClass = match (true) {
-                                str_contains($posVal, 'main2') || str_contains($posVal, 'main3') => 'ratio-1-1',
-                                str_contains($posVal, 'main') => 'ratio-9-16',
-                                str_contains($posVal, 'bestseller_desktop') => 'ratio-wide',
-                                str_contains($posVal, 'bestseller_mobile') => 'ratio-2-1',
-                                str_contains($posVal, 'promo') => 'ratio-4-5',
+
+                            // Exact match untuk menentukan class rasio gambar
+                            $thumbClass = match ($posVal) {
+                                'main2', 'main3' => 'ratio-1-1',
+                                'main' => 'ratio-9-16',
+                                'bestseller_desktop' => 'ratio-wide',
+                                'bestseller_mobile' => 'ratio-2-1',
+                                'promo' => 'ratio-4-5',
                                 default => 'ratio-default',
                             };
+
+                            // Menentukan class warna badge posisi
                             $posBadgeClass = match (true) {
-                                str_contains($posVal, 'main') => 'main',
-                                str_contains($posVal, 'promo') => 'promo',
                                 str_contains($posVal, 'desktop') => 'best-d',
                                 str_contains($posVal, 'mobile') => 'best-m',
+                                str_contains($posVal, 'promo') => 'promo',
+                                str_contains($posVal, 'main') => 'main',
                                 default => 'other',
                             };
                         @endphp

@@ -41,21 +41,22 @@
 
                     {{-- 3. Action Icons (Lanjutan baris 81)    --}}
                     @auth
-                        <a href="javascript:void(0);" class="nav-link dropdown-toggle hide-arrow p-0 ms-3"
-                            data-bs-toggle="dropdown">
-                            <div class="avatar avatar-online">
-                                @if (auth()->user()->avatar)
-                                    <img src="{{ Storage::url(auth()->user()->avatar) }}" alt="Profile"
-                                        class="w-px-40 h-auto rounded-circle">
-                                @else
-                                    <span class="avatar-initial rounded-circle bg-label-primary">
-                                        {{ substr(Auth::user()->name, 0, 2) }}
-                                    </span>
-                                @endif
-                            </div>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            @if (auth()->user()->employee)
+                        @if (auth()->user()->employee)
+                            <a href="javascript:void(0);" class="nav-link dropdown-toggle hide-arrow p-0 ms-3"
+                                data-bs-toggle="dropdown">
+                                <div class="avatar avatar-online">
+                                    {{-- Cek apakah relasi employee punya avatar --}}
+                                    @if (auth()->user()->employee->avatar)
+                                        <img src="{{ Storage::url(auth()->user()->employee->avatar) }}" alt="Profile"
+                                            class="w-px-40 h-auto rounded-circle">
+                                    @else
+                                        <span class="avatar-initial rounded-circle bg-label-primary">
+                                            {{ substr(Auth::user()->name, 0, 2) }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     {{-- PERBAIKAN: Deteksi otomatis http atau https --}}
                                     @php
@@ -84,8 +85,22 @@
                                     </form>
                                 </li>
 
-                                {{-- 2. Jika punya profil Customer --}}
-                            @elseif (auth()->user()->customer)
+                            </ul>
+                        @elseif (auth()->user()->customer)
+                            <a href="javascript:void(0);" class="nav-link dropdown-toggle hide-arrow p-0 ms-3"
+                                data-bs-toggle="dropdown">
+                                <div class="avatar avatar-online">
+                                    @if (auth()->user()->customer->avatar)
+                                        <img src="{{ Storage::url(auth()->user()->customer->avatar) }}" alt="Profile"
+                                            class="w-px-40 h-auto rounded-circle">
+                                    @else
+                                        <span class="avatar-initial rounded-circle bg-label-primary">
+                                            {{ substr(Auth::user()->name, 0, 2) }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a class="dropdown-item" href="#">
                                         <i class="bx bx-user me-2"></i>Profil Saya (Customer)
@@ -108,27 +123,26 @@
                                     </form>
                                 </li>
 
-                                {{-- 3. Jika belum punya profil di keduanya (Fallback) --}}
-                            @else
-                                <li>
-                                    <span class="dropdown-item text-muted">
-                                        Profil belum lengkap
-                                    </span>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li>
-                                    {{-- Gunakan route logout default Laravel/Breeze/Jetstream jika ada --}}
-                                    <form action="{{ route('logout') }}" method="post">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="bx bx-power-off me-2"></i>Log Out
-                                        </button>
-                                    </form>
-                                </li>
-                            @endif
-                        </ul>
+                            </ul>
+                        @else
+                            <li>
+                                <span class="dropdown-item text-muted">
+                                    Profil belum lengkap
+                                </span>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                {{-- Gunakan route logout default Laravel/Breeze/Jetstream jika ada --}}
+                                <form action="{{ route('logout') }}" method="post">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bx bx-power-off me-2"></i>Log Out
+                                    </button>
+                                </form>
+                            </li>
+                        @endif
                     @else
                         {{-- Jika Belum Login, Arahkan ke Login Customer --}}
                         <a href="{{ route('login') }}"

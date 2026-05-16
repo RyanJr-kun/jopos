@@ -98,9 +98,6 @@
                     </div>{{-- end .product-gallery-wrapper --}}
                 </div>
 
-                {{-- ═══════════════════════════════════════════════════
-                     Bagian Kanan: Detail & Info Produk
-                     ═══════════════════════════════════════════════════ --}}
                 <div class="col-lg-6 " data-aos="fade-left">
                     <div class="d-flex flex-wrap align-items-center gap-2 my-3">
                         @if ($produk->category)

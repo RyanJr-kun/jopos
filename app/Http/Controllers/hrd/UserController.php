@@ -21,7 +21,11 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with(['roles', 'employee.store'])->orderBy('id', 'DESC');
+        // Menggunakan whereHas('employee') memastikan HANYA user yang punya relasi
+        // di tabel employee_profiles yang akan ditarik. Jauh lebih aman dari cek Role.
+        $query = User::with(['roles', 'employee.store'])
+            ->whereHas('employee') 
+            ->orderBy('id', 'DESC');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -42,7 +46,9 @@ class UserController extends Controller
         }
 
         $data  = $query->get();
-        $roles = Role::pluck('name', 'name')->all();
+        
+        // Tetap sembunyikan role Customer dari filter pencarian di HRD
+        $roles = Role::where('name', '!=', 'Customer')->pluck('name', 'name')->all();
 
         if ($request->ajax()) {
             $html = view('content.hrd.user.index', compact('data', 'roles'))->fragment('user-table-body');

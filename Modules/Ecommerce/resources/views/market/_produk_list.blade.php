@@ -68,7 +68,7 @@
                             {{ $produk->name_product }}</p>
                     </a>
                     @if ($produk->harga_diskon)
-                        <div>
+                        <div class="d-flex flex-column align-items-start">
                             <span class="text-muted text-decoration-line-through product-price-old">
                                 {{ $produk->harga_formatted }}</span>
                             <span class="fw-bold product-price-current text-hover">
