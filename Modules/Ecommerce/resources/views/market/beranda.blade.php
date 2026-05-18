@@ -10,6 +10,10 @@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 @endsection
 
+@section('page-style')
+    @vite('resources/assets/css/page-market.scss')
+@endsection
+
 @section('vendor-script')
     @vite('resources/assets/vendor/libs/swiper/swiper.js')
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
@@ -351,16 +355,25 @@
                                                         @endif
                                                     </a>
 
-                                                    <div class="product-card-actions">
+                                                    <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
                                                         @if ($produk->stocks->sum('qty') > 0)
-                                                            <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                                                                target="_blank" class="btn btn-blue btn-sm w-100">
-                                                                <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
-                                                            </a>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
+                                                                <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
+                                                            </button>
                                                         @else
-                                                            <button type="button" class="btn btn-blue btn-sm w-100">Stock
-                                                                Habis</button>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-danger text-muted flex-grow-1 d-flex align-items-center justify-content-center">
+                                                                <i class="bx bx-minus-circle me-2 fs-6"></i> HABIS
+                                                            </button>
                                                         @endif
+
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center rounded-2 px-2 "
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Wishlist">
+                                                            <i class="bx bx-heart fs-5"></i>
+                                                        </button>
                                                     </div>
                                                 </div>
 
@@ -504,16 +517,24 @@
                                                     </div>
                                                 @endif
                                             </a>
-                                            <div class="product-card-actions">
+                                            <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
                                                 @if ($produk->stocks->sum('qty') > 0)
-                                                    <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                                                        target="_blank" class="btn btn-blue btn-sm w-100">
-                                                        <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
-                                                    </a>
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
+                                                        <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
+                                                    </button>
                                                 @else
                                                     <button type="button"
-                                                        class="btn btn-light fw-bold w-100">Habis</button>
+                                                        class="btn btn-sm btn-danger text-muted flex-grow-1 d-flex align-items-center justify-content-center">
+                                                        <i class="bx bx-minus-circle me-2 fs-6"></i> HABIS
+                                                    </button>
                                                 @endif
+
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center rounded-2 px-2 "
+                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Wishlist">
+                                                    <i class="bx bx-heart fs-5"></i>
+                                                </button>
                                             </div>
                                         </div>
 
@@ -598,15 +619,24 @@
                                         </div>
                                     @endif
                                 </a>
-                                <div class="product-card-actions">
+                                <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
                                     @if ($produk->stocks->sum('qty') > 0)
-                                        <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                                            target="_blank" class="btn btn-blue btn-sm w-100">
-                                            <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
-                                        </a>
+                                        <button type="button"
+                                            class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
+                                            <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
+                                        </button>
                                     @else
-                                        <button type="button" class="btn btn-blue btn-sm w-100">Stock Habis</button>
+                                        <button type="button"
+                                            class="btn btn-sm btn-danger text-muted flex-grow-1 d-flex align-items-center justify-content-center">
+                                            <i class="bx bx-minus-circle me-2 fs-6"></i> HABIS
+                                        </button>
                                     @endif
+
+                                    <button type="button"
+                                        class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center rounded-2 px-2 "
+                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Wishlist">
+                                        <i class="bx bx-heart fs-5"></i>
+                                    </button>
                                 </div>
                             </div>
                             <div class="card-body border-top py-2">

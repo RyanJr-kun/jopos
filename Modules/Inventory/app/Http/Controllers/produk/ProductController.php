@@ -851,9 +851,9 @@ class ProductController extends Controller
         ]);
     }
 
-    public function laporanStockRendah(Request $request)
+    public function lowStock(Request $request)
     {
-        // Subquery untuk tanggal penjualan terakhir (tetap sama)
+        // Subquery tanggal penjualan terakhir
         $lastSaleDateSubquery = SaleItem::select('sales.tanggal_penjualan')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->whereColumn('sale_items.product_id', 'products.id')
@@ -861,37 +861,60 @@ class ProductController extends Controller
             ->orderBy('sales.tanggal_penjualan', 'desc')
             ->limit(1);
 
-        // Query utama Product
+        // Subquery filter stok rendah
+        $lowStockSubquery = ProductStock::selectRaw('COALESCE(SUM(qty), 0)')
+            ->whereColumn('product_id', 'products.id')
+            ->whereNull('product_variant_id'); 
+
         $query = Product::with('category')
-            ->select('products.*')
-            // Tetap select alias total_qty agar bisa ditampilkan di blade (view)
-            ->selectSub(function ($query) {
-                $query->selectRaw('COALESCE(SUM(qty), 0)')
-                    ->from('product_stocks')
-                    ->whereColumn('product_stocks.product_id', 'products.id');
-            }, 'total_qty')
-            // PERBAIKAN: Ganti havingRaw menjadi whereRaw dan jalankan subquery langsung di dalamnya
-            ->whereRaw('(SELECT COALESCE(SUM(qty), 0) FROM product_stocks WHERE product_stocks.product_id = products.id) <= products.stok_minimum')
+            ->withTotalStock()
+            ->where('products.stok_minimum', '>=', $lowStockSubquery)
             ->addSelect(['last_sale_date' => $lastSaleDateSubquery])
-            ->orderBy('total_qty', 'asc');
+            ->orderBy('total_stock', 'asc');
 
-        // Filter Pencarian
+        // 1. Filter Pencarian
         if ($request->filled('search')) {
-            $query->where('products.nama_produk', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('products.name_product', 'like', '%' . $search . '%')
+                ->orWhere('products.sku', 'like', '%' . $search . '%')
+                ->orWhere('products.barcode', 'like', '%' . $search . '%');
+            });
         }
-        
-        // Filter Kategori
+
+        // 2. Filter Kategori Multi-level
         if ($request->filled('kategori')) {
-            $query->where('products.category_id', $request->kategori);
+            $kategoriId = $request->kategori;
+            $kategoriIds = Category::where('id', $kategoriId)->orWhere('parent_id', $kategoriId)->pluck('id');
+            $query->whereIn('products.category_id', $kategoriIds);
         }
 
-        $products  = $query->paginate(15)->withQueryString();
-        $kategoris = Category::where('status', 1)->orderBy('name')->get();
+        // 3. ✅ TAMBAHAN: Filter Supplier (Pemasok)
+        if ($request->filled('supplier')) {
+            $supplierId = $request->supplier;
+            // Memfilter produk berdasarkan supplier pada riwayat pembelian terakhirnya
+            $query->whereHas('latestPurchaseItem.pembelian', function ($q) use ($supplierId) {
+                $q->where('supplier_id', $supplierId);
+            });
+        }
 
-        return view('inventory::inventaris.stok-rendah', [
+        $products = $query->paginate(15)->withQueryString();
+
+        if ($request->ajax()) {
+            return view('inventory::inventaris.stock.partials.tabel-stok-rendah', compact('products'))->render();
+        }
+
+        $kategoris = Category::where('status', 1)->orderBy('name')->get();
+        
+        // ✅ TAMBAHAN: Ambil data Supplier (Pastikan Anda sudah meng-import model Supplier/Pemasok di atas)
+        // Sesuaikan nama modelnya, apakah Pemasok:: atau Supplier::
+        $pemasoks = \Modules\Inventory\Models\Supplier::orderBy('name')->get(); 
+
+        return view('inventory::inventaris.stock.stok-rendah', [
             'title'     => 'Laporan Stock Rendah',
             'products'  => $products,
             'kategoris' => $kategoris,
+            'pemasoks'  => $pemasoks, // Kirim ke view
         ]);
     }
 }

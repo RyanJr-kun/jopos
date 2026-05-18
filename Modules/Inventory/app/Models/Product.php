@@ -83,11 +83,15 @@ class Product extends Model
     }
     public function pajak(): BelongsTo
     {
-        return $this->belongsTo(Taxe::class);
+        return $this->belongsTo(Taxe::class , 'taxe_id');
     }
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
     public function itemSales(): HasMany
     {

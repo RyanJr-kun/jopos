@@ -17,7 +17,7 @@ class PurchaseItem extends Model
 
     public function pembelian(): BelongsTo
     {
-        return $this->belongsTo(Purchase::class);
+        return $this->belongsTo(Purchase::class, 'purchase_id');
     }
 
     public function produk(): BelongsTo
@@ -28,7 +28,7 @@ class PurchaseItem extends Model
 
     public function pajak(): BelongsTo
     {
-        return $this->belongsTo(Taxe::class);
+        return $this->belongsTo(Taxe::class, 'taxe_id');
     }
 
     public function varian(): BelongsTo

@@ -113,7 +113,7 @@
     },
     {
       "url": "stok-penyesuaian",
-      "name": "Penyesuaian Stock",
+      "name": "Stock",
       "icon": "menu-icon icon-base bx bx-stock-change",
       "slug": "stok-penyesuaian.index"
     },

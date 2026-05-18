@@ -42,7 +42,7 @@ Route::domain($domain)->group(function () {
     });
     
     // Rute untuk Web Market (Publik)[cite: 6]
-    Route::get('/', [MarketController::class, 'index']);
+    Route::get('/', [MarketController::class, 'index'])->name('market.home');
     Route::get('/market/produk', [MarketController::class, 'produk'])->name('market.produk');
     Route::get('/market/produk/{slug}', [MarketController::class, 'produkDetail'])->name('market.produk.detail');
     Route::get('/market/layanan', [MarketController::class, 'layanan'])->name('market.layanan');

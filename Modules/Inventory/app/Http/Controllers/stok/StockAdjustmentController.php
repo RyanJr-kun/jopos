@@ -32,12 +32,9 @@ class StockAdjustmentController extends Controller
             $query->whereBetween('tanggal_penyesuaian', [$request->start_date, $request->end_date . ' 23:59:59']);
         }
 
-        $penyesuaians = $query->paginate(15)->withQueryString();
+        $stocks = $query->paginate(15)->withQueryString();
 
-        return view('inventory::inventaris.stok-penyesuaian-history', [
-            'title' => 'Riwayat Penyesuaian Stock',
-            'penyesuaians' => $penyesuaians,
-        ]);
+        return view('inventory::inventaris.adjustment.index', compact('stocks'));
     }
 
     /**
@@ -45,9 +42,7 @@ class StockAdjustmentController extends Controller
      */
     public function create()
     {
-        return view('inventory::inventaris.stok-penyesuaian-create', [
-            'title' => 'Buat Penyesuaian Stock',
-        ]);
+        return view('inventory::inventaris.adjustment.create');
     }
 
     /**
@@ -140,7 +135,7 @@ class StockAdjustmentController extends Controller
         // Eager load relasi yang dibutuhkan
         $stok_penyesuaian->load(['user', 'details.produk.unit']);
 
-        return view('inventory::inventaris.stok-penyesuaian-show', [
+        return view('inventory::inventaris.adjustment.show', [
             'title' => 'Detail Penyesuaian ' . $stok_penyesuaian->kode_penyesuaian,
             'penyesuaian' => $stok_penyesuaian,
         ]);

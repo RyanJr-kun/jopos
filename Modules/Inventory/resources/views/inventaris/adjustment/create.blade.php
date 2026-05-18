@@ -1,15 +1,8 @@
 @extends('layouts/contentNavbarLayout')
+@section('title', 'Catatan Penyesuaian Stok - Inventory')
 
-@section('title', 'Cards basic - UI elements')
+
 @section('content')
-@section('vendor-style')
-    {{-- Select2 untuk pencarian produk --}}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-@endsection
-
-<div class="container-fluid p-3">
     <form action="{{ route('stok-penyesuaian.store') }}" method="POST" id="adjustmentForm">
         @csrf
         <div class="card rounded-2 mb-4">
@@ -54,8 +47,8 @@
                             placeholder="Contoh: Barang rusak">
                     </div>
                     <div class="col-md-1 d-grid mb-n3">
-                        <button type="button" id="btn-add-item" class="btn btn-outline-info"><i
-                                class="bx bx-plus-lg"></i> Tambah</button>
+                        <button type="button" id="btn-add-item" class="btn btn-outline-info"><i class="bx bx-plus-lg"></i>
+                            Tambah</button>
                     </div>
                 </div>
 
@@ -87,11 +80,9 @@
             </div>
         </div>
     </form>
-</div>
+@endsection
 
 @section('page-script')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
             let itemCounter = 0;
@@ -252,5 +243,4 @@
 
         });
     </script>
-@endsection
 @endsection

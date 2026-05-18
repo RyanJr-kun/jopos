@@ -206,9 +206,9 @@
                 <!-- ACTIONS -->
                 <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-4 pt-3 border-top">
                     <a href="{{ route('pembelian.index') }}" id="cancel-button"
-                        class="btn btn-label-secondary w-100 w-sm-auto order-2 order-sm-1">Batalkan</a>
+                        class="btn btn-outline-danger w-100 w-sm-auto order-2 order-sm-1">Batalkan</a>
                     <button id="saveBtn" type="submit"
-                        class="btn btn-info w-100 w-sm-auto order-1 order-sm-2 px-4">Buat
+                        class="btn btn-success w-100 w-sm-auto order-1 order-sm-2 px-4">Buat
                         Transaksi</button>
                 </div>
             </div>

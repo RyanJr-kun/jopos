@@ -52,7 +52,7 @@ class CustomerAuthController extends Controller
             $request->session()->regenerate();
             
             // Redirect ke halaman Market/Home
-            return redirect()->intended('/')->with('success', 'Selamat datang kembali, ' . $user->name);
+            return redirect()->intended(route('market.home'))->with('success', 'Selamat datang kembali, ' . $user->name);
         }
 
         return back()->withErrors([

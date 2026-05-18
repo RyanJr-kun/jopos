@@ -22,7 +22,7 @@
 </div>
 
 {{-- Grid Product: 2 kolom mobile, 3 tablet, 5 desktop --}}
-<div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3" id="product-grid">
+<div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3" id="product-grid">
     @forelse ($products as $produk)
         <div class="col product-col">
             <div class="card product-card product-card-compact h-100 overflow-hidden">
@@ -50,15 +50,24 @@
                             </div>
                         @endif
                     </a>
-                    <div class="product-card-actions">
+                    <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
                         @if ($produk->stocks->sum('qty') > 0)
-                            <a href="https://wa.me/6281318000699?text=Halo, saya tertarik dengan produk: {{ $produk->name_product }}"
-                                target="_blank" class="btn btn-blue btn-sm w-100">
-                                <i class="bx bxl-whatsapp me-1"></i> Pesan via WA
-                            </a>
+                            <button type="button"
+                                class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center">
+                                <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
+                            </button>
                         @else
-                            <button type="button" class="btn btn-blue btn-sm w-100">Stok Habis</button>
+                            <button type="button"
+                                class="btn btn-sm btn-danger text-muted flex-grow-1 d-flex align-items-center justify-content-center">
+                                <i class="bx bx-minus-circle me-2 fs-6"></i> HABIS
+                            </button>
                         @endif
+
+                        <button type="button"
+                            class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center rounded-2 px-1 "
+                            data-bs-toggle="tooltip" data-bs-placement="top" title="Wishlist">
+                            <i class="bx bx-heart fs-5"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="card-body p-2">

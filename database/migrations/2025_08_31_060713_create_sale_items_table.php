@@ -23,6 +23,7 @@ return new class extends Migration
                 $table->foreignId('taxe_id')->nullable()->constrained('taxes');
                 $table->decimal('pajak_item', 15, 0)->default(0);
                 $table->decimal('subtotal', 15, 0);
+                $table->integer('qty')->default(0);
                 $table->timestamps();
 
                 $table->index('sale_id');

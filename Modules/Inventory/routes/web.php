@@ -32,7 +32,7 @@ Route::domain('jopos.' . $domain)->group(function () {
         Route::get('stok-opname/history/{stok_opname}', [StockTakeController::class, 'show'])->name('stok-opname.show');  
         
         Route::resource('stok-penyesuaian', StockAdjustmentController::class)->except(['edit', 'update']);  
-        Route::get('/stok/rendah', [ProductController::class, 'laporanStockRendah'])->name('stok.rendah');  
+        Route::get('/stok/rendah', [ProductController::class, 'lowStock'])->name('stok.rendah');  
 
 
         // ---------------------------------------------------------
