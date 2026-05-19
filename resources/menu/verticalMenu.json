@@ -145,6 +145,12 @@
       "menuHeader": "E-Commerce"
     },
     {
+      "url": "artikel",
+      "name": "Artikel & Blog",
+      "icon": "menu-icon icon-base bx bx-news",
+      "slug": "artikel.index"
+    },
+    {
       "url": "promo",
       "name": "Promo & Diskon",
       "icon": "menu-icon icon-base bx bx-percent",

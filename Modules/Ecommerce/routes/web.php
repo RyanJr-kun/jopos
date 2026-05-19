@@ -7,6 +7,7 @@ use Modules\Ecommerce\Http\Controllers\EcommerceController;
 use Modules\Ecommerce\Http\Controllers\event\BannerController;
 use Modules\Ecommerce\Http\Controllers\event\PromotionController;
 use Modules\Ecommerce\Http\Controllers\MarketController;
+use Modules\Ecommerce\Http\Controllers\artikel\ArtikelController;
 
 // Ambil domain utama dari file .env
 $domain = env('APP_DOMAIN', 'jocomputer.com');
@@ -60,6 +61,9 @@ Route::domain('jopos.' . $domain)->group(function () {
     Route::middleware(['auth', 'verified', 'employee'])->group(function () {
         
         Route::resource('ecommerces', EcommerceController::class)->names('ecommerce');
+
+        // Manajemen Artikel / Blog
+        Route::resource('artikel', ArtikelController::class);
 
         // Manajemen Promo[cite: 6]
         Route::resource('promo', PromotionController::class);
