@@ -124,7 +124,7 @@
                                             <a href="{{ route('stok-penyesuaian.show', $penyesuaian) }}"
                                                 class="btn btn-link text-dark mb-0 pe-0" data-bs-toggle="tooltip"
                                                 data-bs-placement="top" title="Lihat Detail">
-                                                <i class="bx bx-eye-fill" aria-hidden="true"></i>
+                                                <i class="bx bx-show" aria-hidden="true"></i>
                                             </a>
                                             <button type="button" class="btn btn-link text-danger mb-0"
                                                 data-bs-toggle="modal" data-bs-target="#cancelConfirmationModal"

@@ -34,7 +34,7 @@ class AppServiceProvider extends ServiceProvider
             CheckDeviceLogin::class
         );
 
-        Paginator::useBootstrapFour();
+        Paginator::defaultView('vendor.pagination.custom');
         Blade::directive('money', function ($expression) {
             return "<?php echo 'Rp ' . number_format($expression, 0, ',', '.'); ?>";
         });

@@ -69,6 +69,23 @@ class SpatieRoleSeeder extends Seeder
             'projek'      => ['view', 'create', 'edit', 'delete'],
             'kalender'    => ['view', 'create', 'edit', 'delete'],
             'toko-gudang' => ['view', 'create', 'edit', 'delete'],
+
+            // Sistem & Pengaturan
+            'pengaturan'     => ['view', 'edit'],
+            'users'          => ['view', 'create', 'edit', 'delete'],
+            'roles'          => ['view', 'create', 'edit', 'delete'],
+
+            // Modul Baru Sebelumnya
+            'projek'      => ['view', 'create', 'edit', 'delete'],
+            'kalender'    => ['view', 'create', 'edit', 'delete'],
+            'toko-gudang' => ['view', 'create', 'edit', 'delete'],
+
+            // =====================================================
+            // MODUL TAMBAHAN (Artikel, Services, Ecommerce)
+            // =====================================================
+            'artikel'     => ['view', 'create', 'edit', 'delete'],
+            'services'    => ['view', 'create', 'edit', 'delete'],
+            'ecommerce'   => ['view', 'create', 'edit', 'delete'],
         ];
 
         // 3. Insert Permissions secara Dinamis ke Database

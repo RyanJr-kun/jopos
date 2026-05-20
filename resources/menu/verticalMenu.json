@@ -4,7 +4,8 @@
       "url": "dashboard",
       "name": "Dashboards",
       "icon": "menu-icon icon-base bx bx-home-smile",
-      "slug": "dashboard"
+      "slug": "dashboard",
+      "permission": "view-dashboard"
     },
     {
       "name": "penjualan",
@@ -13,11 +14,13 @@
         "penjualan",
         "pelanggan"
       ],
+      "permission": "view-penjualan",
       "submenu": [
         {
           "url": "penjualan/create",
           "name": "kasir",
-          "slug": "penjualan.create"
+          "slug": "penjualan.create",
+          "permission": "create-penjualan"
         },
         {
           "url": "penjualan",
@@ -33,6 +36,7 @@
         "pembelian",
         "pemasok"
       ],
+      "permission": "view-pembelian|view-pemasok",
       "submenu": [
         {
           "url": "pembelian/create",
@@ -47,7 +51,8 @@
         {
           "url": "pemasok",
           "name": "Supplier",
-          "slug": "pemasok.index"
+          "slug": "pemasok.index",
+          "permission": "view-pemasok"
         }
       ]
     },
@@ -62,13 +67,15 @@
       ]
     },
     {
-      "menuHeader": "Data Master"
+      "menuHeader": "Data Master",
+      "permission": "view-kategoriproduk|view-brand|view-unit|view-garansi|"
     },
     {
       "url": "kategoriproduk?type=utama",
       "name": "Kategori Product",
       "icon": "menu-icon icon-base bx bx-badge-2",
       "slug": "kategoriproduk.index",
+      "permission": "view-kategoriproduk",
       "badge": [
         "label-primary fs-tiny",
         "new"
@@ -78,28 +85,33 @@
       "url": "brand",
       "name": "Brand",
       "icon": "menu-icon icon-base bx bx-brand",
-      "slug": "brand.index"
+      "slug": "brand.index",
+      "permission": "view-brand"
     },
     {
       "url": "unit",
       "name": "Satuan",
       "icon": "menu-icon icon-base bx bx-view-list",
-      "slug": "unit.index"
+      "slug": "unit.index",
+      "permission": "view-unit"
     },
     {
       "url": "garansi",
       "name": "Garansi",
       "icon": "menu-icon icon-base bx bx-warranty",
-      "slug": "garansi.index"
+      "slug": "garansi.index",
+      "permission": "view-garansi"
     },
     {
-      "menuHeader": "Inventaris"
+      "menuHeader": "Inventaris",
+      "permission": "view-produk|view-serialnumber|view-stok-penyesuaian|view-stok-opname|view-stok-rendah"
     },
     {
       "url": "produk",
       "name": "Product",
       "icon": "menu-icon icon-base bx bx-product",
       "slug": "produk.index",
+      "permission": "view-produk",
       "badge": [
         "label-primary fs-tiny",
         "MC"
@@ -109,19 +121,22 @@
       "url": "serialNumber",
       "name": "Serial Number",
       "icon": "menu-icon icon-base bx bx-serial",
-      "slug": "serialNumber.index"
+      "slug": "serialNumber.index",
+      "permission": "view-serialnumber"
     },
     {
       "url": "stok-penyesuaian",
       "name": "Stock",
       "icon": "menu-icon icon-base bx bx-stock-change",
-      "slug": "stok-penyesuaian.index"
+      "slug": "stok-penyesuaian.index",
+      "permission": "view-stok-penyesuaian"
     },
     {
       "url": "#",
       "name": "Stock Opname",
       "icon": "menu-icon icon-base bx bx-opname-2",
       "slug": "stok-opname",
+      "permission": "view-stok-opname",
       "submenu": [
         {
           "url": "stok-opname",
@@ -139,31 +154,37 @@
       "url": "stok/rendah",
       "name": "Stock Rendah",
       "icon": "menu-icon icon-base bx bx-line-chart-down",
-      "slug": "stok.rendah"
+      "slug": "stok.rendah",
+      "permission": "view-stok-rendah"
     },
     {
-      "menuHeader": "E-Commerce"
+      "menuHeader": "E-Commerce",
+      "permission": "view-artikel|view-promo|view-banner"
     },
     {
       "url": "artikel",
       "name": "Artikel & Blog",
       "icon": "menu-icon icon-base bx bx-news",
-      "slug": "artikel.index"
+      "slug": "artikel.index",
+      "permission": "view-artikel"
     },
     {
       "url": "promo",
       "name": "Promo & Diskon",
       "icon": "menu-icon icon-base bx bx-percent",
-      "slug": "promo.index"
+      "slug": "promo.index",
+      "permission": "view-promo"
     },
     {
       "url": "banner",
       "name": "Banner",
       "icon": "menu-icon icon-base bx bx-images",
-      "slug": "banner.index"
+      "slug": "banner.index",
+      "permission": "view-banner"
     },
     {
-      "menuHeader": "Keuangan & Laporan"
+      "menuHeader": "Keuangan & Laporan",
+      "permission": "view-keuangan|view-income|view-expense|view-kategoritransaksi"
     },
     {
       "name": "Administrasi",
@@ -174,26 +195,31 @@
         "expense",
         "kategori"
       ],
+      "permission": "view-keuangan|view-income|view-expense|view-kategoritransaksi|view-laporan-inventaris|view-laporan-penjualan|view-laporan-pembelian|view-laporan-laba-rugi",
       "submenu": [
         {
           "url": "keuangan",
           "name": "Rekap Keuangan",
-          "slug": "keuangan"
+          "slug": "keuangan",
+          "permission": "view-keuangan"
         },
         {
           "url": "income",
           "name": "Pemasukan",
-          "slug": "income.index"
+          "slug": "income.index",
+          "permission": "view-income"
         },
         {
           "url": "expense",
           "name": "Pengeluaran",
-          "slug": "expense.index"
+          "slug": "expense.index",
+          "permission": "view-expense"
         },
         {
           "url": "kategoritransaksi",
           "name": "Kategori Transaksi",
-          "slug": "kategoritransaksi.index"
+          "slug": "kategoritransaksi.index",
+          "permission": "view-kategoritransaksi"
         }
       ]
     },
@@ -201,37 +227,44 @@
       "name": "Laporan",
       "icon": "menu-icon icon-base bx bx-report",
       "slug": "laporan",
+      "permission": "view-laporan-inventaris|view-laporan-penjualan|view-laporan-pembelian|view-laporan-laba-rugi",
       "submenu": [
         {
           "url": "laporan/inventaris",
           "name": "Pergerakan Stock",
-          "slug": "laporan.inventaris"
+          "slug": "laporan.inventaris",
+          "permission": "view-laporan-inventaris"
         },
         {
           "url": "laporan/penjualan",
           "name": "Laporan Sale",
-          "slug": "laporan.penjualan"
+          "slug": "laporan.penjualan",
+          "permission": "view-laporan-penjualan"
         },
         {
           "url": "laporan/pembelian",
           "name": "Laporan Purchase",
-          "slug": "laporan.pembelian"
+          "slug": "laporan.pembelian",
+          "permission": "view-laporan-pembelian"
         },
         {
           "url": "laporan/laba-rugi",
           "name": "Laporan Laba & Rugi",
-          "slug": "laporan.laba-rugi"
+          "slug": "laporan.laba-rugi",
+          "permission": "view-laporan-laba-rugi"
         }
       ]
     },
     {
-      "menuHeader": "Autentikasi"
+      "menuHeader": "Autentikasi",
+      "permission": "view-toko-gudang|view-pelanggan|view-users|view-roles"
     },
     {
       "url": "toko",
       "name": "Toko",
       "icon": "menu-icon icon-base bx bx-store",
       "slug": "toko.index",
+      "permission": "view-toko-gudang",
       "badge": [
         "label-primary fs-tiny",
         "New"
@@ -241,19 +274,29 @@
       "url": "pelanggan",
       "name": "Pelanggan",
       "icon": "menu-icon icon-base bx bx-users",
-      "slug": "pelanggan.index"
+      "slug": "pelanggan.index",
+      "permission": "view-pelanggan"
     },
     {
       "url": "users",
       "name": "Karyawan",
       "icon": "menu-icon icon-base bx bx-user-employee",
-      "slug": "users.index"
+      "slug": "users.index",
+      "permission": "view-users"
+    },
+    {
+      "url": "users",
+      "name": "Pengaturan",
+      "icon": "menu-icon icon-base bx bx-cog",
+      "slug": "users.index",
+      "permission": "view-pengaturan"
     },
     {
       "url": "roles",
       "name": "Role & Permission",
       "icon": "menu-icon icon-base bx bx-shield-quarter",
-      "slug": "roles.index"
+      "slug": "roles.index",
+      "permission": "view-roles"
     }
   ]
 }

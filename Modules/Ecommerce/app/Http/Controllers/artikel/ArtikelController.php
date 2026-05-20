@@ -8,10 +8,28 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
+use Illuminate\Routing\Controllers\HasMiddleware; 
+use Illuminate\Routing\Controllers\Middleware;
 
-class ArtikelController extends Controller
+class ArtikelController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            // Hak akses untuk melihat
+            new Middleware('permission:view-artikel', only: ['index', 'show']),
+            
+            // Hak akses untuk menambah
+            new Middleware('permission:create-artikel', only: ['create', 'store']),
+            
+            // Hak akses untuk mengedit
+            new Middleware('permission:edit-artikel', only: ['edit', 'update']),
+            
+            // Hak akses untuk menghapus
+            new Middleware('permission:delete-artikel', only: ['destroy']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */

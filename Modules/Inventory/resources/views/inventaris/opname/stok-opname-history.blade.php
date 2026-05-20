@@ -67,7 +67,7 @@
                                         <a href="{{ route('stok-opname.show', $opname->kode_opname) }}"
                                             class="btn btn-link text-dark px-3 mb-0" data-bs-toggle="tooltip"
                                             data-bs-placement="top" title="Lihat Detail">
-                                            <i class="bx bx-eye-fill" aria-hidden="true"></i>
+                                            <i class="bx bx-show" aria-hidden="true"></i>
                                         </a>
                                     </td>
                                 </tr>

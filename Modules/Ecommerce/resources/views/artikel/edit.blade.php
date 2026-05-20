@@ -14,7 +14,7 @@
             {{-- Formulir Utama --}}
             <div class="col-12 col-xl-8">
                 <div class="card rounded-2 shadow-sm">
-                    <div class="card-header pb-0 px-3 pt-3 d-flex align-items-center justify-content-between">
+                    <div class="card-header d-flex align-items-center justify-content-between">
                         <h5 class="mb-0 fw-bolder">
                             <i class="bx bx-edit me-2 text-primary"></i>Edit Artikel
                         </h5>

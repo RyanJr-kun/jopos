@@ -143,29 +143,41 @@
                                         </td>
                                         <td class="px-3 text-center">
                                             <div class="d-flex justify-content-center gap-1">
-                                                <a href="{{ route('artikel.show', $artikel) }}"
-                                                    class="btn btn-sm btn-icon btn-outline-secondary" title="Detail">
-                                                    <i class="bx bx-show"></i>
-                                                </a>
-                                                <a href="{{ route('artikel.edit', $artikel) }}"
-                                                    class="btn btn-sm btn-icon btn-outline-primary" title="Edit">
-                                                    <i class="bx bx-edit"></i>
-                                                </a>
-                                                <button type="button"
-                                                    class="btn btn-sm btn-icon btn-outline-danger btn-delete"
-                                                    data-artikel-id="{{ $artikel->id }}"
-                                                    data-artikel-judul="{{ $artikel->judul_artikel }}"
-                                                    data-bs-toggle="modal" data-bs-target="#deleteModal" title="Hapus">
-                                                    <i class="bx bx-trash"></i>
-                                                </button>
+
+                                                @can('view-artikel')
+                                                    <a href="{{ route('artikel.show', $artikel) }}"
+                                                        class="action-btn text-info" title="Detail">
+                                                        <i class="bx bx-show"></i>
+                                                    </a>
+                                                @endcan
+
+                                                @can('edit-artikel')
+                                                    <a href="{{ route('artikel.edit', $artikel) }}"
+                                                        class="action-btn text-secondary" title="Edit">
+                                                        <i class="bx bx-edit"></i>
+                                                    </a>
+                                                @endcan
+
+                                                @can('delete-artikel')
+                                                    <button type="button" class="action-btn text-danger"
+                                                        data-artikel-id="{{ $artikel->id }}"
+                                                        data-artikel-judul="{{ $artikel->judul_artikel }}"
+                                                        data-bs-toggle="modal" data-bs-target="#deleteModal" title="Hapus">
+                                                        <i class="bx bx-trash"></i>
+                                                    </button>
+                                                @endcan
+
                                             </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-5 text-muted">
-                                            <i class="bx bx-file-blank fs-1 d-block mb-2"></i>
-                                            Belum ada artikel. <a href="{{ route('artikel.create') }}">Buat sekarang</a>.
+                                        <td colspan="8">
+                                            <div class="d-flex flex-column align-items-center justify-content-center py-1">
+                                                <i class="bx bx-file-blank fs-1 d-block mb-2"></i>
+                                                <p>Belum ada artikel. <a href="{{ route('artikel.create') }}">Buat
+                                                        sekarang</a>.</p>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforelse

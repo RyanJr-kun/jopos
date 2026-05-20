@@ -16,7 +16,7 @@
         <tbody id="isiTable">
             @forelse ($promotions as $key => $promo)
                 <tr id="promo-row-{{ $promo->id }}">
-                <td>{{ ++$key }}</td>
+                    <td>{{ ++$key }}</td>
                     <td>
                         <p>{{ $promo->name }}</p>
                     </td>
@@ -62,15 +62,15 @@
                         @endif
                     </td>
                     <td class="align-middle">
-                        <a href="{{ route('promo.show', $promo->id) }}" class="text-dark fw-bold px-2 text-xs"
+                        <a href="{{ route('promo.show', $promo->id) }}" class="action-btn text-info"
                             title="Lihat Detail">
-                            <i class="bx bx-eye-fill text-dark text-sm opacity-10"></i>
+                            <i class="bx bx-show"></i>
                         </a>
-                        <a href="{{ route('promo.edit', $promo->id) }}" class="text-dark fw-bold px-2 text-xs"
+                        <a href="{{ route('promo.edit', $promo->id) }}" class="action-btn text-secondary"
                             title="Edit Promotion">
-                            <i class="bx bx-edit text-dark text-sm opacity-10"></i>
+                            <i class="bx bx-edit"></i>
                         </a>
-                        <a href="#" class="text-dark delete-btn px-2" data-bs-toggle="modal"
+                        <a href="#" class="action-btn text-danger" data-bs-toggle="modal"
                             data-bs-target="#deleteConfirmationModal" data-promo-id="{{ $promo->id }}"
                             data-promo-name="{{ $promo->name }}" title="Hapus Promotion">
                             <i class="bx bx-trash"></i>

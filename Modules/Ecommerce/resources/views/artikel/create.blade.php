@@ -14,7 +14,7 @@
             {{-- Formulir Utama --}}
             <div class="col-12 col-xl-8">
                 <div class="card rounded-2 shadow-sm">
-                    <div class="card-header pb-0 px-3 pt-3">
+                    <div class="card-header pb-3">
                         <h5 class="mb-0 fw-bolder">
                             <i class="bx bx-edit-alt me-2 text-primary"></i>Buat Artikel Baru
                         </h5>
