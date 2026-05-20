@@ -289,6 +289,18 @@
     <script src="https://unpkg.com/filepond-plugin-image-crop/dist/filepond-plugin-image-crop.js"></script>
     <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
     <script src="https://unpkg.com/filepond-plugin-image-transform/dist/filepond-plugin-image-transform.js"></script>
+    <script>
+        // Inisialisasi semua popover Bootstrap (termasuk tombol "+N lainnya")
+        document.addEventListener('DOMContentLoaded', function() {
+            const popoverEls = document.querySelectorAll('[data-bs-toggle="popover"]');
+            popoverEls.forEach(function(el) {
+                new bootstrap.Popover(el, {
+                    html: false, // konten plain text, aman dari XSS
+                    sanitize: true,
+                });
+            });
+        });
+    </script>
     <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
     <script type="module">
         const initSelect2 = () => {

@@ -58,7 +58,7 @@
 
         <div class="col-12">
             <div class="card">
-                <div class="card-header pb-0 px-3 pt-2 mb-3">
+                <div class="card-header p-4">
                     <h5 class="mb-n1 fw-bolder">List Brand</h5>
                     <p class="text-sm mb-0">Kelola Data Brandmu</p>
                 </div>

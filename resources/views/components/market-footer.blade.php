@@ -1,25 +1,24 @@
 <footer class="footer-market text-white pt-5 pb-4">
     <div class="container-market pb-md-2">
-        <div class="d-flex justify-content-start align-items-center mt-3">
+        <div class="d-flex justify-content-center justify-content-md-start align-items-center mt-3">
             <a class="navbar-brand d-inline-block mb-3" href="{{ url('/') }}">
                 <img src="{{ asset('assets/img/LM-Putih.png') }}" alt="Logo Jo Computer Putih"
                     class="img-fluid footer-logo">
             </a>
         </div>
-        <div class="row d-flex justify-content-lg-between">
-            {{-- Kolom 1: Tentang Toko --}}
-            <div class="col-12 col-md-4 mb-4 mb-md-0 mt-md-3">
+        <div class="row">
+            {{-- Kolom 1: Tentang Toko (Diberi porsi 5 kolom & padding kanan) --}}
+            <div class="col-12 col-lg-5 mb-4 mb-lg-0 mt-lg-3 pe-lg-5">
                 <p style="font-size: 0.9rem;" class="mb-4 text-white-50">
                     Toko komponen dan aksesoris komputer terpercaya. Kami menyediakan produk berkualitas dengan harga
                     terbaik untuk kebutuhan perakitan dan upgrade PC Anda.
                 </p>
-                {{-- Alamat Pusat Solo --}}
                 <p class="small d-flex align-items-start mb-2">
                     <i class="bx bxs-map me-2 flex-shrink-0 mt-1 text-white"></i>
                     <span><strong>JO Computer</strong><br>Jl. Slamet Riyadi Somodinalan No.250,
                         Somodinatan, Ngadirejo, Kec. Kartasura, Kabupaten Sukoharjo, Jawa Tengah 57169</span>
                 </p>
-                <div class="d-flex flex-column gap-2 mb-4 mb-md-0">
+                <div class="d-flex flex-column gap-2 mb-4 mb-lg-0">
                     <a href="mailto:cs@jocomputer.com"
                         class="small text-white text-decoration-none email-hover d-inline-flex align-items-center"><i
                             class="bx bxs-envelope me-2 text-white"></i>cs@jocomputer.com</a>
@@ -29,8 +28,8 @@
                 </div>
             </div>
 
-            {{-- Kolom 2: Tautan Cepat --}}
-            <div class="col-6 col-md-2 mt-md-3">
+            {{-- Kolom 2: Tautan Cepat (2 Kolom) --}}
+            <div class="col-6 col-lg-2 mt-lg-3">
                 <h6 class="text-uppercase mb-4 font-weight-bold text-white fs-6">Tautan Cepat</h6>
                 <div class="d-flex flex-column gap-2">
                     <a href="{{ url('/') }}" class="link link-white small">Beranda</a>
@@ -40,8 +39,8 @@
                 </div>
             </div>
 
-            {{-- Kolom 3: Kategori --}}
-            <div class="col-6 col-md-2 mt-md-3">
+            {{-- Kolom 3: Kategori (2 Kolom) --}}
+            <div class="col-6 col-lg-2 mt-lg-3">
                 <h6 class="text-uppercase mb-4 font-weight-bold text-white fs-6">Kategori</h6>
                 <div class="d-flex flex-column gap-2">
                     @if (isset($bestSellingCategories) && $bestSellingCategories->isNotEmpty())
@@ -55,10 +54,9 @@
                 </div>
             </div>
 
-            {{-- Kolom 4: Media Sosial --}}
-            <div class="col-12 col-md-4 col-lg-3 mt-5 mt-md-3 mx-auto">
+            <div class="col-12 col-lg-3 ms-lg-auto mt-5 mt-lg-3 ">
                 <h6 class="text-uppercase mb-4 font-weight-bold text-white fs-6">Ikuti Kami</h6>
-                <div class="d-flex gap-3 mb-4 flex-wrap">
+                <div class="d-flex gap-3 mb-4 flex-wrap justify-content-start">
                     <a href="https://www.facebook.com/jo.comp.798/" target="_blank" rel="noopener noreferrer"
                         class="social-icon social-facebook" title="Facebook"><i class="bx bxl-facebook icon-md"></i></a>
                     <a href="https://www.instagram.com/jocompsolo?utm_source=ig_web_button_share_sheet&igsh=b3J2dXFxMmV5Zml1"
@@ -68,10 +66,11 @@
                         class="social-icon social-tokopedia" title="Tokopedia"><i class="bx bx-store"></i></a>
                     <a href="https://www.tiktok.com/@jocomputer.official?is_from_webapp=1&sender_device=pc"
                         target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok" title="TikTok"><i
-                            class="bx bxl-tiktok icon-md"></i></a>
+                            class="bx bxl-tiktok i icon-md"></i></a>
                 </div>
+
                 <h6 class="text-uppercase mb-3 font-weight-bold text-white fs-6">Jam Operasional</h6>
-                <div class="d-flex flex-column gap-2">
+                <div class="d-flex flex-column gap-2 align-items-start">
                     <p class="small d-flex align-items-start mb-0">
                         <i class="bx bxs-time me-2 mt-1 text-white"></i>
                         <span>Senin - Sabtu: 08.00 - 16.30 WIB</span>

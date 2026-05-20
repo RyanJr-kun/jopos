@@ -133,7 +133,8 @@
                                     @php
                                         $imgVar = $variant->img_variant ? Storage::url($variant->img_variant) : null;
                                     @endphp
-                                    <button type="button" class="variant-btn {{ $index === 0 ? 'active' : '' }}"
+                                    <button type="button"
+                                        class="variant-btn {{ $index === 0 ? 'active' : '' }} btn btn-outline-dark btn-sm"
                                         data-harga="Rp {{ number_format($variant->harga_jual, 0, ',', '.') }}"
                                         data-img="{{ $imgVar }}"
                                         data-stok="{{ $produk->stocks->where('product_variant_id', $variant->id)->sum('qty') ?? 0 }}"
@@ -423,6 +424,58 @@
     {{-- Similar Products Section (Styling Disesuaikan) --}}
 
 
+    <div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h6 class="modal-title fw-bold" id="shareModalLabel">Bagikan Produk</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center pb-4">
+                    <p class="text-muted fs-7 mb-3">Pilih platform untuk membagikan produk ini</p>
+
+                    <div class="d-flex justify-content-center gap-3 mb-4">
+                        <a href="https://wa.me/?text={{ urlencode('Cek produk ini: ' . $produk->name_product . ' di JO Computer. ' . url()->current()) }}"
+                            target="_blank"
+                            class="btn btn-success rounded-circle d-flex align-items-center justify-content-center"
+                            style="width: 45px; height: 45px;">
+                            <i class="bx bxl-whatsapp fs-3"></i>
+                        </a>
+
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}"
+                            target="_blank"
+                            class="social-icon social-facebook rounded-circle d-flex align-items-center justify-content-center"
+                            style="width: 45px; height: 45px;">
+                            <i class="bx bxl-facebook icon-lg"></i>
+                        </a>
+
+                        <a href="https://twitter.com/intent/tweet?text={{ urlencode('Cek produk keren ini: ' . $produk->name_product) }}&url={{ urlencode(url()->current()) }}"
+                            target="_blank"
+                            class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center"
+                            style="width: 45px; height: 45px;">
+                            <i class="bx bxl-twitter fs-3"></i>
+                        </a>
+
+                        <a href="https://t.me/share/url?url={{ urlencode(url()->current()) }}&text={{ urlencode('Cek produk ini: ' . $produk->name_product) }}"
+                            target="_blank"
+                            class="btn btn-info text-white rounded-circle d-flex align-items-center justify-content-center"
+                            style="width: 45px; height: 45px;">
+                            <i class="bx bxl-telegram fs-3"></i>
+                        </a>
+                    </div>
+
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="shareUrlInput" value="{{ url()->current() }}"
+                            readonly>
+                        <button class="btn btn-outline-primary" type="button" onclick="copyShareUrl(this)">
+                            <i class="bx bx-copy"></i> Salin
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <x-market-footer></x-market-footer>
 @endsection
 
@@ -487,22 +540,47 @@
 
             // ── Share ─────────────────────────────────────────────
             window.shareProduct = function(btn) {
-                const label = btn.querySelector('span');
                 const url = window.location.href;
+                const title = '{{ $produk->name_product }}';
+                const text = 'Cek produk ini di JO Computer!';
 
+                // Deteksi jika browser mendukung Web Share API (Biasanya Mobile)
                 if (navigator.share) {
                     navigator.share({
-                        title: document.title,
-                        url
+                        title: title,
+                        text: text,
+                        url: url
+                    }).catch((error) => {
+                        console.log('Error sharing:', error);
+                        // Jika user cancel share, biarkan saja
                     });
-                } else if (navigator.clipboard) {
-                    navigator.clipboard.writeText(url).then(() => {
-                        if (label) label.textContent = 'Disalin!';
-                        setTimeout(() => {
-                            if (label) label.textContent = 'Bagikan';
-                        }, 2000);
-                    });
+                } else {
+                    // Fallback untuk Desktop: Tampilkan Bootstrap Modal
+                    const shareModalEl = document.getElementById('shareModal');
+                    // Pastikan script bootstrap sudah ter-load di layout utama
+                    const shareModal = new bootstrap.Modal(shareModalEl);
+                    shareModal.show();
                 }
+            };
+
+            // ── Fungsi Copy URL di dalam Modal ────────────────────
+            window.copyShareUrl = function(btn) {
+                const copyText = document.getElementById("shareUrlInput");
+
+                // Proses salin teks
+                navigator.clipboard.writeText(copyText.value).then(() => {
+                    const originalHtml = btn.innerHTML;
+                    btn.innerHTML = '<i class="bx bx-check"></i> Tersalin';
+                    btn.classList.replace('btn-outline-primary', 'btn-success');
+                    btn.classList.add('text-white');
+
+                    // Kembalikan tombol seperti semula setelah 2 detik
+                    setTimeout(() => {
+                        btn.innerHTML = originalHtml;
+                        btn.classList.replace('btn-success', 'btn-outline-primary');
+                        btn.classList.remove('text-white');
+                    }, 2000);
+                });
             };
 
             // ── Bandingkan ────────────────────────────────────────
