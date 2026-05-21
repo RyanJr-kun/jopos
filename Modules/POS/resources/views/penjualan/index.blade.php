@@ -85,7 +85,7 @@
                 <h6 class="mt-2" id="invoiceNumberToCancel"></h6>
                 <div class="mt-4">
                     {{-- Form ini akan mengirim request ke method 'update' atau method khusus 'cancel' --}}
-                    <form id="cancelInvoiceForm" method="POST" action="#">
+                    <form id="cancelInvoiceForm" method="POST" action="">
                         @method('PUT') {{-- Atau PATCH --}}
                         @csrf
                         <input type="hidden" name="status_pembayaran" value="Dibatalkan">
@@ -160,6 +160,20 @@
     const runAjaxScripts = () => {
         if (typeof $ !== 'undefined') {
             $(document).ready(function() {
+                // Script untuk Modal Pembatalan Transaksi
+                $('#cancelConfirmationModal').on('show.bs.modal', function(event) {
+                    // Tombol yang memicu modal
+                    let button = $(event.relatedTarget);
+
+                    // Ambil data dari atribut tombol
+                    let invoiceNumber = button.data('invoice-number');
+                    let formUrl = button.data('url');
+
+                    // Temukan elemen di dalam modal dan perbarui nilainya
+                    let modal = $(this);
+                    modal.find('#invoiceNumberToCancel').text('Nomor Referensi: ' + invoiceNumber);
+                    modal.find('#cancelInvoiceForm').attr('action', formUrl); // Inject URL ke form
+                });
 
                 // Fungsi Utama Fetch Data
                 window.fetchData = function(page = 1) {

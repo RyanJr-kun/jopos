@@ -36,28 +36,28 @@ class SaleController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        // Mengambil status unik untuk filter
         $statuses = Sale::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
 
+        $storeId = Auth::user()->employee?->store_id;
         $query = Sale::with(['customer', 'user'])->latest();
 
-        // Filter Nama Customer atau Nomor Invoice (Referensi)
+        // Filter berdasarkan store_id jika user terikat dengan toko tertentu
+        if ($storeId) {
+            $query->where('store_id', $storeId);
+        }
+        
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('referensi', 'like', "%{$search}%")
-                    ->orWhereHas('customer', function ($q_customer) use ($search) {
-                        $q_customer->where('name', 'like', "%{$search}%");
-                    });
+                  ->orWhereHas('customer', fn($qc) => $qc->where('name', 'like', "%{$search}%"));
             });
         }
 
-        // Filter Status Penjualan
         if ($request->filled('status')) {
             $query->where('status_pembayaran', $request->input('status'));
         }
 
-        // Filter Rentang Tanggal
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $query->whereBetween('created_at', [
                 $request->date_from . ' 00:00:00',
@@ -66,8 +66,6 @@ class SaleController extends Controller implements HasMiddleware
         }
 
         $penjualan = $query->paginate(15)->withQueryString();
-
-        // Logika AJAX: Jika request datang dari AJAX, return partial view (tabel saja)
         if ($request->ajax()) {
             return view('pos::penjualan._penjualan_table', compact('penjualan'))->render();
         }
@@ -79,55 +77,48 @@ class SaleController extends Controller implements HasMiddleware
      * Show the form for creating a new resource.
      */
     public function create(Request $request)
-{
-    // 1. INISIALISASI QUERY BUILDER (Jangan pakai ->get() atau ->paginate() dulu)
-    $query = Product::with(['category', 'unit', 'promotions'])
-        ->select('products.*')
-        ->whereHas('stocks', function ($query) {
-            $query->where('qty', '>', 0);
-        });
+    {
+        $query = Product::with([
+                    'category',
+                    'unit',
+                    'promotions',
+                    'stocks',      
+                    'primaryImage',
+                    'pajak',
+                ])
+                ->select('products.*')
+                ->whereHas('stocks', fn($q) => $q->where('qty', '>', 0));
 
-    // 2. TERAPKAN FILTER KATEGORI (Jika ada request)
-    if ($request->filled('kategori')) {
-        $categoryId = $request->kategori;
+        if ($request->filled('kategori')) {
+                $categoryId  = $request->kategori;
+                $categoryIds = Category::where('id', $categoryId)
+                    ->orWhere('parent_id', $categoryId)
+                    ->pluck('id');
+                $query->whereIn('category_id', $categoryIds);
+            }
 
-        // Ambil ID kategori itu sendiri + ID semua anaknya (sub-kategori)
-        $categoryIds = Category::where('id', $categoryId)
-            ->orWhere('parent_id', $categoryId)
-            ->pluck('id');
+        $products = $query->orderBy('name_product', 'asc')->get();
+        $customers = Customer::query()->where('status', 1)->orderBy('name', 'asc')->get();
+        $kategoris = Category::whereNull('parent_id')
+            ->with('children')
+            ->get();
+        $taxes = Taxe::all();
+        $referensi = $this->generateInvoiceNumber();
 
-        $query->whereIn('category_id', $categoryIds);
+        return view('pos::penjualan.create', compact('products', 'customers', 'kategoris', 'taxes', 'referensi'));
     }
-
-    $products = $query->orderBy('name_product', 'asc')->get();
-
-    $customers = Customer::query()->where('status', 1)->orderBy('name', 'asc')->get();
-
-    $kategoris = Category::whereNull('parent_id')
-        ->with('children')
-        ->get();
-
-    $taxes = Taxe::all();
-
-    $referensi = $this->generateInvoiceNumber();
-
-    return view('pos::penjualan.create', compact('products', 'customers', 'kategoris', 'taxes', 'referensi'));
-}
 
     private function generateInvoiceNumber()
     {
-        // Contoh format: INV-20250831-0001
         $date = now()->format('Ymd');
         $prefix = 'INV-' . $date . '-';
 
-        // Cari invoice terakhir untuk hari ini untuk mendapatkan nomor urut berikutnya
         $lastSale = Sale::where('referensi', 'like', $prefix . '%')
             ->latest('referensi')
             ->first();
 
         $sequence = 1;
         if ($lastSale) {
-            // Ambil nomor urut dari invoice terakhir dan tambahkan 1
             $lastSequence = (int) substr($lastSale->referensi, -4);
             $sequence = $lastSequence + 1;
         }
@@ -140,165 +131,187 @@ class SaleController extends Controller implements HasMiddleware
      */
     public function store(Request $request)
     {
+        // Bersihkan input angka yang diformat (mis. "1.500.000" → "1500000")
         $request->merge([
             'jumlah_dibayar' => preg_replace('/[^0-9]/', '', $request->input('jumlah_dibayar', 0)),
-            'service' => preg_replace('/[^0-9]/', '', $request->input('service', 0)),
-            'ongkir' => preg_replace('/[^0-9]/', '', $request->input('ongkir', 0)),
-            'diskon' => preg_replace('/[^0-9]/', '', $request->input('diskon', 0)),
+            'service'        => preg_replace('/[^0-9]/', '', $request->input('service', 0)),
+            'ongkir'         => preg_replace('/[^0-9]/', '', $request->input('ongkir', 0)),
+            'diskon'         => preg_replace('/[^0-9]/', '', $request->input('diskon', 0)),
         ]);
-        // 1. Validasi data yang masuk
-        // Disesuaikan untuk menerima semua input dari form kasir
+
         $validatedData = $request->validate([
-            'customer_id' => 'nullable|exists:customers,id',
-            'referensi' => 'required|string|unique:sales,referensi',
-            'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS', // Status pembayaran akan ditentukan otomatis
-            'catatan' => 'nullable|string',
-            'jumlah_dibayar' => 'required|numeric|min:0',
-            'service' => 'nullable|numeric|min:0',
-            'ongkir' => 'nullable|numeric|min:0',
-            'diskon' => 'nullable|numeric|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.jumlah' => 'required|integer|min:1',
-            'items.*.harga_jual' => 'required|numeric|min:0',
-            'items.*.diskon' => 'required|numeric|min:0',
-            'items.*.taxe_id' => 'nullable|exists:taxes,id',
-            'items.*.serial_numbers' => 'nullable|array', // BARU: Validasi bahwa serial_numbers adalah array (jika ada)
-            'items.*.serial_numbers.*' => 'string', // BARU: Validasi setiap elemen di dalamnya adalah string
+            'customer_id'              => 'nullable|exists:customers,id',
+            'referensi'                => 'required|string|unique:sales,referensi',
+            'metode_pembayaran'        => 'required|in:TUNAI,TRANSFER,QRIS',
+            'catatan'                  => 'nullable|string',
+            'jumlah_dibayar'           => 'required|numeric|min:0',
+            'service'                  => 'nullable|numeric|min:0',
+            'ongkir'                   => 'nullable|numeric|min:0',
+            'diskon'                   => 'nullable|numeric|min:0',
+            'items'                    => 'required|array|min:1',
+            'items.*.product_id'       => 'required|exists:products,id',
+            'items.*.jumlah'           => 'required|integer|min:1',
+            'items.*.harga_jual'       => 'required|numeric|min:0',
+            'items.*.diskon'           => 'required|numeric|min:0',
+            'items.*.taxe_id'          => 'nullable|exists:taxes,id',
+            'items.*.serial_numbers'   => 'nullable|array',
+            'items.*.serial_numbers.*' => 'string',
         ]);
 
         try {
-            // Ambil data pajak yang relevan dalam satu query untuk efisiensi
-            $pajakIds = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
+            // Pre-load data pajak dalam satu query
+            $pajakIds  = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
             $taxesData = Taxe::findMany($pajakIds)->keyBy('id');
 
-            // Memulai Database Transaction
             $penjualan = DB::transaction(function () use ($validatedData, $taxesData) {
-                // 2. Ambil semua produk yang dibutuhkan dalam satu query untuk menghindari N+1
+
                 $produkIds = collect($validatedData['items'])->pluck('product_id');
-                // DIUBAH: Menggunakan with() untuk eager load relasi wajib_seri jika ada
-                $products = Product::whereIn('id', $produkIds)->get()->keyBy('id');
+                $products  = Product::whereIn('id', $produkIds)->get()->keyBy('id');
 
-                // Hitung total dari server-side berdasarkan data yang divalidasi
-                $subtotal_dpp_keseluruhan = 0; // Subtotal dari Dasar Pengenaan Taxe
-                $total_pajak_item = 0;
+                // FIX Bug 2: gunakan ?-> agar tidak fatal error jika employee null
+                $storeId = Auth::user()->employee?->store_id ?? null;
 
+                // FIX Bug 3: pre-fetch semua stok terkait dalam SATU query (bukan per item)
+                $stockQuery = ProductStock::whereIn('product_id', $produkIds)
+                    ->whereNull('product_variant_id');
+                if ($storeId) {
+                    $stockQuery->where('store_id', $storeId);
+                }
+                // Jika satu produk muncul di beberapa toko, kita ambil per product_id
+                // Untuk single-store, keyBy('product_id') cukup
+                $stockRecords = $stockQuery->get()->keyBy('product_id');
+
+                // ──────────────────────────────────────────────────────────
+                // PASS 1: Validasi SEMUA item sebelum menyentuh database
+                // ──────────────────────────────────────────────────────────
                 foreach ($validatedData['items'] as $itemData) {
                     $produk = $products->get($itemData['product_id']);
-                    // Pastikan produk ada dan stok mencukupi (validasi tambahan)
-                    if (!$produk || $produk->qty < $itemData['jumlah']) {
-                        // Rollback transaksi dan kirim pesan error
-                        throw new \Exception("Stock untuk produk '{$produk->name_product}' tidak mencukupi.");
+
+                    if (!$produk) {
+                        throw new \Exception("Produk dengan ID {$itemData['product_id']} tidak ditemukan.");
                     }
 
-                    // Cek apakah produk ini wajib menggunakan nomor seri
+                    // FIX Bug 1: Gunakan ProductStock, bukan $produk->qty (tidak ada kolomnya)
+                    $stockRecord  = $stockRecords->get($produk->id);
+                    $stokTersedia = $stockRecord ? $stockRecord->qty : 0;
+
+                    if ($stokTersedia < (int) $itemData['jumlah']) {
+                        throw new \Exception(
+                            "Stok untuk produk '{$produk->name_product}' tidak mencukupi. " .
+                            "Tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']}."
+                        );
+                    }
+
+                    // Validasi serial number wajib
                     if ($produk->wajib_seri) {
-                        // Jika wajib, pastikan array 'serial_numbers' ada dan jumlahnya cocok
-                        if (!isset($itemData['serial_numbers']) || count($itemData['serial_numbers']) !== (int)$itemData['jumlah']) {
-                            throw new \Exception("Jumlah nomor seri untuk produk '{$produk->name_product}' tidak sesuai dengan kuantitas pembelian.");
+                        $snKirim = $itemData['serial_numbers'] ?? [];
+                        if (count($snKirim) !== (int) $itemData['jumlah']) {
+                            throw new \Exception(
+                                "Jumlah nomor seri untuk '{$produk->name_product}' tidak sesuai. " .
+                                "Dibutuhkan: {$itemData['jumlah']}, dikirim: " . count($snKirim) . "."
+                            );
                         }
 
-                        // Verifikasi bahwa semua nomor seri yang dikirim valid, tersedia, dan milik produk yang benar
-                        $snCount = SerialNumber::where('product_id', $produk->id)
-                            ->whereIn('nomor_seri', $itemData['serial_numbers'])
+                        $snValid = SerialNumber::where('product_id', $produk->id)
+                            ->whereIn('nomor_seri', $snKirim)
                             ->where('status', 'Tersedia')
                             ->count();
 
-                        if ($snCount !== (int)$itemData['jumlah']) {
-                            throw new \Exception("Satu atau lebih nomor seri untuk '{$produk->name_product}' tidak valid atau tidak tersedia.");
+                        if ($snValid !== (int) $itemData['jumlah']) {
+                            throw new \Exception(
+                                "Satu atau lebih nomor seri untuk '{$produk->name_product}' " .
+                                "tidak valid atau sudah terjual."
+                            );
                         }
                     }
-
-                    $harga_jual_total_item = $itemData['harga_jual'] * $itemData['jumlah'];
-
-                    // 1. Kurangi diskon terlebih dahulu!
-                    $harga_setelah_diskon = $harga_jual_total_item - $itemData['diskon'];
-
-                    $taxe_id = $itemData['taxe_id'] ?? null;
-                    $pajak_rate = $taxe_id ? ($taxesData->get($taxe_id)->rate ?? 0) : 0;
-
-                    // 2. Hitung DPP dan Pajak dari harga yang SUDAH didiskon
-                    $dpp_item = $harga_setelah_diskon / (1 + ($pajak_rate / 100));
-                    $pajak_amount_item = $harga_setelah_diskon - $dpp_item;
-
-                    // 3. Tambahkan ke total global
-                    $subtotal_dpp_keseluruhan += $dpp_item;
-                    $total_pajak_item += $pajak_amount_item;
                 }
 
-                // Ambil biaya tambahan dari data yang sudah divalidasi
-                $service = (float) ($validatedData['service'] ?? 0);
-                $ongkir = (float) ($validatedData['ongkir'] ?? 0);
-                $diskon_global = (float) ($validatedData['diskon'] ?? 0);
-                $total_akhir = ($subtotal_dpp_keseluruhan + $total_pajak_item + $service + $ongkir) - $diskon_global;
-                $jumlah_dibayar = (float) $validatedData['jumlah_dibayar'];
-                $kembalian = $jumlah_dibayar - $total_akhir;
+                // ──────────────────────────────────────────────────────────
+                // PASS 2: Hitung total server-side
+                // ──────────────────────────────────────────────────────────
+                $subtotal_dpp = 0.0;
+                $total_pajak  = 0.0;
 
-                // Tentukan status pembayaran secara otomatis
+                foreach ($validatedData['items'] as $itemData) {
+                    [$dpp, $pajak] = $this->hitungDppDanPajak(
+                        (float) $itemData['harga_jual'],
+                        (int)   $itemData['jumlah'],
+                        (float) $itemData['diskon'],
+                        $itemData['taxe_id'] ?? null,
+                        $taxesData
+                    );
+                    $subtotal_dpp += $dpp;
+                    $total_pajak  += $pajak;
+                }
+
+                $service       = (float) ($validatedData['service'] ?? 0);
+                $ongkir        = (float) ($validatedData['ongkir']  ?? 0);
+                $diskon_global = (float) ($validatedData['diskon']  ?? 0);
+                $total_akhir   = ($subtotal_dpp + $total_pajak + $service + $ongkir) - $diskon_global;
+                $jumlah_dibayar    = (float) $validatedData['jumlah_dibayar'];
+                $kembalian         = $jumlah_dibayar - $total_akhir;
                 $status_pembayaran = ($jumlah_dibayar >= $total_akhir) ? 'Lunas' : 'Belum Lunas';
 
-                // 3. Simpan data ke tabel 'sales'
+                // ──────────────────────────────────────────────────────────
+                // PASS 3: Simpan header penjualan
+                // ──────────────────────────────────────────────────────────
                 $penjualan = Sale::create([
-                    'referensi' => $validatedData['referensi'],
+                    'referensi'         => $validatedData['referensi'],
                     'tanggal_penjualan' => now(),
-                    'user_id' => Auth::id(),
-                    'customer_id' => $validatedData['customer_id'],
-                    'subtotal' => $subtotal_dpp_keseluruhan, // Simpan subtotal DPP setelah diskon item
-                    'diskon' => $diskon_global,
-                    'service' => $service,
-                    'ongkir' => $ongkir,
-                    'pajak' => $total_pajak_item,
-                    'total_akhir' => $total_akhir,
-                    'jumlah_dibayar' => $jumlah_dibayar,
-                    'kembalian' => $kembalian > 0 ? $kembalian : 0, // Jangan simpan kembalian negatif
+                    'user_id'           => Auth::id(),
+                    'store_id'          => $storeId,
+                    'customer_id'       => $validatedData['customer_id'] ?? null,
+                    'subtotal'          => $subtotal_dpp,
+                    'diskon'            => $diskon_global,
+                    'service'           => $service,
+                    'ongkir'            => $ongkir,
+                    'pajak'             => $total_pajak,
+                    'total_akhir'       => $total_akhir,
+                    'jumlah_dibayar'    => $jumlah_dibayar,
+                    'kembalian'         => max(0, $kembalian),
                     'status_pembayaran' => $status_pembayaran,
                     'metode_pembayaran' => $validatedData['metode_pembayaran'],
-                    'catatan' => $validatedData['catatan'],
+                    'catatan'           => $validatedData['catatan'] ?? null,
                 ]);
 
-                // 4. Simpan setiap item ke 'item_penjualan' dan kurangi stok
+                // ──────────────────────────────────────────────────────────
+                // PASS 4: Simpan item, kurangi stok, update SN
+                // FIX Bug 3: gunakan $stockRecords yang sudah di-pre-fetch
+                // ──────────────────────────────────────────────────────────
                 foreach ($validatedData['items'] as $itemData) {
                     $produk = $products->get($itemData['product_id']);
 
-                    $harga_jual_total_item = $itemData['harga_jual'] * $itemData['jumlah'];
-
-                    // --- PERBAIKAN DI SINI ---
-                    $harga_setelah_diskon = $harga_jual_total_item - $itemData['diskon'];
-
-                    $taxe_id = $itemData['taxe_id'] ?? null;
-                    $pajak_rate = $taxe_id ? ($taxesData->get($taxe_id)->rate ?? 0) : 0;
-
-                    // Hitung dari harga_setelah_diskon
-                    $dpp_item = $harga_setelah_diskon / (1 + ($pajak_rate / 100));
-                    $pajak_amount_item = $harga_setelah_diskon - $dpp_item;
+                    [$dpp, $pajak] = $this->hitungDppDanPajak(
+                        (float) $itemData['harga_jual'],
+                        (int)   $itemData['jumlah'],
+                        (float) $itemData['diskon'],
+                        $itemData['taxe_id'] ?? null,
+                        $taxesData
+                    );
 
                     $penjualanItem = $penjualan->items()->create([
-                        'product_id' => $produk->id,
-                        'jumlah' => $itemData['jumlah'],
-                        'harga_jual' => $itemData['harga_jual'],
+                        'product_id'  => $produk->id,
+                        'jumlah'      => $itemData['jumlah'],
+                        'harga_jual'  => $itemData['harga_jual'],
                         'diskon_item' => $itemData['diskon'],
-                        'taxe_id' => $taxe_id,
-                        'pajak_item' => $pajak_amount_item,
-                        'subtotal' => $dpp_item, // Subtotal sudah benar (DPP yang didiskon)
+                        'taxe_id'     => $itemData['taxe_id'] ?? null,
+                        'pajak_item'  => $pajak,
+                        'subtotal'    => $dpp,
                     ]);
 
-                    $storeId = Auth::user()->employee->store_id ?? null;
-                    $stockRecord = ProductStock::query()->where('product_id', $produk->id)
-                        ->when($storeId, fn($q) => $q->where('store_id', $storeId))
-                        ->first();
-
+                    // FIX Bug 3: pakai stockRecord yang sudah di-fetch, bukan query baru
+                    $stockRecord = $stockRecords->get($produk->id);
                     if ($stockRecord) {
                         $stockRecord->decrement('qty', $itemData['jumlah']);
                     }
 
-                    // PENYESUAIAN LOGIKA NOMOR SERI
-                    if ($produk->wajib_seri && isset($itemData['serial_numbers'])) {
+                    // Update status serial number
+                    if ($produk->wajib_seri && !empty($itemData['serial_numbers'])) {
                         SerialNumber::whereIn('nomor_seri', $itemData['serial_numbers'])
                             ->where('product_id', $produk->id)
                             ->update([
-                                'status' => 'Terjual',
-                                // DIUBAH: Tautkan ke item penjualan spesifik yang baru dibuat
-                                'item_sale_id' => $penjualanItem->id
+                                'status'       => 'Terjual',
+                                'item_sale_id' => $penjualanItem->id,
                             ]);
                     }
                 }
@@ -306,11 +319,14 @@ class SaleController extends Controller implements HasMiddleware
                 return $penjualan;
             });
 
-            // 5. Redirect ke halaman faktur jika berhasil
-            return redirect()->route('penjualan.show', $penjualan->referensi)->with('success', 'Transaksi berhasil disimpan!');
+            return redirect()
+                ->route('penjualan.show', $penjualan->referensi)
+                ->with('success', 'Transaksi berhasil disimpan!');
+
         } catch (\Exception $e) {
-            // Redirect kembali dengan pesan error jika transaksi gagal
-            return back()->withInput()->with('error', 'Terjadi kesalahan saat menyimpan transaksi: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -321,7 +337,7 @@ class SaleController extends Controller implements HasMiddleware
     {
         // Eager load relasi untuk menghindari N+1 problem
         $penjualan->load('items.product', 'items.serialNumbers', 'customer', 'user');
-        $profilToko = Store::query()->first();
+        $profilToko = Store::find($penjualan->store_id);
 
         return view('pos::penjualan.show', [
             'title' => 'Faktur Sale: ' . $penjualan->referensi,
@@ -355,26 +371,35 @@ class SaleController extends Controller implements HasMiddleware
      */
     public function update(Request $request, Sale $penjualan)
     {
-
         if ($request->input('status_pembayaran') === 'Dibatalkan' && !$request->has('items')) {
             if ($penjualan->status_pembayaran !== 'Dibatalkan') {
                 try {
                     DB::transaction(function () use ($penjualan) {
-                        // 1. Kembalikan stok dan status nomor seri untuk setiap item.
-                        foreach ($penjualan->items as $item) {
-                            // a. Kembalikan jumlah stok produk
-                            Product::where('id', $item->product_id)->increment('qty', $item->jumlah);
+                        // PERBAIKAN: Ambil store_id dari transaksi asli
+                        $storeId = $penjualan->store_id; 
 
-                            // b. Kembalikan status nomor seri menjadi 'Tersedia'
-                            // dan hapus relasinya dengan item penjualan ini.
+                        foreach ($penjualan->items as $item) {
                             SerialNumber::where('item_sale_id', $item->id)->update([
-                                'status' => 'Tersedia',
-                                'item_sale_id' => null
+                                'status'       => 'Tersedia',
+                                'item_sale_id' => null,
                             ]);
+
+                            $stockQ = ProductStock::query()->where('product_id', $item->product_id)
+                                ->whereNull('product_variant_id');
+                            
+                            if ($storeId) {
+                                $stockQ->where('store_id', $storeId);
+                            }
+                            
+                            $stock = $stockQ->first();
+                            if ($stock) {
+                                $stock->increment('qty', $item->jumlah);
+                            }
                         }
+
                         $penjualan->update(['status_pembayaran' => 'Dibatalkan']);
                     });
-                    session()->flash('success', 'Transaksi berhasil dibatalkan dan stok telah dikembalikan.');
+                    session()->flash('success', 'Transaksi berhasil dibatalkan dan stok dikembalikan.');
                 } catch (\Exception $e) {
                     session()->flash('error', 'Gagal membatalkan transaksi: ' . $e->getMessage());
                 }
@@ -384,239 +409,226 @@ class SaleController extends Controller implements HasMiddleware
             return redirect()->route('penjualan.index');
         }
 
+        // --- Full update ---
         $request->merge([
             'jumlah_dibayar' => preg_replace('/[^0-9]/', '', $request->input('jumlah_dibayar')),
-            'service' => preg_replace('/[^0-9]/', '', $request->input('service', 0)),
-            'ongkir' => preg_replace('/[^0-9]/', '', $request->input('ongkir', 0)),
-            'diskon' => preg_replace('/[^0-9]/', '', $request->input('diskon', 0)),
+            'service'        => preg_replace('/[^0-9]/', '', $request->input('service', 0)),
+            'ongkir'         => preg_replace('/[^0-9]/', '', $request->input('ongkir', 0)),
+            'diskon'         => preg_replace('/[^0-9]/', '', $request->input('diskon', 0)),
         ]);
 
         $validatedData = $request->validate([
-            'customer_id' => 'nullable|exists:customers,id',
-            'tanggal_penjualan' => 'required|date',
-            'status_pembayaran' => 'required|in:Lunas,Belum Lunas,Dibatalkan',
-            'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS',
-            'catatan' => 'nullable|string',
-            'jumlah_dibayar' => 'required|numeric|min:0',
-            'service' => 'nullable|numeric|min:0',
-            'ongkir' => 'nullable|numeric|min:0',
-            'diskon' => 'nullable|numeric|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.jumlah' => 'required|integer|min:1', // Di frontend, ini disebut 'jumlah'
-            'items.*.harga_jual' => 'required|numeric|min:0',
-            'items.*.diskon' => 'required|numeric|min:0',
-            'items.*.taxe_id' => 'nullable|exists:taxes,id',
-            'items.*.serial_numbers' => 'nullable|array',
+            'customer_id'              => 'nullable|exists:customers,id',
+            'tanggal_penjualan'        => 'required|date',
+            'status_pembayaran'        => 'required|in:Lunas,Belum Lunas,Dibatalkan',
+            'metode_pembayaran'        => 'required|in:TUNAI,TRANSFER,QRIS',
+            'catatan'                  => 'nullable|string',
+            'jumlah_dibayar'           => 'required|numeric|min:0',
+            'service'                  => 'nullable|numeric|min:0',
+            'ongkir'                   => 'nullable|numeric|min:0',
+            'diskon'                   => 'nullable|numeric|min:0',
+            'items'                    => 'required|array|min:1',
+            'items.*.product_id'       => 'required|exists:products,id',
+            'items.*.jumlah'           => 'required|integer|min:1',
+            'items.*.harga_jual'       => 'required|numeric|min:0',
+            'items.*.diskon'           => 'required|numeric|min:0',
+            'items.*.taxe_id'          => 'nullable|exists:taxes,id',
+            'items.*.serial_numbers'   => 'nullable|array',
             'items.*.serial_numbers.*' => 'string',
         ]);
 
         try {
-            $pajakIds = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
+            $pajakIds  = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
             $taxesData = Taxe::findMany($pajakIds)->keyBy('id');
 
-            $penjualan = DB::transaction(function () use ($request, $penjualan, $validatedData, $taxesData) {
-                // --- MANAJEMEN NOMOR SERI ---
-                // 1. Ambil semua item LAMA beserta nomor serinya SEBELUM ada perubahan.
+            $penjualan = DB::transaction(function () use ($penjualan, $validatedData, $taxesData) {
+
+                // PERBAIKAN: Ambil store_id dari transaksi asli, bukan dari user yang login
+                $storeId     = $penjualan->store_id; 
+                $statusLama  = $penjualan->status_pembayaran;
+                $statusBaru  = $validatedData['status_pembayaran'];
+
+                // ── Manajemen Serial Number ──────────────────────────────
                 $oldItemsWithSerials = $penjualan->items()->with('serialNumbers')->get();
+                $oldSerialNumbers    = $oldItemsWithSerials
+                    ->pluck('serialNumbers')->flatten()->pluck('nomor_seri')->all();
 
-                // 2. Kumpulkan semua nomor seri LAMA ke dalam satu array.
-                $oldSerialNumbers = $oldItemsWithSerials->pluck('serialNumbers')->flatten()->pluck('nomor_seri')->all();
-
-                // 3. Kumpulkan semua nomor seri BARU dari request.
                 $newSerialNumbers = collect($validatedData['items'])
-                    ->filter(fn($item) => !empty($item['serial_numbers']))
-                    ->pluck('serial_numbers')
-                    ->flatten()
-                    ->all();
+                    ->filter(fn($i) => !empty($i['serial_numbers']))
+                    ->pluck('serial_numbers')->flatten()->all();
 
-                // 4. Cari nomor seri yang ada di daftar LAMA tapi TIDAK ADA di daftar BARU.
-                // Ini adalah nomor seri yang itemnya dihapus dari transaksi.
-                $serialsToMakeAvailable = array_diff($oldSerialNumbers, $newSerialNumbers);
-
-                // 5. Jika ada, update statusnya kembali menjadi 'Tersedia'.
-                if (!empty($serialsToMakeAvailable)) {
-                    SerialNumber::whereIn('nomor_seri', $serialsToMakeAvailable)
+                $serialsToRelease = array_diff($oldSerialNumbers, $newSerialNumbers);
+                if (!empty($serialsToRelease)) {
+                    SerialNumber::whereIn('nomor_seri', $serialsToRelease)
                         ->update(['status' => 'Tersedia', 'item_sale_id' => null]);
                 }
 
-                // --- MANAJEMEN STOK ---
-                $statusLama = $penjualan->status_pembayaran;
-                $statusBaru = $validatedData['status_pembayaran'];
-
-                // a. Ambil semua produk yang relevan untuk data baru dalam satu query (eager load wajib_seri)
+                // ── Manajemen Stok ───────────────────────────────────────
                 $newProductIds = collect($validatedData['items'])->pluck('product_id');
-                $products = Product::whereIn('id', $newProductIds)->get()->keyBy('id');
+                $products      = Product::whereIn('id', $newProductIds)->get()->keyBy('id');
 
-                // b. Logika penyesuaian stok berdasarkan perubahan status dan item
+                $allProductIds = $oldItemsWithSerials->pluck('product_id')
+                    ->merge($newProductIds)->unique()->values();
+
+                $stockQuery = ProductStock::whereIn('product_id', $allProductIds)
+                    ->whereNull('product_variant_id');
+                
+                // Sekarang $storeId dijamin menggunakan toko tempat transaksi terjadi
+                if ($storeId) {
+                    $stockQuery->where('store_id', $storeId);
+                }
+                $stockRecords = $stockQuery->get()->keyBy('product_id');
+
                 if ($statusBaru === 'Dibatalkan') {
-                    // Status diubah menjadi Dibatalkan -> Kembalikan stok item lama
                     if ($statusLama !== 'Dibatalkan') {
                         foreach ($penjualan->items as $oldItem) {
-                            
                             SerialNumber::where('item_sale_id', $oldItem->id)->update([
-                                'status' => 'Tersedia',
-                                'item_sale_id' => null
+                                'status'       => 'Tersedia',
+                                'item_sale_id' => null,
                             ]);
-                            $storeId = Auth::user()->employee->store_id ?? null;
-                            $stockRecord = ProductStock::query()->where('product_id', $oldItem->product_id)
-                                ->when($storeId, fn($q) => $q->where('store_id', $storeId))
-                                ->first();
-                                
-                            if ($stockRecord) {
-                                $stockRecord->increment('qty', $oldItem->jumlah);
+                            $stock = $stockRecords->get($oldItem->product_id);
+                            if ($stock) {
+                                $stock->increment('qty', $oldItem->jumlah);
                             }
                         }
                     }
-                } else { // $statusBaru adalah 'Lunas' atau 'Belum Lunas'
-                    // Jika status lama BUKAN 'Dibatalkan', kembalikan stok item lama terlebih dahulu
-                    // untuk menghitung ulang stok berdasarkan item baru.
+                } else {
                     if ($statusLama !== 'Dibatalkan') {
                         foreach ($penjualan->items as $oldItem) {
-                            $storeId = Auth::user()->employee->store_id ?? null;
-                            $stockRecord = ProductStock::query()->where('product_id', $oldItem->product_id)
-                                ->when($storeId, fn($q) => $q->where('store_id', $storeId))
-                                ->first();
-                                
-                            if ($stockRecord) {
-                                $stockRecord->increment('qty', $oldItem->jumlah);
+                            $stock = $stockRecords->get($oldItem->product_id);
+                            if ($stock) {
+                                $stock->increment('qty', $oldItem->jumlah);
                             }
                         }
+                        $stockRecords = $stockQuery->get()->keyBy('product_id');
                     }
 
-                    // --- PERBAIKAN LOGIKA & N+1 ---
-                    // 1. Pre-fetch current quantities of all products involved in the new transaction
-                    $newProductIds = collect($validatedData['items'])->pluck('product_id');
-                    $produkQtysSaatIni = ProductStock::query()
-                    ->whereIn('product_id', $newProductIds, 'and', false) 
-                    ->selectRaw('product_id, SUM(qty) as total_qty')
-                    ->groupBy('product_id')
-                    ->pluck('total_qty', 'product_id');
-
-                    // 2. Validasi semua stok sebelum melakukan perubahan
                     foreach ($validatedData['items'] as $itemData) {
                         $produk = $products->get($itemData['product_id']);
-                        $stokTersedia = $produkQtysSaatIni->get($itemData['product_id'], 0);
-                        if (!$produk || $stokTersedia < $itemData['jumlah']) {
-                            throw new \Exception("Stock untuk produk '{$produk->nama_produk}' tidak mencukupi (tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']}).");
+                        $stock        = $stockRecords->get($itemData['product_id']);
+                        $stokTersedia = $stock ? $stock->qty : 0;
+
+                        if (!$produk || $stokTersedia < (int) $itemData['jumlah']) {
+                            $nama = $produk?->name_product ?? "ID: {$itemData['product_id']}";
+                            throw new \Exception(
+                                "Stok '{$nama}' tidak mencukupi " .
+                                "(tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']})."
+                            );
                         }
 
-                        // Validasi ulang nomor seri yang dikirim
                         if ($produk->wajib_seri) {
-                            if (!isset($itemData['serial_numbers']) || count($itemData['serial_numbers']) !== (int)$itemData['jumlah']) {
-                                throw new \Exception("Jumlah nomor seri untuk produk '{$produk->name_product}' tidak sesuai dengan kuantitas.");
+                            $snKirim = $itemData['serial_numbers'] ?? [];
+                            if (count($snKirim) !== (int) $itemData['jumlah']) {
+                                throw new \Exception(
+                                    "Jumlah SN untuk '{$produk->name_product}' tidak sesuai."
+                                );
                             }
-                            // Verifikasi bahwa SN yang dikirim valid (Tersedia ATAU sudah terikat dengan transaksi ini sebelumnya)
                             $validSnCount = SerialNumber::where('product_id', $produk->id)
-                                ->whereIn('nomor_seri', $itemData['serial_numbers'])
-                                ->where(fn($q) => $q->where('status', 'Tersedia')->orWhereIn('nomor_seri', $oldSerialNumbers))
+                                ->whereIn('nomor_seri', $snKirim)
+                                ->where(fn($q) => $q
+                                    ->where('status', 'Tersedia')
+                                    ->orWhereIn('nomor_seri', $oldSerialNumbers)
+                                )
                                 ->count();
-                            if ($validSnCount !== (int)$itemData['jumlah']) {
-                                throw new \Exception("Satu atau lebih nomor seri untuk '{$produk->name_product}' tidak valid atau sudah terjual di transaksi lain.");
+                            if ($validSnCount !== (int) $itemData['jumlah']) {
+                                throw new \Exception(
+                                    "Satu atau lebih SN untuk '{$produk->name_product}' tidak valid."
+                                );
                             }
                         }
                     }
 
-                    // 3. Jika semua validasi lolos, baru kurangi stok
                     foreach ($validatedData['items'] as $itemData) {
-                        Product::where('id', $itemData['product_id'])->decrement('qty', $itemData['jumlah']);
+                        $stock = $stockRecords->get($itemData['product_id']);
+                        if ($stock) {
+                            $stock->decrement('qty', $itemData['jumlah']);
+                        }
                     }
-                    // --- AKHIR PERBAIKAN ---
                 }
 
-                // --- PENGHITUNGAN ULANG TOTAL (SERVER-SIDE) ---
-                $subtotal_dpp = 0;
-                $total_pajak_keseluruhan = 0;
+                // ── Hitung ulang total (server-side) ────────────────────
+                $subtotal_dpp = 0.0;
+                $total_pajak  = 0.0;
 
                 foreach ($validatedData['items'] as $itemData) {
-                    // Logika perhitungan di sini disesuaikan dengan method store() (pajak inklusif)
-                    // untuk konsistensi.
-                    $harga_jual_total_item = $itemData['harga_jual'] * $itemData['jumlah'];
-
-                    // 1. Kurangi diskon terlebih dahulu!
-                    $harga_setelah_diskon = $harga_jual_total_item - $itemData['diskon'];
-
-                    $taxe_id = $itemData['taxe_id'] ?? null;
-                    $pajak_rate = $taxe_id ? ($taxesData->get($taxe_id)->rate ?? 0) : 0;
-
-                    // 2. Hitung DPP dan Pajak dari harga yang SUDAH didiskon
-                    $dpp_item = $harga_setelah_diskon / (1 + ($pajak_rate / 100));
-                    $pajak_amount_item = $harga_setelah_diskon - $dpp_item;
-
-                    // 3. Tambahkan ke total global
-                    $subtotal_dpp_keseluruhan += $dpp_item;
-                    $total_pajak_item += $pajak_amount_item;
+                    [$dpp, $pajak] = $this->hitungDppDanPajak(
+                        (float) $itemData['harga_jual'],
+                        (int)   $itemData['jumlah'],
+                        (float) $itemData['diskon'],
+                        $itemData['taxe_id'] ?? null,
+                        $taxesData
+                    );
+                    $subtotal_dpp += $dpp;
+                    $total_pajak  += $pajak;
                 }
 
-                $service = (float)($validatedData['service'] ?? 0);
-                $ongkir = (float)($validatedData['ongkir'] ?? 0);
-                $diskon_global = (float)($validatedData['diskon'] ?? 0);
-                $total_akhir = ($subtotal_dpp_keseluruhan + $total_pajak_item + $service + $ongkir) - $diskon_global;
-                $jumlah_dibayar = (float) $validatedData['jumlah_dibayar'];
-                $kembalian = $jumlah_dibayar - $total_akhir;
+                $service       = (float) ($validatedData['service'] ?? 0);
+                $ongkir        = (float) ($validatedData['ongkir']  ?? 0);
+                $diskon_global = (float) ($validatedData['diskon']  ?? 0);
+                $total_akhir   = ($subtotal_dpp + $total_pajak + $service + $ongkir) - $diskon_global;
+                $jumlah_dibayar    = (float) $validatedData['jumlah_dibayar'];
+                $kembalian         = $jumlah_dibayar - $total_akhir;
 
-                // --- UPDATE DATA PENJUALAN ---
-                // a. Update record utama di tabel 'sales'
+                // ── Update header penjualan ──────────────────────────────
                 $penjualan->update([
-                    'customer_id' => $validatedData['customer_id'],
+                    'customer_id'       => $validatedData['customer_id'] ?? null,
                     'tanggal_penjualan' => $validatedData['tanggal_penjualan'],
-                    'metode_pembayaran' => $validatedData['metode_pembayaran'], // Langsung gunakan status dari form
-                    'status_pembayaran' => $validatedData['status_pembayaran'],
-                    'subtotal' => $subtotal_dpp,
-                    'diskon' => $diskon_global,
-                    'service' => $service,
-                    'ongkir' => $ongkir,
-                    'pajak' => $total_pajak_keseluruhan,
-                    'total_akhir' => $total_akhir,
-                    'jumlah_dibayar' => $validatedData['jumlah_dibayar'],
-                    'kembalian' => $kembalian > 0 ? $kembalian : 0,
-                    'catatan' => $validatedData['catatan'],
+                    'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                    'status_pembayaran' => $statusBaru,
+                    'subtotal'          => $subtotal_dpp,
+                    'diskon'            => $diskon_global,
+                    'service'           => $service,
+                    'ongkir'            => $ongkir,
+                    'pajak'             => $total_pajak,
+                    'total_akhir'       => $total_akhir,
+                    'jumlah_dibayar'    => $jumlah_dibayar,
+                    'kembalian'         => max(0, $kembalian),
+                    'catatan'           => $validatedData['catatan'] ?? null,
                 ]);
 
-                // b. Hapus item penjualan yang lama
+                // ── Hapus & buat ulang item penjualan ───────────────────
                 $penjualan->items()->delete();
 
-                // c. Buat kembali item penjualan berdasarkan data baru
-                foreach ($validatedData['items'] as $index => $itemData) {
-
-                    $harga_jual_total_item = (float)$itemData['harga_jual'] * (int)$itemData['jumlah'];
-
-                    // --- PERBAIKAN DI SINI ---
-                    $harga_setelah_diskon = $harga_jual_total_item - $itemData['diskon'];
-
-                    $taxe_id = $itemData['taxe_id'] ?? null;
-                    $pajak_rate = $taxe_id ? ($taxesData->get($taxe_id)->rate ?? 0) : 0;
-
-                    // Hitung dari harga_setelah_diskon
-                    $dpp_item = $harga_setelah_diskon / (1 + ($pajak_rate / 100));
-                    $pajak_amount_item = $harga_setelah_diskon - $dpp_item;
+                foreach ($validatedData['items'] as $itemData) {
+                    [$dpp, $pajak] = $this->hitungDppDanPajak(
+                        (float) $itemData['harga_jual'],
+                        (int)   $itemData['jumlah'],
+                        (float) $itemData['diskon'],
+                        $itemData['taxe_id'] ?? null,
+                        $taxesData
+                    );
 
                     $newItem = $penjualan->items()->create([
-                        'product_id' => $itemData['product_id'],
-                        'jumlah' => $itemData['jumlah'],
-                        'harga_jual' => $itemData['harga_jual'],
+                        'product_id'  => $itemData['product_id'],
+                        'jumlah'      => $itemData['jumlah'],
+                        'harga_jual'  => $itemData['harga_jual'],
                         'diskon_item' => $itemData['diskon'],
-                        'taxe_id' => $taxe_id,
-                        'pajak_item' => $pajak_amount_item,
-                        'subtotal' => $dpp_item, // Subtotal sudah benar (DPP yang didiskon)
+                        'taxe_id'     => $itemData['taxe_id'] ?? null,
+                        'pajak_item'  => $pajak,
+                        'subtotal'    => $dpp,
                     ]);
 
-                    // Update status nomor seri yang BARU menjadi 'Terjual' dan kaitkan dengan item baru
-                    if (isset($itemData['serial_numbers']) && !empty($itemData['serial_numbers'])) {
+                    if (!empty($itemData['serial_numbers'])) {
                         SerialNumber::whereIn('nomor_seri', $itemData['serial_numbers'])
                             ->where('product_id', $itemData['product_id'])
                             ->update([
-                                'status' => 'Terjual',
-                                'item_sale_id' => $newItem->id
+                                'status'       => 'Terjual',
+                                'item_sale_id' => $newItem->id,
                             ]);
                     }
                 }
 
                 return $penjualan->load('items.product', 'customer', 'user');
             });
-            return redirect()->route('penjualan.show', $penjualan->referensi)->with('success', 'Transaksi berhasil diperbarui.');
+
+            return redirect()
+                ->route('penjualan.show', $penjualan->referensi)
+                ->with('success', 'Transaksi berhasil diperbarui.');
+
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Gagal memperbarui transaksi: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal memperbarui transaksi: ' . $e->getMessage());
         }
     }
 
@@ -627,7 +639,7 @@ class SaleController extends Controller implements HasMiddleware
     {
         // Eager load relasi untuk efisiensi
         $penjualan->load('customer', 'user', 'items.product', 'items.serialNumbers');
-        $profilToko = Store::query()->first();
+        $profilToko = Store::find($penjualan->store_id);
 
         // Data yang akan dikirim ke view
         $data = [
@@ -643,10 +655,16 @@ class SaleController extends Controller implements HasMiddleware
     public function getTodayHistory(Request $request)
     {
         if ($request->ajax()) {
+
+            $storeId = Auth::user()->employee?->store_id;
+
             $todaySales = Sale::with('customer')
-                ->whereDate('created_at', Carbon::today())
-                ->latest() // Urutkan dari yang terbaru
-                ->get()
+            ->whereDate('created_at', Carbon::today())
+            ->when($storeId, function ($query) use ($storeId) {
+                $query->where('store_id', $storeId); // Filter cabang
+            })
+            ->latest()
+            ->get()
                 ->map(function ($sale) {
                     return [
                         'referensi' => $sale->referensi,
@@ -673,8 +691,33 @@ class SaleController extends Controller implements HasMiddleware
     {
         // Eager load relasi yang dibutuhkan untuk efisiensi
         $penjualan->load('customer', 'user', 'items.product', 'items.serialNumbers');
-        $profilToko = Store::query()->first();
+        $profilToko = Store::find($penjualan->store_id);
 
         return view('pos::penjualan.thermal', compact('penjualan', 'profilToko'));
+    }
+
+    private function hitungDppDanPajak(
+        float $harga_jual,
+        int   $jumlah,
+        float $diskon_item,
+        ?int  $taxe_id,
+        \Illuminate\Support\Collection $taxesData
+    ): array {
+        $harga_total          = $harga_jual * $jumlah;
+        $harga_setelah_diskon = $harga_total - $diskon_item;
+
+        $pajak_rate = 0.0;
+        if ($taxe_id && $taxesData->has($taxe_id)) {
+            $pajak_rate = (float) ($taxesData->get($taxe_id)->rate ?? 0);
+        }
+
+        // Pajak inklusif: harga sudah termasuk pajak
+        $dpp   = $pajak_rate > 0
+            ? $harga_setelah_diskon / (1 + ($pajak_rate / 100))
+            : $harga_setelah_diskon;
+
+        $pajak = $harga_setelah_diskon - $dpp;
+
+        return [$dpp, $pajak];
     }
 }

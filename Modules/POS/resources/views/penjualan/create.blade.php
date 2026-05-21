@@ -1266,7 +1266,7 @@
                         }
                         data.serial_numbers.forEach(sn => {
                             const isChecked = existingSerials.includes(sn.serial_number);
-                            const isDisabled = sn.status !== 'tersedia' && !isChecked;
+                            const isDisabled = sn.status !== 'Tersedia' && !isChecked;
                             snListContainer.insertAdjacentHTML('beforeend', `
                         <label class="list-group-item list-group-item-action d-flex gap-2 align-items-center
                                ${isDisabled ? 'text-muted disabled' : ''}">
@@ -1276,7 +1276,7 @@
                                    ${isDisabled ? 'disabled' : ''}>
                             <span class="d-flex justify-content-between align-items-center w-100">
                                 <span>${sn.serial_number}</span>
-                                <small class="badge bg-label-${sn.status === 'tersedia' ? 'success' : 'secondary'}">
+                                <small class="badge bg-label-${sn.status === 'Tersedia' ? 'success' : 'secondary'}">
                                     ${sn.status}
                                 </small>
                             </span>
