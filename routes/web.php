@@ -13,7 +13,6 @@ use App\Http\Controllers\finance\IncomeController;
 use App\Http\Controllers\finance\KeuanganController;
 use App\Http\Controllers\finance\TransactionCategoryController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 
 // Mengambil variabel domain dari .env
 $domain = env('APP_DOMAIN', 'jocomputer.com');
@@ -42,8 +41,8 @@ Route::domain('jopos.' . $domain)->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('employee.logout');
         
         // Dashboard & Fitur Admin
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('keuangan', [KeuanganController::class, 'index'])->name('keuangan');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:view-dashboard');
+        Route::get('keuangan', [KeuanganController::class, 'index'])->name('keuangan')->middleware('permission:view-keuangan');
 
         // Expense
         Route::get('/expense/{expense:referensi}/json', [ExpenseController::class, 'getjson'])->name('expense.getjson');

@@ -4,12 +4,23 @@ namespace App\Http\Controllers\auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-class RoleController extends Controller
+class RoleController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [ 
+            new Middleware('permission:view-roles', only: ['index','groupedPermissions']), // Tambahkan permission untuk akses index dan groupedPermissions
+            new Middleware('permission:create-roles', only: ['create', 'store']),
+            new Middleware('permission:edit-roles', only: ['edit', 'update']),
+            new Middleware('permission:delete-roles', only: ['destroy']),
+        ];
+    }
     /**
      * Kelompokkan permissions berdasarkan prefix kata pertama.
      * Contoh: "view users" => Group "Users"

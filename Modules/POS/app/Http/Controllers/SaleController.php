@@ -3,24 +3,34 @@
 namespace Modules\POS\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-
-use App\Models\Taxe;
-use Modules\Inventory\Models\Product;
 use App\Models\Customer;
-use App\Models\Store;
-use Modules\POS\Models\Sale;
-use Illuminate\Http\Request;
-use Modules\Inventory\Models\Category;
-use Modules\Inventory\Models\SerialNumber;
-use Illuminate\Support\Carbon;
 use App\Models\ProductStock;
+use App\Models\Store;
+use App\Models\Taxe;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Modules\Inventory\Models\Category;
+use Modules\Inventory\Models\Product;
+use Modules\Inventory\Models\SerialNumber;
+use Modules\POS\Models\Sale;
 
 
-class SaleController extends Controller
+class SaleController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-penjualan', only: ['index', 'show']), 
+            new Middleware('permission:create-penjualan', only: ['create', 'store' , 'getTodayHistory', 'generateInvoiceNumber']),
+            new Middleware('permission:edit-penjualan', only: ['edit', 'update']),
+            new Middleware('permission:print-penjualan', only: ['printThermal', 'generatePdf']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */

@@ -10,10 +10,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule; // <-- Tambahkan ini
+use Illuminate\Validation\Rule; 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class SerialNumberController extends Controller
+class SerialNumberController extends Controller implements HasMiddleware
 {
+    
+
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-serialnumber', only: ['index', 'getByProduct']),
+            new Middleware('permission:create-serialnumber', only: ['create', 'store']),
+            new Middleware('permission:edit-serialnumber', only: ['edit', 'update']),
+            new Middleware('permission:delete-serialnumber', only: ['destroy']),
+        ];
+    }
+
     public function index(Request $request, $produk_slug = null) // Terima parameter slug
     {
         $query = SerialNumber::with(['produk', 'penjualan'])->latest();
@@ -46,7 +60,7 @@ class SerialNumberController extends Controller
         $serialNumbers = $query->paginate(15)->withQueryString();
         $products = Product::where('wajib_seri', true)->orderBy('name_product')->get();
 
-        return view('inventory::inventaris.serial-number', [
+        return view('inventory::inventaris.sn.serial-number', [
             'title' => 'Manajemen Nomor Seri',
             'serialNumbers' => $serialNumbers,
             'products' => $products,
@@ -127,7 +141,6 @@ class SerialNumberController extends Controller
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'serial_numbers' => 'required|array|min:1',
-            // Pastikan setiap nomor seri unik di tabel untuk product_id yang sama
             'serial_numbers.*' => [
                 'required',
                 'distinct',

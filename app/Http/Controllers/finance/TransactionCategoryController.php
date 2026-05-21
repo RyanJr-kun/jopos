@@ -2,14 +2,32 @@
 
 namespace App\Http\Controllers\finance;
 
+use \Cviebrock\EloquentSluggable\Services\SlugService;
 use App\Http\Controllers\Controller;
 use App\Models\TransactionCategory;
 use Illuminate\Http\Request;
-use \Cviebrock\EloquentSluggable\Services\SlugService;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Validation\Rule;
 
-class TransactionCategoryController extends Controller
+class TransactionCategoryController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [ 
+            new Middleware('permission:view-kategoritransaksi', only: ['index','getKategoriJson','chekSlug']),
+            
+            // 2. Akses Tambah Data
+            new Middleware('permission:create-kategoritransaksi', only: ['create', 'store']),
+            
+            // 3. Akses Edit Data
+            new Middleware('permission:edit-kategoritransaksi', only: ['edit', 'update']),
+            
+            // 4. Akses Hapus Data
+            new Middleware('permission:delete-kategoritransaksi', only: ['destroy']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */

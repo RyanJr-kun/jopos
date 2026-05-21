@@ -32,7 +32,7 @@ class StockTakeController extends Controller
         $products = $query->paginate(50)->withQueryString();
         $kategoris = Category::where('status', 1)->whereHas('products')->orderBy('name')->get();
 
-        return view('inventory::inventaris.stok-opname', [
+        return view('inventory::inventaris.opname.stok-opname', [
             'title' => 'Stock Opname',
             'products' => $products,
             'kategoris' => $kategoris,
@@ -156,7 +156,7 @@ class StockTakeController extends Controller
 
         $stokOpnames = $query->paginate(15)->withQueryString();
 
-        return view('inventory::inventaris.stok-opname-history', [
+        return view('inventory::inventaris.opname.stok-opname-history', [
             'title' => 'Riwayat Stock Opname',
             'stokOpnames' => $stokOpnames,
         ]);
@@ -179,7 +179,7 @@ class StockTakeController extends Controller
             'details.produk.unit'
         ]);
 
-        return view('inventory::inventaris.stok-opname-show', [
+        return view('inventory::inventaris.opname.stok-opname-show', [
             'title' => 'Detail Stock Opname ' . $stok_opname->kode_opname,
             'stokOpname' => $stok_opname,
         ]);

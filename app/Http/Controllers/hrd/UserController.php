@@ -8,14 +8,25 @@ use App\Models\EmployeeProfile;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
-
-class UserController extends Controller
+ 
+class UserController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [ 
+            new Middleware('permission:view-users', only: ['index','upload', 'revert']),
+            new Middleware('permission:create-users', only: ['create', 'store']),
+            new Middleware('permission:edit-users', only: ['edit', 'update']),
+            new Middleware('permission:delete-users', only: ['destroy']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */
@@ -65,7 +76,7 @@ class UserController extends Controller
     {
         return view('content.hrd.user.create', [
             'roles'  => Role::all(),
-            'stores' => Store::where('is_active', true)->orderBy('name_toko')->get(),
+            'stores' => Store::query()->where('is_active', true)->orderBy('name_toko', 'ASC')->get(),
             'jabatans' => Jabatan::cases(),
         ]);
     }
@@ -156,7 +167,7 @@ class UserController extends Controller
         return view('content.hrd.user.edit', [
             'user'     => $user,
             'roles'    => Role::all(),
-            'stores'   => Store::where('is_active', true)->orderBy('name_toko')->get(),
+            'stores'   => Store::query()->where('is_active', true)->orderBy('name_toko', 'ASC')->get(),
             'jabatans' => Jabatan::cases(),
         ]);
     }

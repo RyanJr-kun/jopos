@@ -3,13 +3,24 @@
 namespace Modules\Ecommerce\Http\Controllers\event;
 
 use App\Http\Controllers\Controller;
-use Modules\Ecommerce\Models\Promotion;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Modules\Ecommerce\Models\Promotion;
 
-class PromotionController extends Controller
+class PromotionController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-promo', only: ['index','show', 'updateStatus', 'getJson']),
+            new Middleware('permission:create-promo', only: ['create', 'store']),
+            new Middleware('permission:edit-promo', only: ['edit', 'update']),
+            new Middleware('permission:delete-promo', only: ['destroy']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */

@@ -8,6 +8,8 @@ use App\Models\ProductStock;
 use App\Models\Store;
 use App\Models\Taxe;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -23,8 +25,17 @@ use Modules\Inventory\Models\Unit;
 use Modules\Inventory\Models\Warrantie;
 use Modules\POS\Models\SaleItem;
 
-class ProductController extends Controller
+class ProductController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [ 
+            new Middleware('permission:view-produk', only: ['index','show', 'upload', 'revert', 'checkSlug' ]),
+            new Middleware('permission:create-produk', only: ['create', 'store']),
+            new Middleware('permission:edit-produk', only: ['edit', 'update']),
+            new Middleware('permission:delete-produk', only: ['destroy']),
+        ];
+    }
     
     public function index()
     {
@@ -62,7 +73,6 @@ class ProductController extends Controller
                 ->orderBy('name')->get(),
         ]);
     }
-
    
     public function create()
     {
@@ -81,7 +91,6 @@ class ProductController extends Controller
             ->orderBy('name_toko', 'asc')->get(), 
         ]);
     }
-
     
     public function store(Request $request)
     {
@@ -338,9 +347,9 @@ class ProductController extends Controller
     }
 
     /**
- * Pack specification arrays into JSON string
- * Format: [{"key":"Warna","value":"Merah"},{"key":"Ukuran","value":"XL"}]
- */
+     * Pack specification arrays into JSON string
+     * Format: [{"key":"Warna","value":"Merah"},{"key":"Ukuran","value":"XL"}]
+     */
     private function packSpecification(Request $request): ?string
     {
         $keys = $request->input('spec_keys', []);
@@ -370,9 +379,8 @@ class ProductController extends Controller
         return !empty($specs) ? json_encode($specs, JSON_UNESCAPED_UNICODE) : null;
     }
 
-    // -------------------------------------------------------
     // HELPER PRIVATE: simpan galeri
-    // -------------------------------------------------------
+
     private function saveGallery(Product $product, array $galleryPaths, ?string $primaryPath): void
     {
         $order = $product->images()->max('sort_order') + 1;
@@ -430,9 +438,8 @@ class ProductController extends Controller
         }
     }
 
-    // -------------------------------------------------------
     // HELPER PRIVATE: simpan variasi
-    // -------------------------------------------------------
+
     private function saveVariants(Product $product, array $variantTypes, array $variantCombinations): void
     {
         // 1. Buat ulang variant types & options
@@ -533,9 +540,8 @@ class ProductController extends Controller
         });
     }
 
-    // -------------------------------------------------------
     // UPLOAD (FilePond) — sama seperti sebelumnya
-    // -------------------------------------------------------
+
     public function upload(Request $request)
     {
         try {
@@ -593,18 +599,16 @@ class ProductController extends Controller
         return response()->json(['error' => 'File not found or path is missing.'], 404);
     }
 
-    // -------------------------------------------------------
     // CHECK SLUG
-    // -------------------------------------------------------
+
     public function checkSlug(Request $request)
     {
         $slug = SlugService::createSlug(Product::class, 'slug', $request->name_product);
         return response()->json(['slug' => $slug]);
     }
 
-    // -------------------------------------------------------
     // GET DATA (untuk Select2 / AJAX)
-    // -------------------------------------------------------
+
     public function getData(Request $request)
     {
         $search = $request->query('search');
@@ -738,9 +742,6 @@ class ProductController extends Controller
         return response()->json(['message' => 'Product dengan barcode ini tidak ditemukan.'], 404);
     }
 
-    // -------------------------------------------------------
-    // NOTIFIKASI & LAPORAN (tidak diubah)
-    // -------------------------------------------------------
     public function getLowStockNotifications()
     {
         $storeId = Auth::user()->employee->store_id ?? null;
@@ -765,12 +766,14 @@ class ProductController extends Controller
         return response()->json([
             'count' => $lowStockCount,
             'products' => $lowStockProducts->map(function ($produk) {
-                // ... mapping tetap sama, tapi ambil qty dari join
                 return [
                     'name_product' => Str::limit($produk->name_product, 30),
                     'qty' => $produk->stocks->firstWhere('product_variant_id', null)?->qty ?? 0, // Atau hitung via subquery
                     'stok_minimum' => $produk->stok_minimum,
-                    // ...
+                    'img_url'      => $produk->img_produk
+                        ? asset('storage/' . $produk->img_produk)
+                        : asset('assets/img/produk.png'),
+                    'url' => route('stok.rendah')
                 ];
             })
         ]);

@@ -2,15 +2,27 @@
 
 namespace Modules\Ecommerce\Http\Controllers\event;
 
-use App\Http\Controllers\Controller;
 use App\Enums\BannerPosition;
-use Modules\Ecommerce\Models\Banner;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Enum;
+use Modules\Ecommerce\Models\Banner;
 
-class BannerController extends Controller
+class BannerController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-banner', only: ['index','show', 'getJson', 'upload', 'revert']),
+            new Middleware('permission:create-banner', only: ['create', 'store']),
+            new Middleware('permission:edit-banner', only: ['edit', 'update']),
+            new Middleware('permission:delete-banner', only: ['destroy']),
+        ];
+    }
+    
     /**
      * Display a listing of the resource.
      */

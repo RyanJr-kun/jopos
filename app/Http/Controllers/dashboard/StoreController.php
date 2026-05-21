@@ -3,14 +3,32 @@
 namespace App\Http\Controllers\dashboard;
 
 use App\Http\Controllers\Controller;
-use App\Models\Store;
 use App\Models\EmployeeProfile;
+use App\Models\Store;
 use App\Models\User; // Untuk tarik data PIC
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Storage;
 
-class StoreController extends Controller
+class StoreController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-toko-gudang', only: ['index', 'upload', 'revert', 'getMembers']),
+            
+            // 2. Akses Tambah Data
+            new Middleware('permission:create-toko-gudang', only: ['store']),
+            
+            // 3. Akses Edit Data
+            new Middleware('permission:edit-toko-gudang', only: ['update', 'updateMembers']),
+            
+            // 4. Akses Hapus Data
+            new Middleware('permission:delete-toko-gudang', only: ['destroy']),
+        ];
+    }
+
     public function index()
     {
         // Kita pisahkan datanya di sini agar di Blade tinggal pakai Tabs
@@ -203,10 +221,10 @@ class StoreController extends Controller
     {
         $selectedUserIds = $request->input('user_ids', []);
 
-        EmployeeProfile::whereIn('user_id', $selectedUserIds)
+        EmployeeProfile::query()->whereIn('user_id', $selectedUserIds)
             ->update(['store_id' => $toko->id]);
 
-        EmployeeProfile::where('store_id', $toko->id)
+        EmployeeProfile::query()->where('store_id', $toko->id)
             ->whereNotIn('user_id', $selectedUserIds)
             ->update(['store_id' => null]);
 

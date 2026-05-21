@@ -2,15 +2,26 @@
 
 namespace Modules\Inventory\Http\Controllers\master;
 
-use App\Http\Controllers\Controller;
-use Modules\Inventory\Models\Category;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Storage;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Modules\Inventory\Models\Category;
 
-class CategoryController extends Controller
+class CategoryController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-kategoriproduk', only: ['index', 'getKategoriJson', 'getParentOptions', 'chekSlug', 'upload', 'revert']), 
+            new Middleware('permission:create-kategoriproduk', only: ['create', 'store']),
+            new Middleware('permission:edit-kategoriproduk', only: ['edit', 'update']),
+            new Middleware('permission:delete-kategoriproduk', only: ['destroy']),
+        ];
+    }
     public function index(Request $request)
     {
         // Ambil semua kategori utama untuk dropdown parent (dipakai di modal create/edit)

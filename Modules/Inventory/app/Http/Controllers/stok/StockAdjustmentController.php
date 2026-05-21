@@ -3,15 +3,24 @@
 namespace Modules\Inventory\Http\Controllers\stok;
 
 use App\Http\Controllers\Controller;
-
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\StockAdjustment;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 
-class StockAdjustmentController extends Controller
+class StockAdjustmentController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [ 
+            new Middleware('permission:view-stok-penyesuaian', only: ['index', 'show','generateAdjustmentCode' ]), 
+            new Middleware('permission:create-stok-penyesuaian', only: ['create', 'store']),
+            new Middleware('permission:delete-stok-penyesuaian', only: ['destroy']),
+        ];
+    }
     /**
      * Menampilkan riwayat penyesuaian stok.
      */

@@ -26,13 +26,13 @@ Route::domain('jopos.' . $domain)->group(function () {
         // ---------------------------------------------------------
         // 1. MANAJEMEN STOK (Stock Management)
         // ---------------------------------------------------------
-        Route::get('stok-opname', [StockTakeController::class, 'index'])->name('stok-opname.index');  
-        Route::post('stok-opname', [StockTakeController::class, 'store'])->name('stok-opname.store');  
-        Route::get('stok-opname/history', [StockTakeController::class, 'history'])->name('stok-opname.history');  
-        Route::get('stok-opname/history/{stok_opname}', [StockTakeController::class, 'show'])->name('stok-opname.show');  
+        Route::get('stok-opname', [StockTakeController::class, 'index'])->name('stok-opname.index')->middleware('permission:create-stok-opname');  
+        Route::post('stok-opname', [StockTakeController::class, 'store'])->name('stok-opname.store')->middleware('permission:create-stok-opname');  
+        Route::get('stok-opname/history', [StockTakeController::class, 'history'])->name('stok-opname.history')->middleware('permission:view-stok-opname');  
+        Route::get('stok-opname/history/{stok_opname}', [StockTakeController::class, 'show'])->name('stok-opname.show')->middleware('permission:view-stok-opname');  
         
         Route::resource('stok-penyesuaian', StockAdjustmentController::class)->except(['edit', 'update']);  
-        Route::get('/stok/rendah', [ProductController::class, 'lowStock'])->name('stok.rendah');  
+        Route::get('/stok/rendah', [ProductController::class, 'lowStock'])->name('stok.rendah')->middleware('permission:view-stok-rendah');  
 
 
         // ---------------------------------------------------------

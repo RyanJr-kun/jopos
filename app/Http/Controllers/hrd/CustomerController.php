@@ -3,13 +3,23 @@
 namespace App\Http\Controllers\hrd;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Validation\Rule;
 
-class CustomerController extends Controller
+class CustomerController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [ 
+            new Middleware('permission:view-pelanggan', only: ['index','getJson']),
+            new Middleware('permission:create-pelanggan', only: ['create', 'store']),
+            new Middleware('permission:edit-pelanggan', only: ['edit', 'update']),
+            new Middleware('permission:delete-pelanggan', only: ['destroy']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */

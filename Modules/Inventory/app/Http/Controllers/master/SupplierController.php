@@ -3,14 +3,23 @@
 namespace Modules\Inventory\Http\Controllers\master;
 
 use App\Http\Controllers\Controller;
-
-use Illuminate\Validation\Rule; // Import Rule untuk validasi unique saat update
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Validation\Rule;
 use Modules\Inventory\Models\Supplier;
 
-use Illuminate\Http\Request;
-
-class SupplierController extends Controller
+class SupplierController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-pemasok', only: ['index', 'show', 'getjson']), // Akses untuk melihat daftar dan detail pemasok
+            new Middleware('permission:create-pemasok', only: ['create', 'store']),
+            new Middleware('permission:edit-pemasok', only: ['edit', 'update']),
+            new Middleware('permission:delete-pemasok', only: ['destroy']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */

@@ -2,15 +2,25 @@
 
 namespace Modules\Inventory\Http\Controllers\master;
 
-use App\Http\Controllers\Controller;
-
-use Modules\Inventory\Models\Warrantie;
-use Illuminate\Http\Request;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Validation\Rule;
+use Modules\Inventory\Models\Warrantie;
 
-class WarrantieController extends Controller
+class WarrantieController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-garansi', only: ['index', 'show', 'getWarrantieJson', 'checkSlug']), 
+            new Middleware('permission:create-garansi', only: ['create', 'store']),
+            new Middleware('permission:edit-garansi', only: ['edit', 'update']),
+            new Middleware('permission:delete-garansi', only: ['destroy']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */

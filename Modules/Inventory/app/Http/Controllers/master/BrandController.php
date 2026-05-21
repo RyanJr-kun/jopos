@@ -2,17 +2,27 @@
 
 namespace Modules\Inventory\Http\Controllers\master;
 
-use App\Http\Controllers\Controller;
-
-use Modules\Inventory\Models\Brand;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Storage;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Modules\Inventory\Models\Brand;
 
-
-class BrandController extends Controller
+class BrandController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-brand', only: ['index', 'getBrandJson', 'checkSlug', 'upload', 'revert']), 
+            new Middleware('permission:create-brand', only: ['create', 'store']),
+            new Middleware('permission:edit-brand', only: ['edit', 'update']),
+            new Middleware('permission:delete-brand', only: ['destroy']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */

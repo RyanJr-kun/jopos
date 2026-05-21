@@ -9,6 +9,8 @@ use App\Models\Store;
 use App\Models\Taxe;
 use Barryvdh\DomPDF\Facade\Pdf as Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Models\Product;
@@ -16,8 +18,18 @@ use Modules\Inventory\Models\ProductVariant;
 use Modules\Inventory\Models\Purchase;
 use Modules\Inventory\Models\Supplier;
 
-class PurchaseController extends Controller
+class PurchaseController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-pembelian', only: ['index', 'show', 'generatePurchaseInvoiceNumber']), 
+            new Middleware('permission:create-pembelian', only: ['create', 'store']),
+            new Middleware('permission:edit-pembelian', only: ['edit', 'update']),
+            new Middleware('permission:delete-pembelian', only: ['destroy']),
+            new Middleware('permission:print-pembelian', only: ['printThermal','generatePdf']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */

@@ -50,7 +50,7 @@ class SpatieRoleSeeder extends Seeder
             'keuangan'          => ['view'],
             'income'            => ['view', 'create', 'edit', 'delete'],
             'expense'           => ['view', 'create', 'edit', 'delete'],
-            'kategoritransaksi' => ['view', 'create', 'edit', 'delete'],
+            '   ' => ['view', 'create', 'edit', 'delete'],
 
             // Laporan
             'laporan-inventaris' => ['view', 'export'],
@@ -155,7 +155,7 @@ class SpatieRoleSeeder extends Seeder
         }
 
         // Memastikan User ID 1 selalu menjadi Super Admin / Admin
-        $firstUser = User::find(1);
+        $firstUser = User::query()->find(1);
         if ($firstUser) {
             $firstUser->assignRole('admin');
         }

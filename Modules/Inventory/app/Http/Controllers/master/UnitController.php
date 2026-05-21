@@ -2,15 +2,25 @@
 
 namespace Modules\Inventory\Http\Controllers\master;
 
-use App\Http\Controllers\Controller;
-
-use Modules\Inventory\Models\Unit;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Validation\Rule;
+use Modules\Inventory\Models\Unit;
 
-class UnitController extends Controller
+class UnitController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-unit', only: ['index', 'getUnitJson', 'checkSlug']), 
+            new Middleware('permission:create-unit', only: ['create', 'store']),
+            new Middleware('permission:edit-unit', only: ['edit', 'update']),
+            new Middleware('permission:delete-unit', only: ['destroy']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */
@@ -116,7 +126,7 @@ class UnitController extends Controller
         return redirect()->route('unit.index')->with('success', 'Data Unit Berhasil Dihapus.');
     }
 
-    public function chekSlug(Request $request)
+    public function chekSlug(Request $request) 
     {
         $slug = SlugService::createSlug(Unit::class, 'slug', $request->name);
         return response()->json(['slug' => $slug]);

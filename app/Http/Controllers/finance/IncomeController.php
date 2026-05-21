@@ -9,9 +9,26 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\TransactionCategory;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class IncomeController extends Controller
+class IncomeController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-income', only: ['index']),
+            
+            // 2. Akses Tambah Data
+            new Middleware('permission:create-income', only: ['create', 'store']),
+            
+            // 3. Akses Edit Data
+            new Middleware('permission:edit-income', only: ['edit', 'update']),
+            
+            // 4. Akses Hapus Data
+            new Middleware('permission:delete-income', only: ['destroy']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */
@@ -19,14 +36,14 @@ class IncomeController extends Controller
     {
         $query = Income::with(['transaction_category', 'user'])->latest();
 
-        $kategoriFilters = TransactionCategory::where('type', 'income')
+        $kategoriFilters = TransactionCategory::query()->where('type', 'income')
             ->whereHas('incomes')
-            ->orderBy('name')
+            ->orderBy('name', 'asc')
             ->get();
 
-        $allKategoris = TransactionCategory::where('type', 'income')
+        $allKategoris = TransactionCategory::query()->where('type', 'income')
             ->where('status', 1)
-            ->orderBy('name')
+            ->orderBy('name', 'asc')
             ->get();
 
         if ($request->filled('search')) {
@@ -78,7 +95,7 @@ class IncomeController extends Controller
         $prefix = 'IN-' . $date . '-';
 
         // Cari referensi terakhir untuk hari ini untuk mendapatkan nomor urut berikutnya
-        $lastIncome = Income::where('referensi', 'like', $prefix . '%')
+        $lastIncome = Income::query()->where('referensi', 'like', $prefix . '%')
             ->latest('referensi')
             ->first();
 

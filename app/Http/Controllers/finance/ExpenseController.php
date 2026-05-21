@@ -9,9 +9,27 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\TransactionCategory;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class ExpenseController extends Controller
+class ExpenseController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view-expense', only: ['index']),
+            
+            // 2. Akses Tambah Data
+            new Middleware('permission:create-expense', only: ['create', 'store']),
+            
+            // 3. Akses Edit Data
+            new Middleware('permission:edit-expense', only: ['edit', 'update']),
+            
+            // 4. Akses Hapus Data
+            new Middleware('permission:delete-expense', only: ['destroy']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -19,14 +37,14 @@ class ExpenseController extends Controller
     {
         $query = Expense::with(['transaction_category', 'user'])->latest();
 
-        $kategoriFilters = TransactionCategory::where('type', 'expense')
+        $kategoriFilters = TransactionCategory::query()->where('type', 'expense')
             ->whereHas('expenses')
-            ->orderBy('name')
+            ->orderBy('name', 'asc')
             ->get();
 
-        $allKategoris = TransactionCategory::where('type', 'expense')
+        $allKategoris = TransactionCategory::query()->where('type', 'expense')
             ->where('status', 1)
-            ->orderBy('name')
+            ->orderBy('name', 'asc')
             ->get();
 
         if ($request->filled('search')) {
@@ -77,7 +95,7 @@ class ExpenseController extends Controller
         $prefix = 'EX-' . $date . '-';
 
         // Cari referensi terakhir untuk hari ini untuk mendapatkan nomor urut berikutnya
-        $lastExpense = \App\Models\Expense::where('referensi', 'like', $prefix . '%')
+        $lastExpense = Expense::query()->where('referensi', 'like', $prefix . '%')
             ->latest('referensi')
             ->first();
 
