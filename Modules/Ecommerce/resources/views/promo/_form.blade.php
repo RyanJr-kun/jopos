@@ -89,7 +89,7 @@
                 $selectedProductIds = old('products', $promo?->products->pluck('id')->toArray() ?? []);
             @endphp
             @if (!empty($selectedProductIds))
-                @foreach (App\Models\Product::whereIn('id', $selectedProductIds)->get() as $produk)
+                @foreach (Product::whereIn('id', $selectedProductIds)->get() as $produk)
                     <option value="{{ $produk->id }}" selected>{{ $produk->name_product }}</option>
                 @endforeach
             @endif

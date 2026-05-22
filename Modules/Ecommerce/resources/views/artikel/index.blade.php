@@ -48,9 +48,7 @@
                             <button type="submit" class="btn btn-outline-primary">
                                 <i class="bx bx-filter-alt me-1"></i>Filter
                             </button>
-                            <a href="{{ route('artikel.create') }}" class="btn btn-outline-info">
-                                <i class="bx bx-plus me-1"></i>Artikel
-                            </a>
+
                         </div>
                     </form>
                 </div>
@@ -60,9 +58,18 @@
         {{-- Tabel Artikel --}}
         <div class="col-12">
             <div class="card rounded-2 shadow-sm">
-                <div class="card-header pb-0 px-3 pt-2">
-                    <h5 class="mb-n1 fw-bolder">Daftar Artikel / Blog</h5>
-                    <p class="text-sm mb-0">Kelola semua artikel dan konten blog Anda di sini.</p>
+                <div class="card-header d-flex align-items-center justify-content-between py-3">
+                    <div>
+                        <h5 class="mb-n1 fw-bolder text-poppings">Daftar Artikel</h5>
+                        <small class="text-sm mb-0">Kelola semua artikel Anda di sini.</small>
+                    </div>
+                    <div>
+                        <a href="{{ route('artikel.create') }}"
+                            class="btn btn-primary px-2 d-flex align-items-center gap-2 shadow-sm" title="Tambah Artikel"
+                            data-bs-toggle="tooltip" data-bs-placement="top">
+                            <i class="bx bx-plus-circle"></i>
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body px-0 pt-0 pb-2">
                     @if (session('success'))
@@ -74,16 +81,16 @@
 
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="bg-label-secondary">
                                 <tr>
-                                    <th class="px-3" style="width:60px">#</th>
-                                    <th class="px-3">Thumbnail</th>
-                                    <th class="px-3">Judul Artikel</th>
-                                    <th class="px-3">Penulis</th>
-                                    <th class="px-3">Kategori</th>
-                                    <th class="px-3">Status</th>
-                                    <th class="px-3">Tanggal</th>
-                                    <th class="px-3 text-center">Aksi</th>
+                                    <th width="5%" class="text-muted text-poppins">#</th>
+                                    <th class="text-muted text-poppins">Thumbnail</th>
+                                    <th class="text-muted text-poppins">Judul Artikel</th>
+                                    <th class="text-muted text-poppins">Penulis</th>
+                                    <th class="text-muted text-poppins">Kategori</th>
+                                    <th class="text-muted text-poppins">Status</th>
+                                    <th class="text-muted text-poppins">Tanggal</th>
+                                    <th class=" text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>

@@ -1,64 +1,126 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Cards basic - UI elements')
+@section('title', 'Manajemen Promo & Diskon')
+
 @section('content')
-    <div class="row g-3 align-items-stretch">
-        <div class="col-12 col-md-4 col-xl-3 mb-md-0">
-            <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4d50eb 0%, #8592ff 100%);">
-                <div class="card-body d-flex align-items-center">
-                    <div class="avatar avatar-md me-3">
-                        <span class="avatar-initial rounded bg-white text-primary shadow-sm">
-                            <i class="bx bx-percent fs-4"></i>
+
+    {{-- Stat Cards --}}
+    <div class="row g-3 mb-4">
+        {{-- Total Promo --}}
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #4d50eb 0%, #8592ff 100%);">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="avatar avatar-md flex-shrink-0">
+                        <span class="avatar-initial rounded-circle bg-white" style="opacity:.95;">
+                            <i class="bx bx-tag text-primary fs-5"></i>
                         </span>
                     </div>
                     <div>
-                        <p class="text-white mb-0 text-sm">Total Promo</p>
-                        <h3 class="text-white mb-0 fw-bold" id="resumeTotalPromo">
+                        <p class="text-white mb-0" style="font-size:.78rem; opacity:.85;">Total Promo</p>
+                        <h4 class="text-white mb-0 fw-bold lh-1 mt-1">
                             {{ method_exists($promotions, 'total') ? $promotions->total() : $promotions->count() }}
-                        </h3>
+                        </h4>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Filter & Tombol Tambah --}}
-        <div class="col-12 col-md-8 col-xl-9">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body d-flex align-items-center">
-                    <div class="row g-3 align-items-center justify-content-start w-100 m-0">
-                        <div class="col-md-4">
-                            <input type="text" name="search" id="searchInput" class="form-control"
-                                placeholder="Cari promo..." value="{{ request('search') }}">
-                        </div>
-                        <div class="col-md-4 me-3">
-                            <select name="status" id="statusFilter" class="form-select select2"
-                                data-placeholder="Semua Status">
-                                <option value="">Semua Status</option>
-                                <option value="Aktif" @selected(request('status') == 'Aktif')>Aktif</option>
-                                <option value="Tidak Aktif" @selected(request('status') == 'Tidak Aktif')>Tidak Aktif</option>
-                            </select>
-                        </div>
-                        <div class="col-md-auto ms-md-auto">
-                            <a href="{{ route('promo.create') }}" class="btn btn-outline-info mb-0">
-                                <i class="bx bx-plus me-2"></i>Promotion
-                            </a>
-                        </div>
+        {{-- Promo Aktif --}}
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100"
+                style="background: linear-gradient(135deg, #28a745 0%, #5cb85c 100%);">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="avatar avatar-md flex-shrink-0">
+                        <span class="avatar-initial rounded-circle bg-white" style="opacity:.95;">
+                            <i class="bx bx-check-circle text-success fs-5"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <p class="text-white mb-0" style="font-size:.78rem; opacity:.85;">Promo Aktif</p>
+                        <h4 class="text-white mb-0 fw-bold lh-1 mt-1">
+                            {{ \Modules\Ecommerce\Models\Promotion::where('status', true)->count() }}
+                        </h4>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-12">
-            <div class="card rounded-2">
-                <div class="card-header pb-0 px-3 pt-2">
-                    <h5 class="mb-n1 fw-bolder">Daftar Promotion & Diskon</h5>
-                    <p class="text-sm mb-0">Kelola semua promotionsi dan diskon <br class="d-sm-none"> Anda di sini.</p>
-                </div>
-                <div class="card-body px-0 pt-0 pb-2">
 
-                    <div id="promo-table-container">
-                        @include('ecommerce::promo._promo_table')
+        {{-- Promo Persentase --}}
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100"
+                style="background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="avatar avatar-md flex-shrink-0">
+                        <span class="avatar-initial rounded-circle bg-white" style="opacity:.95;">
+                            <i class="bx bx-percent text-warning fs-5"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <p class="text-white mb-0" style="font-size:.78rem; opacity:.85;">Tipe Persentase</p>
+                        <h4 class="text-white mb-0 fw-bold lh-1 mt-1">
+                            {{ \Modules\Ecommerce\Models\Promotion::where('type', 'percentage')->count() }}
+                        </h4>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        {{-- Promo Fixed --}}
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100"
+                style="background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="avatar avatar-md flex-shrink-0">
+                        <span class="avatar-initial rounded-circle bg-white" style="opacity:.95;">
+                            <i class="bx bx-money text-danger fs-5"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <p class="text-white mb-0" style="font-size:.78rem; opacity:.85;">Tipe Nominal</p>
+                        <h4 class="text-white mb-0 fw-bold lh-1 mt-1">
+                            {{ \Modules\Ecommerce\Models\Promotion::where('type', 'fixed')->count() }}
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Main Card --}}
+    <div class="card shadow-sm border-0">
+        {{-- Card Header --}}
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
+            <div>
+                <h5 class="mb-0 fw-bold">Daftar Promo & Diskon</h5>
+                <p class="text-muted text-sm mb-0">Kelola semua promosi dan diskon di sini.</p>
+            </div>
+            {{-- Filter & Search --}}
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <div class="input-group input-group-sm" style="width:220px;">
+                    <span class="input-group-text bg-transparent border-end-0">
+                        <i class="bx bx-search text-muted"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control border-start-0 ps-0"
+                        placeholder="Cari nama / kode..." value="{{ request('search') }}">
+                </div>
+                <select id="statusFilter" class="form-select form-select-sm" style="width:150px;">
+                    <option value="">Semua Status</option>
+                    <option value="1" @selected(request('status') == '1')>Aktif</option>
+                    <option value="0" @selected(request('status') === '0')>Tidak Aktif</option>
+                </select>
+                @can('create-promo')
+                    <a href="{{ route('promo.create') }}" class="btn btn-primary px-2 d-flex align-items-center gap-2 shadow-sm"
+                        title="Tambah Promo" data-bs-toggle="tooltip" data-bs-placement="top">
+                        <i class="bx bx-plus-circle"></i>
+                    </a>
+                @endcan
+            </div>
+        </div>
+
+        {{-- Table --}}
+        <div class="card-body p-0">
+            <div id="promo-table-container">
+                @include('ecommerce::promo._promo_table')
             </div>
         </div>
     </div>
@@ -66,195 +128,175 @@
     {{-- Modal Delete Confirmation --}}
     <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center mt-3 mx-n5">
-                    <i class="bx bx-trash fa-2x text-danger mb-3"></i>
-                    <p class="mb-0">Apakah Anda yakin ingin menghapus promo ini?</p>
-                    <h6 class="mt-2" id="promoNameToDelete"></h6>
-                    <div class="mt-4">
-                        <form id="deletePromotionForm" method="POST" action="#">
-                            @method('delete')
-                            @csrf
-                            <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
-                                data-bs-dismiss="modal">Batal</button>
-                        </form>
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body text-center py-4 px-3">
+                    <div class="mb-3">
+                        <span class="avatar avatar-lg bg-label-danger rounded-circle">
+                            <i class="bx bx-trash fs-3 text-danger"></i>
+                        </span>
                     </div>
+                    <h6 class="fw-bold mb-1">Hapus Promo?</h6>
+                    <p class="text-muted text-sm mb-1">Tindakan ini tidak dapat dibatalkan.</p>
+                    <p class="fw-semibold text-dark mb-3" id="promoNameToDelete"></p>
+                    <form id="deletePromotionForm" method="POST" action="#">
+                        @method('delete')
+                        @csrf
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-outline-secondary btn-sm px-3"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger btn-sm px-3">
+                                <i class="bx bx-trash me-1"></i>Ya, Hapus
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
+@endsection
 
 @section('page-script')
-    <script type="module">
-        const initSelect2 = () => {
-            if (typeof $ !== 'undefined' && $.fn.select2) {
-                $('.select2').each(function() {
-                    const $this = $(this);
-                    $this.select2({
-                        placeholder: $this.data('placeholder') || "Pilih...",
-                        allowClear: $this.find('option[value=""]').length > 0,
-                        width: '100%',
-                        minimumResultsForSearch: 10
-                    });
-                });
-            } else {
-                setTimeout(initSelect2, 100);
-            }
-        };
-        initSelect2();
-    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+
             // --- MODAL DELETE ---
             const deleteModal = document.getElementById('deleteConfirmationModal');
             if (deleteModal) {
                 deleteModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const promoId = button.getAttribute('data-promo-id');
-                    const promoName = button.getAttribute('data-promo-name');
-                    const modalBodyName = deleteModal.querySelector('#promoNameToDelete');
-                    const deleteForm = deleteModal.querySelector('#deletePromotionForm');
-
-                    modalBodyName.textContent = promoName;
-                    deleteForm.action = `{{ url('promo') }}/${promoId}`;
+                    const btn = event.relatedTarget;
+                    document.getElementById('promoNameToDelete').textContent = btn.dataset.promoName;
+                    document.getElementById('deletePromotionForm').action =
+                        `{{ url('promo') }}/${btn.dataset.promoId}`;
                 });
             }
 
-            // --- AJAX FILTER & SEARCH ---
-            function debounce(func, delay) {
-                let timeout;
+            // --- DEBOUNCE ---
+            function debounce(fn, delay) {
+                let t;
                 return function(...args) {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func.apply(this, args), delay);
+                    clearTimeout(t);
+                    t = setTimeout(() => fn.apply(this, args), delay);
                 };
             }
 
+            // --- FETCH / AJAX FILTER ---
             function fetchData(page = 1) {
-                let search = $('#searchInput').val();
-                let status = $('#statusFilter').val();
-                let url = '{{ route('promo.index') }}';
+                const search = document.getElementById('searchInput').value;
+                const status = document.getElementById('statusFilter').value;
+                const url = '{{ route('promo.index') }}';
+                const container = document.getElementById('promo-table-container');
 
-                $('#promo-table-container').css('opacity', 0.5);
+                container.style.opacity = '0.5';
+                container.style.pointerEvents = 'none';
 
                 $.ajax({
-                    url: url,
+                    url,
                     data: {
-                        search: search,
-                        status: status,
-                        page: page
+                        search,
+                        status,
+                        page
                     },
-                    success: function(data) {
-                        $('#promo-table-container').html(data).css('opacity', 1);
-                        window.history.pushState({
-                                path: url + '?page=' + page + '&search=' + search + '&status=' +
-                                    status
-                            }, '', url + '?page=' + page + '&search=' + search + '&status=' +
-                            status);
+                    success(data) {
+                        container.innerHTML = data;
+                        container.style.opacity = '1';
+                        container.style.pointerEvents = '';
+                        initializeCountdowns();
+                        window.history.replaceState({},
+                            '',
+                            `${url}?page=${page}&search=${encodeURIComponent(search)}&status=${status}`
+                        );
                     },
-                    error: function() {
-                        $('#promo-table-container').css('opacity', 1);
-                        window.showToast('error', 'Gagal memuat data. Silakan coba lagi.');
+                    error() {
+                        container.style.opacity = '1';
+                        container.style.pointerEvents = '';
+                        if (window.showToast) window.showToast('error', 'Gagal memuat data.');
                     }
                 });
             }
 
-            $('#searchInput').on('keyup', debounce(function() {
-                fetchData(1);
-            }, 500));
-
-            $('#statusFilter').on('change', function() {
-                fetchData(1);
-            });
+            document.getElementById('searchInput').addEventListener('keyup', debounce(() => fetchData(1), 500));
+            document.getElementById('statusFilter').addEventListener('change', () => fetchData(1));
 
             $(document).on('click', '#promo-table-container .pagination a', function(e) {
                 e.preventDefault();
-                let page = $(this).attr('href').split('page=')[1];
-                if (page) {
-                    fetchData(page);
-                }
+                const href = $(this).attr('href');
+                const match = href.match(/page=(\d+)/);
+                if (match) fetchData(match[1]);
             });
-            // --- PROMO COUNTDOWN LOGIC ---
+
+            // --- COUNTDOWN LOGIC ---
             let countdownInterval;
 
             function initializeCountdowns() {
-                // Hentikan interval sebelumnya jika ada
-                if (countdownInterval) {
-                    clearInterval(countdownInterval);
-                }
+                if (countdownInterval) clearInterval(countdownInterval);
+                const els = document.querySelectorAll('[id^="countdown-"]');
+                if (!els.length) return;
 
-                const countdownElements = document.querySelectorAll('[id^="countdown-"]');
-                if (countdownElements.length === 0) return;
-
-                function updateAllCountdowns() {
-                    countdownElements.forEach(el => {
+                function updateAll() {
+                    els.forEach(el => {
                         const endTime = new Date(el.dataset.endTime).getTime();
                         const promoId = el.dataset.promoId;
-                        const now = new Date().getTime();
-                        const distance = endTime - now;
-
+                        const distance = endTime - Date.now();
                         const statusContainer = document.getElementById(`status-container-${promoId}`);
-                        const statusBadge = statusContainer ? statusContainer.querySelector('.badge') :
-                            null;
+                        const badge = statusContainer?.querySelector('.badge');
 
                         if (distance > 0) {
-                            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                            const d = Math.floor(distance / 86400000);
+                            const h = Math.floor((distance % 86400000) / 3600000);
+                            const m = Math.floor((distance % 3600000) / 60000);
+                            const s = Math.floor((distance % 60000) / 1000);
 
-                            el.innerHTML = `${days}h ${hours}j ${minutes}m ${seconds}d`;
+                            let html = '';
+                            if (d > 0) html +=
+                                `<span class="fw-semibold text-primary">${d}</span><small class="text-muted">h </small>`;
+                            html +=
+                                `<span class="fw-semibold text-primary">${String(h).padStart(2,'0')}</span><small class="text-muted">j </small>`;
+                            html +=
+                                `<span class="fw-semibold">${String(m).padStart(2,'0')}</span><small class="text-muted">m </small>`;
+                            html +=
+                                `<span class="fw-semibold">${String(s).padStart(2,'0')}</span><small class="text-muted">d</small>`;
+                            el.innerHTML = html;
 
-                            // Pastikan statusnya 'Aktif' jika masih berjalan
-                            if (statusBadge && statusBadge.textContent.trim() === 'Tidak Aktif') {
-                                statusBadge.className = 'badge bg-label-success';
-                                statusBadge.textContent = 'Aktif';
+                            if (badge && badge.textContent.trim().includes('Nonaktif')) {
+                                badge.className = 'badge bg-label-success rounded-pill px-2';
+                                badge.innerHTML = '<i class="bx bx-check-circle me-1"></i>Aktif';
                             }
-
                         } else {
-                            el.innerHTML = `<span class="text-danger">Berakhir</span>`;
-                            // Jika status masih 'Aktif', ubah dan panggil AJAX
-                            if (statusBadge && statusBadge.textContent.trim() === 'Aktif') {
-                                statusBadge.className = 'badge bg-label-secondary';
-                                statusBadge.textContent = 'Tidak Aktif';
+                            el.innerHTML =
+                                `<span class="badge bg-label-danger rounded-pill"><i class="bx bx-x-circle me-1"></i>Berakhir</span>`;
+                            if (badge && !badge.textContent.trim().includes('Nonaktif') && !badge
+                                .textContent.trim().includes('Berakhir')) {
+                                badge.className = 'badge bg-label-secondary rounded-pill px-2';
+                                badge.innerHTML = '<i class="bx bx-x-circle me-1"></i>Nonaktif';
                                 updatePromotionStatus(promoId);
                             }
                         }
                     });
                 }
 
-                countdownInterval = setInterval(updateAllCountdowns, 1000);
-                updateAllCountdowns(); // Panggil sekali saat inisialisasi
+                countdownInterval = setInterval(updateAll, 1000);
+                updateAll();
             }
 
             async function updatePromotionStatus(promoId) {
                 try {
-                    const response = await fetch(`/promo/${promoId}/update-status`, {
+                    const res = await fetch(`/promo/${promoId}/update-status`, {
                         method: 'PATCH',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Accept': 'application/json'
                         }
                     });
-                    const result = await response.json();
-                    if (!result.success) {
-                        console.error(`Gagal update status promo ${promoId}:`, result.message);
-                    }
-                } catch (error) {
-                    console.error('Error saat update status promo:', error);
+                    const result = await res.json();
+                    if (!result.success) console.warn(`Update status promo ${promoId}:`, result.message);
+                } catch (e) {
+                    console.error('Error update status promo:', e);
                 }
             }
 
-            // Inisialisasi countdown saat halaman dimuat
             initializeCountdowns();
-
-            // Inisialisasi ulang setelah AJAX selesai
-            $(document).ajaxComplete(function() {
-                initializeCountdowns();
-            });
         });
     </script>
-@endsection
 @endsection

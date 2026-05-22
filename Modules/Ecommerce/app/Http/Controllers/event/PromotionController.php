@@ -36,8 +36,8 @@ class PromotionController extends Controller implements HasMiddleware
             });
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+        if ($request->filled('status') && $request->input('status') !== '') {
+            $query->where('status', (bool) $request->input('status'));
         }
 
         $promotions = $query->paginate(10)->withQueryString();

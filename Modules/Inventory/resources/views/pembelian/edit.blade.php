@@ -378,6 +378,7 @@
 
         // 2. JALANKAN SAAT DOM SIAP
         document.addEventListener('DOMContentLoaded', function() {
+            const ASSET_STORAGE = "{{ config('filesystems.disks.r2.url') }}";
 
             // --- A. INISIALISASI QUILL (Bisa jalan tanpa jQuery) ---
             if (document.getElementById('quill-editor-catatan')) {
@@ -428,7 +429,7 @@
                 function formatProduct(produk) {
                     if (!produk.id) return produk.text;
                     var defaultImage = "{{ asset('assets/img/produk.png') }}";
-                    var imageUrl = produk.img_produk ? `{{ asset('storage/') }}/${produk.img_produk}` :
+                    var imageUrl = produk.img_produk ? `${ASSET_STORAGE}${produk.img_produk}` :
                         defaultImage;
                     var variantBadge = produk.variant_id ?
                         `<span class="badge bg-label-info text-xs mt-1"><i class="bx bx-list-ul ms-n1 me-1"></i>Varian</span>` :
@@ -536,8 +537,7 @@
                         updateRowDisplay(existingRow);
                     } else {
                         const defaultImage = "{{ asset('assets/img/produk.png') }}";
-                        const imageUrl = produkImg ? `{{ asset('storage/') }}/${produkImg}` :
-                            defaultImage;
+                        const imageUrl = produkImg ? `${ASSET_STORAGE}${produkImg}` : defaultImage;
 
                         const subtotalAwal = (hargaBeli * qtyToAdd);
                         const pajakAwal = subtotalAwal * (pajakRate / 100);
