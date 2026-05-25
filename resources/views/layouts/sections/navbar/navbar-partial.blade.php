@@ -187,7 +187,12 @@
                             <i class="bx bx-bxs-shopping-bag me-2"></i> Web Market
                         </a>
                     </li>
-
+                    <li>
+                        <a class="dropdown-item" href="{{ route('setting.index', Auth::user()->username) }}">
+                            <i class="bx bx-cog me-2"></i>
+                            <span class="align-middle">Pengaturan Akun</span>
+                        </a>
+                    </li>
                     <li>
                         <form action="{{ route('employee.logout') }}" method="post">
                             @csrf

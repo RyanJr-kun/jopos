@@ -1,17 +1,17 @@
 <?php
 
 use App\Http\Controllers\auth\AuthController; 
-
 use App\Http\Controllers\auth\RoleController;
-use App\Http\Controllers\hrd\UserController;
-use App\Http\Controllers\hrd\CustomerController;
-use App\Http\Controllers\dashboard\StoreController;
 use App\Http\Controllers\dashboard\DashboardController;
 use App\Http\Controllers\dashboard\LaporanController;
+use App\Http\Controllers\dashboard\StoreController;
 use App\Http\Controllers\finance\ExpenseController;
 use App\Http\Controllers\finance\IncomeController;
 use App\Http\Controllers\finance\KeuanganController;
 use App\Http\Controllers\finance\TransactionCategoryController;
+use App\Http\Controllers\hrd\CustomerController;
+use App\Http\Controllers\hrd\UserController;
+use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
 
 // Mengambil variabel domain dari .env
@@ -89,5 +89,18 @@ Route::domain('jopos.' . $domain)->group(function () {
 
         // Roles
         Route::resource('roles', RoleController::class)->except('show');
+
+        Route::get('/setting', function () {
+            return redirect()->route('setting.index', auth()->user()->username);
+        })->name('setting.redirect');
+
+        Route::prefix('setting')->name('setting.')->group(function () {
+            Route::get('/{username}', [SettingController::class, 'index'])->name('index');
+            Route::put('/{username}/profile', [SettingController::class, 'updateProfile'])->name('profile.update');
+            Route::put('/{username}/password', [SettingController::class, 'updatePassword'])->name('password.update');
+            Route::put('/{username}/notifications', [SettingController::class, 'updateNotifications'])->name('notifications.update');
+        });
+
+        Route::get('/notifications/all', [SettingController::class, 'allNotifications'])->name('notifications.all');
     });
 });

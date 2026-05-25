@@ -285,10 +285,10 @@
       "permission": "view-users"
     },
     {
-      "url": "users",
+      "url": "setting",
       "name": "Pengaturan",
       "icon": "menu-icon icon-base bx bx-cog",
-      "slug": "users.index",
+      "slug": "setting.index",
       "permission": "view-pengaturan"
     },
     {

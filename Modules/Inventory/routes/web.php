@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
 use Modules\Inventory\Http\Controllers\master\BrandController;
 use Modules\Inventory\Http\Controllers\master\CategoryController;
@@ -108,8 +109,7 @@ Route::domain('jopos.' . $domain)->group(function () {
             Route::get('notifications/unregistered-serials', [ProductController::class, 'getUnregisteredSerialNotifications'])->name('notifications.unregistered-serials');  
         });
 
-        // Halaman Daftar Semua Notifikasi
-        Route::get('/notifications/all', [ProductController::class, 'allNotifications'])->name('notifications.all');  
+        
 
     });
 });

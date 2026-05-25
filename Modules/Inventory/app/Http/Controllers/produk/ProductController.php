@@ -821,38 +821,7 @@ class ProductController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function allNotifications()
-    {
-        // Kueri 1: Produk Stok Rendah
-        $lowStockProducts = Product::select('products.*')
-            ->selectSub(function ($query) {
-                // Menambahkan alias total_qty agar tetap bisa dipanggil di view blade
-                $query->selectRaw('COALESCE(SUM(qty), 0)')
-                    ->from('product_stocks')
-                    ->whereColumn('product_stocks.product_id', 'products.id');
-            }, 'total_qty')
-            // PERBAIKAN: Ganti havingRaw menjadi whereRaw dengan subquery langsung
-            ->whereRaw('(SELECT COALESCE(SUM(qty), 0) FROM product_stocks WHERE product_stocks.product_id = products.id) <= products.stok_minimum')
-            ->orderBy('total_qty', 'asc')
-            ->get();
-
-        // Kueri 2: Produk Wajib Seri yang belum didaftarkan
-        $productsNeedingSerials = Product::select('products.*')
-            ->where('wajib_seri', true)
-            // withSum dan withCount tetap dipanggil agar propertinya bisa dipakai di blade
-            ->withSum('stocks as total_stok', 'qty')
-            ->withCount(['serialNumbers as sn_tercatat_count' => fn($q) => $q->whereNotIn('status', ['Terjual', 'Hilang'])])
-            // PERBAIKAN: Ganti havingRaw menjadi whereRaw dengan perbandingan 2 subquery 
-            ->whereRaw('(SELECT COALESCE(SUM(qty), 0) FROM product_stocks WHERE product_stocks.product_id = products.id) > (SELECT COUNT(*) FROM serial_numbers WHERE serial_numbers.product_id = products.id AND status NOT IN ("Terjual", "Hilang"))')
-            ->orderBy('updated_at', 'desc')
-            ->get();
-
-        return view('content.dashboard.all', [
-            'title'                  => 'Semua Notifikasi',
-            'lowStockProducts'       => $lowStockProducts,
-            'productsNeedingSerials' => $productsNeedingSerials,
-        ]);
-    }
+    
 
     public function lowStock(Request $request)
     {
