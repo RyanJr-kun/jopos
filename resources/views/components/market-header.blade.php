@@ -41,52 +41,7 @@
 
                     {{-- 3. Action Icons (Lanjutan baris 81)    --}}
                     @auth
-                        @if (auth()->user()->employee)
-                            <a href="javascript:void(0);" class="nav-link dropdown-toggle hide-arrow p-0 ms-3"
-                                data-bs-toggle="dropdown">
-                                <div class="avatar avatar-online">
-                                    {{-- Cek apakah relasi employee punya avatar --}}
-                                    @if (auth()->user()->employee->avatar)
-                                        <img src="{{ Storage::url(auth()->user()->employee->avatar) }}" alt="Profile"
-                                            class="w-px-40 h-auto rounded-circle">
-                                    @else
-                                        <span class="avatar-initial rounded-circle bg-label-primary">
-                                            {{ substr(Auth::user()->name, 0, 2) }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    {{-- PERBAIKAN: Deteksi otomatis http atau https --}}
-                                    @php
-                                        $protocol = request()->secure() ? 'https://' : 'http://';
-                                        $adminDomain = $protocol . 'jopos.' . env('APP_DOMAIN', 'jocomputer.test');
-                                    @endphp
-                                    <a class="dropdown-item" href="{{ $adminDomain }}/dashboard">
-                                        <i class="bx bx-home-smile me-2"></i>Dashboard Admin
-                                    </a>
-                                </li>
-                                <li>
-                                    {{-- PERBAIKAN: Gunakan $adminDomain agar POS mengarah ke subdomain yang benar --}}
-                                    <a class="dropdown-item" href="{{ $adminDomain }}/penjualan">
-                                        <i class="bx bx-tv me-2"></i>Point Of Sales
-                                    </a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li>
-                                    <form action="{{ route('employee.logout') }}" method="post">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="bx bx-power-off me-2"></i>Log Out
-                                        </button>
-                                    </form>
-                                </li>
-
-                            </ul>
-                        @elseif (auth()->user()->customer)
+                        @if (auth()->user()->customer)
                             <a href="javascript:void(0);" class="nav-link dropdown-toggle hide-arrow p-0 ms-3"
                                 data-bs-toggle="dropdown">
                                 <div class="avatar avatar-online">
@@ -124,24 +79,6 @@
                                 </li>
 
                             </ul>
-                        @else
-                            <li>
-                                <span class="dropdown-item text-muted">
-                                    Profil belum lengkap
-                                </span>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                {{-- Gunakan route logout default Laravel/Breeze/Jetstream jika ada --}}
-                                <form action="{{ route('logout') }}" method="post">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="bx bx-power-off me-2"></i>Log Out
-                                    </button>
-                                </form>
-                            </li>
                         @endif
                     @else
                         {{-- Jika Belum Login, Arahkan ke Login Customer --}}

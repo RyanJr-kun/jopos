@@ -1,116 +1,122 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Cards basic - UI elements')
+@section('title', 'Manajemen Nomor Seri')
+
+{{-- Select2 CSS already loaded globally via Vite in commonMaster/styles.blade.php --}}
+
 @section('content')
-@section('vendor-style')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-@endsection
-<div class="container-fluid p-3">
-    {{-- Card 1: Form Pendaftaran Nomor Seri --}}
-    <div class="card rounded-2 mb-4">
-        <div class="card-header pb-0 px-3 pt-2">
-            <h6 class="mb-0">Pendaftaran Nomor Seri</h6>
-            <p class="text-sm mb-0">Tambah nomor seri untuk produk yang membutuhkannya.</p>
+    <div class="card rounded-3 mb-4 shadow-sm">
+        <div class="card-header d-flex align-items-center justify-content-between py-3 px-4 border-bottom">
+            <div>
+                <h5 class="mb-0 fw-semibold"><i class="bx bx-barcode me-2 text-primary"></i>Pendaftaran Nomor Seri</h5>
+                <p class="text-muted mb-0 mt-1 small">Tambah nomor seri untuk produk yang membutuhkannya.</p>
+            </div>
         </div>
-        <div class="card-body pt-2">
+        <div class="card-body p-4">
             <form id="addMultipleSerialsForm" onsubmit="return false;">
                 @csrf
                 <input type="hidden" name="product_id" id="selected_product_id">
-                <div class="row g-3">
-                    <div class="col-md-7">
-                        <label for="select-produk" class="form-label">Pilih Product:</label>
-                        <select id="select-produk" class="form-control"></select>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label for="select-produk" class="form-label fw-medium">Pilih Produk</label>
+                        <select id="select-produk" class="form-control" style="width:100%;"></select>
                     </div>
-                    <div class="col-md-5 d-flex">
-                        <div class="w-100 me-3">
-                            <label for="input-serial" class="form-label">Input Nomor Seri:</label>
+                    <div class="col-md-4">
+                        <label for="input-serial" class="form-label fw-medium">Input Nomor Seri</label>
+                        <div class="input-group">
                             <input type="text" id="input-serial" class="form-control"
                                 placeholder="Pilih produk terlebih dahulu" disabled>
-                        </div>
-                        <div>
-                            <button type="button" id="btn-add-to-table" class="btn btn-outline-info"
-                                style="margin-top: 30px;" disabled>Tambah</button>
+                            <button type="button" id="btn-add-to-table" class="btn btn-primary" disabled>
+                                <i class="bx bx-plus me-1"></i>Tambah
+                            </button>
                         </div>
                     </div>
-                    <div class="col-md-5 d" id="product-info-container" style="display: none;">
-                        <div class="card bg-gray-100 rounded-2 shadow-none">
-                            <div class="card-body p-2">
-                                <div class="d-flex justify-content-around text-center">
+                    <div class="col-md-2" id="product-info-container" style="display: none;">
+                        <div class="card border-0 bg-light rounded-3 h-100">
+                            <div class="card-body p-2 text-center">
+                                <div class="d-flex justify-content-around">
                                     <div>
-                                        <h6 class="mb-0" id="info-stok">0</h6>
-                                        <p class="text-xs fw-bold mb-0">Stock</p>
+                                        <div class="fw-bold fs-6" id="info-stok">0</div>
+                                        <div class="text-muted" style="font-size:0.7rem;">Stok</div>
                                     </div>
+                                    <div class="vr mx-1"></div>
                                     <div>
-                                        <h6 class="mb-0" id="info-sn-tercatat">0</h6>
-                                        <p class="text-xs fw-bold mb-0">SN Tercatat</p>
+                                        <div class="fw-bold fs-6" id="info-sn-tercatat">0</div>
+                                        <div class="text-muted" style="font-size:0.7rem;">Tercatat</div>
                                     </div>
+                                    <div class="vr mx-1"></div>
                                     <div>
-                                        <h6 class="mb-0 text-danger" id="info-sn-butuh">0</h6>
-                                        <p class="text-xs fw-bold mb-0">Butuh SN</p>
+                                        <div class="fw-bold fs-6 text-danger" id="info-sn-butuh">0</div>
+                                        <div class="text-muted" style="font-size:0.7rem;">Butuh</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div id="serial-input-section" style="display: none;">
 
-                    <div class="table-responsive p-0 mt-3" style="max-height: 300px; overflow-y: auto;">
-                        <table class="table table-sm w-md-60 align-items-center" id="temp-serial-table">
-                            <thead class="table-secondary">
+                <div id="serial-input-section" style="display: none;">
+                    <div class="table-responsive mt-3 border rounded-3" style="max-height: 260px; overflow-y: auto;">
+                        <table class="table table-sm table-hover align-middle mb-0" id="temp-serial-table">
+                            <thead class="table-light sticky-top">
                                 <tr>
-                                    <th class="text-dark text-xs font-weight-bolder">No.</th>
-                                    <th class="text-dark text-xs font-weight-bolder ps-2">Nomor Seri</th>
-                                    <th class="text-dark"></th>
+                                    <th class="text-uppercase text-muted small ps-3" style="width:50px;">No.</th>
+                                    <th class="text-uppercase text-muted small">Nomor Seri</th>
+                                    <th class="text-uppercase text-muted small text-center" style="width:80px;">Hapus</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {{-- New serials will be added here by JS --}}
+                                {{-- Diisi oleh JS --}}
                             </tbody>
                         </table>
                     </div>
-                    <div class="d-flex justify-content-start mt-3">
-                        <button type="button" id="btn-submit-serials" class="btn btn-outline-info" disabled>Simpan
-                            Nomor Seri</button>
+                    <div class="d-flex align-items-center gap-2 mt-3">
+                        <button type="button" id="btn-submit-serials" class="btn btn-success" disabled>
+                            <i class="bx bx-save me-1"></i>Simpan Nomor Seri
+                        </button>
+                        <span class="text-muted small" id="sn-count-label"></span>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- Card 2: Daftar Nomor Seri (Existing Table) --}}
-    <div class="card rounded-2">
-        <div class="card-header pb-0 px-3 pt-2 mb-3">
+    {{-- Card 2: Daftar Nomor Seri --}}
+    <div class="card rounded-3 shadow-sm">
+        <div class="card-header py-3 px-4 border-bottom">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="mb-n1">Daftar Nomor Seri</h6>
-                    <p class="text-sm mb-0">Kelola semua nomor seri produk Anda.</p>
+                    <h5 class="mb-0 fw-semibold"><i class="bx bx-list-ul me-2 text-primary"></i>Daftar Nomor Seri</h5>
+                    <p class="text-muted mb-0 mt-1 small">Kelola semua nomor seri produk Anda.</p>
                 </div>
             </div>
         </div>
-        <div class="card-body px-0 pt-0 pb-2">
+        <div class="card-body p-4 pb-2">
             <form method="GET" action="{{ route('serialNumber.index') }}">
-                <div class="row g-3 px-3 align-items-center justify-content-start">
+                <div class="row g-3 align-items-end">
                     <div class="col-md-4">
-                        <label for="search" class="form-label">Cari Nomor Seri</label>
-                        <input type="text" id="search" name="search" class="form-control"
-                            placeholder="Ketik nomor seri..." value="{{ request('search') }}">
+                        <label for="search" class="form-label fw-medium">Cari Nomor Seri</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bx bx-search"></i></span>
+                            <input type="text" id="search" name="search" class="form-control"
+                                placeholder="Ketik nomor seri..." value="{{ request('search') }}">
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        <label for="product_id_filter" class="form-label">Filter Product</label>
-                        <select id="product_id_filter" name="product_id" class="form-select" style="width: 100%;">
-                            <option value="">Semua Product</option>
+                        <label for="product_id_filter" class="form-label fw-medium">Filter Produk</label>
+                        <select id="product_id_filter" name="product_id" class="form-select form-select-sm"
+                            style="width:100%;">
+                            <option value="">Semua Produk</option>
                             @foreach ($products as $produk)
                                 <option value="{{ $produk->id }}" @selected(request('product_id') == $produk->id)>
-                                    {{ $produk->name_product }}</option>
+                                    {{ $produk->name_product }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label for="status_filter" class="form-label">Filter Status</label>
-                        <select id="status_filter" name="status" class="form-select">
+                        <label for="status_filter" class="form-label fw-medium">Filter Status</label>
+                        <select id="status_filter" name="status" class="form-select form-select-sm">
                             <option value="">Semua Status</option>
                             <option value="Tersedia" @selected(request('status') == 'Tersedia')>Tersedia</option>
                             <option value="Terjual" @selected(request('status') == 'Terjual')>Terjual</option>
@@ -118,441 +124,505 @@
                             <option value="Hilang" @selected(request('status') == 'Hilang')>Hilang</option>
                         </select>
                     </div>
-                    <div class="col-md-3 d-flex align-items-end" style="padding-top: 45px;">
-                        <button type="submit" class="btn btn-outline-info me-3 py-2">Filter</button>
-                        <a href="{{ route('serialNumber.index') }}" class="btn btn-outline-dark py-2">Reset</a>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4"><i
+                                class="bx bx-filter me-1"></i>Filter</button>
+                        <a href="{{ route('serialNumber.index') }}" class="btn btn-outline-secondary px-3"><i
+                                class="bx bx-reset me-1"></i>Reset</a>
                     </div>
                 </div>
             </form>
-            <div class="table-responsive p-0 mt-3">
-                <table class="table table-hover align-items-center mb-0" id="tableData">
-                    <thead>
-                        <tr class="table-secondary">
-                            <th class="text-uppercase text-dark text-xs font-weight-bolder">Product</th>
-                            <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Nomor Seri</th>
-                            <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Status</th>
-                            <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Tgl. Masuk</th>
-                            <th class="text-uppercase text-dark text-xs font-weight-bolder ps-2">Info Sale</th>
-                            <th class="text-dark">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="isiTable">
-                        @forelse ($serialNumbers as $sn)
-                            <tr>
-                                <td>
-                                    <div class="d-flex ms-2 px-2 py-1 align-items-center">
-                                        @if ($sn->produk->img_produk)
-                                            <img src="{{ Storage::url($sn->produk->img_produk) }}"
-                                                class="avatar avatar-sm me-3" alt="{{ $sn->produk->name_product }}">
-                                        @else
-                                            <img src="{{ asset('assets/img/produk.png') }}"
-                                                class="avatar avatar-sm me-3" alt="Gambar produk default">
-                                        @endif
-                                        <h6 class="mb-0 text-sm">{{ $sn->produk->name_product }}</h6>
-                                    </div>
-                                </td>
-                                <td>
-                                    <p class="text-xs text-dark fw-bold mb-0">{{ $sn->nomor_seri }}</p>
-                                </td>
-                                <td class="align-middle text-sm">
-                                    @php
-                                        $statusClass = '';
-                                        switch ($sn->status) {
-                                            case 'Tersedia':
-                                                $statusClass = 'bg-label-success';
-                                                break;
-                                            case 'Terjual':
-                                                $statusClass = 'bg-label-info';
-                                                break;
-                                            case 'Rusak':
-                                                $statusClass = 'bg-label-danger';
-                                                break;
-                                            case 'Hilang':
-                                                $statusClass = 'bg-label-warning';
-                                                break;
-                                        }
-                                    @endphp
-                                    <span class="badge {{ $statusClass }}">{{ $sn->status }}</span>
-                                </td>
-                                <td>
-                                    <p class="text-xs text-dark fw-bold mb-0">
-                                        {{ $sn->created_at->translatedFormat('d M Y') }}</p>
-                                </td>
-                                <td>
-                                    @if ($sn->penjualan)
-                                        <a href="{{ route('penjualan.show', $sn->penjualan->referensi) }}"
-                                            class="text-info fw-bold text-xs" data-bs-toggle="tooltip"
-                                            title="Lihat Invoice Sale">
-                                            {{ $sn->penjualan->referensi }}
-                                        </a>
+        </div>
+        <div class="table-responsive mt-3">
+            <table class="table table-hover align-middle mb-0" id="tableData">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-uppercase text-muted small ps-4">Produk</th>
+                        <th class="text-uppercase text-muted small">Nomor Seri</th>
+                        <th class="text-uppercase text-muted small">Status</th>
+                        <th class="text-uppercase text-muted small">Tgl. Masuk</th>
+                        <th class="text-uppercase text-muted small">Info Sale</th>
+                        <th class="text-uppercase text-muted small text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="isiTable">
+                    @forelse ($serialNumbers as $sn)
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    @if ($sn->produk->primaryImage->path)
+                                        <img src="{{ Storage::url($sn->produk->primaryImage->path) }}" class="rounded-2"
+                                            width="36" height="36" style="object-fit:cover;"
+                                            alt="{{ $sn->produk->name_product }}">
                                     @else
-                                        <p class="text-xs text-dark fw-bold mb-0">-</p>
+                                        <img src="{{ asset('assets/img/produk.png') }}" class="rounded-2" width="36"
+                                            height="36" style="object-fit:cover;" alt="Produk">
                                     @endif
-                                </td>
-                                <td class="align-middle">
-                                    <button type="button" class="btn btn-link text-dark p-0 m-0 btn-edit"
-                                        data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
-                                        data-status="{{ $sn->status }}" title="Edit SN">
-                                        <i class="bx bx-edit bi-sm text-dark text-sm opacity-10"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-link text-danger p-0 m-0 ms-2 btn-delete"
-                                        data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
-                                        title="Hapus SN">
-                                        <i class="bx bx-trash bi-sm"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center py-4">Tidak ada data nomor seri yang cocok.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-                <div class="my-3 ms-3">{{ $serialNumbers->links() }}</div>
-            </div>
+                                    <span class="fw-medium small">{{ $sn->produk->name_product }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-label-dark fw-mono text-sm px-2 py-1">{{ $sn->nomor_seri }}</span>
+                            </td>
+                            <td>
+                                @php
+                                    $statusMap = [
+                                        'Tersedia' => 'success',
+                                        'Terjual' => 'info',
+                                        'Rusak' => 'danger',
+                                        'Hilang' => 'warning',
+                                    ];
+                                    $color = $statusMap[$sn->status] ?? 'secondary';
+                                @endphp
+                                <span class="badge bg-label-{{ $color }}">{{ $sn->status }}</span>
+                            </td>
+                            <td class="small text-muted">{{ $sn->created_at->translatedFormat('d M Y') }}</td>
+                            <td>
+                                @if ($sn->penjualan)
+                                    <a href="{{ route('penjualan.show', $sn->penjualan->referensi) }}"
+                                        class="text-primary fw-medium small" data-bs-toggle="tooltip"
+                                        title="Lihat Invoice Sale">
+                                        {{ $sn->penjualan->referensi }}
+                                    </a>
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-edit me-1"
+                                    data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
+                                    data-status="{{ $sn->status }}" title="Edit SN" data-bs-toggle="tooltip">
+                                    <i class="bx bx-edit-alt"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-delete"
+                                    data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}" title="Hapus SN"
+                                    data-bs-toggle="tooltip">
+                                    <i class="bx bx-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bx bx-info-circle fs-3 d-block mb-2"></i>
+                                Tidak ada data nomor seri yang cocok.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+            <div class="my-3 ms-3">{{ $serialNumbers->links() }}</div>
         </div>
     </div>
 
-    {{-- modal edit --}}
+    {{-- Modal Edit --}}
     <div class="modal fade" id="editSerialModal" tabindex="-1" aria-labelledby="editSerialModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n3">
-                    <h6 class="modal-title" id="editSerialModalLabel">Edit Nomor Seri</h6>
-                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+            <div class="modal-content rounded-3">
+                <div class="modal-header border-bottom pb-3">
+                    <h6 class="modal-title fw-semibold" id="editSerialModalLabel">
+                        <i class="bx bx-edit me-2 text-primary"></i>Edit Nomor Seri
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body pt-3">
                     <form id="editSerialForm" method="post">
                         @method('put')
                         @csrf
                         <div class="mb-3">
-                            <label for="edit_serial_number" class="form-label">Nomor Seri</label>
+                            <label for="edit_serial_number" class="form-label fw-medium">Nomor Seri</label>
                             <input id="edit_serial_number" name="serial_number" type="text" class="form-control"
                                 required>
                             <div class="invalid-feedback" id="edit_serial_number-error"></div>
                         </div>
                         <div class="mb-3">
-                            <label for="edit_status" class="form-label">Status</label>
-                            <select id="edit_status" name="status" class="form-select" required>
+                            <label for="edit_status" class="form-label fw-medium">Status</label>
+                            <select id="edit_status" name="status" class="form-select form-select-sm" required>
                                 <option value="Tersedia">Tersedia</option>
-                                <option value="Terjual">Terjual</option>
                                 <option value="Rusak">Rusak</option>
                                 <option value="Hilang">Hilang</option>
                             </select>
+                            <div class="form-text text-warning"><i class="bx bx-info-circle me-1"></i>Status "Terjual"
+                                diatur otomatis oleh sistem.</div>
                         </div>
-                        <div class="modal-footer border-0 pb-0">
-                            <button type="submit" class="btn btn-outline-info btn-sm">Simpan Perubahan</button>
-                            <button type="button" class="btn btn-danger btn-sm"
-                                data-bs-dismiss="modal">Batalkan</button>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-outline-secondary"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-    {{-- modal delete --}}
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1"
-        aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center mt-3 mx-n5">
-                    <i class="bx bx-trash fa-2x text-danger mb-3"></i>
-                    <p class="mb-0">Apakah Anda yakin ingin menghapus Unit ini?</p>
-                    <h6 class="mt-2" id="serialNumberToDelete"></h6>
-                    <div class="mt-4">
-                        <form id="deleteSerialForm" method="POST" action="#">
-                            @method('delete')
-                            @csrf
-                            <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
-                                data-bs-dismiss="modal">Batal</button>
-                        </form>
+
+    {{-- Modal Delete --}}
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-3 text-center">
+                <div class="modal-body py-4 px-4">
+                    <div class="mb-3">
+                        <span class="avatar avatar-lg rounded-circle bg-label-danger">
+                            <i class="bx bx-trash fs-4"></i>
+                        </span>
                     </div>
+                    <h6 class="fw-semibold mb-1">Hapus Nomor Seri?</h6>
+                    <p class="text-muted small mb-3">Tindakan ini tidak dapat dibatalkan.</p>
+                    <p class="fw-bold text-dark mb-4" id="serialNumberToDelete"></p>
+                    <form id="deleteSerialForm" method="POST" action="#">
+                        @method('delete')
+                        @csrf
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-</div>
+@endsection
+
 @section('page-script')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
+    <script type="module">
         $(document).ready(function() {
-
-            // --- GLOBAL VARIABLES & INITIALIZATION ---
-            let tempSerials = new Set();
-            let selectedProductData = null;
-            const editSerialModal = new bootstrap.Modal(document.getElementById('editSerialModal'));
-            const deleteSerialModal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
-
-            $('#product_id_filter').select2({
-                theme: "bootstrap-5",
-                placeholder: 'Semua Product'
-            });
-
-            // --- UTILITY FUNCTIONS ---
-            function showSuccess(message) {
-                window.showToast('success', message);.then(() => location.reload());
-            }
-
-            function showError(message, errors = {}) {
-                let errorText = message;
-                if (Object.keys(errors).length > 0) {
-                    errorText = Object.values(errors).flat()[0];
-                }
-                window.showToast('error', errorText);
-            }
-
-            // --- FUNGSI UTAMA (SUMBER KEBENARAN TUNGGAL) ---
-
-            /**
-             * Mengupdate status input serial berdasarkan data produk dan daftar serial sementara.
-             * Ini adalah satu-satunya fungsi yang boleh mengaktifkan/menonaktifkan input.
-             */
-            function updateInputState() {
-                if (!selectedProductData) return;
-
-                const butuhAwal = selectedProductData.qty - selectedProductData.sn_count;
-                const sisaButuh = butuhAwal - tempSerials.size;
-
-                if (sisaButuh > 0) {
-                    $('#input-serial').prop('disabled', false).attr('placeholder', `Butuh ${sisaButuh} SN lagi...`)
-                        .focus();
-                    $('#btn-add-to-table').prop('disabled', false);
-                } else {
-                    $('#input-serial').prop('disabled', true).attr('placeholder', 'Jumlah SN sudah cukup');
-                    $('#btn-add-to-table').prop('disabled', true);
-                }
-
-                $('#btn-submit-serials').prop('disabled', tempSerials.size === 0);
-            }
-
-            /**
-             * Memuat data produk, memperbarui UI, dan memanggil updateInputState.
-             */
-            function updateProductInfo(productId, productSlug) {
-                if (!productId) {
-                    $('#product-info-container').hide();
-                    return;
-                }
-                const url = "{{ route('get-data.serial-product-info', ['produk' => ':id']) }}".replace(':id',
-                    productId);
-                $.ajax({
-                    url: url,
-                    method: 'GET',
-                    success: function(data) {
-                        selectedProductData = {
-                            id: productId,
-                            qty: data.qty,
-                            sn_count: data.sn_tercatat_count,
-                            slug: productSlug
-                        };
-                        $('#selected_product_id').val(productId);
-                        $('#info-stok').text(data.qty);
-                        $('#info-sn-tercatat').text(data.sn_tercatat_count);
-                        $('#info-sn-butuh').text(data.butuh_sn);
-                        $('#product-info-container').show();
-                        $('#serial-input-section').show();
-
-                        const newUrl = `/serialNumber/${productSlug}`;
-                        history.pushState({
-                            path: newUrl
-                        }, '', newUrl);
-
-                        tempSerials.clear();
-                        renderTempTable();
-                        updateInputState(); // Panggil fungsi utama untuk atur input
-                    },
-                    error: function() {
-                        showError('Gagal memuat info produk.');
-                    }
+            setTimeout(function() {
+                $('#product_id_filter').select2({
+                    placeholder: 'Semua Produk',
+                    allowClear: true,
+                    width: '100%'
                 });
-            }
 
+                // --- INISIALISASI GLOBAL ---
+                let tempSerials = new Set();
+                let selectedProductData = null;
+                const editSerialModal = new bootstrap.Modal(document.getElementById('editSerialModal'));
+                const deleteSerialModal = new bootstrap.Modal(document.getElementById(
+                    'deleteConfirmationModal'));
 
-            // --- SELECT2 & EVENT HANDLING ---
-            function formatProduct(produk) {
-                if (!produk.id) return produk.text;
-                const defaultImage = "{{ asset('assets/img/produk.png') }}";
-                const imageUrl = produk.img_produk ? `{{ asset('storage/') }}/${produk.img_produk}` : defaultImage;
-                return $(
-                    `<div class="d-flex align-items-center">
-                    <img src="${imageUrl}" class="avatar avatar-sm me-3" />
-                    <div>
-                        <h6 class="mb-0 text-sm">${produk.text}</h6>
-                        <p class="text-xs text-muted mb-0">Stock: ${produk.qty}</p>
-                    </div>
-                </div>`
-                );
-            }
+                // Inisialisasi tooltip Bootstrap
+                document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(
+                    el));
 
-            $('#select-produk').select2({
-                theme: "bootstrap-5",
-                placeholder: 'Ketik untuk mencari produk',
-                templateResult: formatProduct,
-                templateSelection: (produk) => produk.text,
-                ajax: {
-                    url: "{{ route('get-data.produk') }}",
-                    dataType: 'json',
-                    delay: 250,
-                    data: (params) => ({
-                        search: params.term,
-                        page: params.page || 1,
-                        wajib_seri: 1
-                    }),
-                    processResults: function(data) {
-                        return {
-                            results: data.data.map(item => ({
-                                id: item.id,
-                                text: item.name_product,
-                                slug: item.slug,
-                                qty: item.qty,
-                                img_produk: item.img_produk
-                            })),
-                            pagination: {
-                                more: data.next_page_url !== null
+                // --- SELECT2: Filter Produk (tidak perlu AJAX, data sudah ada) ---
+                $('#product_id_filter').select2({
+                    placeholder: 'Semua Produk',
+                    allowClear: true,
+                    width: '100%'
+                });
+
+                // --- FUNGSI UTILITY ---
+                function showSuccess(message) {
+                    window.showToast('success', message);
+                    setTimeout(() => location.reload(), 1500);
+                }
+
+                function showError(message, errors = {}) {
+                    let errorText = message;
+                    if (Object.keys(errors).length > 0) {
+                        errorText = Object.values(errors).flat()[0];
+                    }
+                    window.showToast('error', errorText);
+                }
+
+                // --- FUNGSI UTAMA: Update State Input ---
+                function updateInputState() {
+                    if (!selectedProductData) return;
+
+                    const butuhAwal = selectedProductData.qty - selectedProductData.sn_count;
+                    const sisaButuh = butuhAwal - tempSerials.size;
+                    const total = tempSerials.size;
+
+                    if (sisaButuh > 0) {
+                        $('#input-serial').prop('disabled', false)
+                            .attr('placeholder', `Butuh ${sisaButuh} SN lagi...`);
+                        $('#btn-add-to-table').prop('disabled', false);
+                    } else {
+                        $('#input-serial').prop('disabled', true)
+                            .attr('placeholder', 'Jumlah SN sudah cukup');
+                        $('#btn-add-to-table').prop('disabled', true);
+                    }
+
+                    $('#btn-submit-serials').prop('disabled', total === 0);
+                    $('#sn-count-label').text(total > 0 ? `${total} SN siap disimpan` : '');
+                }
+
+                // --- FUNGSI: Muat Info Produk ---
+                function updateProductInfo(productId, productSlug) {
+                    if (!productId) {
+                        $('#product-info-container').hide();
+                        return;
+                    }
+                    const url = "{{ route('get-data.serial-product-info', ['produk' => ':id']) }}"
+                        .replace(':id', productId);
+                    $.ajax({
+                        url: url,
+                        method: 'GET',
+                        success: function(data) {
+                            selectedProductData = {
+                                id: productId,
+                                qty: data.qty,
+                                sn_count: data.sn_tercatat_count,
+                                slug: productSlug
+                            };
+                            $('#selected_product_id').val(productId);
+                            $('#info-stok').text(data.qty);
+                            $('#info-sn-tercatat').text(data.sn_tercatat_count);
+                            $('#info-sn-butuh').text(data.butuh_sn);
+                            $('#product-info-container').show();
+                            $('#serial-input-section').show();
+
+                            if (productSlug) {
+                                const newUrl = `/serialNumber/${productSlug}`;
+                                history.pushState({
+                                    path: newUrl
+                                }, '', newUrl);
                             }
-                        };
+
+                            tempSerials.clear();
+                            renderTempTable();
+                            updateInputState();
+                        },
+                        error: function() {
+                            showError('Gagal memuat info produk.');
+                        }
+                    });
+                }
+
+                // --- SELECT2: Pilih Produk (AJAX) ---
+                function formatProduct(produk) {
+                    if (!produk.id) return produk.text;
+                    const defaultImage = "{{ asset('assets/img/produk.png') }}";
+                    const r2BaseUrl = "{{ config('filesystems.disks.r2.url') }}";
+                    const cleanBaseUrl = r2BaseUrl.replace(/\/$/, "");
+                    const imageUrl = produk.primaryImage ?
+                        `${cleanBaseUrl}/${produk.primaryImage}` :
+                        defaultImage;
+                    return $(
+                        `<div class="d-flex align-items-center gap-2 py-1">
+                        <img src="${imageUrl}" class="rounded-2" width="32" height="32" style="object-fit:cover;" />
+                        <div>
+                            <div class="fw-medium small">${produk.text}</div>
+                            <div class="text-muted" style="font-size:0.72rem;">Stok: ${produk.qty ?? '-'}</div>
+                        </div>
+                    </div>`
+                    );
+                }
+
+                $('#select-produk').select2({
+                    placeholder: 'Ketik untuk mencari produk...',
+                    allowClear: true,
+                    width: '100%',
+                    templateResult: formatProduct,
+                    templateSelection: (p) => p.text || 'Pilih Produk',
+                    ajax: {
+                        url: "{{ route('get-data.produk') }}",
+                        dataType: 'json',
+                        delay: 250,
+                        data: (params) => ({
+                            search: params.term,
+                            page: params.page || 1,
+                            wajib_seri: 1
+                        }),
+                        processResults: function(data) {
+                            return {
+                                results: data.data.map(item => ({
+                                    id: item.id,
+                                    text: item.name_product,
+                                    slug: item.slug,
+                                    qty: item.qty,
+                                    primaryImage: item.primaryImage
+                                })),
+                                pagination: {
+                                    more: data.next_page_url !== null
+                                }
+                            };
+                        }
                     }
+                });
+
+                $('#select-produk').on('select2:select', function(e) {
+                    const data = e.params.data;
+                    updateProductInfo(data.id, data.slug);
+                });
+
+                $('#select-produk').on('select2:clear', function() {
+                    selectedProductData = null;
+                    $('#product-info-container').hide();
+                    $('#serial-input-section').hide();
+                    $('#selected_product_id').val('');
+                    tempSerials.clear();
+                });
+
+                // --- LOGIKA PENDAFTARAN SN ---
+                function addSerialToTempTable() {
+                    if (!selectedProductData) return;
+                    const serialInput = $('#input-serial');
+                    const serialValue = serialInput.val().trim().toUpperCase();
+                    if (!serialValue) return;
+
+                    const sisaButuh = (selectedProductData.qty - selectedProductData.sn_count) - tempSerials
+                        .size;
+                    if (sisaButuh <= 0) {
+                        window.showToast('warning', 'Jumlah nomor seri yang ditambahkan sudah mencukupi.');
+                        return;
+                    }
+                    if (tempSerials.has(serialValue)) {
+                        window.showToast('warning', 'Nomor seri sudah ada di dalam daftar.');
+                        return;
+                    }
+
+                    tempSerials.add(serialValue);
+                    renderTempTable();
+                    serialInput.val('').focus();
                 }
-            });
 
-            $('#select-produk').on('select2:select', function(e) {
-                const data = e.params.data;
-                updateProductInfo(data.id, data.slug);
-            });
+                $('#btn-add-to-table').on('click', addSerialToTempTable);
+                $('#input-serial').on('keypress', function(e) {
+                    if (e.which === 13) {
+                        e.preventDefault();
+                        addSerialToTempTable();
+                    }
+                });
 
-
-            // --- LOGIKA PENDAFTARAN SN ---
-            function addSerialToTempTable() {
-                if (!selectedProductData) return;
-                const serialInput = $('#input-serial');
-                const serialValue = serialInput.val().trim();
-                if (!serialValue) return;
-
-                const sisaButuh = (selectedProductData.qty - selectedProductData.sn_count) - tempSerials.size;
-                if (sisaButuh <= 0) {
-                    window.showToast('warning', 'Jumlah nomor seri yang ditambahkan sudah mencukupi.');
-                    return;
+                function renderTempTable() {
+                    const tableBody = $('#temp-serial-table tbody');
+                    tableBody.empty();
+                    let counter = 1;
+                    tempSerials.forEach(serial => {
+                        tableBody.append(
+                            `<tr>
+                        <td class="ps-3 text-muted small">${counter++}</td>
+                        <td class="fw-medium small">${serial}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-remove-temp"
+                                data-serial="${serial}" title="Hapus dari daftar">
+                                <i class="bx bx-x"></i>
+                            </button>
+                        </td>
+                    </tr>`
+                        );
+                    });
+                    updateInputState();
                 }
-                if (tempSerials.has(serialValue)) {
-                    window.showToast('warning', 'Nomor seri sudah ada di dalam daftar.');
-                    return;
-                }
 
-                tempSerials.add(serialValue);
-                renderTempTable();
-                serialInput.val('').focus();
-                updateInputState(); // Panggil fungsi utama untuk update state
-            }
+                $('#temp-serial-table').on('click', '.btn-remove-temp', function() {
+                    tempSerials.delete($(this).data('serial'));
+                    renderTempTable();
+                });
 
-            $('#btn-add-to-table').on('click', addSerialToTempTable);
-            $('#input-serial').on('keypress', (e) => {
-                if (e.which === 13) {
+                $('#btn-submit-serials').on('click', function() {
+                    const btn = $(this);
+                    btn.prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...'
+                    );
+                    $.ajax({
+                        url: "{{ route('serialNumber.store') }}",
+                        method: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            product_id: $('#selected_product_id').val(),
+                            serial_numbers: Array.from(tempSerials)
+                        },
+                        success: (response) => showSuccess(response.message),
+                        error: (xhr) => {
+                            showError(
+                                xhr.responseJSON?.message || 'Terjadi kesalahan.',
+                                xhr.responseJSON?.errors || {}
+                            );
+                            btn.prop('disabled', false).html(
+                                '<i class="bx bx-save me-1"></i>Simpan Nomor Seri');
+                        }
+                    });
+                });
+
+                // --- LOGIKA SAAT HALAMAN DIMUAT (jika ada produk dari URL slug) ---
+                @if ($produkDipilih)
+                    var produkOption = new Option(
+                        "{{ $produkDipilih->name_product }}",
+                        "{{ $produkDipilih->id }}",
+                        true, true
+                    );
+                    $('#select-produk').append(produkOption).trigger('change');
+                    updateProductInfo("{{ $produkDipilih->id }}", "{{ $produkDipilih->slug }}");
+                    $('#product_id_filter').val("{{ $produkDipilih->id }}").trigger('change');
+                @endif
+
+                // --- MODAL EDIT ---
+                $('#tableData').on('click', '.btn-edit', function() {
+                    const id = $(this).data('id');
+                    const serial = $(this).data('serial');
+                    const status = $(this).data('status');
+                    const url = "{{ route('serialNumber.update', ':id') }}".replace(':id', id);
+
+                    $('#editSerialForm').attr('action', url);
+                    $('#edit_serial_number').val(serial).removeClass('is-invalid');
+                    $('#edit_serial_number-error').text('');
+                    $('#edit_status').val(status);
+                    editSerialModal.show();
+                });
+
+                $('#editSerialForm').on('submit', function(e) {
                     e.preventDefault();
-                    addSerialToTempTable();
-                }
-            });
-
-            function renderTempTable() {
-                const tableBody = $('#temp-serial-table tbody');
-                tableBody.empty();
-                let counter = 1;
-                tempSerials.forEach(serial => {
-                    tableBody.append(`  <tr>
-                                        <td class="ps-4">${counter++}</td>
-                                        <td class="text-start">${serial}</td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-link text-danger p-0 m-0 btn-remove-temp" data-serial="${serial}"><i class="bx bx-trash bi-sm"></i></button>
-                                        </td>
-                                    </tr>`);
+                    const form = $(this);
+                    const btn = form.find('[type=submit]');
+                    btn.prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...'
+                    );
+                    $.ajax({
+                        url: form.attr('action'),
+                        method: 'POST',
+                        data: form.serialize(),
+                        success: (response) => {
+                            editSerialModal.hide();
+                            showSuccess(response.message);
+                        },
+                        error: (xhr) => {
+                            const error = xhr.responseJSON?.errors?.serial_number?.[0];
+                            $('#edit_serial_number').addClass('is-invalid').focus();
+                            $('#edit_serial_number-error').text(error ||
+                                'Terjadi kesalahan.');
+                            btn.prop('disabled', false).text('Simpan Perubahan');
+                        }
+                    });
                 });
-                updateInputState(); // Panggil fungsi utama untuk update state
-            }
 
-            $('#temp-serial-table').on('click', '.btn-remove-temp', function() {
-                tempSerials.delete($(this).data('serial'));
-                renderTempTable(); // Render ulang tabel dan panggil updateInputState di dalamnya
-            });
-
-            $('#btn-submit-serials').on('click', function() {
-                $.ajax({
-                    url: "{{ route('serialNumber.store') }}",
-                    method: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        product_id: $('#selected_product_id').val(),
-                        serial_numbers: Array.from(tempSerials)
-                    },
-                    success: (response) => showSuccess(response.message),
-                    error: (xhr) => showError(xhr.responseJSON.message || 'Terjadi kesalahan.', xhr
-                        .responseJSON.errors || {})
+                // --- MODAL DELETE ---
+                $('#tableData').on('click', '.btn-delete', function() {
+                    const id = $(this).data('id');
+                    const serial = $(this).data('serial');
+                    const url = "{{ route('serialNumber.destroy', ':id') }}".replace(':id', id);
+                    $('#deleteSerialForm').attr('action', url);
+                    $('#serialNumberToDelete').text(`"${serial}"`);
+                    deleteSerialModal.show();
                 });
-            });
 
-            // --- LOGIKA AWAL SAAT HALAMAN DIMUAT ---
-            @if ($produkDipilih)
-                var produkOption = new Option("{{ $produkDipilih->name_product }}", "{{ $produkDipilih->id }}",
-                    true, true);
-                $('#select-produk').append(produkOption).trigger('change');
-                updateProductInfo("{{ $produkDipilih->id }}", "{{ $produkDipilih->slug }}");
-                $('#product_id_filter').val("{{ $produkDipilih->id }}").trigger('change');
-            @endif
-
-            // --- LOGIKA MODAL EDIT & DELETE ---
-            $('#tableData').on('click', '.btn-edit', function() {
-                const id = $(this).data('id');
-                const serial = $(this).data('serial');
-                const status = $(this).data('status');
-                const url = "{{ route('serialNumber.update', ':id') }}".replace(':id', id);
-
-                $('#editSerialForm').attr('action', url);
-                $('#edit_serial_number').val(serial);
-                $('#edit_status').val(status);
-                editSerialModal.show();
-            });
-
-            $('#editSerialForm').on('submit', function(e) {
-                e.preventDefault();
-                const form = $(this);
-                $.ajax({
-                    url: form.attr('action'),
-                    method: 'POST',
-                    data: form.serialize(),
-                    success: (response) => showSuccess(response.message),
-                    error: (xhr) => {
-                        const error = xhr.responseJSON.errors?.serial_number[0];
-                        $('#edit_serial_number').addClass('is-invalid').focus();
-                        $('#edit_serial_number-error').text(error || 'Terjadi kesalahan');
-                    }
+                $('#deleteSerialForm').on('submit', function(e) {
+                    e.preventDefault();
+                    const form = $(this);
+                    const btn = form.find('[type=submit]');
+                    btn.prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm me-1"></span>Menghapus...'
+                    );
+                    $.ajax({
+                        url: form.attr('action'),
+                        method: 'POST',
+                        data: form.serialize(),
+                        success: (response) => {
+                            deleteSerialModal.hide();
+                            showSuccess(response.message);
+                        },
+                        error: (xhr) => {
+                            deleteSerialModal.hide();
+                            showError(xhr.responseJSON?.message ||
+                                'Gagal menghapus nomor seri.');
+                        }
+                    });
                 });
-            });
-
-            $('#tableData').on('click', '.btn-delete', function() {
-                const id = $(this).data('id');
-                const serial = $(this).data('serial');
-                const url = "{{ route('serialNumber.destroy', ':id') }}".replace(':id', id);
-                $('#deleteSerialForm').attr('action', url);
-                $('#serialNumberToDelete').text(`"${serial}"`);
-                deleteSerialModal.show();
-            });
-
-            $('#deleteSerialForm').on('submit', function(e) {
-                e.preventDefault();
-                const form = $(this);
-                $.ajax({
-                    url: form.attr('action'),
-                    method: 'POST',
-                    data: form.serialize(),
-                    success: (response) => showSuccess(response.message),
-                    error: (xhr) => showError(xhr.responseJSON.message || 'Terjadi kesalahan.')
-                });
-            });
-
+            }, 500);
         });
     </script>
-@endsection
 @endsection

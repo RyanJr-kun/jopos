@@ -115,7 +115,7 @@
             <h4 class="text-center mb-3 lh-1">
                 <span class="position-relative fw-extrabold z-1">Kami menyediakan Solusi <br
                         class="d-block d-lg-none"></span>
-                untuk kebutuhan teknologi anda
+                Teknologi
             </h4>
             <p class="text-center mb-12">Hadir sebagai teman konsultasi dan menyediakan produk berkualitas tinggi.</p>
 
@@ -246,39 +246,51 @@
     {{-- section : Category --}}
     <section id="category" class="section-py bg-white">
         <div class="container-market">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bolder tg-blue-v2 mb-0">JELAJAHI KATEGORI</h3>
-                <a href="{{ route('market.produk') }}"
-                    class="link link-blue px-2 align-items-center justify-content-center">
-                    <i class="bx bx-category me-2"></i><span>Lihat Semua</span>
-                </a>
-            </div>
-            <div class="position-relative category-scroll-wrapper">
-                <div class="swiper myCategorySwiper">
-                    <div class="swiper-wrapper">
-                        @foreach ($kategoris as $kategori)
-                            <div class="swiper-slide">
-                                <a href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}"
-                                    class="text-decoration-none text-dark">
-                                    <div class="card category-card overflow-hidden">
-                                        <img src="{{ $kategori->img_kategori ? Storage::url($kategori->img_kategori) : asset('assets/img/produk.png') }}"
-                                            class="card-img-top" alt="{{ $kategori->name }}">
-                                    </div>
-                                    <div class="card-body p-2 text-center">
-                                        <h6 class="card-title fw-bold text-truncate mb-1" title="{{ $kategori->name }}">
-                                            {{ $kategori->name }}</h6>
-                                        {{-- <p class="card-text text-muted small">{{ $kategori->products_count }} Product</p> --}}
-                                    </div>
-                                </a>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    {{-- Tombol navigasi --}}
-                    <div class="swiper-button-prev category-nav-btn"></div>
-                    <div class="swiper-button-next category-nav-btn"></div>
+            {{-- mobile --}}
+            <div class="d-block d-md-none">
+                <div class="row row-cols-4 g-2">
+                    @foreach ($kategoris as $kategori)
+                        <div class="col d-flex justify-content-center align-items-center">
+                            <a href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}"
+                                class="text-decoration-none d-flex flex-column align-items-center category-mobile-item">
+                                <div class="category-mobile-img-wrap">
+                                    <img src="{{ $kategori->img_kategori ? Storage::url($kategori->img_kategori) : asset('assets/img/produk.png') }}"
+                                        style="width: 50px; height: 50px;" alt="{{ $kategori->name }}">
+                                </div>
+                                <span class="text-center">{{ $kategori->name }}</span>
+                            </a>
+                        </div>
+                    @endforeach
                 </div>
             </div>
+
+            {{-- desktop --}}
+            <div class="d-none d-md-block">
+                <div class="position-relative category-scroll-wrapper">
+                    <div class="swiper myCategorySwiper">
+                        <div class="swiper-wrapper">
+                            @foreach ($kategoris as $kategori)
+                                <div class="swiper-slide">
+                                    <a href="{{ route('market.produk', ['kategori' => $kategori->slug]) }}"
+                                        class="text-decoration-none text-dark">
+                                        <div class="card category-card overflow-hidden">
+                                            <img src="{{ $kategori->img_kategori ? Storage::url($kategori->img_kategori) : asset('assets/img/produk.png') }}"
+                                                class="card-img-top" alt="{{ $kategori->name }}">
+                                        </div>
+                                        <div class="card-body p-2 text-center">
+                                            <h6 class="card-title fw-bold text-truncate mb-1"
+                                                title="{{ $kategori->name }}">{{ $kategori->name }}</h6>
+                                        </div>
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="swiper-button-prev category-nav-btn"></div>
+                        <div class="swiper-button-next category-nav-btn"></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -287,22 +299,26 @@
         <section id="promotions" class="py-3">
             <div class="container-market">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="fw-bolder  mb-0"><span class="tg-red-blue">PROMO TERBATAS</span></h3>
-                    <a href="{{ route('market.produk') }}"
-                        class="link link-dark px-2 align-items-center justify-content-center">
-                        <i class="bx bx-category me-2"></i><span>Lihat Semua</span>
+                    <h4 class="fw-bolder  mb-0"><span class="tg-red-blue">PROMO TERBATAS</span></h4>
+                    <a href="{{ route('market.produk') }}" class="link link-blue px-2" title="Lihat Semua Promo"
+                        data-bs-toggle="tooltip" data-bs-placement="top">
+                        <i class="bx bx-category"></i>
                     </a>
                 </div>
-                <div class="row g-4 align-items-center">
+                <div class="d-flex align-items-center justify-content-center gap-4">
+
+                    {{-- Banner Promo: ukuran statis, hanya tampil di layar lg ke atas --}}
                     @if ($promoImg->isNotEmpty())
-                        <div class="col-lg-3 d-none d-lg-flex">
-                            <div class="swiper myPromoSwiper promo-card rounded-3 overflow-hidden">
+                        <div class="d-none d-lg-flex flex-shrink-0" style="width: 240px;">
+                            <div class="swiper myPromoSwiper promo-card rounded-3 overflow-hidden"
+                                style="width: 250px; height: 375px;">
                                 <div class="swiper-wrapper">
                                     @foreach ($promoImg as $banner)
                                         <div class="swiper-slide">
-                                            <a href="{{ $banner->url_tujuan ?? '#' }}" class="d-block w-100 h-100">
+                                            <a href="{{ $banner->url_tujuan ?? '#' }}" class="d-block"
+                                                style="width: 240px; height: 375px;">
                                                 <img src="{{ Storage::url($banner->img_banner) }}"
-                                                    class="d-block w-100 h-100" style="object-fit: cover;"
+                                                    style="width: 240px; height: 375px; object-fit: cover; display: block;"
                                                     alt="{{ $banner->judul ?? 'Promotion' }}">
                                             </a>
                                         </div>
@@ -311,17 +327,17 @@
                             </div>
                         </div>
                     @endif
-                    <div class="{{ $promoImg->isNotEmpty() ? 'col-lg-9' : 'col-11' }}">
+
+                    {{-- Produk Promo: mengambil sisa ruang --}}
+                    <div class="flex-grow-1" style="min-width: 0;">
                         @if ($produkPromotion->isNotEmpty())
                             <div class="swiper myPromoProductSwiper"
-                                data-lg-slides="{{ $promoImg->isNotEmpty() ? 3 : 5 }}">
+                                data-lg-slides="{{ $promoImg->isNotEmpty() ? 4 : 5 }}">
                                 <div class="swiper-wrapper py-2">
                                     @foreach ($produkPromotion as $produk)
                                         <div class="swiper-slide h-auto">
-                                            {{-- Cukup 1 Card Container di sini --}}
                                             <div class="card product-card overflow-hidden h-100 d-flex flex-column">
-
-                                                <div class="promo-produk promo-produk-lg">
+                                                <div class="product-card-img-container">
                                                     <a
                                                         href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                                                         <img src="{{ $produk->primaryImage
@@ -330,8 +346,7 @@
                                                                 ? Storage::url($produk->img_produk)
                                                                 : asset('assets/img/produk.png')) }}"
                                                             alt="{{ $produk->name_product }}" loading="eager"
-                                                            class="card-img-top" alt="{{ $produk->name_product }}">
-
+                                                            class="card-img-top">
                                                         @if ($produk->stocks->sum('qty') < 1)
                                                             <div class="product-badge">
                                                                 <span class="badge bg-danger">Habis</span>
@@ -354,7 +369,6 @@
                                                             </div>
                                                         @endif
                                                     </a>
-
                                                     <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
                                                         @if ($produk->stocks->sum('qty') > 0)
                                                             <button type="button"
@@ -367,16 +381,14 @@
                                                                 <i class="bx bx-minus-circle me-2 fs-6"></i> HABIS
                                                             </button>
                                                         @endif
-
                                                         <button type="button"
-                                                            class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center rounded-2 px-2 "
+                                                            class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center rounded-2 px-2"
                                                             data-bs-toggle="tooltip" data-bs-placement="top"
                                                             title="Wishlist">
                                                             <i class="bx bx-heart fs-5"></i>
                                                         </button>
                                                     </div>
                                                 </div>
-
                                                 <div class="card-body border-top py-2">
                                                     <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}"
                                                         class="text-decoration-none text-dark text-hover">
@@ -403,15 +415,10 @@
                                                         @endif
                                                     </div>
                                                 </div>
-
-                                            </div> {{-- Penutup card --}}
-                                        </div> {{-- Penutup swiper-slide --}}
+                                            </div>
+                                        </div>
                                     @endforeach
                                 </div>
-
-                                {{-- Tombol Navigasi Swiper --}}
-                                {{-- <div class="swiper-button-prev"></div>
-                                <div class="swiper-button-next"></div> --}}
                             </div>
                         @else
                             <div class="d-flex align-items-center justify-content-center h-100">
@@ -419,6 +426,7 @@
                             </div>
                         @endif
                     </div>
+
                 </div>
             </div>
         </section>
@@ -443,7 +451,7 @@
                                     @foreach ($bestsellerImg as $banner)
                                         <div class="swiper-slide">
                                             <a href="{{ $banner->url_tujuan ?? route('market.produk') }}">
-                                                <img src="{{ Storage::url($banner->img_banner) }}" loading="lazy"
+                                                <img src="{{ Storage::url($banner->img_banner) }}" loading="eager"
                                                     class="d-block w-100 h-100" style="object-fit: cover;"
                                                     alt="{{ $banner->judul ?? 'Bestseller Banner' }}">
                                             </a>
@@ -582,10 +590,10 @@
     <section id="product" class="section-py bg-white">
         <div class="container-market">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bolder tg-red mb-0">PRODUK TERBARU</h3>
-                <a href="{{ route('market.produk') }}"
-                    class="link link-danger px-2 align-items-center justify-content-center">
-                    <i class="bx bx-category me-2"></i><span>Lihat Semua</span>
+                <h4 class="fw-bolder tg-red mb-0">PRODUK TERBARU</h4>
+                <a href="{{ route('market.produk') }}" class="link link-danger px-2" title="Lihat Semua Produk"
+                    data-bs-toggle="tooltip" data-bs-placement="top">
+                    <i class="bx bx-category"></i>
                 </a>
             </div>
             <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3">
@@ -773,22 +781,21 @@
                 let lgSlides = promoProductContainer.getAttribute('data-lg-slides') || 5;
 
                 new Swiper('.myPromoProductSwiper', {
-                    slidesPerView: 1, // Di HP tampil 1.5 card agar user tahu bisa di-swipe
-                    spaceBetween: 16, // Jarak antar card (setara dengan class g-3 di Bootstrap)
+                    slidesPerView: 2, // Mobile: 2 card — banner tersembunyi di mobile
+                    spaceBetween: 12,
                     grabCursor: true,
                     navigation: {
                         nextEl: '.myPromoProductSwiper .swiper-button-next',
                         prevEl: '.myPromoProductSwiper .swiper-button-prev',
                     },
                     breakpoints: {
-                        576: {
-                            slidesPerView: 2, // Layar sm
-                        },
                         768: {
-                            slidesPerView: 3, // Layar md
+                            slidesPerView: 3, // Tablet md
+                            spaceBetween: 16,
                         },
                         992: {
-                            slidesPerView: parseInt(lgSlides), // Layar lg (3 atau 5 tergantung banner)
+                            slidesPerView: parseInt(lgSlides), // lg: 4 (ada banner) / 5 (tanpa banner)
+                            spaceBetween: 16,
                         }
                     }
                 });

@@ -90,6 +90,7 @@ class SerialNumberController extends Controller implements HasMiddleware
     {
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,id',
+            
             'serial_numbers' => 'required|array|min:1',
             'serial_numbers.*' => [
                 'required',
@@ -116,9 +117,10 @@ class SerialNumberController extends Controller implements HasMiddleware
         $validated = $validator->validated();
         $serialsToInsert = [];
         $now = now();
-
+        $storeId = auth()->user()->employee->store_id;
         foreach ($validated['serial_numbers'] as $serial) {
             $serialsToInsert[] = [
+                'store_id'   => $storeId,
                 'product_id' => $validated['product_id'],
                 'nomor_seri' => $serial,
                 'status' => 'Tersedia', // Set default status
@@ -158,9 +160,11 @@ class SerialNumberController extends Controller implements HasMiddleware
             $serialNumbers = $validated['serial_numbers'];
             $now = now();
             $dataToInsert = [];
+            $storeId = auth()->user()->employee->store_id;
 
             foreach ($serialNumbers as $sn) {
                 $dataToInsert[] = [
+                    'store_id'   => $storeId,
                     'product_id' => $productId,
                     'nomor_seri' => $sn,
                     'status' => 'Tersedia',
@@ -201,16 +205,17 @@ class SerialNumberController extends Controller implements HasMiddleware
         if (!$produk) {
             return response()->json(['message' => 'Product tidak ditemukan.'], 404);
         }
-
-        // Hitung SN yang masih dianggap sebagai aset (bukan terjual atau hilang)
+ 
         $snTerdaftar = $produk->serialNumbers()
             ->whereNotIn('status', ['Terjual', 'Hilang'])
             ->count();
+        
+        $totalQty = $produk->stocks()->sum('qty');
 
-        return response()->json([
-            'qty' => $produk->qty,
+        return response()->json([ 
+            'qty' => $totalQty,
             'sn_tercatat_count' => $snTerdaftar,
-            'butuh_sn' => max(0, $produk->qty - $snTerdaftar), // Pastikan tidak mengembalikan angka negatif
+            'butuh_sn' => max(0, $totalQty - $snTerdaftar),
         ]);
     }
 
