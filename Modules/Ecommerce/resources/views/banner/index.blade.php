@@ -23,19 +23,6 @@
 @section('content')
 
     {{-- ================================================================
-         PAGE HEADER
-    ================================================================ --}}
-    <div class="page-header">
-        <div class="page-header-title">
-            <h4 class="mb-0">Manajemen Banner</h4>
-            <p>Kelola gambar banner untuk setiap posisi di halaman depan toko.</p>
-        </div>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-            <i class="bx bx-plus me-1"></i> Tambah Banner
-        </button>
-    </div>
-
-    {{-- ================================================================
          STAT CARDS
     ================================================================ --}}
     <div class="row g-3 mb-4">
@@ -145,12 +132,99 @@
     {{-- ================================================================
          BANNER TABLE CARD
     ================================================================ --}}
+
     <div class="banner-card">
         <div class="banner-card-header">
-            <h6><i class="bx bx-list-ul me-1"></i> Daftar Banner</h6>
+            <div class="">
+                <h6><i class="bx bx-list-ul me-1"></i> Daftar Banner</h6>
+            </div>
+            <div class="">
+                <button class="btn btn-primary px-2" data-bs-toggle="modal" data-bs-target="#createModal">
+                    <i class="bx bx-plus-circle"></i>
+                </button>
+            </div>
         </div>
 
-        <div id="banner-table-container" class="table-responsive">
+        {{-- Banner Mobile List --}}
+        <div class="banner-mobile-list d-md-none">
+            @forelse ($banners as $banner)
+                @php
+                    $posVal = $banner->posisi;
+                    $posBadgeClass = match (true) {
+                        str_contains($posVal, 'desktop') => 'best-d',
+                        str_contains($posVal, 'mobile') => 'best-m',
+                        str_contains($posVal, 'promo') => 'promo',
+                        str_contains($posVal, 'main') => 'main',
+                        default => 'other',
+                    };
+                @endphp
+                <div class="bmc" id="banner-row-{{ $banner->id }}">
+                    <div class="bmc-thumb">
+                        <img src="{{ $banner->img_banner ? Storage::url($banner->img_banner) : asset('assets/img/default-banner.png') }}"
+                            alt="{{ $banner->judul ?? 'Banner' }}">
+                    </div>
+                    <div class="bmc-body">
+                        <div class="bmc-top">
+                            <div>
+                                <div class="bmc-title">{{ $banner->judul ?? 'Tanpa Judul' }}</div>
+                                <div class="bmc-id">ID : {{ $banner->id }}</div>
+                            </div>
+                            <div class="bmc-actions">
+                                <a href="javascript:;" class="bmc-btn" data-bs-toggle="modal"
+                                    data-bs-target="#editModal" data-id="{{ $banner->id }}" title="Edit banner">
+                                    <i class="bx bx-edit"></i>
+                                </a>
+                                <a href="javascript:;" class="bmc-btn del btn-delete" data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal" data-id="{{ $banner->id }}"
+                                    data-title="{{ $banner->judul ?? 'Tanpa Judul' }}"
+                                    data-url="{{ route('banner.destroy', $banner->id) }}" title="Hapus banner">
+                                    <i class="bx bx-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="bmc-meta">
+                            <span class="bmc-badge badge-{{ $posBadgeClass }}">
+                                <i class="bx bx-map-pin"></i>
+                                {{ \App\Enums\BannerPosition::from($banner->posisi)->getLabel() }}
+                            </span>
+
+                            @if ($banner->is_active)
+                                <span class="bmc-badge badge-active"><i class="bx bx-check"></i> Aktif</span>
+                            @else
+                                <span class="bmc-badge badge-inactive">Nonaktif</span>
+                            @endif
+
+                            <span class="bmc-badge badge-urutan">Urutan: {{ $banner->urutan ?? 0 }}</span>
+                        </div>
+
+                        @if ($banner->url_tujuan)
+                            <a href="{{ $banner->url_tujuan }}" target="_blank" class="bmc-url"
+                                title="{{ $banner->url_tujuan }}">
+                                <i class="bx bx-link-external"></i>
+                                {{ Str::limit($banner->url_tujuan, 35) }}
+                            </a>
+                        @else
+                            <span class="bmc-url" style="color: var(--muted);">— Tanpa link</span>
+                        @endif
+
+                        <div class="bmc-date">
+                            <i class="bx bx-calendar"></i>
+                            {{ $banner->created_at->translatedFormat('d M Y') }}
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="bx bx-image-add"></i></div>
+                    <p class="fw-semibold mb-1">Belum ada banner</p>
+                    <p>Tambahkan banner pertama Anda dengan klik tombol di atas.</p>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- Banner Table --}}
+        <div id="banner-table-container" class="table-responsive d-none d-md-block">
             <table class="table mb-0">
                 <thead>
                     <tr>
@@ -478,7 +552,7 @@
                         <i class="bx bx-x me-1"></i> Batal
                     </button>
                     <button type="submit" id="submitEditBtn" class="btn btn-primary">
-                        <i class="bx bx-save me-1"></i> Simpan Perubahan
+                        <i class="bx bx-save me-1"></i> Simpan
                     </button>
                 </div>
 

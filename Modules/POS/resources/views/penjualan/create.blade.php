@@ -8,132 +8,7 @@
 
 @section('content')
 
-    {{-- ============================================================
-     NAVBAR POS
-     ============================================================ --}}
-    <nav class="navbar navbar-main pos-navbar sticky-top border-bottom" aria-label="Navigasi POS" id="pos-navbar">
-        <div class="container-fluid align-items-center px-3 gap-2">
-
-            {{-- Logo --}}
-            <a href="/dashboard" target="_blank" aria-label="Ke Dashboard" class="flex-shrink-0">
-                <img src="{{ asset('assets/img/LM-Default.png') }}" class="navbar-brand-logo" alt="Logo JO Computer">
-            </a>
-
-            {{-- Clock Badge --}}
-            <div class="badge bg-label-success pos-clock-badge" aria-live="polite" aria-atomic="true">
-                <i class="bx bx-clock-fill me-1" aria-hidden="true"></i>
-                <span id="realtime-clock" class="fw-bold">Memuat...</span>
-            </div>
-
-            {{-- Action Buttons --}}
-            <div class="d-flex align-items-center gap-2 ms-auto">
-
-                {{-- Dashboard (desktop only) --}}
-                <a href="/dashboard" class="d-none d-lg-block text-decoration-none">
-                    <button class="btn btn-primary btn-sm px-3 mb-0" type="button">
-                        <i class="bx bx-globe me-1" aria-hidden="true"></i>Dashboard
-                    </button>
-                </a>
-
-                <div class="vr d-none d-lg-block opacity-25"></div>
-
-                {{-- Fullscreen --}}
-                <button class="btn btn-light d-none d-md-flex align-items-center justify-content-center mb-0" type="button"
-                    style="width: 32px; height: 32px; padding: 0; border-radius: 8px;" onclick="toggleFullScreen(event)"
-                    aria-label="Toggle Fullscreen">
-                    <i class="bx bx-fullscreen" aria-hidden="true"></i>
-                </button>
-
-                {{-- Riwayat --}}
-                <button class="btn btn-light d-none d-md-flex align-items-center justify-content-center mb-0" type="button"
-                    style="width: 32px; height: 32px; padding: 0; border-radius: 8px;" data-bs-toggle="modal"
-                    data-bs-target="#salesHistoryModal" aria-label="Riwayat Penjualan">
-                    <i class="bx bx-history" aria-hidden="true"></i>
-                </button>
-
-                {{-- User Dropdown --}}
-                @auth
-                    <div class="nav-item navbar-dropdown dropdown-user dropdown">
-                        <a href="javascript:void(0);" class="nav-link dropdown-toggle hide-arrow p-0" id="userDropdown"
-                            data-bs-toggle="dropdown">
-                            <div class="avatar avatar-online">
-                                @if (auth()->user()->employee?->avatar)
-                                    <img src="{{ Storage::url(auth()->user()->employee->avatar) }}" alt="Profile"
-                                        class="w-px-40 h-auto rounded-circle" style="object-fit: cover; aspect-ratio: 1/1;">
-                                @else
-                                    <span class="avatar-initial rounded-circle bg-label-primary flex-shrink-0">
-                                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                                    </span>
-                                @endif
-                            </div>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="javascript:void(0);">
-                                    <div class="d-flex">
-                                        <div class="flex-shrink-0 me-3">
-                                            <div class="avatar avatar-online">
-                                                @if (auth()->user()->employee?->avatar)
-                                                    <img src="{{ Storage::url(auth()->user()->employee->avatar) }}"
-                                                        alt="Profile" class="w-px-40 h-auto rounded-circle"
-                                                        style="object-fit: cover; aspect-ratio: 1/1;">
-                                                @else
-                                                    <span class="avatar-initial rounded-circle bg-label-primary flex-shrink-0">
-                                                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        <div class="grow">
-                                            <h6 class="mb-0">{{ Auth::user()->name ?? 'user' }}</h6>
-                                            @php
-                                                $roleColors = [
-                                                    'admin' => 'danger',
-                                                    'kasir' => 'primary',
-                                                    'teknisi' => 'success',
-                                                    'pelayan' => 'info',
-                                                    'Magang' => 'warning',
-                                                    'Manajer' => 'dark',
-                                                ];
-                                            @endphp
-                                            @forelse(Auth::user()->getRoleNames() as $role)
-                                                @php $colorClass = $roleColors[strtolower($role)] ?? 'primary'; @endphp
-                                                <small
-                                                    class="badge py-1 bg-label-{{ $colorClass }} me-1">{{ $role }}</small>
-                                            @empty
-                                                <span class="text-muted small">Tanpa Role</span>
-                                            @endforelse
-                                        </div>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <div class="dropdown-divider my-1"></div>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/">
-                                    <i class="bx bx-store me-2"></i> Web Market
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item d-md-none" href="{{ route('penjualan.create') }}">
-                                    <i class="bx bx-tv me-2"></i> Point Of Sales
-                                </a>
-                            </li>
-                            <li>
-                                <form action="{{ route('employee.logout') }}" method="post">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="icon-base bx bx-power-off icon-md me-3"></i>Log Out
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                @endauth
-            </div>
-        </div>
-    </nav>
+    @include('pos::penjualan.partials._navbar')
 
     {{-- ============================================================
      POS WRAPPER — Dua Panel Utama
@@ -156,7 +31,7 @@
                     </div>
                     {{-- Search --}}
                     <div class="pos-search-wrap flex-grow-1 ms-3" style="max-width: 320px;">
-                        <i class="bx bx-search pos-search-icon" aria-hidden="true"></i>
+                        <i class="pos-search-icon" aria-hidden="true"></i>
                         <input type="text" id="product-search" class="form-control form-control-sm"
                             placeholder="Cari produk atau scan barcode…" aria-label="Cari atau scan produk"
                             autocomplete="off">
@@ -170,8 +45,8 @@
                 <div class="category-scroll-inner ps-category" id="category-container" role="tablist"
                     aria-label="Filter Kategori">
 
-                    <div class="category-btn category-active" data-category-id="all" role="tab" aria-selected="true"
-                        tabindex="0">
+                    <div class="category-btn category-active text-primary" data-category-id="all" role="tab"
+                        aria-selected="true" tabindex="0">
                         <i class="bx bx-category" aria-hidden="true"></i>
                         <span>Semua</span>
                     </div>
@@ -190,83 +65,7 @@
                 </div>
             </div>
 
-            {{-- Daftar Produk — PerfectScrollbar vertical --}}
-            <div class="pos-product-scroll" id="pos-product-scroll">
-                <div id="product-list">
-
-                    @forelse ($products as $produk)
-                        {{-- Wrapper untuk animasi + filter kategori --}}
-                        <div class="product-card-wrap" data-product-category-id="{{ $produk->category_id }}">
-                            <div class="product-card" data-id="{{ $produk->id }}"
-                                data-name="{{ e($produk->name_product) }}"
-                                data-harga="{{ $produk->harga_diskon ?? $produk->harga_jual }}"
-                                data-harga-asli="{{ $produk->harga_jual }}"
-                                data-img="{{ $produk->primaryImage ? Storage::url($produk->primaryImage->path) : asset('assets/img/produk.png') }}"
-                                data-stok="{{ $produk->stocks->sum('qty') }}"
-                                data-wajib-seri="{{ $produk->wajib_seri ? 'true' : 'false' }}"
-                                data-pajak-id="{{ $produk->taxe_id }}" data-pajak-rate="{{ $produk->pajak->rate ?? 0 }}"
-                                data-disabled="{{ $produk->stocks->sum('qty') < 1 ? 'true' : 'false' }}" role="button"
-                                aria-label="Tambah {{ e($produk->name_product) }} ke keranjang"
-                                tabindex="{{ $produk->stocks->sum('qty') < 1 ? '-1' : '0' }}">
-
-                                {{-- Gambar --}}
-                                <div class="product-img-wrap">
-                                    <img src="{{ $produk->primaryImage ? Storage::url($produk->primaryImage->path) : asset('assets/img/produk.png') }}"
-                                        alt="Gambar {{ e($produk->name_product) }}" loading="lazy">
-                                </div>
-
-                                {{-- Badge --}}
-                                @if ($produk->stocks->sum('qty') < 1)
-                                    <div class="product-badge">
-                                        <span class="badge bg-label-danger">Stok Habis</span>
-                                    </div>
-                                @elseif($produk->promotions->isNotEmpty() && ($promo = $produk->promotions->first()))
-                                    <div class="product-badge">
-                                        @if ($promo->type == 'percentage')
-                                            <span class="badge bg-label-danger">{{ (int) $promo->nilai_diskon }}%
-                                                OFF</span>
-                                        @else
-                                            <span class="badge bg-label-info">PROMO</span>
-                                        @endif
-                                    </div>
-                                @endif
-
-                                {{-- Info Teks --}}
-                                <div class="product-info">
-                                    <p class="product-category">{{ $produk->category->name }}</p>
-                                    <p class="product-name">{{ $produk->name_product }}</p>
-                                    <div class="product-price-row">
-                                        @if ($produk->harga_diskon)
-                                            <span class="price-original">{{ $produk->harga_formatted }}</span>
-                                            <span class="price-main">
-                                                {{ 'Rp ' . number_format($produk->harga_diskon, 0, ',', '.') }}
-                                            </span>
-                                        @else
-                                            <span class="price-main">{{ $produk->harga_formatted }}</span>
-                                        @endif
-                                        <span class="stock-info">
-                                            {{ $produk->stocks->sum('qty') }} {{ $produk->unit->singkat }}
-                                        </span>
-                                    </div>
-                                    @if ($produk->stocks->sum('qty') < 1)
-                                        <p class="text-danger text-center fw-bold mb-0"
-                                            style="font-size:.65rem; margin-top:4px;">
-                                            Stok Habis
-                                        </p>
-                                    @endif
-                                </div>
-
-                            </div>
-                        </div>
-                    @empty
-                        <div style="grid-column: 1/-1;" class="text-center py-5">
-                            <i class="bx bx-package fs-1 text-muted d-block mb-2" aria-hidden="true"></i>
-                            <p class="text-muted">Tidak ada produk yang tersedia.</p>
-                        </div>
-                    @endforelse
-
-                </div>
-            </div>
+            @include('pos::penjualan.partials._list_produk')
 
         </div>{{-- /pos-products-panel --}}
 
@@ -291,7 +90,7 @@
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge badge-md bg-label-success cart-count-badge" id="cart-item-count"
                                 aria-live="polite" aria-atomic="true">
-                                <i class="fas fa-shopping-cart me-1" aria-hidden="true"></i>
+                                <i class="bx bx-shopping-bag me-1" aria-hidden="true"></i>
                                 <span>0 Item</span>
                             </span>
                             <button type="button" class="btn btn-outline-danger btn-reset-cart mb-0" id="btn-reset-cart"
@@ -321,8 +120,8 @@
                         Customer <span class="text-danger" aria-hidden="true">*</span>
                     </label>
                     <div class="customer-row">
-                        <select class="form-select @error('customer_id') is-invalid @enderror" name="customer_id"
-                            id="Customer" required aria-required="true">
+                        <select class="form-select select2 @error('customer_id') is-invalid @enderror" name="customer_id"
+                            id="Customer" required aria-required="true" data-placeholder="Pilih Customer">
                             @foreach ($customers as $item)
                                 <option value="{{ $item->id }}" @selected(old('customer_id') == $item->id)>
                                     {{ $item->name }}
@@ -393,45 +192,14 @@
                     </div>
                 </div>
 
-                {{-- Pembayaran --}}
-                <div class="pos-payment">
-                    {{-- Jumlah Dibayar --}}
-                    <div class="payment-row">
-                        <label for="jumlah-dibayar-input">Jumlah Dibayar</label>
-                        <input type="text" name="jumlah_dibayar" id="jumlah-dibayar-input"
-                            class="form-control form-control-sm" value="0"
-                            aria-label="Jumlah dibayar oleh pelanggan" inputmode="numeric">
-                    </div>
-                    {{-- Kembalian --}}
-                    <div class="payment-row">
-                        <label>Kembalian</label>
-                        <span class="change-value" id="change-display" aria-live="polite">Rp 0</span>
-                    </div>
-                    {{-- Metode Pembayaran --}}
-                    <div class="payment-method-row">
-                        <label for="metode_pembayaran">Metode Pembayaran</label>
-                        <select name="metode_pembayaran" id="metode_pembayaran" class="form-select form-select-sm"
-                            required aria-required="true">
-                            <option value="TUNAI">Tunai</option>
-                            <option value="TRANSFER">Transfer</option>
-                            <option value="QRIS">QRIS</option>
-                        </select>
-                    </div>
-                    {{-- Catatan --}}
-                    <div class="catatan-row">
-                        <label for="catatan">Catatan <span class="text-muted">(Opsional)</span></label>
-                        <textarea name="catatan" id="catatan" class="form-control form-control-sm" rows="2"
-                            placeholder="Tambahkan catatan…"></textarea>
-                    </div>
-                    {{-- Tombol Aksi --}}
-                    <div class="pos-action-row">
-                        <button type="button" class="btn btn-info btn-pay-exact" id="btn-pay-exact">
-                            Bayar Pas
-                        </button>
-                        <button type="submit" class="btn btn-dark btn-save-transaction" id="btn-save-transaction"
-                            disabled>
-                            <i class="fas fa-save me-1" aria-hidden="true"></i>
-                            Simpan Transaksi
+                {{-- Pembayaran (Di Panel Kanan Cart) --}}
+                <div class="pos-payment p-3 border-top mt-auto">
+                    {{-- Tombol Aksi Utama --}}
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary d-flex justify-content-between align-items-center"
+                            id="btn-open-payment" data-bs-toggle="modal" data-bs-target="#paymentModal" disabled>
+                            <span class="text-muted">Bayar Sekarang</span>
+                            <span class="text-muted" id="cart-total-btn-display">Rp 0</span>
                         </button>
                     </div>
                 </div>
@@ -455,264 +223,29 @@
      MODALS
      ============================================================ --}}
 
-    {{-- Modal: Buat Customer Baru --}}
-    <div class="modal fade" id="createCustomerModal" tabindex="-1" aria-labelledby="createCustomerModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n3">
-                    <h6 class="modal-title" id="createCustomerModalLabel">Buat Customer Baru</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Tutup modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="createCustomerForm" action="{{ route('pelanggan.store') }}" method="post" novalidate>
-                        @csrf
-                        <div class="mb-2">
-                            <label for="cust-name" class="form-label">
-                                Nama <span class="text-danger">*</span>
-                            </label>
-                            <input id="cust-name" name="name" type="text" class="form-control" required
-                                autocomplete="name">
-                            <div class="invalid-feedback"></div>
-                        </div>
-                        <div class="mb-1">
-                            <label for="cust-kontak" class="form-label">
-                                Kontak <span class="text-danger">*</span>
-                            </label>
-                            <input id="cust-kontak" name="kontak" type="text" class="form-control" required
-                                autocomplete="tel">
-                            <div class="invalid-feedback"></div>
-                        </div>
-                        <div class="mb-1">
-                            <label for="cust-email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="cust-email" name="email"
-                                placeholder="example@gmail.com" autocomplete="email">
-                            <div class="invalid-feedback"></div>
-                        </div>
-                        <div class="mb-1">
-                            <label for="cust-alamat" class="form-label">Alamat</label>
-                            <textarea id="cust-alamat" name="alamat" class="form-control" rows="3" autocomplete="street-address"></textarea>
-                            <div class="invalid-feedback"></div>
-                        </div>
-                        <div class="justify-content-end form-check form-switch form-check-reverse mb-2">
-                            <label class="me-auto fw-bold form-check-label" for="cust-status">
-                                Status Aktif
-                            </label>
-                            <input id="cust-status" class="form-check-input" type="checkbox" name="status"
-                                value="1" checked>
-                        </div>
-                        <div class="modal-footer border-0 pb-0">
-                            <button type="submit" class="btn btn-outline-info btn-sm p-2" id="btn-save-customer">Tambah
-                                Customer</button>
-                            <button type="button" class="btn btn-danger btn-sm p-2"
-                                data-bs-dismiss="modal">Batalkan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Modal: Edit Item Keranjang --}}
-    <div class="modal fade" id="editCartItemModal" tabindex="-1" aria-labelledby="editCartItemModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editCartItemModalLabel">Edit Item</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editCartItemForm" novalidate>
-                        <input type="hidden" id="edit-item-id">
-                        <div class="row g-3 px-1">
-                            <div class="col-12">
-                                <label class="form-label">Nama Produk</label>
-                                <input type="text" class="form-control" id="edit-item-name" readonly disabled
-                                    aria-readonly="true">
-                            </div>
-                            <div class="col-12">
-                                <label for="edit-item-harga" class="form-label">
-                                    Harga Jual <span class="text-danger">*</span>
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="text" class="form-control" id="edit-item-harga" placeholder="0"
-                                        inputmode="numeric" min="1">
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <label for="edit-item-diskon" class="form-label">Diskon (Rp)</label>
-                                <input type="text" class="form-control" id="edit-item-diskon" placeholder="0"
-                                    inputmode="numeric">
-                            </div>
-                            <div class="col-6">
-                                <label for="edit-item-pajak-id" class="form-label">Pajak</label>
-                                <select class="form-select" id="edit-item-pajak-id">
-                                    <option value="" data-rate="0" selected>Tidak Ada</option>
-                                    @foreach ($taxes as $pajak)
-                                        <option value="{{ $pajak->id }}" data-rate="{{ $pajak->rate }}">
-                                            {{ $pajak->name_taxe }} ({{ $pajak->rate }}%)
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-info" id="saveItemChangesBtn">Simpan Perubahan</button>
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Modal: Riwayat Penjualan --}}
-    <div class="modal fade" id="salesHistoryModal" tabindex="-1" aria-labelledby="salesHistoryModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title" id="salesHistoryModalLabel">
-                        <i class="bx bx-history me-2" aria-hidden="true"></i>
-                        Riwayat Penjualan Hari Ini
-                    </h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                </div>
-                <div class="modal-body" id="salesHistoryBody">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Memuat data...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Modal: Edit Biaya Tambahan --}}
-    <div class="modal fade" id="editExtraCostModal" tabindex="-1" aria-labelledby="editExtraCostModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title" id="editExtraCostModalLabel">Edit Biaya</h6>
-                    <button type="button" class="btn bg-dark btn-close" data-bs-dismiss="modal"
-                        aria-label="Tutup"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editExtraCostForm" novalidate>
-                        <input type="hidden" id="extra-cost-type">
-                        <div id="promo-code-section" class="mb-3" style="display:none;" aria-hidden="true">
-                            <label for="promo-code-input" class="form-label">Kode Promosi</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="promo-code-input"
-                                    placeholder="Masukkan kode promo" autocomplete="off">
-                                <button class="btn btn-outline-secondary mb-0" type="button"
-                                    id="apply-promo-btn">Terapkan</button>
-                            </div>
-                            <div id="promo-feedback" class="mt-2 text-xs" aria-live="polite"></div>
-                        </div>
-                        <div class="mb-0">
-                            <label for="extra-cost-value" class="form-label" id="extra-cost-label">Jumlah</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rp</span>
-                                <input type="text" class="form-control" id="extra-cost-value" min="0"
-                                    inputmode="numeric">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-info" id="saveExtraCostBtn">Simpan</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Modal: Pilih Nomor Seri --}}
-    <div class="modal fade" id="serialNumberModal" tabindex="-1" aria-labelledby="serialNumberModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title" id="serialNumberModalLabel">Pilih Nomor Seri</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="sn-produk-id">
-                    <div class="badge bg-label-info p-2 text-sm w-100 text-start mb-2" role="status">
-                        Produk: <strong id="sn-name-produk" class="text-warning">—</strong><br>
-                        Pilih tepat <strong id="sn-required-count">1</strong> nomor seri.
-                    </div>
-                    <div id="sn-list-container" class="list-group" style="max-height: 300px; overflow-y: auto;"
-                        role="group" aria-label="Daftar nomor seri">
-                        <div class="text-center py-3">
-                            <div class="spinner-border spinner-border-sm" role="status">
-                                <span class="visually-hidden">Memuat nomor seri...</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="invalid-feedback d-block mt-2" id="sn-error-message" aria-live="assertive"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-info" id="btn-confirm-sn">Simpan Pilihan</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Modal: Pembayaran --}}
-    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="paymentModalLabel">Pembayaran</h5>
-                    <button type="button" class="btn bg-dark btn-close" data-bs-dismiss="modal"
-                        aria-label="Tutup"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center mb-3">
-                        <p class="text-sm mb-0">Total Tagihan</p>
-                        <h3 class="font-weight-bolder" id="payment-modal-total">Rp 0</h3>
-                    </div>
-                    <div class="mb-3">
-                        <label for="payment-amount-input" class="form-label">Jumlah Bayar</label>
-                        <div class="input-group">
-                            <span class="input-group-text">Rp</span>
-                            <input type="text" class="form-control form-control-lg text-end" id="payment-amount-input"
-                                placeholder="0" inputmode="numeric">
-                        </div>
-                    </div>
-                    <div class="row gx-2 mt-3">
-                        <div class="col">
-                            <button class="btn btn-outline-secondary w-100 quick-pay-btn" type="button"
-                                data-amount="pas">Uang Pas</button>
-                        </div>
-                        <div class="col">
-                            <button class="btn btn-outline-secondary w-100 quick-pay-btn" type="button"
-                                data-amount="50000">50.000</button>
-                        </div>
-                        <div class="col">
-                            <button class="btn btn-outline-secondary w-100 quick-pay-btn" type="button"
-                                data-amount="100000">100.000</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-info w-100" id="savePaymentBtn">Konfirmasi
-                        Pembayaran</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('pos::penjualan.partials._model')
 
 @endsection
 
 @section('page-script')
+    <script type="module">
+        const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    $this.select2({
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
+                    });
+                });
+            } else {
+                setTimeout(initSelect2, 100);
+            }
+        };
+        initSelect2();
+    </script>
     <script>
         // ============================================================
         //  HELPERS
@@ -738,7 +271,6 @@
                 cartPanel.classList.add('pos-cart-open');
                 overlay.classList.add('visible');
                 overlay.setAttribute('aria-hidden', 'false');
-                document.body.style.overflow = 'hidden';
             }
 
             function closeCart() {
@@ -875,7 +407,7 @@
 
             // ── DOM Elements ─────────────────────────────────────────
             const productList = document.getElementById('product-list');
-            const allProductCards = document.querySelectorAll('.product-card');
+            const allProductCards = document.querySelectorAll('.product-card-pos');
             const cartContainer = document.getElementById('cart-items-container');
             const cartItemCount = document.getElementById('cart-item-count');
             const subtotalEl = document.getElementById('subtotal');
@@ -900,6 +432,8 @@
             const snRequiredCount = document.getElementById('sn-required-count');
             const snConfirmBtn = document.getElementById('btn-confirm-sn');
             const snErrorMessage = document.getElementById('sn-error-message');
+            const btnOpenPayment = document.getElementById('btn-open-payment');
+            const cartTotalBtnDisplay = document.getElementById('cart-total-btn-display');
 
             // ── CART: Fungsi Inti ─────────────────────────────────────
             const updateCartAndTotals = () => {
@@ -996,7 +530,7 @@
                     cartContainer.innerHTML = `
                 <tr id="cart-empty-message">
                     <td colspan="5" class="text-center py-4 text-muted">
-                        <i class="fas fa-shopping-cart fa-2x mb-2 d-block" aria-hidden="true"></i>
+                        <i class="bx bx-shopping-bag icon-lg mb-2 d-block" aria-hidden="true"></i>
                         <p class="mb-0">Keranjang masih kosong</p>
                     </td>
                 </tr>`;
@@ -1046,8 +580,8 @@
                                 <img src="${item.img}" class="avatar avatar-md rounded me-2"
                                      alt="${item.name}" loading="lazy">
                                 <div class="d-flex flex-column" style="min-width:0;">
-                                    <h6 class="mb-0 text-xs text-wrap">${item.name}</h6>
-                                    <small class="text-xs d-flex">${serialNumberDisplay}</small>
+                                    <p class="mb-0 fw-bold text-xs text-wrap text-truncate">${item.name}</p>
+                                    <small class="d-flex">${serialNumberDisplay}</small>
                                     ${hargaDisplay}
                                 </div>
                             </div>
@@ -1083,7 +617,7 @@
                 // Update cart count badge + FAB badge
                 const totalItems = Array.from(cart.values()).reduce((sum, item) => sum + item.jumlah, 0);
                 cartItemCount.innerHTML =
-                    `<i class="fas fa-shopping-cart me-1" aria-hidden="true"></i> ${totalItems} Item`;
+                    `<i class="bx bx-shopping-bag me-1" aria-hidden="true"></i> ${totalItems} Item`;
                 if (window.updateFabBadge) window.updateFabBadge(totalItems);
 
                 // Tandai kartu produk aktif
@@ -1114,6 +648,10 @@
                 subtotalEl.textContent = formatCurrency(subtotal);
                 document.getElementById('pajak-total-display').textContent = formatCurrency(totalTaxe);
                 totalAkhirEl.textContent = formatCurrency(Math.max(0, total));
+
+                // TAMBAHKAN BARIS INI:
+                if (cartTotalBtnDisplay) cartTotalBtnDisplay.textContent = formatCurrency(Math.max(0, total));
+
                 calculateChange();
                 return total;
             };
@@ -1129,8 +667,12 @@
             };
 
             const toggleSaveButton = () => {
-                saveButton.disabled = cart.size === 0;
-                resetButton.disabled = cart.size === 0;
+                const isCartEmpty = cart.size === 0;
+                saveButton.disabled = isCartEmpty;
+                resetButton.disabled = isCartEmpty;
+
+                // TAMBAHKAN BARIS INI:
+                if (btnOpenPayment) btnOpenPayment.disabled = isCartEmpty;
             };
 
             // ── Filter Produk ─────────────────────────────────────────
@@ -1449,7 +991,7 @@
 
             // Klik produk
             productList.addEventListener('click', (e) => {
-                const card = e.target.closest('.product-card');
+                const card = e.target.closest('.product-card-pos');
                 if (!card) return;
 
                 const {
@@ -1586,8 +1128,51 @@
             }
 
             // ── Inisialisasi ─────────────────────────────────────────
-            updateCartAndTotals();
+            document.getElementById('paymentModal').addEventListener('show.bs.modal', function() {
+                const total = parseFloat(document.getElementById('total-akhir').textContent.replace(
+                        /[^0-9]/g, '')) ||
+                    0;
 
-        }); // akhir DOMContentLoaded
+                // Update teks total di dalam modal
+                document.getElementById('payment-modal-total').textContent = formatCurrency(total);
+
+                // Opsional: Fokuskan kursor ke input jumlah bayar
+                setTimeout(() => {
+                    document.getElementById('jumlah-dibayar-input').focus();
+                }, 500);
+            });
+
+            // ── Handle Detail Transfer ─────────────────────────────────────────
+            const paymentRadios = document.querySelectorAll('input[name="metode_pembayaran"]');
+            const transferDetails = document.getElementById('transfer-details');
+            const bankTujuanSelect = document.getElementById('bank_tujuan');
+
+            paymentRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.value === 'TRANSFER') {
+                        // Tampilkan dropdown dan jadikan wajib diisi
+                        transferDetails.classList.remove('d-none');
+                        bankTujuanSelect.setAttribute('required', 'required');
+                    } else {
+                        // Sembunyikan, hapus wajib isi, dan reset nilainya
+                        transferDetails.classList.add('d-none');
+                        bankTujuanSelect.removeAttribute('required');
+                        bankTujuanSelect.value = '';
+                    }
+                });
+            });
+
+            // Pastikan state awalnya benar saat modal dibuka
+            document.getElementById('paymentModal').addEventListener('show.bs.modal', function() {
+                const isTransfer = document.getElementById('pay-transfer').checked;
+                if (!isTransfer) {
+                    transferDetails.classList.add('d-none');
+                    bankTujuanSelect.removeAttribute('required');
+                    bankTujuanSelect.value = '';
+                }
+            });
+
+            updateCartAndTotals();
+        });
     </script>
 @endsection

@@ -30,12 +30,12 @@
                                     alt="Gambar produk default">
                             @endif
                             <div>
-                                <h6 class="mb-0 text-sm">{{ $kategori->name }}</h6>
+                                <p class="mb-0 fw-bold">{{ $kategori->name }}</p>
                                 {{-- Label kecil di bawah nama untuk memperjelas --}}
                                 @if ($kategori->parent_id)
                                     <small class="text-muted">Sub Kategori</small>
                                 @else
-                                    <small class="text-primary">Kategori Utama</small>
+                                    <small class="text-muted">Kategori Utama</small>
                                 @endif
                             </div>
                         </div>
@@ -71,14 +71,14 @@
                         @endif
                     </td>
                     <td class="text-center">{{ $kategori->products_count }}</td>
-                    <td class="align-middle text-center text-sm">
+                    <td class="text-center text-sm">
                         @if ($kategori->status)
                             <span class="badge bg-label-success">Aktif</span>
                         @else
                             <span class="badge bg-label-secondary">Tidak Aktif</span>
                         @endif
                     </td>
-                    <td class="text-center">
+                    <td class="text-center d-flex align-items-center justify-content-center gap-2">
                         <a href="#" class="action-btn text-secondary" data-bs-toggle="modal"
                             data-bs-target="#editModal"
                             data-url="{{ route('kategoriproduk.getjson', $kategori->slug) }}"

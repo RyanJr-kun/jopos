@@ -69,7 +69,7 @@
     <div class="card-body px-0 pt-0 pb-2">
 
         <div id="penjualan-table-container" class="mt-3">
-            @include('pos::penjualan._penjualan_table')
+            @include('pos::penjualan.partials._penjualan_table')
         </div>
     </div>
 </div>

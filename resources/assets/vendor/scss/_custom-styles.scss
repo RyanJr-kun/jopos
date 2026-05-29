@@ -137,6 +137,8 @@ $blue-g: #000f94;
     }
 }
 
+
+
 .product-card {
     position: relative;
     cursor: pointer;
@@ -145,33 +147,13 @@ $blue-g: #000f94;
 
     &:hover {
         border-color: #2835a7; // Green border on hover
-        box-shadow: 0 0 15px rgba(40, 49, 167, 0.3); // Green glow
+        box-shadow: 0 0 10px rgba(40, 49, 167, 0.3); // Green glow
 
         .text-hover {
             background: linear-gradient(135deg, $red, $blue-g);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-        }
-    }
-
-    &.active {
-        border-color: #28a745; // Persistent green border when active
-        box-shadow: 0 0 15px rgba(40, 167, 69, 0.3); // Persistent green glow
-
-        &::after {
-            content: "\f26a"; // Unicode untuk bootstrap-icon 'check-circle-fill'
-            font-family: "bootstrap-icons";
-            font-weight: normal;
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            color: #28a745; // Warna hijau (success) yang konsisten dengan border
-            font-size: 24px;
-            animation: fadeIn 0.3s;
-            background-color: white; // Memberi latar belakang putih agar ikon terlihat jelas
-            border-radius: 50%; // Membuat latar belakang menjadi lingkaran
-            line-height: 1;
         }
     }
 }
@@ -286,7 +268,7 @@ $blue-g: #000f94;
         z-index: -1;
     }
 
-    
+
 }
 
 @media (min-width: 992px) {
@@ -363,15 +345,7 @@ $blue-g: #000f94;
     }
 }
 
-.product-card {
-    .card-img-top {
-        transition: transform 0.3s ease-in-out;
-    }
 
-    &:hover .card-img-top {
-        transform: scale(1.03);
-    }
-}
 
 /*
 *
@@ -523,6 +497,8 @@ $blue-g: #000f94;
 * Market Page - Product Card Hover Actions
 *
 */
+
+
 .product-card-img-container {
     position: relative;
     overflow: hidden;
@@ -535,6 +511,10 @@ $blue-g: #000f94;
         z-index: 3; // Pastikan berada di atas gambar (dan di atas hover actions)
     }
 
+    .card-img-top {
+        transition: transform 0.3s ease-in-out;
+    }
+
     .product-card-actions {
         position: absolute;
         bottom: 0;
@@ -543,17 +523,19 @@ $blue-g: #000f94;
         z-index: 2;
         padding: 0.5rem;
         opacity: 0;
-        transform: translateY(100%); // Mulai dari bawah, di luar container
+        transform: translateY(100%);
         transition: opacity 0.3s ease, transform 0.3s ease;
-        // background: linear-gradient(to top,
-        //         rgba(255, 255, 255, 0.468) 0%,
-        //         rgba(0, 0, 0, 0) 100%); // Gradient agar teks terbaca
     }
 
     &:hover {
+
         .product-card-actions {
             opacity: 1;
             transform: translateY(0); // Kembali ke posisi normal
+        }
+
+        .card-img-top {
+            transform: scale(1.03);
         }
     }
 }

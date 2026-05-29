@@ -3,7 +3,13 @@
 //  POS JO Computer — Responsive Layout
 //  Mobile → Tablet → Laptop → Monitor
 // ============================================================
-
+$light-blue: #4a90e2;
+$dark-blue: #053172;
+$solid-blue: #0d6efd;
+$black: #0b0b0b;
+$red: #770101;
+$light-red: #ff2032;
+$blue-g: #000f94;
 // ── Variables ────────────────────────────────────────────────
 $navbar-h : 64px;
 $panel-radius : 12px;
@@ -120,19 +126,6 @@ body {
             font-size: 1.1rem;
             pointer-events: none;
         }
-
-        input {
-            padding-left: 34px;
-            border-radius: 8px;
-            font-size: .85rem;
-            border: 1.5px solid #e4e6ea;
-            transition: border-color $transition-fast, box-shadow $transition-fast;
-
-            &:focus {
-                border-color: #696cff;
-                box-shadow: 0 0 0 3px rgba(105, 108, 255, .12);
-            }
-        }
     }
 }
 
@@ -233,24 +226,41 @@ body {
 }
 
 // ── Product Card ──────────────────────────────────────────────
-.product-card {
-    border: 1.5px solid #f0f1f5;
-    border-radius: $card-radius;
-    background: #fff;
-    cursor: pointer;
-    transition: transform $transition-fast, box-shadow $transition-fast, border-color $transition-fast;
-    overflow: hidden;
-    padding: 0 !important;
+.product-card-pos {
+    border-radius: 6px;
     position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    border: 1px solid transparent; // Default transparent border
 
-    &:hover:not([data-disabled="true"]) {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(105, 108, 255, .18);
-        border-color: #696cff;
+    &:hover {
+        border-color: #2835a7; // Green border on hover
+        box-shadow: 0 0 10px rgba(40, 49, 167, 0.3); // Green glow
+
+        .text-hover {
+            background: linear-gradient(135deg, $red, $blue-g);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
     }
 
-    &:active:not([data-disabled="true"]) {
-        transform: scale(0.97);
+    &.active {
+        border-color: #28a745; // Persistent green border when active
+        box-shadow: 0 0 15px rgba(40, 167, 69, 0.3); // Persistent green glow
+
+        &::after {
+            font-weight: normal;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            color: #28a745; // Warna hijau (success) yang konsisten dengan border
+            font-size: 24px;
+            animation: fadeIn 0.3s;
+            background-color: white; // Memberi latar belakang putih agar ikon terlihat jelas
+            border-radius: 50%; // Membuat latar belakang menjadi lingkaran
+            line-height: 1;
+        }
     }
 
     &[data-disabled="true"] {
@@ -261,7 +271,8 @@ body {
     // Gambar produk — aspect ratio 4:3
     .product-img-wrap {
         width: 100%;
-        aspect-ratio: 4 / 3;
+        border-radius: 6px 6px 0 0;
+        aspect-ratio: 1/1;
         overflow: hidden;
         background: #f4f5fa;
 
@@ -276,6 +287,7 @@ body {
     &:hover .product-img-wrap img {
         transform: scale(1.04);
     }
+
 
     // Badge (stok habis / promo)
     .product-badge {
@@ -313,30 +325,24 @@ body {
             margin-bottom: 6px;
         }
 
-        .product-price-row {
-            display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-            gap: 4px;
 
-            .price-main {
-                font-size: .78rem;
-                font-weight: 700;
-                color: #696cff;
-            }
-
-            .price-original {
-                font-size: .65rem;
-                color: #a0aab4;
-                text-decoration: line-through;
-            }
-
-            .stock-info {
-                font-size: .65rem;
-                color: #a0aab4;
-                margin-left: auto;
-            }
+        .price-main {
+            font-size: .78rem;
+            font-weight: 700;
         }
+
+        .price-original {
+            font-size: .65rem;
+            color: #a0aab4;
+            text-decoration: line-through;
+        }
+
+        .stock-info {
+            font-size: .65rem;
+            color: #a0aab4;
+            margin-left: auto;
+        }
+
     }
 }
 
@@ -605,14 +611,6 @@ body {
                 flex-shrink: 0;
             }
 
-            input {
-                font-size: .82rem;
-                text-align: right;
-                border-radius: 7px;
-                max-width: 150px;
-                font-weight: 600;
-            }
-
             .change-value {
                 font-size: .85rem;
                 font-weight: 700;
@@ -675,10 +673,8 @@ body {
 
             .btn-save-transaction {
                 flex: 2;
-                border-radius: 8px;
                 font-size: .82rem;
                 font-weight: 700;
-                padding: 9px 0;
                 background: #333;
                 border-color: #333;
                 transition: background $transition-fast;

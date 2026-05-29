@@ -25,7 +25,7 @@
 <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3" id="product-grid">
     @forelse ($products as $produk)
         <div class="col product-col">
-            <div class="card product-card product-card-compact h-100 overflow-hidden">
+            <div class="card product-card-pos product-card-compact h-100 overflow-hidden">
                 <div class="product-card-img-container">
                     <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                         <img src="{{ $produk->primaryImage
