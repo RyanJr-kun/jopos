@@ -237,32 +237,38 @@
                             <input type="radio" class="btn-check" name="metode_pembayaran" id="pay-tunai"
                                 value="TUNAI" form="penjualanForm" checked required>
                             <label class="btn btn-outline-primary w-100 p-2" for="pay-tunai">
-                                <i class="bx bx-money fs-4 d-block mb-1"></i> Tunai
+                                <i class="bx bx-money fs-4 d-block me-2"></i> Tunai
                             </label>
                         </div>
                         <div class="col-4">
                             <input type="radio" class="btn-check" name="metode_pembayaran" id="pay-transfer"
                                 value="TRANSFER" form="penjualanForm">
                             <label class="btn btn-outline-primary w-100 p-2" for="pay-transfer">
-                                <i class="bx bx-transfer fs-4 d-block mb-1"></i> Transfer
+                                <i class="bx bx-transfer fs-4 d-block me-2"></i> Transfer
                             </label>
                         </div>
                         <div class="col-4">
                             <input type="radio" class="btn-check" name="metode_pembayaran" id="pay-qris"
                                 value="QRIS" form="penjualanForm">
                             <label class="btn btn-outline-primary w-100 p-2" for="pay-qris">
-                                <i class="bx bx-qr-scan fs-4 d-block mb-1"></i> QRIS
+                                <i class="bx bx-qr-scan fs-4 d-block me-2"></i> QRIS
                             </label>
                         </div>
 
                         <div id="transfer-details" class="d-none mt-3 animate__animated animate__fadeIn">
                             <label for="bank_tujuan" class="form-label fw-semibold">Rekening Tujuan <span
                                     class="text-danger">*</span></label>
-                            <select name="bank_tujuan" id="bank_tujuan" class="form-select select2" data-placeholder="Pilih Rekening" form="penjualanForm">
-                                <option value="">-- Pilih Rekening --</option>
-                                <option value="BCA - 123456789">BCA - 123456789 (JO Computer)</option>
-                                <option value="Mandiri - 987654321">Mandiri - 987654321 (JO Computer)</option>
-                                <option value="BRI - 456123789">BRI - 456123789 (JO Computer)</option>
+                            <select name="bank_tujuan" id="bank_tujuan" class="form-select select2 select2-bank"
+                                data-placeholder="Pilih Rekening Bank" form="penjualanForm">
+                                <option value=""></option>
+                                @foreach ($banks as $bank)
+                                    <option value="{{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}"
+                                        data-logo="{{ $bank->logo_url }}">
+                                        {{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}
+                                        ({{ $bank->nama_pemilik }})
+                                    </option>
+                                @endforeach
+                            </select>
                             </select>
                         </div>
                     </div>
@@ -311,15 +317,15 @@
                             placeholder="Tambahkan catatan untuk transaksi ini..." form="penjualanForm"></textarea>
                     </div>
                 </div>
-            </div>
-
-            {{-- Footer Modal --}}
-            <div class="modal-footer border-top d-flex justify-content-end">
-                <button type="button" class="btn btn-outline-danger " data-bs-dismiss="modal">Batal</button>
-                <button type="submit" class="btn w-50 btn-primary btn-save-transaction" id="btn-save-transaction"
-                    form="penjualanForm">
-                    <i class="bx bx-check-circle me-1"></i> Transaksi
-                </button>
+                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 my-4 pt-3 border-top">
+                    <button type="button" class="btn btn-outline-danger w-100 w-sm-auto order-2 order-sm-1"
+                        data-bs-dismiss="modal">Batal</button>
+                    <button type="submit"
+                        class="btn btn-blue w-100 w-sm-auto order-1 order-sm-2 px-4 btn-save-transaction"
+                        id="btn-save-transaction" form="penjualanForm">
+                        <i class="bx bx-check-circle me-1"></i> Transaksi
+                    </button>
+                </div>
             </div>
 
         </div>

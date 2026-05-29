@@ -33,7 +33,7 @@
                     <div class="pos-search-wrap flex-grow-1 ms-3" style="max-width: 320px;">
                         <i class="pos-search-icon" aria-hidden="true"></i>
                         <input type="text" id="product-search" class="form-control form-control-sm"
-                            placeholder="Cari produk atau scan barcode…" aria-label="Cari atau scan produk"
+                            placeholder="Cari produk, sku atau scan barcode…" aria-label="Cari atau scan produk"
                             autocomplete="off">
                     </div>
                 </div>
@@ -131,9 +131,9 @@
                         @error('customer_id')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
-                        <button type="button" class="btn btn-outline-info btn-add-customer mb-0" data-bs-toggle="modal"
+                        <button type="button" class="btn btn-outline-info px-2 mb-0" data-bs-toggle="modal"
                             data-bs-target="#createCustomerModal" aria-label="Tambah Pelanggan Baru">
-                            <i class="bx bx-plus" aria-hidden="true"></i>
+                            <i class="bx bx-plus-circle" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
@@ -231,25 +231,50 @@
     <script type="module">
         const initSelect2 = () => {
             if (typeof $ !== 'undefined' && $.fn.select2) {
+                const formatBankLogo = (state) => {
+                    if (!state.id) {
+                        return state.text;
+                    }
+                    const logoUrl = $(state.element).data('logo');
+                    if (!logoUrl) {
+                        return state.text;
+                    }
+                    const $state = $(
+                        '<span class="d-flex align-items-center">' +
+                        '<img src="' + logoUrl +
+                        '" style="width: 24px; height: 24px; object-fit: contain; margin-right: 8px;" alt="logo" />' +
+                        '<span>' + state.text + '</span>' +
+                        '</span>'
+                    );
+
+                    return $state;
+                };
+
                 $('.select2').each(function() {
                     const $this = $(this);
-                    $this.select2({
+                    const isBankSelect = $this.hasClass('select2-bank');
+                    let select2Options = {
                         placeholder: $this.data('placeholder') || "Pilih...",
                         allowClear: $this.find('option[value=""]').length > 0,
                         width: '100%',
                         minimumResultsForSearch: 10
-                    });
+                    };
+
+                    if (isBankSelect) {
+                        select2Options.templateResult = formatBankLogo;
+                        select2Options.templateSelection = formatBankLogo;
+                    }
+
+                    $this.select2(select2Options);
                 });
             } else {
                 setTimeout(initSelect2, 100);
             }
         };
+
         initSelect2();
     </script>
     <script>
-        // ============================================================
-        //  HELPERS
-        // ============================================================
         function toggleFullScreen(event) {
             if (event) event.preventDefault();
             if (!document.fullscreenElement) {
@@ -530,8 +555,10 @@
                     cartContainer.innerHTML = `
                 <tr id="cart-empty-message">
                     <td colspan="5" class="text-center py-4 text-muted">
-                        <i class="bx bx-shopping-bag icon-lg mb-2 d-block" aria-hidden="true"></i>
-                        <p class="mb-0">Keranjang masih kosong</p>
+                        <div class="d-flex flex-column align-items-center justify-content-center py-5">    
+                            <i class="bx bx-shop fs-1 text-muted d-block mb-2" aria-hidden="true"></i>
+                            <p class="mb-0">Keranjang masih kosong</p>
+                        </div>
                     </td>
                 </tr>`;
                 } else {
@@ -580,9 +607,11 @@
                                 <img src="${item.img}" class="avatar avatar-md rounded me-2"
                                      alt="${item.name}" loading="lazy">
                                 <div class="d-flex flex-column" style="min-width:0;">
-                                    <p class="mb-0 fw-bold text-xs text-wrap text-truncate">${item.name}</p>
+                                    <p class="mb-0 fw-bold text-xs text-wrap text-truncate" title="${item.name}">
+                                        ${item.name.length > 10 ? item.name.substring(0, 10) + ' ...' : item.name}
+                                    </p>
                                     <small class="d-flex">${serialNumberDisplay}</small>
-                                    ${hargaDisplay}
+                                    <small class="text-muted">${hargaDisplay}</small>
                                 </div>
                             </div>
                         </td>

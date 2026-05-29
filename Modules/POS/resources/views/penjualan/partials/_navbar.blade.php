@@ -19,7 +19,7 @@
         <div class="d-flex align-items-center gap-2 ms-auto">
 
             {{-- Dashboard (desktop only) --}}
-            <a href="/dashboard" class="d-none d-lg-block text-decoration-none">
+            <a href="/dashboard" target="_blank" class="d-none d-lg-block text-decoration-none">
                 <button class="btn btn-primary btn-sm px-3 mb-0" type="button">
                     <i class="bx bx-globe me-1" aria-hidden="true"></i>Dashboard
                 </button>

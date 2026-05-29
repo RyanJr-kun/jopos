@@ -18,6 +18,9 @@ return new class extends Migration
             // Biodata & Kontak
             $table->string('kontak', 20)->unique()->nullable();
             $table->text('alamat')->nullable();
+            $table->string('nama_bank')->nullable();
+            $table->string('nomor_rekening')->nullable();
+            $table->string('nama_pemilik_rekening')->nullable();
             $table->string('avatar')->nullable();
             $table->string('jabatan', 50)->nullable();
             $table->string('nik', 50)->unique()->nullable();

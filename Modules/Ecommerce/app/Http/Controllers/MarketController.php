@@ -92,7 +92,6 @@ class MarketController extends Controller
                 'products.warrantie_id',
                 'products.stok_minimum',
                 'products.taxe_id',
-                'products.img_produk',
                 'products.wajib_seri',
                 'products.user_id',
                 'products.created_at',
@@ -325,7 +324,7 @@ class MarketController extends Controller
                     ->orWhere('kabupaten_kota', 'like', "%{$search}%")
                     ->orWhere('desa', 'like', "%{$search}%")
                     ->orWhere('alamat', 'like', "%{$search}%");
-             });
+            });
         }
 
         // 2. Filter Select berdasarkan Daerah

@@ -29,14 +29,14 @@ class ProductController extends Controller implements HasMiddleware
 {
     public static function middleware(): array
     {
-        return [ 
-            new Middleware('permission:view-produk', only: ['index','show', 'upload', 'revert', 'checkSlug' ]),
+        return [
+            new Middleware('permission:view-produk', only: ['index', 'show', 'upload', 'revert', 'checkSlug']),
             new Middleware('permission:create-produk', only: ['create', 'store']),
             new Middleware('permission:edit-produk', only: ['edit', 'update']),
             new Middleware('permission:delete-produk', only: ['destroy']),
         ];
     }
-    
+
     public function index()
     {
         $request = request();
@@ -73,7 +73,7 @@ class ProductController extends Controller implements HasMiddleware
                 ->orderBy('name')->get(),
         ]);
     }
-   
+
     public function create()
     {
         return view('inventory::produk.create', [
@@ -87,11 +87,11 @@ class ProductController extends Controller implements HasMiddleware
             'pajak'   => Taxe::orderBy('name_taxe', 'asc')->get(),
             // BARU: Kirim data toko untuk pilihan lokasi stok awal
             'stores'  => Store::query()
-            ->where('is_active', 1)
-            ->orderBy('name_toko', 'asc')->get(), 
+                ->where('is_active', 1)
+                ->orderBy('name_toko', 'asc')->get(),
         ]);
     }
-    
+
     public function store(Request $request)
     {
         // Debug: cek format gallery input
@@ -138,7 +138,7 @@ class ProductController extends Controller implements HasMiddleware
             'variants.*.img_variant'         => 'nullable|string',
         ]);
 
-       DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request) {
             // ---- Buat produk utama ----
             $product = Product::create([
                 'name_product'  => $request->name_product,
@@ -159,7 +159,7 @@ class ProductController extends Controller implements HasMiddleware
                 'user_id'       => Auth::id(),
             ]);
 
-            
+
 
             // ---- 2. Simpan galeri foto ----
             $this->saveGallery($product, $request->input('gallery', []), $request->input('primary_image'));
@@ -173,7 +173,7 @@ class ProductController extends Controller implements HasMiddleware
         return redirect()->route('produk.index')->with('success', 'Product Baru Berhasil Ditambahkan.');
     }
 
-    
+
     public function show(Product $produk)
     {
         return view('inventory::produk.show', [
@@ -191,7 +191,7 @@ class ProductController extends Controller implements HasMiddleware
         ]);
     }
 
-   
+
     public function edit(Product $produk)
     {
         return view('inventory::produk.edit', [
@@ -206,7 +206,7 @@ class ProductController extends Controller implements HasMiddleware
                 ->orderBy('name')->get(),
             'brands'    => Brand::where('status', 1)->orderBy('name')->get(),
             'units'     => Unit::where('status', 1)->orderBy('name')->get(),
-            'warranties'=> Warrantie::where('status', 1)->orderBy('name')->get(),
+            'warranties' => Warrantie::where('status', 1)->orderBy('name')->get(),
             'pajak'     => Taxe::orderBy('name_taxe', 'asc')->get(),
             // BARU: Kirim data toko
             'stores'    => Store::query()
@@ -216,11 +216,11 @@ class ProductController extends Controller implements HasMiddleware
         ]);
     }
 
-    
+
     public function update(Request $request, Product $produk)
     {
 
-            // Di ProductController::store(), sebelum DB::transaction()
+        // Di ProductController::store(), sebelum DB::transaction()
         \Log::info("Product store debug", [
             'gallery_input' => $request->input('gallery'),
             'primary_image' => $request->input('primary_image'),
@@ -268,7 +268,7 @@ class ProductController extends Controller implements HasMiddleware
                     $exists = ProductVariant::where('sku', $value)
                         ->where('product_id', '!=', $produk->id)
                         ->exists();
-                        
+
                     if ($exists) {
                         $fail("SKU variasi sudah digunakan oleh produk lain.");
                     }
@@ -302,7 +302,7 @@ class ProductController extends Controller implements HasMiddleware
                 'user_id'       => Auth::id(),
             ]);
 
-                       // ---- Update galeri foto ----
+            // ---- Update galeri foto ----
             $keepIds = $request->input('existing_images', []);
             // Hapus foto lama yang tidak di-keep
             $produk->images()->whereNotIn('id', $keepIds)->each(function ($img) {
@@ -312,7 +312,7 @@ class ProductController extends Controller implements HasMiddleware
             // Tambah foto baru
             $this->saveGallery($produk, $request->input('gallery', []), $request->input('primary_image'));
 
-            
+
             // ---- Update variasi ----
             if ($request->filled('variant_types')) {
                 // Panggil langsung saveVariants, logika update/create/delete ada di dalamnya
@@ -330,7 +330,7 @@ class ProductController extends Controller implements HasMiddleware
         return redirect()->route('produk.index')->with('success', 'Product Berhasil Diupdate.');
     }
 
-    
+
     public function destroy(Product $produk)
     {
         // Hapus semua foto galeri
@@ -354,28 +354,28 @@ class ProductController extends Controller implements HasMiddleware
     {
         $keys = $request->input('spec_keys', []);
         $values = $request->input('spec_values', []);
-        
+
         // Jika tidak ada spec, return null
         if (empty($keys) || empty($values) || count($keys) !== count($values)) {
             return null;
         }
-        
+
         $specs = [];
         foreach ($keys as $index => $key) {
             $key = trim($key);
             $value = trim($values[$index] ?? '');
-            
+
             // Skip jika key atau value kosong
             if ($key === '' || $value === '') {
                 continue;
             }
-            
+
             $specs[] = [
                 'key'   => $key,
                 'value' => $value
             ];
         }
-        
+
         return !empty($specs) ? json_encode($specs, JSON_UNESCAPED_UNICODE) : null;
     }
 
@@ -385,52 +385,52 @@ class ProductController extends Controller implements HasMiddleware
     {
         $order = $product->images()->max('sort_order') + 1;
         $hasPrimary = $product->images()->where('is_primary', true)->exists();
-        
+
         $allPaths = collect($galleryPaths);
         if ($primaryPath && !$allPaths->contains($primaryPath)) {
             $allPaths->prepend($primaryPath);
         }
-        
+
         // ✅ SATU LOOP SAJA
         foreach ($allPaths as $tmpPath) {
             if (!$tmpPath || !str_starts_with($tmpPath, 'tmp/')) {
                 \Log::warning("Gallery skip - invalid tmpPath: $tmpPath");
                 continue;
             }
-            
+
             if (!Storage::disk('r2')->exists($tmpPath)) {
                 \Log::error("Gallery file not found: $tmpPath");
                 continue;
             }
-            
+
             $newPath = 'produk/gallery/' . basename($tmpPath);
             $dir = dirname($newPath);
-            
+
             if (!Storage::disk('r2')->exists($dir)) {
                 Storage::disk('r2')->makeDirectory($dir);
             }
-            
+
             $moved = Storage::disk('r2')->move($tmpPath, $newPath);
-            
+
             if (!$moved) {
                 \Log::error("Failed to move gallery file: $tmpPath -> $newPath");
                 continue;
             }
-            
+
             \Log::info("Gallery file moved successfully: $newPath");
-            
-            $isPrimary = (!$hasPrimary && $tmpPath === $primaryPath) 
-                    || (!$hasPrimary && $order === 1);
-            
+
+            $isPrimary = (!$hasPrimary && $tmpPath === $primaryPath)
+                || (!$hasPrimary && $order === 1);
+
             $product->images()->create([
                 'path'       => $newPath,
                 'is_primary' => $isPrimary,
                 'sort_order' => $order++,
             ]);
-            
+
             if ($isPrimary) $hasPrimary = true;
         }
-        
+
         // Fallback: jika belum ada primary, set yang pertama
         if (!$product->images()->where('is_primary', true)->exists()) {
             $first = $product->images()->orderBy('sort_order')->first();
@@ -444,7 +444,7 @@ class ProductController extends Controller implements HasMiddleware
     {
         // 1. Buat ulang variant types & options
         // Tidak masalah dihapus, karena ID Varian utamanya (ProductVariant) akan kita pertahankan
-        $product->variantTypes()->delete(); 
+        $product->variantTypes()->delete();
 
         $optionMap = [];
         foreach ($variantTypes as $typeIndex => $typeData) {
@@ -462,7 +462,7 @@ class ProductController extends Controller implements HasMiddleware
                 $optionMap[$typeData['name']][$optValue] = $option->id;
             }
         }
-        
+
         // Array untuk melacak ID varian mana saja yang masih dipakai
         $keptVariantIds = [];
 
@@ -470,7 +470,7 @@ class ProductController extends Controller implements HasMiddleware
         foreach ($variantCombinations as $varData) {
             $imgPath = null;
             $tmpImg = $varData['img_variant'] ?? null;
-            
+
             if ($tmpImg) {
                 if (str_starts_with($tmpImg, 'tmp/') && Storage::disk('r2')->exists($tmpImg)) {
                     $imgPath = 'produk/variants/' . basename($tmpImg);
@@ -479,11 +479,11 @@ class ProductController extends Controller implements HasMiddleware
                     $imgPath = $tmpImg;
                 }
             }
-            
+
             // CEK APAKAH INI VARIAN LAMA (Diedit) ATAU BARU (Ditambah)
             if (isset($varData['id']) && $varData['id']) {
                 $variant = ProductVariant::find($varData['id']);
-                
+
                 // Hapus file gambar lama jika user mengunggah gambar baru
                 if ($imgPath && $variant->img_variant && $imgPath !== $variant->img_variant) {
                     Storage::disk('r2')->delete($variant->img_variant);
@@ -495,7 +495,7 @@ class ProductController extends Controller implements HasMiddleware
                     'barcode'       => $varData['barcode'] ?? null,
                     'harga_jual'    => $varData['harga_jual'],
                     'harga_beli'    => $varData['harga_beli'],
-                    'img_variant'   => $imgPath ?? $variant->img_variant, 
+                    'img_variant'   => $imgPath ?? $variant->img_variant,
                 ]);
             } else {
                 // Buat varian baru karena tidak ada ID (biasanya karena user klik "Generate" lagi)
@@ -509,7 +509,7 @@ class ProductController extends Controller implements HasMiddleware
                     'is_active'     => true,
                 ]);
             }
-            
+
             $keptVariantIds[] = $variant->id;
 
             // Bersihkan relasi opsi pivot yang lama, lalu pasang yang baru
@@ -521,7 +521,7 @@ class ProductController extends Controller implements HasMiddleware
                     foreach ($optionMap as $typeName => $options) {
                         if (isset($options[$optValue])) {
                             $idsToAttach[] = $options[$optValue];
-                            break; 
+                            break;
                         }
                     }
                 }
@@ -547,7 +547,7 @@ class ProductController extends Controller implements HasMiddleware
         try {
             // 1. Ambil semua file dari request (menghindari error nama key tidak cocok)
             $files = $request->allFiles();
-            
+
             if (empty($files)) {
                 return response()->json(['error' => 'Tidak ada file yang diunggah.'], 400);
             }
@@ -564,25 +564,24 @@ class ProductController extends Controller implements HasMiddleware
             // 3. Validasi ekstensi dan ukuran secara manual agar lebih aman
             $extension = strtolower($uploadedFile->getClientOriginalExtension());
             $validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'svg'];
-            
+
             if (!in_array($extension, $validExtensions)) {
                 return response()->json(['error' => 'Format file tidak didukung. Gunakan JPG, PNG, WEBP, atau SVG.'], 422);
             }
-            
+
             if ($uploadedFile->getSize() > 2048 * 1024) { // Maksimal 2MB
                 return response()->json(['error' => 'Ukuran file maksimal 2MB.'], 422);
             }
 
             // 4. Simpan ke storage 'tmp'
             $path = $uploadedFile->store('tmp', 'r2');
-            
+
             if ($path) {
                 // 5. Kembalikan plain text agar serverId terbaca benar oleh FilePond
                 return response($path, 200)->header('Content-Type', 'text/plain');
             }
-            
+
             return response()->json(['error' => 'Gagal menyimpan file ke server.'], 500);
-            
         } catch (\Exception $e) {
             \Log::error("Upload error: " . $e->getMessage());
             return response()->json(['error' => 'Sistem Error: ' . $e->getMessage()], 500);
@@ -612,27 +611,27 @@ class ProductController extends Controller implements HasMiddleware
     public function getData(Request $request)
     {
         $search = $request->query('search');
-        
+
         // Ambil ID Toko dari user yang login (sesuai logika Anda di cekStock)
         $storeId = Auth::user()->employee->store_id ?? null;
 
         // Load relasi pajak, varian, dan opsi variannya
-        $query = Product::with(['pajak', 'primaryImage', 'variants' => function($q) {
-                // Pastikan memuat opsi untuk membentuk nama varian (misal: "Merah / XL")
-                $q->where('is_active', 1)->with('options'); 
-            }])
+        $query = Product::with(['pajak', 'primaryImage', 'variants' => function ($q) {
+            // Pastikan memuat opsi untuk membentuk nama varian (misal: "Merah / XL")
+            $q->where('is_active', 1)->with('options');
+        }])
             ->when($search, function ($q, $search) {
-                $q->where(function($subQ) use ($search) {
+                $q->where(function ($subQ) use ($search) {
                     $subQ->where('name_product', 'like', "%{$search}%")
-                         ->orWhere('sku', 'like', "%{$search}%")
-                         ->orWhere('barcode', 'like', "%{$search}%")
-                         ->orWhereHas('variants', function($qv) use ($search) {
-                             $qv->where('sku', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%")
+                        ->orWhere('barcode', 'like', "%{$search}%")
+                        ->orWhereHas('variants', function ($qv) use ($search) {
+                            $qv->where('sku', 'like', "%{$search}%")
                                 ->orWhere('barcode', 'like', "%{$search}%");
-                         });
+                        });
                 });
             })
-            ->when($request->boolean('wajib_seri'), function($q) {
+            ->when($request->boolean('wajib_seri'), function ($q) {
                 $q->where('wajib_seri', true);
             })
             ->latest(); // Gunakan latest, jangan orderBy qty karena qty ada di tabel product_stocks
@@ -645,7 +644,7 @@ class ProductController extends Controller implements HasMiddleware
             // Skenario 1: Produk memiliki varian
             if ($product->variants && $product->variants->count() > 0) {
                 foreach ($product->variants as $variant) {
-                    
+
                     // Bentuk nama varian dari opsi (misal: "Hitam / XL")
                     $variantOptions = [];
                     if ($variant->relationLoaded('options') && $variant->options->count() > 0) {
@@ -654,10 +653,10 @@ class ProductController extends Controller implements HasMiddleware
                         }
                     }
                     $variantName = !empty($variantOptions) ? implode(' / ', $variantOptions) : "SKU: " . $variant->sku;
-                    
+
                     // Hitung stok varian spesifik di toko saat ini
                     $stockQuery = ProductStock::query()->where('product_id', $product->id)
-                                    ->where('product_variant_id', $variant->id);
+                        ->where('product_variant_id', $variant->id);
                     if ($storeId) {
                         $stockQuery->where('store_id', $storeId);
                     }
@@ -667,7 +666,7 @@ class ProductController extends Controller implements HasMiddleware
                         'id' => $product->id, // ID Produk Induk
                         'variant_id' => $variant->id,
                         'name_product' => $product->name_product,
-                        'variant_name' => $variantName, 
+                        'variant_name' => $variantName,
                         'sku' => $variant->sku,
                         'qty' => $stokVarian,
                         'harga_beli' => $variant->harga_beli,
@@ -678,18 +677,18 @@ class ProductController extends Controller implements HasMiddleware
                         'pajak' => $product->pajak ? ['rate' => $product->pajak->rate] : null
                     ];
                 }
-            } 
+            }
             // Skenario 2: Produk Simple (Tanpa Varian)
             else {
-                 // Hitung stok produk induk (dimana product_variant_id adalah null)
+                // Hitung stok produk induk (dimana product_variant_id adalah null)
                 $stockQuery = ProductStock::query()
-                ->where('product_id', $product->id)
-                ->where('product_variant_id', '=', null);
+                    ->where('product_id', $product->id)
+                    ->where('product_variant_id', '=', null);
 
-                 if ($storeId) {
-                     $stockQuery->where('store_id', $storeId);
-                 }
-                 $stokProduk = $stockQuery->sum('qty');
+                if ($storeId) {
+                    $stockQuery->where('store_id', $storeId);
+                }
+                $stokProduk = $stockQuery->sum('qty');
 
                 $formattedData[] = [
                     'id' => $product->id,
@@ -719,12 +718,12 @@ class ProductController extends Controller implements HasMiddleware
     {
         $productId = $request->query('id');
         $storeId = Auth::user()->employee->store_id ?? null; // Sesuaikan dengan auth user
-        
+
         $query = ProductStock::query()->where('product_id', $productId);
         if ($storeId) {
             $query->where('store_id', $storeId);
         }
-        
+
         $totalStok = $query->sum('qty');
         return response()->json($totalStok);
     }
@@ -745,7 +744,7 @@ class ProductController extends Controller implements HasMiddleware
     public function getLowStockNotifications()
     {
         $storeId = Auth::user()->employee->store_id ?? null;
-    
+
         $lowStockProducts = Product::select('products.*')
             ->join('product_stocks', 'products.id', '=', 'product_stocks.product_id')
             ->where('product_stocks.product_variant_id', null) // Produk utama
@@ -754,15 +753,15 @@ class ProductController extends Controller implements HasMiddleware
             ->groupBy('products.id')
             ->orderBy('product_stocks.qty', 'asc')
             ->take(5)
-            ->get(['products.id', 'products.name_product', 'products.slug', 'products.stok_minimum', 'products.img_produk']);
-        
+            ->get(['products.id', 'products.name_product', 'products.slug', 'products.stok_minimum']);
+
         // Hitung total count dengan query terpisah
         $lowStockCount = Product::join('product_stocks', 'products.id', '=', 'product_stocks.product_id')
             ->where('product_stocks.product_variant_id', null)
             ->when($storeId, fn($q) => $q->where('product_stocks.store_id', $storeId))
             ->whereColumn('product_stocks.qty', '<=', 'products.stok_minimum')
             ->count();
-        
+
         return response()->json([
             'count' => $lowStockCount,
             'products' => $lowStockProducts->map(function ($produk) {
@@ -786,7 +785,7 @@ class ProductController extends Controller implements HasMiddleware
         // 1. Ambil 5 produk untuk ditampilkan
         $productsNeedingSerials = Product::where('wajib_seri', true)
             // Hitung total kolom 'qty' dari relasi stocks
-            ->withSum('stocks as total_stok', 'qty') 
+            ->withSum('stocks as total_stok', 'qty')
             // Hitung total baris dari relasi serialNumbers dengan filter status
             ->withCount(['serialNumbers as sn_tercatat_count' => function ($query) {
                 $query->whereNotIn('status', ['Terjual', 'Hilang']);
@@ -821,7 +820,7 @@ class ProductController extends Controller implements HasMiddleware
         ]);
     }
 
-    
+
 
     public function lowStock(Request $request)
     {
@@ -836,9 +835,9 @@ class ProductController extends Controller implements HasMiddleware
         // Subquery filter stok rendah
         $lowStockSubquery = ProductStock::selectRaw('COALESCE(SUM(qty), 0)')
             ->whereColumn('product_id', 'products.id')
-            ->whereNull('product_variant_id'); 
+            ->whereNull('product_variant_id');
 
-        $query = Product::with('category')
+        $query = Product::with('category', 'primaryImage')
             ->withTotalStock()
             ->where('products.stok_minimum', '>=', $lowStockSubquery)
             ->addSelect(['last_sale_date' => $lastSaleDateSubquery])
@@ -847,10 +846,10 @@ class ProductController extends Controller implements HasMiddleware
         // 1. Filter Pencarian
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('products.name_product', 'like', '%' . $search . '%')
-                ->orWhere('products.sku', 'like', '%' . $search . '%')
-                ->orWhere('products.barcode', 'like', '%' . $search . '%');
+                    ->orWhere('products.sku', 'like', '%' . $search . '%')
+                    ->orWhere('products.barcode', 'like', '%' . $search . '%');
             });
         }
 
@@ -877,10 +876,10 @@ class ProductController extends Controller implements HasMiddleware
         }
 
         $kategoris = Category::where('status', 1)->orderBy('name')->get();
-        
+
         // ✅ TAMBAHAN: Ambil data Supplier (Pastikan Anda sudah meng-import model Supplier/Pemasok di atas)
         // Sesuaikan nama modelnya, apakah Pemasok:: atau Supplier::
-        $pemasoks = \Modules\Inventory\Models\Supplier::orderBy('name')->get(); 
+        $pemasoks = \Modules\Inventory\Models\Supplier::orderBy('name')->get();
 
         return view('inventory::inventaris.stock.stok-rendah', [
             'title'     => 'Laporan Stock Rendah',

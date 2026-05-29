@@ -77,8 +77,8 @@ body {
 
     // ── Panel Kanan: Keranjang ────────────────────────────────
     .pos-cart-panel {
-        width: 400px;
-        min-width: 340px;
+        width: 600px;
+        min-width: 540px;
         max-width: 460px;
         flex-shrink: 0;
         display: flex;
@@ -402,17 +402,6 @@ body {
                 font-size: .82rem;
                 border-radius: 8px;
                 flex: 1;
-            }
-
-            .btn-add-customer {
-                width: 34px;
-                height: 34px;
-                padding: 0;
-                border-radius: 8px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                flex-shrink: 0;
             }
         }
     }

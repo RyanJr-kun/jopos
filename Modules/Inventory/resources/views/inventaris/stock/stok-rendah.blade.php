@@ -5,23 +5,21 @@
 
     <div class="card">
         <div class="card-header pb-2">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-0 fw-bold text-poppins">Stock Rendah</h5>
-                    <span class="mb-0 text-sm">List produk dengan stok minim</span>
-                </div>
+            <div class="mb-3">
+                <h5 class="mb-0 fw-bold text-poppins">Stock Rendah</h5>
+                <span class="mb-0 text-sm">List produk dengan stok minim</span>
             </div>
         </div>
         <div class="card-body px-0 pb-2">
             <div class="px-5 mb-4">
                 <form action="{{ route('stok.rendah') }}" method="GET" onsubmit="return false;">
-                    <div class="row g-2">
+                    <div class="row g-3">
                         <div class="col-md-5">
                             <input type="text" id="searchInput" name="search" class="form-control"
                                 placeholder="Cari nama, SKU, atau barcode produk..." value="{{ request('search') }}">
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <select id="kategoriFilter" name="kategori" class="form-select select2"
                                 data-placeholder="Filter Kategori">
                                 <option value="">Semua Kategori</option>
@@ -34,7 +32,7 @@
                             </select>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-3 col-6">
                             <select id="supplierFilter" name="supplier" class="form-select select2"
                                 data-placeholder="Filter Supplier">
                                 <option value="">Semua Supplier</option>

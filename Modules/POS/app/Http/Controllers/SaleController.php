@@ -3,6 +3,7 @@
 namespace Modules\POS\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bank;
 use App\Models\Customer;
 use App\Models\ProductStock;
 use App\Models\Store;
@@ -25,8 +26,8 @@ class SaleController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:view-penjualan', only: ['index', 'show']), 
-            new Middleware('permission:create-penjualan', only: ['create', 'store' , 'getTodayHistory', 'generateInvoiceNumber']),
+            new Middleware('permission:view-penjualan', only: ['index', 'show']),
+            new Middleware('permission:create-penjualan', only: ['create', 'store', 'getTodayHistory', 'generateInvoiceNumber']),
             new Middleware('permission:edit-penjualan', only: ['edit', 'update']),
             new Middleware('permission:print-penjualan', only: ['printThermal', 'generatePdf']),
         ];
@@ -45,12 +46,12 @@ class SaleController extends Controller implements HasMiddleware
         if ($storeId) {
             $query->where('store_id', $storeId);
         }
-        
+
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('referensi', 'like', "%{$search}%")
-                  ->orWhereHas('customer', fn($qc) => $qc->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('customer', fn($qc) => $qc->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -79,23 +80,23 @@ class SaleController extends Controller implements HasMiddleware
     public function create(Request $request)
     {
         $query = Product::with([
-                    'category',
-                    'unit',
-                    'promotions',
-                    'stocks',      
-                    'primaryImage',
-                    'pajak',
-                ])
-                ->select('products.*')
-                ->whereHas('stocks', fn($q) => $q->where('qty', '>', 0));
+            'category',
+            'unit',
+            'promotions',
+            'stocks',
+            'primaryImage',
+            'pajak',
+        ])
+            ->select('products.*')
+            ->whereHas('stocks', fn($q) => $q->where('qty', '>', 0));
 
         if ($request->filled('kategori')) {
-                $categoryId  = $request->kategori;
-                $categoryIds = Category::where('id', $categoryId)
-                    ->orWhere('parent_id', $categoryId)
-                    ->pluck('id');
-                $query->whereIn('category_id', $categoryIds);
-            }
+            $categoryId  = $request->kategori;
+            $categoryIds = Category::where('id', $categoryId)
+                ->orWhere('parent_id', $categoryId)
+                ->pluck('id');
+            $query->whereIn('category_id', $categoryIds);
+        }
 
         $products = $query->orderBy('name_product', 'asc')->get();
         $customers = Customer::query()->where('status', 1)->orderBy('name', 'asc')->get();
@@ -104,8 +105,9 @@ class SaleController extends Controller implements HasMiddleware
             ->get();
         $taxes = Taxe::all();
         $referensi = $this->generateInvoiceNumber();
+        $banks = Bank::where('is_active', true)->orderBy('nama_bank', 'asc')->get();
 
-        return view('pos::penjualan.create', compact('products', 'customers', 'kategoris', 'taxes', 'referensi'));
+        return view('pos::penjualan.create', compact('products', 'customers', 'kategoris', 'taxes', 'referensi', 'banks'));
     }
 
     private function generateInvoiceNumber()
@@ -198,7 +200,7 @@ class SaleController extends Controller implements HasMiddleware
                     if ($stokTersedia < (int) $itemData['jumlah']) {
                         throw new \Exception(
                             "Stok untuk produk '{$produk->name_product}' tidak mencukupi. " .
-                            "Tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']}."
+                                "Tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']}."
                         );
                     }
 
@@ -208,7 +210,7 @@ class SaleController extends Controller implements HasMiddleware
                         if (count($snKirim) !== (int) $itemData['jumlah']) {
                             throw new \Exception(
                                 "Jumlah nomor seri untuk '{$produk->name_product}' tidak sesuai. " .
-                                "Dibutuhkan: {$itemData['jumlah']}, dikirim: " . count($snKirim) . "."
+                                    "Dibutuhkan: {$itemData['jumlah']}, dikirim: " . count($snKirim) . "."
                             );
                         }
 
@@ -220,7 +222,7 @@ class SaleController extends Controller implements HasMiddleware
                         if ($snValid !== (int) $itemData['jumlah']) {
                             throw new \Exception(
                                 "Satu atau lebih nomor seri untuk '{$produk->name_product}' " .
-                                "tidak valid atau sudah terjual."
+                                    "tidak valid atau sudah terjual."
                             );
                         }
                     }
@@ -322,7 +324,6 @@ class SaleController extends Controller implements HasMiddleware
             return redirect()
                 ->route('penjualan.show', $penjualan->referensi)
                 ->with('success', 'Transaksi berhasil disimpan!');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -376,7 +377,7 @@ class SaleController extends Controller implements HasMiddleware
                 try {
                     DB::transaction(function () use ($penjualan) {
                         // PERBAIKAN: Ambil store_id dari transaksi asli
-                        $storeId = $penjualan->store_id; 
+                        $storeId = $penjualan->store_id;
 
                         foreach ($penjualan->items as $item) {
                             SerialNumber::where('item_sale_id', $item->id)->update([
@@ -386,11 +387,11 @@ class SaleController extends Controller implements HasMiddleware
 
                             $stockQ = ProductStock::query()->where('product_id', $item->product_id)
                                 ->whereNull('product_variant_id');
-                            
+
                             if ($storeId) {
                                 $stockQ->where('store_id', $storeId);
                             }
-                            
+
                             $stock = $stockQ->first();
                             if ($stock) {
                                 $stock->increment('qty', $item->jumlah);
@@ -444,7 +445,7 @@ class SaleController extends Controller implements HasMiddleware
             $penjualan = DB::transaction(function () use ($penjualan, $validatedData, $taxesData) {
 
                 // PERBAIKAN: Ambil store_id dari transaksi asli, bukan dari user yang login
-                $storeId     = $penjualan->store_id; 
+                $storeId     = $penjualan->store_id;
                 $statusLama  = $penjualan->status_pembayaran;
                 $statusBaru  = $validatedData['status_pembayaran'];
 
@@ -472,7 +473,7 @@ class SaleController extends Controller implements HasMiddleware
 
                 $stockQuery = ProductStock::whereIn('product_id', $allProductIds)
                     ->whereNull('product_variant_id');
-                
+
                 // Sekarang $storeId dijamin menggunakan toko tempat transaksi terjadi
                 if ($storeId) {
                     $stockQuery->where('store_id', $storeId);
@@ -512,7 +513,7 @@ class SaleController extends Controller implements HasMiddleware
                             $nama = $produk?->name_product ?? "ID: {$itemData['product_id']}";
                             throw new \Exception(
                                 "Stok '{$nama}' tidak mencukupi " .
-                                "(tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']})."
+                                    "(tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']})."
                             );
                         }
 
@@ -525,9 +526,10 @@ class SaleController extends Controller implements HasMiddleware
                             }
                             $validSnCount = SerialNumber::where('product_id', $produk->id)
                                 ->whereIn('nomor_seri', $snKirim)
-                                ->where(fn($q) => $q
-                                    ->where('status', 'Tersedia')
-                                    ->orWhereIn('nomor_seri', $oldSerialNumbers)
+                                ->where(
+                                    fn($q) => $q
+                                        ->where('status', 'Tersedia')
+                                        ->orWhereIn('nomor_seri', $oldSerialNumbers)
                                 )
                                 ->count();
                             if ($validSnCount !== (int) $itemData['jumlah']) {
@@ -624,7 +626,6 @@ class SaleController extends Controller implements HasMiddleware
             return redirect()
                 ->route('penjualan.show', $penjualan->referensi)
                 ->with('success', 'Transaksi berhasil diperbarui.');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -659,12 +660,12 @@ class SaleController extends Controller implements HasMiddleware
             $storeId = Auth::user()->employee?->store_id;
 
             $todaySales = Sale::with('customer')
-            ->whereDate('created_at', Carbon::today())
-            ->when($storeId, function ($query) use ($storeId) {
-                $query->where('store_id', $storeId); // Filter cabang
-            })
-            ->latest()
-            ->get()
+                ->whereDate('created_at', Carbon::today())
+                ->when($storeId, function ($query) use ($storeId) {
+                    $query->where('store_id', $storeId); // Filter cabang
+                })
+                ->latest()
+                ->get()
                 ->map(function ($sale) {
                     return [
                         'referensi' => $sale->referensi,

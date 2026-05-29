@@ -66,7 +66,7 @@
                 </div>
             </div>
         @empty
-            <div style="grid-column: 1/-1;" class="text-center py-5">
+            <div style="grid-column: 1/-1;" class="d-flex flex-column align-items-center justify-content-center py-5">
                 <i class="bx bx-package fs-1 text-muted d-block mb-2" aria-hidden="true"></i>
                 <p class="text-muted">Tidak ada produk yang tersedia.</p>
             </div>
