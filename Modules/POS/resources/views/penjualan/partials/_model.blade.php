@@ -262,10 +262,8 @@
                                 data-placeholder="Pilih Rekening Bank" form="penjualanForm">
                                 <option value=""></option>
                                 @foreach ($banks as $bank)
-                                    <option value="{{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}"
-                                        data-logo="{{ $bank->logo_url }}">
+                                    <option value="{{ $bank->id }}" data-logo="{{ $bank->logo_bank }}">
                                         {{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}
-                                        ({{ $bank->nama_pemilik }})
                                     </option>
                                 @endforeach
                             </select>

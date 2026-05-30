@@ -145,8 +145,9 @@
                                 <select class="form-select select2 @error('status_barang') is-invalid @enderror"
                                     name="status_barang" id="statusBarang" required>
                                     <option value="" disabled selected>Pilih Status</option>
-                                    <option value="Diterima" @selected(old('status_barang') == 'Diterima')>Diterima</option>
-                                    <option value="Belum Diterima" @selected(old('status_barang') == 'Belum Diterima')>Belum Diterima</option>
+                                    <option value="pre-order" @selected(old('status_barang') == 'pre-order')>Pre-Order</option>
+                                    <option value="diterima" @selected(old('status_barang') == 'diterima')>Di terima</option>
+                                    <option value="retur" @selected(old('status_barang') == 'retur')>Retur</option>
                                 </select>
                             </div>
                             <div class="col-12 col-sm-6">
@@ -155,8 +156,9 @@
                                 <select class="form-select select2 @error('status_pembayaran') is-invalid @enderror"
                                     name="status_pembayaran" id="statusBayar" required>
                                     <option value="" disabled selected>Pilih Status</option>
-                                    <option value="Lunas" @selected(old('status_pembayaran') == 'Lunas')>Lunas</option>
-                                    <option value="Belum Lunas" @selected(old('status_pembayaran') == 'Belum Lunas')>Belum Lunas</option>
+                                    <option value="lunas" @selected(old('status_pembayaran') == 'lunas')>Lunas</option>
+                                    <option value="hutang" @selected(old('status_pembayaran') == 'hutang')>Hutang</option>
+                                    <option value="retur" @selected(old('status_pembayaran') == 'retur')>Retur</option>
                                 </select>
                             </div>
                         </div>

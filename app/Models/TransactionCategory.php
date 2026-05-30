@@ -26,4 +26,11 @@ class TransactionCategory extends Model
     {
         return ['slug' => ['source' => 'name']];
     }
+    public static function getTypes()
+    {
+        return [
+            'Income',
+            'Expense'
+        ];
+    }
 }

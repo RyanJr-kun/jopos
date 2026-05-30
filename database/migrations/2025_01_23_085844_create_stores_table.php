@@ -12,9 +12,7 @@ return new class extends Migration
             Schema::create('stores', function (Blueprint $table) {
                 $table->id();
                 $table->string('name_toko', 100);
-                $table->enum('type', ['toko', 'gudang'])->default('toko');
-
-                // Struktur Alamat Baru
+                $table->string('type', 30)->default('toko');
                 $table->string('provinsi', 100)->nullable();
                 $table->string('kabupaten_kota', 100)->nullable();
                 $table->string('kecamatan', 100)->nullable();

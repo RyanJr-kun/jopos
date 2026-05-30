@@ -122,6 +122,14 @@ class Store extends Model
     {
         return $this->logo
             ? asset('storage/' . $this->logo)
-            : asset('assets/img/illustrations/default-store.png');
+            : asset('assets/img/produk.png');
+    } 
+
+    public static function getTypes()
+    {
+        return [
+            'toko',
+            'gudang'
+        ];
     }
 }

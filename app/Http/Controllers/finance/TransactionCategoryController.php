@@ -58,7 +58,7 @@ class TransactionCategoryController extends Controller implements HasMiddleware
         }
 
         $kategoris = $query->paginate(15)->withQueryString();
-        $types = TransactionCategory::distinct()->pluck('type', 'type')->all();
+        $types = TransactionCategory::getTypes();
 
         if ($request->ajax()) {
             // Kita render fragment yang mencakup TABEL dan PAGINATION

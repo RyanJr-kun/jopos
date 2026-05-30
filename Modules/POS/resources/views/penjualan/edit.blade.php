@@ -63,9 +63,10 @@
                 <div class="col-md-3">
                     <label for="status_pembayaran" class="form-label">Status Pembayaran</label>
                     <select name="status_pembayaran" id="status_pembayaran" class="form-select select2" required>
-                        <option value="Lunas" @selected($penjualan->status_pembayaran == 'Lunas')>Lunas</option>
-                        <option value="Belum Lunas" @selected($penjualan->status_pembayaran == 'Belum Lunas')>Belum Lunas</option>
-                        <option value="Dibatalkan" @selected($penjualan->status_pembayaran == 'Dibatalkan')>Dibatalkan</option>
+                        <option value="lunas" @selected($penjualan->status_pembayaran == 'lunas')>Lunas</option>
+                        <option value="belum lunas" @selected($penjualan->status_pembayaran == 'belum lunas')>Belum Lunas</option>
+                        <option value="tertunda" @selected($penjualan->status_pembayaran == 'tertunda')>Tertunda</option>
+                        <option value="batal" @selected($penjualan->status_pembayaran == 'batal')>Dibatalkan</option>
                     </select>
                 </div>
 

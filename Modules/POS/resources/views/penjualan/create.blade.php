@@ -29,6 +29,7 @@
                         </p>
                         <p class="pos-date">{{ now()->translatedFormat('l, d F Y') }}</p>
                     </div>
+
                     {{-- Search --}}
                     <div class="pos-search-wrap flex-grow-1 ms-3" style="max-width: 320px;">
                         <i class="pos-search-icon" aria-hidden="true"></i>

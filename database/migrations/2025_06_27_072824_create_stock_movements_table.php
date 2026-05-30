@@ -18,8 +18,8 @@ return new class extends Migration
                 $table->foreignId('tujuan_store_id')->constrained('stores')->onDelete('cascade');
                 $table->foreignId('product_id')->constrained('products');
                 $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->nullOnDelete();
-                $table->integer('jumlah'); // positif (masuk) atau negatif (keluar)
-                $table->enum('tipe', ['PEMBELIAN', 'PENJUALAN', 'PENYESUAIAN', 'RETUR_JUAL', 'RETUR_BELI']);
+                $table->integer('jumlah'); 
+                $table->string('type', 30); 
                 $table->text('keterangan')->nullable();
                 $table->foreignId('user_id')->nullable()->constrained('users');
                 $table->unsignedBigInteger('referensi_id')->nullable();

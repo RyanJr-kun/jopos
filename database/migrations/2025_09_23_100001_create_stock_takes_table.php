@@ -19,7 +19,7 @@ return new class extends Migration
                 $table->dateTime('tanggal_opname');
                 $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
                 $table->text('catatan')->nullable();
-                $table->enum('status', ['Selesai', 'Draft'])->default('Selesai');
+                $table->string('status', 50)->default('Selesai');
                 $table->timestamps();
             });
         }

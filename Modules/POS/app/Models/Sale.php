@@ -58,4 +58,22 @@ class Sale extends Model
             'name' => 'Customer Umum',
         ]);
     }
+
+    public static function getPaymentStatuses()
+    {
+        return [
+            'Lunas',
+            'Kredit',
+            'Piutang'
+        ];
+    } 
+
+    public static function getPaymentMethods()
+    {
+        return [
+            'TUNAI',
+            'TRANSFER',
+            'QRIS',
+        ];
+    }
 }

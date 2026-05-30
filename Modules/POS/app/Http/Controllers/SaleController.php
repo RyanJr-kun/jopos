@@ -68,7 +68,7 @@ class SaleController extends Controller implements HasMiddleware
 
         $penjualan = $query->paginate(15)->withQueryString();
         if ($request->ajax()) {
-            return view('pos::penjualan._penjualan_table', compact('penjualan'))->render();
+            return view('pos::penjualan.partials._penjualan_table', compact('penjualan'))->render();
         }
 
         return view('pos::penjualan.index', compact('penjualan', 'statuses'));
@@ -105,7 +105,7 @@ class SaleController extends Controller implements HasMiddleware
             ->get();
         $taxes = Taxe::all();
         $referensi = $this->generateInvoiceNumber();
-        $banks = Bank::where('is_active', true)->orderBy('nama_bank', 'asc')->get();
+        $banks = Bank::query()->where('is_active', true)->orderBy('nama_bank', 'asc')->get();
 
         return view('pos::penjualan.create', compact('products', 'customers', 'kategoris', 'taxes', 'referensi', 'banks'));
     }
@@ -145,6 +145,7 @@ class SaleController extends Controller implements HasMiddleware
             'customer_id'              => 'nullable|exists:customers,id',
             'referensi'                => 'required|string|unique:sales,referensi',
             'metode_pembayaran'        => 'required|in:TUNAI,TRANSFER,QRIS',
+            'bank_id'                  => 'nullable|exists:banks,id|required_if:metode_pembayaran,TRANSFER',
             'catatan'                  => 'nullable|string',
             'jumlah_dibayar'           => 'required|numeric|min:0',
             'service'                  => 'nullable|numeric|min:0',
@@ -174,7 +175,8 @@ class SaleController extends Controller implements HasMiddleware
                 $storeId = Auth::user()->employee?->store_id ?? null;
 
                 // FIX Bug 3: pre-fetch semua stok terkait dalam SATU query (bukan per item)
-                $stockQuery = ProductStock::whereIn('product_id', $produkIds)
+                $stockQuery = ProductStock::query()
+                    ->whereIn('product_id', $produkIds)
                     ->whereNull('product_variant_id');
                 if ($storeId) {
                     $stockQuery->where('store_id', $storeId);
@@ -273,6 +275,7 @@ class SaleController extends Controller implements HasMiddleware
                     'kembalian'         => max(0, $kembalian),
                     'status_pembayaran' => $status_pembayaran,
                     'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                    'bank_id'           => $validatedData['bank_id'] ?? null,
                     'catatan'           => $validatedData['catatan'] ?? null,
                 ]);
 
@@ -423,6 +426,7 @@ class SaleController extends Controller implements HasMiddleware
             'tanggal_penjualan'        => 'required|date',
             'status_pembayaran'        => 'required|in:Lunas,Belum Lunas,Dibatalkan',
             'metode_pembayaran'        => 'required|in:TUNAI,TRANSFER,QRIS',
+            'bank_id'                  => 'nullable|exists:banks,id|required_if:metode_pembayaran,TRANSFER',
             'catatan'                  => 'nullable|string',
             'jumlah_dibayar'           => 'required|numeric|min:0',
             'service'                  => 'nullable|numeric|min:0',
@@ -576,6 +580,7 @@ class SaleController extends Controller implements HasMiddleware
                     'customer_id'       => $validatedData['customer_id'] ?? null,
                     'tanggal_penjualan' => $validatedData['tanggal_penjualan'],
                     'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                    'bank_id'           => $validatedData['bank_id'] ?? null,
                     'status_pembayaran' => $statusBaru,
                     'subtotal'          => $subtotal_dpp,
                     'diskon'            => $diskon_global,

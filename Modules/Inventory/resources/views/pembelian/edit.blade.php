@@ -232,8 +232,8 @@
                                         class="text-danger">*</span></label>
                                 <select class="form-select select2 @error('status_barang') is-invalid @enderror"
                                     name="status_barang" id="statusBarang" required>
-                                    <option value="Diterima" @selected(old('status_barang', $pembelian->status_barang) == 'Diterima')>Diterima</option>
-                                    <option value="Belum Diterima" @selected(old('status_barang', $pembelian->status_barang) == 'Belum Diterima')>Belum Diterima</option>
+                                    <option value="diterima" @selected(old('status_barang', $pembelian->status_barang) == 'diterima')>Diterima</option>
+                                    <option value="belum diterima" @selected(old('status_barang', $pembelian->status_barang) == 'belum diterima')>Belum Diterima</option>
                                 </select>
                             </div>
                             <div class="col-12 col-sm-6">
@@ -241,9 +241,9 @@
                                         class="text-danger">*</span></label>
                                 <select class="form-select select2 @error('status_pembayaran') is-invalid @enderror"
                                     name="status_pembayaran" id="statusBayar" required>
-                                    <option value="Lunas" @selected(old('status_pembayaran', $pembelian->status_pembayaran) == 'Lunas')>Lunas</option>
-                                    <option value="Belum Lunas" @selected(old('status_pembayaran', $pembelian->status_pembayaran) == 'Belum Lunas')>Belum Lunas</option>
-                                    <option value="Dibatalkan" @selected(old('status_pembayaran', $pembelian->status_pembayaran) == 'Dibatalkan')>Dibatalkan</option>
+                                    <option value="lunas" @selected(old('status_pembayaran', $pembelian->status_pembayaran) == 'lunas')>Lunas</option>
+                                    <option value="hutang" @selected(old('status_pembayaran', $pembelian->status_pembayaran) == 'hutang')>Hutang</option>
+                                    <option value="retur" @selected(old('status_pembayaran', $pembelian->status_pembayaran) == 'retur')>Retur</option>
                                 </select>
                             </div>
                         </div>
@@ -713,10 +713,10 @@
                 // Update Status Bayar
                 $("#statusBayar").on("change", function() {
                     const status = $(this).val();
-                    if (status === 'Lunas') {
+                    if (status === 'lunas') {
                         const totalAkhir = calculateGrandTotal();
                         $("#bayar").val(totalAkhir).trigger('input');
-                    } else if (status === 'Belum Lunas') {
+                    } else if (status === 'belum lunas') {
                         $("#bayar").val(0).trigger('input');
                     }
                 });

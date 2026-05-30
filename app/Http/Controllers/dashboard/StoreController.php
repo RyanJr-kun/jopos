@@ -37,8 +37,9 @@ class StoreController extends Controller implements HasMiddleware
 
         // Ambil user untuk dropdown pilihan Kepala Toko (PIC) saat Create/Edit
         $users = User::all();
+        $types = Store::getTypes();
 
-        return view('content.hrd.store.index', compact('tokos', 'gudangs', 'users'));
+        return view('content.hrd.store.index', compact('tokos', 'gudangs', 'users', 'types'));
     }
 
     /**

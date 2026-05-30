@@ -34,12 +34,14 @@
                     <td class="align-middle text-center text-sm">
                         @php
                             $statusClass = '';
-                            if ($item->status_pembayaran === 'Lunas') {
+                            if ($item->status_pembayaran === 'lunas') {
                                 $statusClass = 'bg-label-success';
-                            } elseif ($item->status_pembayaran === 'Belum Lunas') {
-                                $statusClass = 'bg-label-danger';
-                            } elseif ($item->status_pembayaran === 'Dibatalkan') {
+                            } elseif ($item->status_pembayaran === 'belum lunas') {
+                                $statusClass = 'bg-label-secondary';
+                            } elseif ($item->status_pembayaran === 'tertunda') {
                                 $statusClass = 'bg-label-warning';
+                            } elseif ($item->status_pembayaran === 'batal') {
+                                $statusClass = 'bg-label-danger';
                             }
                         @endphp
                         <span

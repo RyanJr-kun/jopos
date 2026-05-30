@@ -43,4 +43,32 @@ class Purchase extends Model
         }
         return \Carbon\Carbon::now()->startOfDay()->gt(\Carbon\Carbon::parse($this->tanggal_jatuh_tempo)->startOfDay());
     }
+
+    public function getPaymentStatus()
+    {
+        return [
+            'Lunas',
+            'Hutang',
+            'Batal'
+        ];
+    }
+
+    public function getPaymentMethods()
+    {
+        return [
+            'TUNAI',
+            'TRANSFER',
+            'QRIS'
+        ];
+    }
+
+    public function getStatusBarang()
+    {
+        return [
+            'Diterima',
+            'Pre Order',
+            'Retur',
+            'Batal'
+        ];
+    }
 }

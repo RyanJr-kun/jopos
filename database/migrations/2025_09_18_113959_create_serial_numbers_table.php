@@ -18,7 +18,7 @@ return new class extends Migration
                 $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
                 $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->nullOnDelete();
                 $table->string('nomor_seri');
-                $table->enum('status', ['Tersedia', 'Terjual', 'Rusak', 'Hilang'])->default('Tersedia');
+                $table->string('status', 50)->default('Tersedia');
                 $table->foreignId('purchase_id')->nullable()->constrained('purchases');
                 $table->foreignId('item_sale_id')->nullable()->constrained('sale_items')->onDelete('set null');
                 $table->timestamps();

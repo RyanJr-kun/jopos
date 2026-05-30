@@ -18,6 +18,8 @@ return new class extends Migration
                 $table->foreignId('transaction_category_id')->constrained('transaction_categories')->onDelete('restrict');
                 $table->dateTime('tanggal');
                 $table->decimal('jumlah', 15, 0);
+                $table->string('metode_pembayaran', 30)->default('TUNAI');
+                $table->foreignId('bank_id')->nullable()->constrained('banks')->onDelete('set null');
                 $table->string('referensi')->nullable()->unique();
                 $table->string('keterangan');
                 $table->text('description')->nullable();

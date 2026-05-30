@@ -25,4 +25,20 @@ class Expense extends Model
     {
         return $this->belongsTo(TransactionCategory::class);
     }
+
+    public function getRouteKeyName()
+    {
+        return 'referensi';
+    }
+
+    public function getPaymentMethods()
+    {
+        return [
+            'TUNAI',
+            'TRANSFER',
+            'QRIS'
+        ];
+    }
+
+    
 }

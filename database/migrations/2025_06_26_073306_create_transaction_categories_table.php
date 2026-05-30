@@ -16,7 +16,7 @@ return new class extends Migration
                 $table->id();
                 $table->string('name', 100)->unique();
                 $table->string('slug', 100)->unique();
-                $table->enum('type', ['income', 'expense']);
+                $table->string('type', 20);
                 $table->text('description')->nullable();
                 $table->boolean('status')->default(true);
                 $table->timestamps();

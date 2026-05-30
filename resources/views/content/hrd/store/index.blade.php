@@ -239,8 +239,9 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Tipe Lokasi</label>
                                 <select name="type" id="type" class="form-select select2" required>
-                                    <option value="toko">Toko</option>
-                                    <option value="gudang">Gudang</option>
+                                    @foreach ($types as $type)
+                                        <option value="{{ $type }}">{{ $type }}</option>
+                                    @endforeach
                                 </select>
                             </div>
 
@@ -722,7 +723,7 @@
                 button.addEventListener('click', function() {
                     const data = JSON.parse(this.getAttribute('data-store'));
                     const logoUrl = this.getAttribute(
-                    'data-logo-url'); // <-- Mengambil URL lengkap gambar dari Blade
+                        'data-logo-url'); // <-- Mengambil URL lengkap gambar dari Blade
 
                     modalTitle.textContent = 'Edit Data Lokasi';
                     formStore.action = `toko/${data.id}`;
@@ -751,7 +752,7 @@
                     const previewContainer = document.getElementById('existing-logo-preview');
                     const previewImg = document.getElementById('preview-img');
                     const filepondWrapper = document.getElementById(
-                    'filepond-wrapper'); // Ambil elemen filepond
+                        'filepond-wrapper'); // Ambil elemen filepond
 
                     // Reset penanda hapus logo
                     document.getElementById('remove_logo').value = '0';

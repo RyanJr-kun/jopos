@@ -25,4 +25,13 @@ class Income extends Model
     {
         return $this->belongsTo(TransactionCategory::class);
     }
+
+    public function getPaymentMethods()
+    {
+        return [
+            'TUNAI',
+            'TRANSFER',
+            'QRIS'
+        ];
+    }
 }

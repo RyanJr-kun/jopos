@@ -17,6 +17,8 @@ return new class extends Migration
                 $table->foreignId('store_id')->constrained('stores')->onDelete('cascade');
                 $table->dateTime('tanggal');
                 $table->decimal('jumlah', 15, 0);
+                $table->string('metode_pembayaran', 30)->default('TUNAI');
+                $table->foreignId('bank_id')->nullable()->constrained('banks')->onDelete('set null');
                 $table->foreignId('user_id')->constrained('users');
                 $table->foreignId('transaction_category_id')->constrained('transaction_categories')->onDelete('restrict');
                 $table->string('referensi');
