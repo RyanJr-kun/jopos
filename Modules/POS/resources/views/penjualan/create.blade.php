@@ -41,31 +41,82 @@
             </div>
 
             {{-- Category Filter --}}
-            <div class="pos-category-bar" id="category-outer">
-                {{-- PerfectScrollbar akan attach ke sini --}}
-                <div class="category-scroll-inner ps-category" id="category-container" role="tablist"
-                    aria-label="Filter Kategori">
+            <div class="pos-category-bar mt-2 d-flex align-items-center flex-wrap gap-1 py-2 bg-white border-top border-bottom mb-3"
+                id="category-outer">
 
-                    <div class="category-btn category-active text-primary" data-category-id="all" role="tab"
-                        aria-selected="true" tabindex="0">
-                        <i class="bx bx-category" aria-hidden="true"></i>
-                        <span>Semua</span>
-                    </div>
-                    <div class="category-list">
-                        @foreach ($kategoris as $kategori)
-                            {{-- Link ini akan mengirimkan ID Parent ke controller --}}
-                            <a href="{{ route('produk.create', ['kategori' => $kategori->id]) }}"
-                                class="category-btn {{ request('kategori') == $kategori->id ? 'active' : '' }}">
-                                <span>{{ $kategori->name }}</span>
-                                {{-- Opsional: Tampilkan jumlah sub-kategori --}}
-                                <small>({{ $kategori->children->count() }} Sub)</small>
-                            </a>
-                        @endforeach
-                    </div>
+                {{-- Tombol Semua --}}
+                <a href="{{ route('penjualan.create') }}"
+                    class="btn btn-sm rounded-pill {{ !request()->filled('kategori') ? 'btn-primary' : 'btn-outline-secondary' }}">
+                    <i class="bx bx-category me-1"></i> Semua
+                </a>
 
-                </div>
+                <div class="vr text-light mx-1"></div>
+
+                {{-- Loop kategori utama --}}
+                @foreach ($kategoris as $kategori)
+                    @php
+                        $isActive =
+                            request('kategori') == $kategori->id ||
+                            $kategori->children->contains('id', request('kategori'));
+                    @endphp
+
+                    @if ($kategori->children->isNotEmpty())
+                        {{-- Kategori dengan sub-kategori: pakai dropdown --}}
+                        <div class="dropdown">
+                            <button
+                                class="btn btn-sm rounded-pill dropdown-toggle {{ $isActive ? 'btn-primary' : 'btn-outline-secondary' }}"
+                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ $kategori->name }}
+                            </button>
+
+                            <ul class="dropdown-menu shadow-sm border-0 mt-1"
+                                style="min-width: 200px; border-radius: 8px; overflow: hidden;">
+                                {{-- Pilih semua produk dalam kategori ini (termasuk sub) --}}
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-2 py-2
+                            {{ request('kategori') == $kategori->id ? 'active' : '' }}"
+                                        href="{{ route('penjualan.create', ['kategori' => $kategori->id]) }}">
+                                        <i class="bx bx-folder-open fs-6 text-primary"></i>
+                                        <div>
+                                            <div class="fw-semibold" style="font-size: 13px;">Semua {{ $kategori->name }}
+                                            </div>
+                                            <div class="text-muted" style="font-size: 11px;">
+                                                {{ $kategori->children->count() }} sub-kategori
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider my-1">
+                                </li>
+
+                                {{-- Sub-kategori --}}
+                                @foreach ($kategori->children as $child)
+                                    <li>
+                                        <a class="dropdown-item d-flex justify-content-between align-items-center py-2
+                                {{ request('kategori') == $child->id ? 'active' : '' }}"
+                                            href="{{ route('penjualan.create', ['kategori' => $child->id]) }}"
+                                            style="font-size: 13px;">
+                                            {{ $child->name }}
+                                            <span class="badge bg-label-primary ms-2"
+                                                style="font-size: 10px; font-weight: 400;">
+                                                sub
+                                            </span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @else
+                        {{-- Kategori tanpa sub-kategori: tombol biasa --}}
+                        <a href="{{ route('penjualan.create', ['kategori' => $kategori->id]) }}"
+                            class="btn btn-sm rounded-pill {{ $isActive ? 'btn-primary' : 'btn-outline-secondary' }}">
+                            {{ $kategori->name }}
+                        </a>
+                    @endif
+                @endforeach
+
             </div>
-
             @include('pos::penjualan.partials._list_produk')
 
         </div>{{-- /pos-products-panel --}}
@@ -74,8 +125,8 @@
          PANEL KANAN: Keranjang & Transaksi
          ========================================== --}}
         <div class="pos-cart-panel" id="pos-cart-panel">
-            <form action="{{ route('penjualan.store') }}" method="POST" id="penjualanForm" novalidate
-                aria-label="Form Transaksi Penjualan">
+            <form action="{{ route('penjualan.store') }}" method="POST" id="penjualanForm"
+                class="d-flex flex-column h-100 overflow-hidden" novalidate aria-label="Form Transaksi Penjualan">
                 @csrf
 
                 {{-- Cart Header --}}

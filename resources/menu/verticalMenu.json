@@ -199,7 +199,7 @@
       "submenu": [
         {
           "url": "keuangan",
-          "name": "Rekap Keuangan",
+          "name": "Bank & Kas",
           "slug": "keuangan",
           "permission": "view-keuangan"
         },

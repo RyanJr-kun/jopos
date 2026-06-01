@@ -42,7 +42,18 @@ Route::domain('jopos.' . $domain)->group(function () {
         
         // Dashboard & Fitur Admin
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:view-dashboard');
+       
         Route::get('keuangan', [KeuanganController::class, 'index'])->name('keuangan')->middleware('permission:view-keuangan');
+
+        Route::prefix('keuangan')->name('keuangan.')->group(function () {
+            // Mutasi Bank
+            Route::post('/mutasi', [KeuanganController::class, 'storeMutasi'])->name('mutasi.store');
+     
+            // Bank CRUD
+            Route::post('/bank', [KeuanganController::class, 'storeBank'])->name('bank.store');
+            Route::put('/bank/{bank}', [KeuanganController::class, 'updateBank'])->name('bank.update');
+            Route::delete('/bank/{bank}', [KeuanganController::class, 'destroyBank'])->name('bank.destroy');
+        });
 
         // Expense
         Route::get('/expense/{expense:referensi}/json', [ExpenseController::class, 'getjson'])->name('expense.getjson');

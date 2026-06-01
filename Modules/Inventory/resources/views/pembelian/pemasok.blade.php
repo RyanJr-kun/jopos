@@ -55,7 +55,7 @@
 
         <div class="col-12">
             <div class="card">
-                <div class="card-header pb-0 px-3 pt-2 mb-3">
+                <div class="card-header py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="mb-n1 fw-bolder">List Supplier</h5>
@@ -63,9 +63,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body px-0 pt-0 pb-2">
+                <div class="card-body px-0 pt-0 pb-4">
                     <div id="pemasok-table-container">
-                        @include('inventory::pembelian._pemasok_table')
+                        @include('inventory::pembelian.partials._pemasok_table')
                     </div>
                 </div>
             </div>
@@ -173,8 +173,27 @@
         };
         initSelect2();
     </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Inisialisasi semua popover di halaman
+            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+            var popoverList = popoverTriggerList.map(function(popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl, {
+                    sanitize: false // Penting: Agar ikon Boxicons (<i>) dan elemen layout HTML tidak dihapus oleh sistem keamanan Bootstrap
+                })
+            });
+
+            // (Opsional) Menutup popover lain saat satu popover diklik
+            $('body').on('click', function(e) {
+                $('[data-bs-toggle="popover"]').each(function() {
+                    if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover')
+                        .has(e.target).length === 0) {
+                        $(this).popover('hide');
+                    }
+                });
+            });
+
             // --- MODAL EDIT ---
             const editModal = document.getElementById('editModal');
             if (editModal) {

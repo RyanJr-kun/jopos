@@ -5,17 +5,25 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
 @endsection
 
+@section('page-style')
+    @vite(['resources/assets/vendor/scss/pages/page-purchase.scss'])
+@endsection
+
 @section('vendor-script')
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 @endsection
 
 @section('content')
 
-    <form action="{{ route('pembelian.store') }}" method="post" id="form-pembelian">
+    <form action="{{ route('pembelian.store') }}" method="post" id="formPurchase">
         @csrf
         <div class="card rounded-3 shadow-sm border-0">
-            <div class="card-header bg-transparent border-bottom pt-4 pb-3">
+            <div class="card-header border-bottom py-3 justify-content-between align-items-center d-flex">
                 <h5 class="mb-0 fw-bold">Informasi Purchase</h5>
+                <a href="{{ route('pembelian.index') }}" class="btn btn-icon btn-outline-secondary btn-sm"
+                    data-bs-toggle="tooltip" aria-label="Kembali" data-bs-original-title="Kembali">
+                    <i class="bx bx-arrow-back"></i>
+                </a>
             </div>
 
             <div class="card-body p-4">
@@ -119,15 +127,15 @@
                 </div>
 
                 <!-- BOTTOM SECTION: SETTINGS & TOTALS -->
-                <div class="row g-4 mb-4">
+                <div class="row g-4">
                     <!-- Left: Additional Charges & Status -->
                     <div class="col-12 col-xl-7">
                         <div class="row g-3">
-                            <div class="col-12 col-sm-6">
+                            {{-- <div class="col-12 col-sm-6">
                                 <label for="ongkir" class="form-label fw-semibold">Ongkos Kirim</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="number" name="ongkir" id="ongkir" class="form-control text-end"
+                                    <input type="number" name="ongkir" id="ongkir-input" class="form-control text-end"
                                         value="0" min="0">
                                 </div>
                             </div>
@@ -138,16 +146,17 @@
                                     <input type="number" name="diskon_tambahan" id="diskon-tambahan"
                                         class="form-control text-end" value="0" min="0">
                                 </div>
-                            </div>
-                            <div class="col-12 col-sm-6">
+                            </div> --}}
+                            {{-- <div class="col-12 col-sm-6">
                                 <label for="statusBarang" class="form-label fw-semibold">Status Barang <span
                                         class="text-danger">*</span></label>
                                 <select class="form-select select2 @error('status_barang') is-invalid @enderror"
                                     name="status_barang" id="statusBarang" required>
                                     <option value="" disabled selected>Pilih Status</option>
-                                    <option value="pre-order" @selected(old('status_barang') == 'pre-order')>Pre-Order</option>
-                                    <option value="diterima" @selected(old('status_barang') == 'diterima')>Di terima</option>
-                                    <option value="retur" @selected(old('status_barang') == 'retur')>Retur</option>
+                                    @foreach ($barangs as $barang)
+                                        <option value="{{ $barang }}" @selected(old('status_barang') == $barang)>
+                                            {{ $barang }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="col-12 col-sm-6">
@@ -156,27 +165,53 @@
                                 <select class="form-select select2 @error('status_pembayaran') is-invalid @enderror"
                                     name="status_pembayaran" id="statusBayar" required>
                                     <option value="" disabled selected>Pilih Status</option>
-                                    <option value="lunas" @selected(old('status_pembayaran') == 'lunas')>Lunas</option>
-                                    <option value="hutang" @selected(old('status_pembayaran') == 'hutang')>Hutang</option>
-                                    <option value="retur" @selected(old('status_pembayaran') == 'retur')>Retur</option>
+                                    @foreach ($payments as $payment)
+                                        <option value="{{ $payment }}" @selected(old('status_pembayaran') == $payment)>
+                                            {{ $payment }}</option>
+                                    @endforeach
                                 </select>
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
 
                     <!-- Right: Calculation Summary Panel -->
-                    <div class="col-12 col-xl-5">
-                        <div class="bg-label-light p-4 rounded-3 border border-primary h-100">
-                            <div class="d-flex justify-content-between mb-3">
-                                <span class="text-muted fw-semibold">Subtotal Keseluruhan</span>
-                                <span id="subtotal-keseluruhan" class="fw-bold">Rp 0</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-3 align-items-center">
-                                <span class="text-dark fw-bold text-uppercase">Total Akhir</span>
-                                <span id="total-akhir" class="fw-bolder fs-5 text-primary">Rp 0</span>
-                            </div>
-                            <hr class="border-secondary opacity-25">
-                            <div class="d-flex justify-content-between mb-3 align-items-center">
+                    <div class="totals">
+                        <div class="totals-row">
+                            <span class="totals-label">Subtotal Keseluruhan</span>
+                            <span class="totals-value" id="subtotal">Rp 0</span>
+                        </div>
+                        <div class="totals-row">
+                            <span class="totals-label">PPN</span>
+                            <span class="totals-value" id="pajak-total-display">Rp 0</span>
+                        </div>
+                        <div class="totals-row clickable" data-bs-toggle="modal" data-bs-target="#editExtraCostModal"
+                            data-type="ongkir" data-label="Ongkos Kirim" role="button" tabindex="0"
+                            aria-label="Edit ongkos kirim">
+                            <span class="totals-label">Ongkir</span>
+                            <span class="totals-value" id="ongkir-display">Rp 0</span>
+                            <input type="hidden" name="ongkir" id="ongkir-input" value="0">
+                        </div>
+                        <div class="totals-row clickable" data-bs-toggle="modal" data-bs-target="#editExtraCostModal"
+                            data-type="diskon" data-label="Diskon" role="button" tabindex="0"
+                            aria-label="Edit diskon">
+                            <span class="totals-label">Diskon (Rp)</span>
+                            <span class="totals-value" id="diskon-display">Rp 0</span>
+                            <input type="hidden" name="diskon" id="diskon-tambahan" value="0">
+                        </div>
+                        <div class="totals-grand">
+                            <span class="grand-label">Total</span>
+                            <span class="grand-value" id="total-akhir" aria-live="polite">Rp 0</span>
+                        </div>
+                        <hr class="border-secondary opacity-25">
+                        <div class="d-flex ">
+                            <button type="button"
+                                class="btn btn-primary w-100 justify-content-between align-items-center"
+                                id="btn-open-payment" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                                <span class="text-muted">Bayar Sekarang</span>
+                                <span class="text-muted" id="cart-total-btn-display">Rp 0</span>
+                            </button>
+                        </div>
+                        {{-- <div class="d-flex justify-content-between mb-3 align-items-center">
                                 <span class="text-dark fw-semibold">Nominal Bayar</span>
                                 <div class="w-50">
                                     <input type="text" id="bayar" class="form-control text-end fw-bold">
@@ -187,174 +222,34 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-dark fw-semibold">Sisa / Kembalian</span>
                                 <span id="kembalian" class="fw-bold fs-6">Rp 0</span>
-                            </div>
-                        </div>
+                            </div> --}}
                     </div>
-                </div>
-
-                <!-- NOTES -->
-                <div class="mb-4">
-                    <label for="catatan" class="form-label fw-semibold">Catatan</label>
-                    <div class="border rounded-3 bg-white">
-                        <div id="quill-editor-catatan" style="min-height: 120px; border: none;">{!! old('catatan') !!}
-                        </div>
-                    </div>
-                    <input type="hidden" name="catatan" id="catatan" value="{{ old('catatan') }}">
-                    @error('catatan')
-                        <div class="invalid-feedback d-block text-sm">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <!-- ACTIONS -->
-                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-4 pt-3 border-top">
-                    <a href="{{ route('pembelian.index') }}" id="cancel-button"
-                        class="btn btn-outline-danger w-100 w-sm-auto order-2 order-sm-1">Batalkan</a>
-                    <button id="saveBtn" type="submit"
-                        class="btn btn-success w-100 w-sm-auto order-1 order-sm-2 px-4">Buat
-                        Transaksi</button>
                 </div>
             </div>
+
+            <!-- NOTES -->
+            {{-- <div class="mb-4">
+                <label for="catatan" class="form-label fw-semibold">Catatan</label>
+                <div class="border rounded-3 bg-white">
+                    <div id="quill-editor-catatan" style="min-height: 120px; border: none;">{!! old('catatan') !!}
+                    </div>
+                </div>
+                <input type="hidden" name="catatan" id="catatan" value="{{ old('catatan') }}">
+                @error('catatan')
+                    <div class="invalid-feedback d-block text-sm">{{ $message }}</div>
+                @enderror
+            </div> --}}
+        </div>
         </div>
     </form>
 
-    {{-- Modal Create Supplier --}}
-    <div class="modal fade" id="createSupplierModal" tabindex="-1" aria-labelledby="createSupplierModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n3">
-                    <h6 class="modal-title" id="createSupplierModalLabel">Tambah Supplier Baru</h6>
-                    <button type="button" class="btn btn-close bg-danger rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="createSupplierForm" action="{{ route('pemasok.store') }}" method="post">
-                        @csrf
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="name" class="form-label">Nama</label>
-                                <input id="name" name="name" type="text"
-                                    class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
-                                    required>
-                                @error('name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label for="perusahaan" class="form-label">Perusahaan</label>
-                                <input id="perusahaan" name="perusahaan" type="text"
-                                    class="form-control @error('perusahaan') is-invalid @enderror"
-                                    value="{{ old('perusahaan') }}" required>
-                                @error('perusahaan')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label for="kontak" class="form-label">Kontak</label>
-                                <input id="kontak" name="kontak" type="text"
-                                    class="form-control @error('kontak') is-invalid @enderror"
-                                    value="{{ old('kontak') }}" required>
-                                @error('kontak')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                    id="email" name="email" placeholder="example@gmail.com"
-                                    value="{{ old('email') }}">
-                                @error('email')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-12">
-                                <label for="alamat" class="form-label">Alamat</label>
-                                <textarea id="alamat" name="alamat" class="form-control @error('alamat') is-invalid @enderror" rows="2">{{ old('alamat') }}</textarea>
-                                @error('alamat')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-12">
-                                <label for="note" class="form-label">Catatan (Opsional)</label>
-                                <textarea id="note" name="note" class="form-control @error('note') is-invalid @enderror" rows="2">{{ old('note') }}</textarea>
-                                @error('note')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                        <div class="justify-content-end form-check form-switch form-check-reverse my-2">
-                            <label class="me-auto fw-bold form-check-label" for="status">Status</label>
-                            <input id="status" class="form-check-input" type="checkbox" name="status"
-                                value="1" checked>
-                        </div>
-                        <div class="modal-footer border-0 pb-0">
-                            <button type="submit" class="btn btn-info btn-sm">Buat Supplier</button>
-                            <button type="button" class="btn btn-danger btn-sm"
-                                data-bs-dismiss="modal">Batalkan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Modal Edit Item --}}
-    <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editItemModalLabel">Edit Item</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editItemForm" onsubmit="return false;">
-                        <input type="hidden" id="edit-item-id">
-                        <div class="row g-3 px-1">
-                            <div class="col-12">
-                                <label class="form-label">Nama Product</label>
-                                <input type="text" class="form-control" id="edit-item-name" readonly disabled>
-                            </div>
-                            <div class="col-md-6 col-12 form-group">
-                                <label for="edit-item-qty" class="form-control-label">Qty <span
-                                        class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="edit-item-qty" min="1" required>
-                            </div>
-                            <div class="col-md-6 col-12 form-group">
-                                <label for="edit-item-harga" class="form-control-label">Harga Beli <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="edit-item-harga" placeholder="0">
-                            </div>
-                            <div class="col-6">
-                                <label for="edit-item-pajak-id" class="form-label">Taxe</label>
-                                <select class="form-select select2" id="edit-item-pajak-id">
-                                    <option value="" data-rate="0" selected>Tidak ada</option>
-                                    @foreach ($taxes as $pajak)
-                                        <option value="{{ $pajak->id }}" data-rate="{{ $pajak->rate }}">
-                                            {{ $pajak->name_taxe }} ({{ $pajak->rate }}%)</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-6">
-                                <label for="edit-item-diskon" class="form-label">Diskon (Rp)</label>
-                                <input type="text" class="form-control" id="edit-item-diskon" placeholder="0">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-info" id="saveItemChangesBtn">Simpan Perubahan</button>
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('inventory::pembelian.partials._modal_purchase')
 
 @endsection
 
 @section('page-script')
     <script type="module">
         // 1. FUNGSI PENUNGGU JQUERY & SELECT2
-        // Menahan script agar tidak error '$ is not defined' sebelum select2.js siap
         function waitForDependencies(callback) {
             if (window.$ && window.$.fn && window.$.fn.select2) {
                 callback();
@@ -368,9 +263,7 @@
         // 2. JALANKAN SAAT DOM SIAP
         document.addEventListener('DOMContentLoaded', function() {
 
-            // --- A. LOGIKA NON-JQUERY (Bisa jalan duluan) ---
-
-            // Inisialisasi Quill Editor
+            // --- A. LOGIKA NON-JQUERY (Quill & Supplier) ---
             if (document.getElementById('quill-editor-catatan')) {
                 const hiddenInputCatatan = document.getElementById('catatan');
                 const quillCatatan = new Quill('#quill-editor-catatan', {
@@ -385,7 +278,6 @@
                 }
             }
 
-            // Form Create Supplier Modal
             const createSupplierForm = document.getElementById('createSupplierForm');
             if (createSupplierForm) {
                 const pemasokSelect = document.getElementById('Supplier');
@@ -423,12 +315,8 @@
                                 pemasokSelect.dispatchEvent(new Event('change'));
                                 createSupplierForm.reset();
                                 createSupplierModal.hide();
-
-                                if (typeof Swal !== 'undefined') {
-                                    window.showToast('success', data.message);
-                                } else {
-                                    alert(data.message);
-                                }
+                                if (typeof window.showToast !== 'undefined') window.showToast('success',
+                                    data.message);
                             }
                         })
                         .catch(error => {
@@ -445,36 +333,35 @@
                                         }
                                     }
                                 });
-                            } else {
-                                console.error('Error:', error);
-                                if (typeof Swal !== 'undefined') {
-                                    window.showToast('error', 'Terjadi kesalahan. Silakan coba lagi.');
-                                } else {
-                                    alert('Terjadi kesalahan. Silakan coba lagi.');
-                                }
                             }
                         });
                 });
             }
 
-            // --- B. LOGIKA JQUERY & KASIR (Menunggu $ Siap) ---
+            // --- B. LOGIKA JQUERY & KASIR ---
             waitForDependencies(function() {
 
-                // --- Inisialisasi Default Select2 (Status, dll) ---
+                // Inisialisasi Default Select2
                 $('.select2:not(#select2)').select2({
                     placeholder: "Pilih...",
                     allowClear: true,
-                    width: '100%'
+                    width: '100%',
+                    dropdownParent: function() {
+                        // Fix masalah z-index select2 di dalam modal
+                        let modalParent = $(this).closest('.modal');
+                        return modalParent.length ? modalParent : $(document.body);
+                    }
                 });
 
-                // --- Utilitas Format ---
+                // Utilitas Format
                 $("#qty").removeAttr("onfocus");
                 const formatCurrency = (number) => new Intl.NumberFormat('id-ID', {
                     style: 'currency',
                     currency: 'IDR',
                     minimumFractionDigits: 0
                 }).format(number);
-                const parseCurrency = (string) => parseFloat(String(string).replace(/[^0-9]/g, '')) || 0;
+
+                const parseCurrency = (string) => parseFloat(String(string).replace(/[^0-9.-]+/g, '')) || 0;
 
                 function formatInputAsCurrency(input) {
                     let value = parseCurrency(input.val());
@@ -487,29 +374,24 @@
                 function formatProduct(produk) {
                     if (!produk.id) return produk.text;
                     var defaultImage = "{{ asset('assets/img/produk.png') }}";
-
-                    // Ambil URL dasar dari konfigurasi disk R2 Laravel
                     var r2BaseUrl = "{{ config('filesystems.disks.r2.url') }}";
-
-                    // Gabungkan Base URL R2 dengan path gambar produk
                     var imageUrl = produk.img_produk ? `${r2BaseUrl}/${produk.img_produk}` : defaultImage;
-
                     var variantBadge = produk.variant_id ?
                         `<span class="badge bg-label-info text-xs mt-1"><i class="bx bx-list-ul ms-n1 me-1"></i>Varian</span>` :
                         '';
+
                     return $(`
-                                <div class="d-flex align-items-center">
-                                    <img src="${imageUrl}" class="avatar avatar-sm me-3" />
-                                    <div>
-                                        <h6 class="mb-0 text-sm">${produk.text}</h6>
-                                        <p class="text-xs text-muted mb-0">Stock: ${produk.qty} ${variantBadge}</p>
-                                    </div>
-                                </div>
-                            `);
+                        <div class="d-flex align-items-center">
+                            <img src="${imageUrl}" class="avatar avatar-sm me-3" />
+                            <div>
+                                <h6 class="mb-0 text-sm">${produk.text}</h6>
+                                <p class="text-xs text-muted mb-0">Stock: ${produk.qty} ${variantBadge}</p>
+                            </div>
+                        </div>
+                    `);
                 }
 
                 $('#select2').select2({
-                    // TANPA THEME: Agar murni menggunakan style dari select2.scss
                     placeholder: 'Ketik untuk mencari produk atau varian...',
                     minimumInputLength: 0,
                     language: 'id',
@@ -546,7 +428,6 @@
                                     let displayName = item.variant_name ?
                                         `${item.name_product} - ${item.variant_name}` :
                                         item.name_product;
-
                                     return {
                                         id: combinedId,
                                         product_id: item.id,
@@ -568,18 +449,15 @@
                     }
                 });
 
-                // --- ADD ITEM TO TABLE ---
+                // ADD ITEM TO TABLE
                 $("#btn-add").on("click", function() {
                     const selectedData = $("#select2").select2('data')[0];
                     const qty = $("#qty").val();
 
                     if (!selectedData || !selectedData.id || !qty || parseInt(qty) <= 0) {
-                        if (typeof Swal !== 'undefined') {
-                            window.showToast('warning',
-                                'Harap pilih produk dan tentukan jumlah yang valid.');
-                        } else {
-                            alert('Harap pilih produk dan tentukan jumlah yang valid.');
-                        }
+                        if (typeof window.showToast !== 'undefined') window.showToast('warning',
+                            'Harap pilih produk dan tentukan jumlah yang valid.');
+                        else alert('Harap pilih produk dan tentukan jumlah yang valid.');
                         return;
                     }
 
@@ -653,7 +531,7 @@
                     calculateGrandTotal();
                 });
 
-                // --- CALCULATIONS ---
+                // CALCULATIONS
                 function calculateRow(row) {
                     const qty = parseFloat(row.find(".item-qty-hidden").val()) || 0;
                     const hargaBeli = parseFloat(row.find(".item-harga-hidden").val()) || 0;
@@ -670,6 +548,8 @@
 
                 function calculateGrandTotal() {
                     let subtotalKeseluruhan = 0;
+                    let totalPajakKeseluruhan = 0;
+
                     $('#table-pembelian tbody tr').each(function() {
                         const qty = parseFloat($(this).find(".item-qty-hidden").val()) || 0;
                         const hargaBeli = parseFloat($(this).find(".item-harga-hidden").val()) || 0;
@@ -679,59 +559,35 @@
 
                         const subtotalItem = (qty * hargaBeli) - diskon;
                         const pajakItem = subtotalItem * (pajakRate / 100);
-                        subtotalKeseluruhan += subtotalItem + pajakItem;
+
+                        subtotalKeseluruhan += subtotalItem;
+                        totalPajakKeseluruhan += pajakItem;
                     });
 
-                    $("#subtotal-keseluruhan").text(formatCurrency(subtotalKeseluruhan));
-                    const ongkir = parseFloat($("#ongkir").val()) || 0;
+                    $("#subtotal").text(formatCurrency(subtotalKeseluruhan));
+                    $("#pajak-total-display").text(formatCurrency(totalPajakKeseluruhan));
+
+                    const ongkir = parseFloat($("#ongkir-input").val()) || 0;
                     const diskonTambahan = parseFloat($("#diskon-tambahan").val()) || 0;
-                    const totalAkhir = subtotalKeseluruhan - diskonTambahan + ongkir;
+                    const totalAkhir = subtotalKeseluruhan + totalPajakKeseluruhan - diskonTambahan +
+                        ongkir;
+                    const finalTotal = totalAkhir < 0 ? 0 : totalAkhir;
 
-                    $("#total-akhir").text(formatCurrency(totalAkhir < 0 ? 0 : totalAkhir));
-                    return totalAkhir < 0 ? 0 : totalAkhir;
+                    $("#total-akhir").text(formatCurrency(finalTotal));
+                    $("#cart-total-btn-display").text(formatCurrency(finalTotal));
+
+                    // Disable tombol bayar jika keranjang kosong
+                    const isCartEmpty = $('#table-pembelian tbody tr').length === 0;
+                    $('#btn-open-payment').prop('disabled', isCartEmpty);
+
+                    return finalTotal;
                 }
-
-                function calculateChange() {
-                    const totalAkhir = calculateGrandTotal();
-                    const bayarValue = $("#bayar").val().replace(/[^0-9]/g, '');
-                    const bayar = parseFloat(bayarValue) || 0;
-
-                    $("#jumlah_dibayar_hidden").val(bayar);
-                    const sisa = bayar - totalAkhir;
-
-                    $("#kembalian").text(formatCurrency(sisa));
-                    if (sisa < 0) {
-                        $("#kembalian").removeClass('text-dark').addClass('text-danger');
-                    } else {
-                        $("#kembalian").removeClass('text-danger').addClass('text-dark');
-                    }
-                }
-
-                $("#ongkir, #diskon-tambahan").on("input", calculateChange);
 
                 $("#table-pembelian").on("click", ".btn-remove", function() {
                     const row = $(this).closest("tr");
-                    const productName = row.find('.item-name').text();
-
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            title: 'Hapus Item?',
-                            text: `Hapus ${productName} dari daftar?`,
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonText: 'Ya, hapus!',
-                            cancelButtonText: 'Batal'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                row.remove();
-                                calculateChange();
-                            }
-                        });
-                    } else {
-                        if (confirm(`Hapus ${productName} dari daftar?`)) {
-                            row.remove();
-                            calculateChange();
-                        }
+                    if (confirm(`Hapus item dari daftar?`)) {
+                        row.remove();
+                        calculateGrandTotal();
                     }
                 });
 
@@ -746,7 +602,8 @@
                         ".item-harga-hidden").val()));
                     $("#edit-item-diskon").val(new Intl.NumberFormat('id-ID').format(row.find(
                         ".item-diskon-hidden").val()));
-                    $("#edit-item-pajak-id").val(row.find(".item-pajak-id-hidden").val());
+                    $("#edit-item-pajak-id").val(row.find(".item-pajak-id-hidden").val()).trigger(
+                        'change');
 
                     editItemModal.show();
                 });
@@ -762,27 +619,10 @@
 
                     const selectedTaxe = $("#edit-item-pajak-id option:selected");
                     row.find(".item-pajak-id-hidden").val(selectedTaxe.val());
-                    row.find(".item-pajak-rate-hidden").val(selectedTaxe.data('rate'));
+                    row.find(".item-pajak-rate-hidden").val(selectedTaxe.data('rate') || 0);
 
                     updateRowDisplay(row);
                     editItemModal.hide();
-                });
-
-                $("#bayar").on("input", calculateChange);
-
-                $("#statusBayar").on("change", function() {
-                    if ($(this).val() === 'Lunas') {
-                        const totalAkhir = calculateGrandTotal();
-                        $("#bayar").val(totalAkhir).trigger('input');
-                    } else {
-                        $("#bayar").val(0).trigger('input');
-                    }
-                });
-
-                $("#bayar").on("blur", function() {
-                    const value = $(this).val().replace(/[^0-9]/g, '');
-                    const number = parseFloat(value) || 0;
-                    $(this).val(new Intl.NumberFormat('id-ID').format(number));
                 });
 
                 $('#edit-item-harga, #edit-item-diskon').on('input', function() {
@@ -794,45 +634,174 @@
                     row.find('.item-harga').text(formatCurrency(row.find('.item-harga-hidden').val()));
                     row.find('.item-diskon').text(formatCurrency(row.find('.item-diskon-hidden').val()));
                     calculateRow(row);
-                    calculateChange();
+                    calculateGrandTotal();
                 }
 
-                $("#form-pembelian").on("submit", function(e) {
-                    const totalAkhir = calculateGrandTotal();
-                    const bayar = parseCurrency($("#bayar").val());
-                    const statusBayar = $("#statusBayar").val();
+                // ==========================================
+                //  LOGIKA MODAL EXTRA COST (Ongkir/Diskon)
+                // ==========================================
+                const editExtraCostModal = document.getElementById('editExtraCostModal');
+                if (editExtraCostModal) {
+                    // Update tampilan awal sebelum modal terbuka
+                    editExtraCostModal.addEventListener('show.bs.modal', function(event) {
+                        const trigger = event.relatedTarget;
+                        const type = trigger.getAttribute('data-type');
+                        const label = trigger.getAttribute('data-label');
+
+                        document.getElementById('extra-cost-type').value = type;
+                        document.getElementById('editExtraCostModalLabel').innerText = 'Edit ' +
+                            label;
+                        document.getElementById('extra-cost-label').innerText = label;
+
+                        let currentValue = 0;
+                        if (type === 'ongkir') currentValue = document.getElementById(
+                            'ongkir-input').value;
+                        if (type === 'diskon') currentValue = document.getElementById(
+                            'diskon-tambahan').value;
+
+                        document.getElementById('extra-cost-value').value = new Intl.NumberFormat(
+                            'id-ID').format(currentValue);
+                    });
+
+                    // Simpan perubahan ke form
+                    document.getElementById('saveExtraCostBtn').addEventListener('click', function() {
+                        const type = document.getElementById('extra-cost-type').value;
+                        const value = parseCurrency(document.getElementById('extra-cost-value')
+                            .value);
+
+                        if (type === 'ongkir') {
+                            document.getElementById('ongkir-input').value = value;
+                            document.getElementById('ongkir-display').innerText = formatCurrency(
+                                value);
+                        } else if (type === 'diskon') {
+                            document.getElementById('diskon-tambahan').value = value;
+                            document.getElementById('diskon-display').innerText = formatCurrency(
+                                value);
+                        }
+
+                        bootstrap.Modal.getInstance(editExtraCostModal).hide();
+                        calculateGrandTotal(); // Panggil kalkulasi ulang
+                    });
+
+                    // Format input text jadi mata uang
+                    $('#extra-cost-value').on('input', function() {
+                        let value = parseCurrency($(this).val());
+                        $(this).val(new Intl.NumberFormat('id-ID').format(value));
+                    });
+                }
+
+                // ==========================================
+                //  LOGIKA MODAL PAYMENT
+                // ==========================================
+                const paymentModalElement = document.getElementById('paymentModal');
+                if (paymentModalElement) {
+                    const inputJumlah = document.getElementById('jumlah-dibayar-input');
+                    const displayChange = document.getElementById('change-display');
+
+                    paymentModalElement.addEventListener('show.bs.modal', function() {
+                        const total = calculateGrandTotal();
+                        document.getElementById('payment-modal-total').innerText = formatCurrency(
+                            total);
+                        calculateModalChange(); // Hitung kembalian awal (dari 0)
+                        toggleTransferDetails();
+                    });
+
+                    // Tombol Quick Pay (50rb, 100rb)
+                    document.querySelectorAll('.quick-pay-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const amount = parseFloat(this.getAttribute('data-amount'));
+                            let currentVal = parseCurrency(inputJumlah.value);
+                            inputJumlah.value = new Intl.NumberFormat('id-ID').format(
+                                currentVal + amount);
+                            calculateModalChange();
+                        });
+                    });
+
+                    // Tombol Uang Pas
+                    const btnPayExact = document.getElementById('btn-pay-exact');
+                    if (btnPayExact) {
+                        btnPayExact.addEventListener('click', function() {
+                            const total = calculateGrandTotal();
+                            inputJumlah.value = new Intl.NumberFormat('id-ID').format(total);
+                            calculateModalChange();
+                        });
+                    }
+
+                    // Format input dan hitung kembalian real-time
+                    $(inputJumlah).on('input', function() {
+                        let val = parseCurrency($(this).val());
+                        $(this).val(new Intl.NumberFormat('id-ID').format(val));
+                        calculateModalChange();
+                    });
+
+                    function calculateModalChange() {
+                        const total = calculateGrandTotal();
+                        const bayar = parseCurrency(inputJumlah.value);
+                        const change = bayar - total;
+
+                        displayChange.innerText = formatCurrency(change);
+                        if (change < 0) {
+                            displayChange.classList.remove('text-success');
+                            displayChange.classList.add('text-danger');
+                        } else {
+                            displayChange.classList.remove('text-danger');
+                            displayChange.classList.add('text-success');
+                        }
+                    }
+
+                    // Toggle rekening transfer
+                    const paymentRadios = document.querySelectorAll('input[name="metode_pembayaran"]');
+                    const transferDetails = document.getElementById('transfer-details');
+                    const bankTujuanSelect = document.getElementById('bank_tujuan');
+
+                    function toggleTransferDetails() {
+                        const isTransfer = document.getElementById('pay-transfer').checked;
+                        if (isTransfer) {
+                            transferDetails.classList.remove('d-none');
+                            bankTujuanSelect.setAttribute('required', 'required');
+                        } else {
+                            transferDetails.classList.add('d-none');
+                            bankTujuanSelect.removeAttribute('required');
+                            bankTujuanSelect.value = '';
+                            $(bankTujuanSelect).trigger('change');
+                        }
+                    }
+
+                    paymentRadios.forEach(radio => radio.addEventListener('change', toggleTransferDetails));
+                }
+
+                // ==========================================
+                //  FORM SUBMISSION (Validasi Akhir)
+                // ==========================================
+                $("#formPurchase").on("submit", function(e) {
                     const itemCount = $("#table-pembelian tbody tr").length;
 
                     if (itemCount === 0) {
                         e.preventDefault();
-                        if (typeof Swal !== 'undefined') {
-                            window.showToast('warning', 'Harap tambahkan minimal satu produk.');
-                        } else {
-                            alert('Harap tambahkan minimal satu produk ke dalam daftar pembelian.');
-                        }
+                        if (typeof window.showToast !== 'undefined') window.showToast('warning',
+                            'Harap tambahkan minimal satu produk.');
+                        else alert('Harap tambahkan minimal satu produk.');
                         return;
                     }
-                    if (bayar < totalAkhir && statusBayar === 'Lunas') {
-                        e.preventDefault();
-                        if (typeof Swal !== 'undefined') {
-                            window.showToast('warning',
-                                'Pembayaran kurang dari total akhir. Mohon ubah status pembayaran Anda atau lunasi pembayaran.'
-                            );
-                        } else {
-                            alert('Pembayaran kurang dari total akhir.');
-                        }
-                        return;
+
+                    // Cek kelengkapan status (Hutang / Lunas otomatis dihitung)
+                    const totalAkhir = calculateGrandTotal();
+                    const bayar = parseCurrency($("#jumlah-dibayar-input").val());
+                    let statusPembayaran = bayar >= totalAkhir ? 'Lunas' : 'Hutang';
+
+                    // Karena di HTML label "status_barang" di hide, kita suntikkan default agar lolos validasi controller
+                    if (!document.querySelector('input[name="status_pembayaran"]')) {
+                        $(this).append(
+                            `<input type="hidden" name="status_pembayaran" value="${statusPembayaran}">`
+                        );
+                    } else {
+                        $('input[name="status_pembayaran"]').val(statusPembayaran);
                     }
-                    if (statusBayar === 'Belum Lunas' && bayar >= totalAkhir) {
-                        e.preventDefault();
-                        if (typeof Swal !== 'undefined') {
-                            window.showToast('warning',
-                                'Pembayaran sudah lunas. Mohon ubah status pembayaran menjadi "Lunas".'
-                            );
-                        } else {
-                            alert('Ubah status pembayaran menjadi "Lunas".');
-                        }
-                        return;
+
+                    if (!document.querySelector('select[name="status_barang"]') && !document
+                        .querySelector('input[name="status_barang"]')) {
+                        $(this).append(
+                            `<input type="hidden" name="status_barang" value="Diterima">`);
                     }
 
                     $("#saveBtn").prop('disabled', true).html(

@@ -57,7 +57,7 @@
         </div>
         <div class="card-body px-0 pt-0 pb-2">
             <div id="pembelian-table-container" class="mt-3">
-                @include('inventory::pembelian._pembelian_table')
+                @include('inventory::pembelian.partials._pembelian_table')
             </div>
         </div>
     </div>

@@ -1,0 +1,63 @@
+// ── Totals Section ──────────────────────────────────────────
+.totals {
+    padding: 10px 16px;
+    border-top: 1px solid #f0f1f5;
+    flex-shrink: 0;
+    background: #fff;
+
+    .totals-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+
+        &.clickable {
+            cursor: pointer;
+            border-radius: 6px;
+            padding: 3px 6px;
+            margin: 0 -6px 4px;
+
+            &:hover {
+                background: rgba(105, 108, 255, .07);
+
+                .totals-label::after {
+                    content: ' ✎';
+                    font-size: .65rem;
+                    color: #696cff;
+                }
+            }
+        }
+
+        .totals-label {
+            font-size: .78rem;
+            color: #566a7f;
+        }
+
+        .totals-value {
+            font-size: .8rem;
+            font-weight: 600;
+            color: #333;
+        }
+    }
+
+    .totals-grand {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+        padding-top: 8px;
+        border-top: 2px solid #e9ecef;
+
+        .grand-label {
+            font-size: .9rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .grand-value {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #696cff;
+        }
+    }
+}

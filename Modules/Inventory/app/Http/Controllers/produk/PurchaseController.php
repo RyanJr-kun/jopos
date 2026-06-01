@@ -4,6 +4,7 @@ namespace Modules\Inventory\Http\Controllers\produk;
 
 
 use App\Http\Controllers\Controller;
+use App\Models\Bank;
 use App\Models\ProductStock;
 use App\Models\Store;
 use App\Models\Taxe;
@@ -61,7 +62,7 @@ class PurchaseController extends Controller implements HasMiddleware
 
         // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
         if ($request->ajax()) {
-            return view('inventory::pembelian._pembelian_table', compact('pembelian'))->render();
+            return view('inventory::pembelian.partials._pembelian_table', compact('pembelian'))->render();
         }
 
         // Jika request biasa, kembalikan view lengkap
@@ -74,14 +75,15 @@ class PurchaseController extends Controller implements HasMiddleware
     public function create(Request $request)
     {
         $statuses = Purchase::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
-        
-        return view('inventory::pembelian.create', [
-            'title' => 'Tambah Invoice Purchase',
-            'supplier' => Supplier::all(),
-            'taxes' => Taxe::all(),
-            'nomer_referensi' => $this->generatePurchaseInvoiceNumber(),
-            'statuses' => $statuses,
-        ]);
+        $supplier = Supplier::query()->where('status', 1)->get();
+        $taxes = Taxe::all();
+        $nomer_referensi = $this->generatePurchaseInvoiceNumber();
+        $barangs = Purchase::getStatusBarangs();
+        $payments = Purchase::getPaymentStatus();
+        $options = Purchase::getPaymentMethods();
+        $banks = Bank::all();
+
+        return view('inventory::pembelian.create',compact('supplier', 'taxes', 'nomer_referensi', 'statuses', 'barangs', 'payments', 'options', 'banks'));        
     }
 
     /**
@@ -120,8 +122,8 @@ class PurchaseController extends Controller implements HasMiddleware
             'tanggal' => 'required|date',
             'tanggal_jatuh_tempo' => 'nullable|date|after:tanggal',
             'referensi' => 'required|string|max:255|unique:purchases',
-            'status_barang' => 'required|in:Diterima,Belum Diterima,Dibatalkan',
-            'status_pembayaran' => 'required|in:Lunas,Belum Lunas',
+            'status_barang' => 'required|in:Diterima,Pre Order,Retur,Batal',
+            'status_pembayaran' => 'required|in:Lunas,Hutang,Batal',
             'jumlah_dibayar' => 'nullable|numeric|min:0',
             'ongkir' => 'nullable|numeric|min:0',
             'diskon_tambahan' => 'nullable|numeric|min:0',

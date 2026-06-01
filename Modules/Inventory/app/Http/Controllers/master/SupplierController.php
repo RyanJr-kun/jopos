@@ -48,7 +48,7 @@ class SupplierController extends Controller implements HasMiddleware
 
         // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
         if ($request->ajax()) {
-            return view('inventory::pembelian._pemasok_table', compact('suppliers'))->render();
+            return view('inventory::pembelian.partials._pemasok_table', compact('suppliers'))->render();
         }
 
         return view('inventory::pembelian.pemasok', compact('suppliers', 'statuses'));

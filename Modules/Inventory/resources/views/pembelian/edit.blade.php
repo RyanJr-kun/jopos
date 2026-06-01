@@ -232,18 +232,20 @@
                                         class="text-danger">*</span></label>
                                 <select class="form-select select2 @error('status_barang') is-invalid @enderror"
                                     name="status_barang" id="statusBarang" required>
-                                    <option value="diterima" @selected(old('status_barang', $pembelian->status_barang) == 'diterima')>Diterima</option>
-                                    <option value="belum diterima" @selected(old('status_barang', $pembelian->status_barang) == 'belum diterima')>Belum Diterima</option>
-                                </select>
+                                    @foreach ($barangs as $barang)
+                                        <option value="{{ $barang }}" @selected(old('status_barang') == $barang)>
+                                            {{ $barang }}</option>
+                                    @endforeach
                             </div>
                             <div class="col-12 col-sm-6">
                                 <label for="statusBayar" class="form-label fw-semibold">Status Pembayaran <span
                                         class="text-danger">*</span></label>
                                 <select class="form-select select2 @error('status_pembayaran') is-invalid @enderror"
                                     name="status_pembayaran" id="statusBayar" required>
-                                    <option value="lunas" @selected(old('status_pembayaran', $pembelian->status_pembayaran) == 'lunas')>Lunas</option>
-                                    <option value="hutang" @selected(old('status_pembayaran', $pembelian->status_pembayaran) == 'hutang')>Hutang</option>
-                                    <option value="retur" @selected(old('status_pembayaran', $pembelian->status_pembayaran) == 'retur')>Retur</option>
+                                    @foreach ($payments as $payment)
+                                        <option value="{{ $payment }}" @selected(old('status_pembayaran') == $payment)>
+                                            {{ $payment }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>

@@ -217,7 +217,7 @@
             {{-- Header --}}
             <div class="modal-header border-bottom pb-3">
                 <h5 class="modal-title fw-bold" id="paymentModalLabel">
-                    <i class="bx bx-wallet text-primary me-2"></i>Selesaikan Pembayaran
+                    <i class="bx bx-wallet text-primary me-2"></i>Payment
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
@@ -262,7 +262,7 @@
                                 data-placeholder="Pilih Rekening Bank" form="penjualanForm">
                                 <option value=""></option>
                                 @foreach ($banks as $bank)
-                                    <option value="{{ $bank->id }}" data-logo="{{ $bank->logo_bank }}">
+                                    <option value="{{ $bank->id }}" data-logo="{{ $bank->logo_url }}">
                                         {{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}
                                     </option>
                                 @endforeach

@@ -1,0 +1,558 @@
+// =============================================================================
+// page-bank.scss  —  Dashboard Keuangan
+// Sneat + Bootstrap 5.3 compatible
+// =============================================================================
+
+// --- Token lokal (sesuai Sneat CSS vars) ---
+$fin-radius : 10px;
+$fin-radius-lg : 14px;
+$fin-income : #28c76f;
+$fin-expense : #ea5455;
+$fin-neutral : #696cff;
+$fin-qris : #00b4d8;
+$fin-tunai : #ff9f43;
+$fin-transfer : #7367f0;
+$fin-store : #20c997;
+
+// =============================================================================
+// FILTER BAR
+// =============================================================================
+.fin-filter-bar {
+    background: var(--bs-card-bg, #fff);
+    border: 1px solid var(--bs-border-color);
+    border-radius: $fin-radius-lg;
+    padding: 1rem 1.25rem;
+
+    .fin-metode-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+
+        .fin-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1.5px solid var(--bs-border-color);
+            background: transparent;
+            font-size: 12.5px;
+            color: var(--bs-secondary-color);
+            cursor: pointer;
+            transition: all .18s ease;
+            white-space: nowrap;
+            line-height: 1;
+
+            i {
+                font-size: 14px;
+            }
+
+            &:hover {
+                border-color: $fin-neutral;
+                color: $fin-neutral;
+            }
+
+            &.active {
+                border-color: transparent;
+                font-weight: 500;
+
+                &[data-metode="tunai"] {
+                    background: rgba($fin-tunai, .15);
+                    color: $fin-tunai;
+                    border-color: rgba($fin-tunai, .35);
+                }
+
+                &[data-metode="transfer"] {
+                    background: rgba($fin-transfer, .15);
+                    color: $fin-transfer;
+                    border-color: rgba($fin-transfer, .35);
+                }
+
+                &[data-metode="qris"] {
+                    background: rgba($fin-qris, .15);
+                    color: $fin-qris;
+                    border-color: rgba($fin-qris, .35);
+                }
+
+                &[data-metode="store"] {
+                    background: rgba($fin-store, .15);
+                    color: $fin-store;
+                    border-color: rgba($fin-store, .35);
+                }
+            }
+        }
+    }
+
+    .fin-bank-select {
+        min-width: 180px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+
+    // Flatpickr minimal override
+    .flatpickr-input {
+        font-size: 13px;
+        border-radius: 8px;
+        padding-left: 2rem;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") no-repeat .6rem center;
+        background-color: var(--bs-body-bg);
+        cursor: pointer;
+    }
+
+    .fin-filter-divider {
+        width: 1px;
+        height: 28px;
+        background: var(--bs-border-color);
+        flex-shrink: 0;
+    }
+}
+
+// =============================================================================
+// SUMMARY CARDS
+// =============================================================================
+.fin-summary-card {
+    border-radius: $fin-radius-lg;
+    border: 1px solid var(--bs-border-color);
+    background: var(--bs-card-bg, #fff);
+    padding: 1.1rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow .2s;
+
+    &:hover {
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .07);
+    }
+
+    .fin-card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .fin-card-label {
+        font-size: 11.5px;
+        color: var(--bs-secondary-color);
+        font-weight: 400;
+        margin: 0;
+        line-height: 1;
+    }
+
+    .fin-card-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 2px 0 0;
+        line-height: 1.2;
+    }
+
+    .fin-card-sub {
+        font-size: 11px;
+        color: var(--bs-secondary-color);
+        margin: 4px 0 0;
+    }
+
+    // Warna per tipe
+    &.fin-income .fin-card-icon {
+        background: rgba($fin-income, .12);
+        color: $fin-income;
+    }
+
+    &.fin-expense .fin-card-icon {
+        background: rgba($fin-expense, .12);
+        color: $fin-expense;
+    }
+
+    &.fin-profit .fin-card-icon {
+        background: rgba($fin-neutral, .12);
+        color: $fin-neutral;
+    }
+
+    &.fin-count .fin-card-icon {
+        background: rgba($fin-tunai, .12);
+        color: $fin-tunai;
+    }
+
+    &.fin-income .fin-card-value {
+        color: $fin-income;
+    }
+
+    &.fin-expense .fin-card-value {
+        color: $fin-expense;
+    }
+
+    &.fin-profit .fin-card-value {
+        color: $fin-neutral;
+    }
+}
+
+// =============================================================================
+// GRAFIK CARD
+// =============================================================================
+.fin-chart-card {
+    border-radius: $fin-radius-lg;
+    border: 1px solid var(--bs-border-color);
+    background: var(--bs-card-bg, #fff);
+
+    .fin-chart-header {
+        padding: 1rem 1.25rem .5rem;
+        border-bottom: 1px solid var(--bs-border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        h6 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    }
+
+    .fin-chart-legend {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        font-size: 12px;
+        color: var(--bs-secondary-color);
+
+        span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+    }
+
+    #financial-chart {
+        min-height: 280px;
+    }
+}
+
+// =============================================================================
+// BREAKDOWN METODE PEMBAYARAN
+// =============================================================================
+.fin-breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+
+    .fin-breakdown-item {
+        border-radius: $fin-radius;
+        border: 1px solid var(--bs-border-color);
+        padding: .85rem 1rem;
+        text-align: center;
+        transition: border-color .15s;
+
+        &:hover {
+            border-color: rgba($fin-neutral, .4);
+        }
+
+        .fin-bk-label {
+            font-size: 11px;
+            color: var(--bs-secondary-color);
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin: 0 0 4px;
+        }
+
+        .fin-bk-value {
+            font-size: 13.5px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .fin-bk-count {
+            font-size: 10.5px;
+            color: var(--bs-secondary-color);
+            margin: 2px 0 0;
+        }
+
+        &[data-m="tunai"] {
+            --bk-color: #{$fin-tunai};
+        }
+
+        &[data-m="transfer"] {
+            --bk-color: #{$fin-transfer};
+        }
+
+        &[data-m="qris"] {
+            --bk-color: #{$fin-qris};
+        }
+
+        &[data-m="store"] {
+            --bk-color: #{$fin-store};
+        }
+
+        .fin-bk-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--bk-color, #aaa);
+            display: inline-block;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+    }
+}
+
+// =============================================================================
+// TABEL TRANSAKSI
+// =============================================================================
+.fin-tx-table {
+    width: 100%;
+    font-size: 13px;
+    border-collapse: collapse;
+
+    th {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--bs-secondary-color);
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        padding: .5rem .75rem;
+        border-bottom: 1px solid var(--bs-border-color);
+        white-space: nowrap;
+    }
+
+    td {
+        padding: .7rem .75rem;
+        border-bottom: 1px solid rgba(var(--bs-border-color-rgb), .5);
+        vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    tbody tr:hover td {
+        background: rgba(var(--bs-primary-rgb), .03);
+    }
+
+    .fin-tx-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+
+        &.tunai {
+            background: rgba($fin-tunai, .12);
+            color: $fin-tunai;
+        }
+
+        &.transfer {
+            background: rgba($fin-transfer, .12);
+            color: $fin-transfer;
+        }
+
+        &.qris {
+            background: rgba($fin-qris, .12);
+            color: $fin-qris;
+        }
+
+        &.store {
+            background: rgba($fin-store, .12);
+            color: $fin-store;
+        }
+    }
+
+    .fin-amount {
+        font-weight: 600;
+        font-size: 13px;
+
+        &.income {
+            color: $fin-income;
+        }
+
+        &.expense {
+            color: $fin-expense;
+        }
+    }
+}
+
+// =============================================================================
+// SALDO PER BANK
+// =============================================================================
+.fin-bank-card {
+    border-radius: $fin-radius;
+    border: 1px solid var(--bs-border-color);
+    padding: .9rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: box-shadow .15s;
+
+    &:hover {
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
+    }
+
+    .fin-bank-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        object-fit: contain;
+        border: 1px solid var(--bs-border-color);
+        padding: 4px;
+        background: #fff;
+        flex-shrink: 0;
+    }
+
+    .fin-bank-inisial {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: rgba($fin-neutral, .1);
+        color: $fin-neutral;
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .fin-bank-name {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0 0 1px;
+    }
+
+    .fin-bank-norek {
+        font-size: 11px;
+        color: var(--bs-secondary-color);
+        margin: 0;
+    }
+
+    .fin-bank-saldo {
+        margin-left: auto;
+        text-align: right;
+
+        .saldo-val {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: $fin-income;
+        }
+
+        .saldo-lbl {
+            font-size: 10.5px;
+            color: var(--bs-secondary-color);
+        }
+    }
+}
+
+// =============================================================================
+// MODAL BANK & MUTASI
+// =============================================================================
+.fin-modal {
+    .modal-header {
+        border-bottom: 1px solid var(--bs-border-color);
+        padding: 1rem 1.25rem;
+
+        .modal-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--bs-border-color);
+        padding: .75rem 1.25rem;
+    }
+
+    .fin-logo-preview {
+        width: 64px;
+        height: 64px;
+        border-radius: 10px;
+        object-fit: contain;
+        border: 1px solid var(--bs-border-color);
+        padding: 4px;
+        background: #fff;
+    }
+
+    .fin-upload-area {
+        border: 1.5px dashed var(--bs-border-color);
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color .18s;
+        font-size: 13px;
+        color: var(--bs-secondary-color);
+
+        &:hover {
+            border-color: $fin-neutral;
+            color: $fin-neutral;
+        }
+
+        i {
+            font-size: 22px;
+            margin-bottom: 4px;
+            display: block;
+        }
+    }
+
+    .fin-tipe-switch {
+        display: flex;
+        border: 1px solid var(--bs-border-color);
+        border-radius: 8px;
+        overflow: hidden;
+
+        .fin-tipe-btn {
+            flex: 1;
+            padding: 7px 0;
+            font-size: 13px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--bs-secondary-color);
+            transition: all .15s;
+            font-weight: 500;
+
+            &.active.masuk {
+                background: rgba($fin-income, .12);
+                color: $fin-income;
+            }
+
+            &.active.keluar {
+                background: rgba($fin-expense, .12);
+                color: $fin-expense;
+            }
+        }
+    }
+}
+
+// =============================================================================
+// SECTION TITLE
+// =============================================================================
+.fin-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--bs-secondary-color);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin: 0 0 .75rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--bs-border-color);
+    }
+}

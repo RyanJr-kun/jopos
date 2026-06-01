@@ -18,14 +18,14 @@ class Purchase extends Model
     }
     public function supplier(): BelongsTo
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
     public function details(): HasMany
-    {
+    { 
         return $this->hasMany(PurchaseItem::class);
     }
     // Tambahkan attribute ini
@@ -44,7 +44,7 @@ class Purchase extends Model
         return \Carbon\Carbon::now()->startOfDay()->gt(\Carbon\Carbon::parse($this->tanggal_jatuh_tempo)->startOfDay());
     }
 
-    public function getPaymentStatus()
+    public static function getPaymentStatus()
     {
         return [
             'Lunas',
@@ -53,7 +53,7 @@ class Purchase extends Model
         ];
     }
 
-    public function getPaymentMethods()
+    public static function getPaymentMethods()
     {
         return [
             'TUNAI',
@@ -62,7 +62,7 @@ class Purchase extends Model
         ];
     }
 
-    public function getStatusBarang()
+    public static function getStatusBarangs()
     {
         return [
             'Diterima',
