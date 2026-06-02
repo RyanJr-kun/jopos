@@ -1,91 +1,263 @@
-<div class="table-responsive p-0 mt-3">
-    <table class="table table-hover align-items-center mb-0">
-        <thead>
-            <tr class="table-secondary">
-                <th class="text-uppercase text-dark text-xs fw-bolder">Customer</th>
-                <th class="text-uppercase text-dark text-xs fw-bolder ps-2">Invoice</th>
-                <th class="text-uppercase text-dark text-xs fw-bolder ps-2">Tanggal</th>
-                <th class="text-uppercase text-dark text-xs fw-bolder ps-2">Total</th>
-                <th class="text-uppercase text-dark text-xs fw-bolder text-center">Status</th>
-                <th class="text-uppercase text-dark text-xs fw-bolder">Pembuat</th>
-                <th class="text-dark"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($penjualan as $key => $item)
+<div class="">
+    <div class="table-responsive text-nowrap p-0 d-none d-md-block">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-secondary text-dark border-top">
                 <tr>
-                    <td>
-                        <div class="d-flex flex-column justify-content-center ms-3">
-                            <h6 class="mb-0 text-sm">{{ $item->customer->name ?? 'Customer Umum' }}</h6>
+                    <th>Detail Transaksi</th>
+                    <th>Keuangan</th>
+                    <th class="text-center">Status</th>
+                    <th>Pembuat</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($penjualan as $key => $item)
+                    <tr>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span
+                                    class="fw-bold text-dark text-sm mb-1">{{ $item->customer->name ?? 'Customer Umum' }}</span>
+                                <small class="text-muted mb-1"><i
+                                        class="bx bx-receipt text-xs me-1"></i>{{ $item->referensi }}</small>
+                                <small class="text-muted"><i
+                                        class="bx bx-calendar text-xs me-1"></i>{{ \Carbon\Carbon::parse($item->tanggal_penjualan)->translatedFormat('d M Y, H:i') }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            @php
+                                $persentase = $item->persentase_bayar;
+                                $isJatuhTempo = $item->is_overdue;
+
+                                $barColor = 'bg-info';
+                                if ($item->status_pembayaran == 'Lunas') {
+                                    $barColor = 'bg-success';
+                                } elseif ($item->status_pembayaran == 'Piutang') {
+                                    $barColor = 'bg-secondary';
+                                    $persentase = 0;
+                                } elseif ($isJatuhTempo) {
+                                    $barColor = 'bg-danger';
+                                } else {
+                                    $barColor = 'bg-warning';
+                                }
+                            @endphp
+
+                            <div class="d-flex flex-column" style="min-width: 170px;">
+                                <div class="d-flex justify-content-between text-xs mb-1">
+                                    <span class="fw-bold text-dark" title="Total Tagihan">Rp
+                                        {{ number_format($item->total_akhir, 0, ',', '.') }}</span>
+                                    @if ($item->sisa_piutang > 0)
+                                        <span class="text-danger fw-semibold" title="Sisa Piutang">- Rp
+                                            {{ number_format($item->sisa_piutang, 0, ',', '.') }}</span>
+                                    @else
+                                        <span class="text-success fw-semibold" title="Lunas">Lunas</span>
+                                    @endif
+                                </div>
+
+                                <div class="progress shadow-none border mb-1" style="height: 6px;">
+                                    <div class="progress-bar {{ $barColor }}" role="progressbar"
+                                        style="width: {{ $persentase }}%" aria-valuenow="{{ $persentase }}"
+                                        aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center"
+                                    style="font-size: 0.7rem;">
+                                    <span class="text-muted" title="Sudah Dibayar">Bayar: Rp
+                                        {{ number_format($item->jumlah_dibayar, 0, ',', '.') }}</span>
+                                    @if ($item->status_pembayaran == 'Belum Lunas' && $item->tanggal_jatuh_tempo)
+                                        <span class="{{ $isJatuhTempo ? 'text-danger fw-bold' : 'text-muted' }}">Tempo:
+                                            {{ \Carbon\Carbon::parse($item->tanggal_jatuh_tempo)->format('d/m/y') }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            @php
+                                $statusClass =
+                                    $item->status_pembayaran == 'Lunas'
+                                        ? 'bg-label-success'
+                                        : ($item->status_pembayaran == 'Piutang'
+                                            ? 'bg-label-warning'
+                                            : ($item->status_pembayaran == 'Batal'
+                                                ? 'bg-label-danger'
+                                                : 'bg-label-secondary'));
+                            @endphp
+                            <span class="badge {{ $statusClass }}" style="font-size: 0.7rem; width: 110px;">
+                                <i class="bx bx-wallet text-xs me-1"></i> {{ $item->status_pembayaran }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                @if ($item->user && $item->user->employee && $item->user->employee->avatar)
+                                    <img src="{{ Storage::url($item->user->employee->avatar) }}"
+                                        class="avatar avatar-sm rounded-circle me-2" alt="user_img">
+                                @else
+                                    <div class="avatar avatar-sm me-2">
+                                        <span
+                                            class="avatar-initial rounded-circle bg-label-info">{{ substr($item->user->name ?? 'U', 0, 1) }}</span>
+                                    </div>
+                                @endif
+                                <div class="d-flex flex-column">
+                                    <span
+                                        class="text-sm text-dark fw-semibold">{{ $item->user->name ?? 'User Dihapus' }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
+                                    data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded"></i></button>
+                                <div class="dropdown-menu">
+                                    <a href="{{ route('penjualan.show', $item->referensi) }}"
+                                        class="dropdown-item text-info" data-bs-toggle="tooltip" data-bs-placement="top"
+                                        title="Lihat Detail">
+                                        <i class="bx bx-show-alt me-2 text-info"></i> Lihat Detail
+                                    </a>
+                                    <a href="{{ route('penjualan.edit', $item->referensi) }}"
+                                        class="dropdown-item text-secondary"data-bs-toggle="tooltip"
+                                        data-bs-placement="top" title="Edit Transaksi">
+                                        <i class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
+                                    </a>
+                                    <a href="javascript:void(0);" class="dropdown-item text-danger"
+                                        data-bs-toggle="modal" data-bs-target="#cancelConfirmationModal"
+                                        data-invoice-number="{{ $item->referensi }}"
+                                        data-url="{{ route('penjualan.update', $item->referensi) }}"
+                                        title="Batalkan Transaksi">
+                                        <i class="bx bx-ban me-2"></i> Batalkan
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center py-3">
+                            <p class=" text-dark text-sm fw-bold mb-0">Belum ada data penjualan.</p>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="d-block d-md-none p-3">
+        @forelse ($penjualan as $item)
+            @php
+                $persentase = $item->persentase_bayar;
+                $isJatuhTempo = $item->is_overdue;
+
+                $barColor = 'bg-info';
+                if ($item->status_pembayaran == 'Lunas') {
+                    $barColor = 'bg-success';
+                } elseif ($item->status_pembayaran == 'Piutang') {
+                    $barColor = 'bg-secondary';
+                    $persentase = 0;
+                } elseif ($isJatuhTempo) {
+                    $barColor = 'bg-danger';
+                } else {
+                    $barColor = 'bg-warning';
+                }
+
+                $statusPembayaranClass =
+                    $item->status_pembayaran == 'Lunas'
+                        ? 'bg-label-success'
+                        : ($item->status_pembayaran == 'Piutang'
+                            ? 'bg-label-warning'
+                            : ($item->status_pembayaran == 'Batal'
+                                ? 'bg-label-danger'
+                                : 'bg-label-secondary'));
+            @endphp
+
+            <div class="card mb-3 shadow-sm border">
+                <div class="card-body p-3">
+
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="mb-0 fw-bold text-dark">{{ $item->supplier->name ?? 'Supplier Dihapus' }}</h6>
+                            <small class="text-muted"><i
+                                    class="bx bx-receipt text-xs me-1"></i>{{ $item->referensi }}</small>
                         </div>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">{{ $item->referensi }}</h6>
+                        <div class="dropdown">
+                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
+                                data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded fs-4"></i></button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a class="dropdown-item" href="{{ route('pembelian.show', $item->referensi) }}"><i
+                                        class="bx bx-show-alt me-2 text-info"></i> Lihat Detail</a>
+                                <a class="dropdown-item" href="{{ route('pembelian.edit', $item->referensi) }}"><i
+                                        class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
+                                @if ($item->status_pembayaran != 'Batal')
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
+                                        data-bs-target="#cancelConfirmationModal"
+                                        data-pembelian-referensi="{{ $item->referensi }}"><i
+                                            class="bx bx-ban me-2"></i> Batalkan</a>
+                                @endif
+                            </div>
                         </div>
-                    </td>
-                    <td>
-                        <p class="text-sm fw-bolder mb-0">
-                            {{ \Carbon\Carbon::parse($item->tanggal_penjualan)->translatedFormat('d M Y, H:i') }}</p>
-                    </td>
-                    <td class="align-middle">
-                        <span class="text-secondary text-sm fw-bolder"> @money($item->total_akhir) </span>
-                    </td>
-                    <td class="align-middle text-center text-sm">
-                        @php
-                            $statusClass = '';
-                            if ($item->status_pembayaran === 'lunas') {
-                                $statusClass = 'bg-label-success';
-                            } elseif ($item->status_pembayaran === 'belum lunas') {
-                                $statusClass = 'bg-label-secondary';
-                            } elseif ($item->status_pembayaran === 'tertunda') {
-                                $statusClass = 'bg-label-warning';
-                            } elseif ($item->status_pembayaran === 'batal') {
-                                $statusClass = 'bg-label-danger';
-                            }
-                        @endphp
-                        <span
-                            class="badge badge-sm {{ $statusClass }}">{{ str_replace('_', ' ', $item->status_pembayaran) }}</span>
-                    </td>
-                    <td>
-                        <div title="foto & name user" class="d-flex align-items-center px-2 py-1">
-                            @if ($item->user->avatar)
-                                <img src="{{ Storage::url($item->user->avatar) }}" class="avatar avatar-sm me-3"
-                                    alt="user_img">
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 text-xs">
+                        <span class="text-muted"><i
+                                class="bx bx-calendar text-xs me-1"></i>{{ \Carbon\Carbon::parse($item->tanggal_pembelian)->translatedFormat('d M Y') }}</span>
+                        <div class="d-flex align-items-center">
+                            @if ($item->user && $item->user->employee && $item->user->employee->avatar)
+                                <img src="{{ Storage::url($item->user->employee->avatar) }}"
+                                    class="avatar avatar-xs rounded-circle me-1" alt="user_img"
+                                    style="width: 20px; height: 20px;">
                             @else
-                                <img src="{{ asset('assets/img/user.webp') }}" class="avatar avatar-sm me-3"
-                                    alt="Gambar User default">
+                                <div class="avatar avatar-xs me-1" style="width: 20px; height: 20px;">
+                                    <span class="avatar-initial rounded-circle bg-label-info"
+                                        style="font-size: 0.6rem;">{{ substr($item->user->name ?? 'U', 0, 1) }}</span>
+                                </div>
                             @endif
-                            <h6 class="mb-0 text-sm">{{ $item->user->name }}</h6>
+                            <span class="text-muted text-truncate"
+                                style="max-width: 80px;">{{ explode(' ', trim($item->user->name ?? 'User'))[0] }}</span>
                         </div>
-                    </td>
-                    <td class="align-middle text-center">
-                        <a href="{{ route('penjualan.show', $item->referensi) }}" class="action-btn text-info"
-                            data-bs-toggle="tooltip" data-bs-placement="top" title="Lihat Detail">
-                            <i class="bx bx-eye "></i>
-                        </a>
-                        <a href="{{ route('penjualan.edit', $item->referensi) }}"
-                            class="action-btn text-secondary"data-bs-toggle="tooltip" data-bs-placement="top"
-                            title="Edit Transaksi">
-                            <i class="bx bx-edit"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="action-btn text-danger" data-bs-toggle="modal"
-                            data-bs-target="#cancelConfirmationModal" data-invoice-number="{{ $item->referensi }}"
-                            data-url="{{ route('penjualan.update', $item->referensi) }}" title="Batalkan Transaksi">
-                            <i class="bx bx-ban"></i>
-                        </a>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="7" class="text-center py-3">
-                        <p class=" text-dark text-sm fw-bold mb-0">Belum ada data penjualan.</p>
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+                    </div>
+
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge {{ $statusPembayaranClass }} px-2 py-1" style="font-size: 0.7rem;">
+                            <i class="bx bx-wallet text-xs me-1"></i> {{ $item->status_pembayaran }}
+                        </span>
+                    </div>
+
+                    <div class="bg-lighter rounded p-2 border">
+                        <div class="d-flex justify-content-between text-sm mb-1">
+                            <span class="fw-bold text-dark">Rp
+                                {{ number_format($item->total_akhir, 0, ',', '.') }}</span>
+                            @if ($item->sisa_piutang > 0)
+                                <span class="text-danger fw-semibold">- Rp
+                                    {{ number_format($item->sisa_piutang, 0, ',', '.') }}</span>
+                            @else
+                                <span class="text-success fw-semibold">Lunas</span>
+                            @endif
+                        </div>
+
+                        <div class="progress shadow-none border mb-1" style="height: 6px;">
+                            <div class="progress-bar {{ $barColor }}" role="progressbar"
+                                style="width: {{ $persentase }}%" aria-valuenow="{{ $persentase }}"
+                                aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center" style="font-size: 0.75rem;">
+                            <span class="text-muted">Bayar: Rp
+                                {{ number_format($item->jumlah_dibayar, 0, ',', '.') }}</span>
+                            @if ($item->status_pembayaran == 'Piutang' && $item->tanggal_jatuh_tempo)
+                                <span class="{{ $isJatuhTempo ? 'text-danger fw-bold' : 'text-muted' }}">Tempo:
+                                    {{ \Carbon\Carbon::parse($item->tanggal_jatuh_tempo)->format('d/m/y') }}</span>
+                            @endif
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        @empty
+            <div class="text-center py-5 text-muted bg-lighter rounded border border-dashed">
+                <i class="bx bx-folder-open display-4 mb-2"></i>
+                <h6 class="text-dark fw-bold mb-0">Belum ada data pembelian.</h6>
+            </div>
+        @endforelse
+    </div>
 </div>
+
 <div class="mt-3 px-3">
     {{ $penjualan->links() }}
 </div>

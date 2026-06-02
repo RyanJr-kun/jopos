@@ -10,3 +10,7 @@ setelah migration berhasil import backup data terbaru dulu, setelah itu jalankan
 2. hapus column img_produk lama
 
     ALTER TABLE `products` DROP COLUMN `img_produk`;
+
+3. taro ini di common 
+    <!-- HAPUS meta robots noindex JIKA INI UNTUK WEB MARKET -->
+    <meta name="robots" content="nonindex, follow" />

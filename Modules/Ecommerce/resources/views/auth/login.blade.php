@@ -3,7 +3,7 @@
 @endisset
 
 @extends('layouts/commonMaster')
-@section('title', 'Login Pelanggan - JO Computer')
+@section('title', 'Login')
 
 @section('vendor-style')
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">

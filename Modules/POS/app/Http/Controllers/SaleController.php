@@ -143,6 +143,7 @@ class SaleController extends Controller implements HasMiddleware
 
         $validatedData = $request->validate([
             'customer_id'              => 'nullable|exists:customers,id',
+            'tanggal_jatuh_tempo'      => 'nullable|date',
             'referensi'                => 'required|string|unique:sales,referensi',
             'metode_pembayaran'        => 'required|in:TUNAI,TRANSFER,QRIS',
             'bank_id'                  => 'nullable|exists:banks,id|required_if:metode_pembayaran,TRANSFER',
@@ -253,15 +254,15 @@ class SaleController extends Controller implements HasMiddleware
                 $diskon_global = (float) ($validatedData['diskon']  ?? 0);
                 $total_akhir   = ($subtotal_dpp + $total_pajak + $service + $ongkir) - $diskon_global;
                 $jumlah_dibayar    = (float) $validatedData['jumlah_dibayar'];
-                $kembalian         = $jumlah_dibayar - $total_akhir;
                 $status_pembayaran = ($jumlah_dibayar >= $total_akhir) ? 'Lunas' : 'Belum Lunas';
-
+                $sisa_piutang      = max(0, $total_akhir - $jumlah_dibayar);
                 // ──────────────────────────────────────────────────────────
                 // PASS 3: Simpan header penjualan
                 // ──────────────────────────────────────────────────────────
                 $penjualan = Sale::create([
                     'referensi'         => $validatedData['referensi'],
                     'tanggal_penjualan' => now(),
+                    'tanggal_jatuh_tempo' => $validatedData['tanggal_jatuh_tempo'] ?? null,
                     'user_id'           => Auth::id(),
                     'store_id'          => $storeId,
                     'customer_id'       => $validatedData['customer_id'] ?? null,
@@ -272,11 +273,11 @@ class SaleController extends Controller implements HasMiddleware
                     'pajak'             => $total_pajak,
                     'total_akhir'       => $total_akhir,
                     'jumlah_dibayar'    => $jumlah_dibayar,
-                    'kembalian'         => max(0, $kembalian),
                     'status_pembayaran' => $status_pembayaran,
                     'metode_pembayaran' => $validatedData['metode_pembayaran'],
                     'bank_id'           => $validatedData['bank_id'] ?? null,
                     'catatan'           => $validatedData['catatan'] ?? null,
+                    'sisa_piutang'      => $sisa_piutang,
                 ]);
 
                 // ──────────────────────────────────────────────────────────
@@ -424,6 +425,7 @@ class SaleController extends Controller implements HasMiddleware
         $validatedData = $request->validate([
             'customer_id'              => 'nullable|exists:customers,id',
             'tanggal_penjualan'        => 'required|date',
+            'tanggal_jatuh_tempo'      => 'nullable|date|after:tanggal_penjualan',
             'status_pembayaran'        => 'required|in:Lunas,Belum Lunas,Dibatalkan',
             'metode_pembayaran'        => 'required|in:TUNAI,TRANSFER,QRIS',
             'bank_id'                  => 'nullable|exists:banks,id|required_if:metode_pembayaran,TRANSFER',
@@ -572,25 +574,26 @@ class SaleController extends Controller implements HasMiddleware
                 $ongkir        = (float) ($validatedData['ongkir']  ?? 0);
                 $diskon_global = (float) ($validatedData['diskon']  ?? 0);
                 $total_akhir   = ($subtotal_dpp + $total_pajak + $service + $ongkir) - $diskon_global;
-                $jumlah_dibayar    = (float) $validatedData['jumlah_dibayar'];
-                $kembalian         = $jumlah_dibayar - $total_akhir;
+                $jumlah_dibayar = (float) $validatedData['jumlah_dibayar'];
+                $sisa_piutang   = max(0, $total_akhir - $jumlah_dibayar);
 
                 // ── Update header penjualan ──────────────────────────────
                 $penjualan->update([
-                    'customer_id'       => $validatedData['customer_id'] ?? null,
-                    'tanggal_penjualan' => $validatedData['tanggal_penjualan'],
-                    'metode_pembayaran' => $validatedData['metode_pembayaran'],
-                    'bank_id'           => $validatedData['bank_id'] ?? null,
-                    'status_pembayaran' => $statusBaru,
-                    'subtotal'          => $subtotal_dpp,
-                    'diskon'            => $diskon_global,
-                    'service'           => $service,
-                    'ongkir'            => $ongkir,
-                    'pajak'             => $total_pajak,
-                    'total_akhir'       => $total_akhir,
-                    'jumlah_dibayar'    => $jumlah_dibayar,
-                    'kembalian'         => max(0, $kembalian),
-                    'catatan'           => $validatedData['catatan'] ?? null,
+                    'customer_id'           => $validatedData['customer_id'] ?? null,
+                    'tanggal_penjualan'     => $validatedData['tanggal_penjualan'],
+                    'tanggal_jatuh_tempo'   => $validatedData['tanggal_jatuh_tempo'] ?? null,
+                    'metode_pembayaran'     => $validatedData['metode_pembayaran'],
+                    'bank_id'               => $validatedData['bank_id'] ?? null,
+                    'status_pembayaran'     => $statusBaru,
+                    'subtotal'              => $subtotal_dpp,
+                    'diskon'                => $diskon_global,
+                    'service'               => $service,
+                    'ongkir'                => $ongkir,
+                    'pajak'                 => $total_pajak,
+                    'total_akhir'           => $total_akhir,
+                    'jumlah_dibayar'        => $jumlah_dibayar,
+                    'sisa_piutang'          => $sisa_piutang,
+                    'catatan'               => $validatedData['catatan'] ?? null,
                 ]);
 
                 // ── Hapus & buat ulang item penjualan ───────────────────

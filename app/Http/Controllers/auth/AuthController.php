@@ -27,7 +27,7 @@ class AuthController extends Controller
         $loginValue = $request->input('login'); 
         $password = $request->input('password'); 
 
-        $user = User::where('username', $loginValue) 
+        $user = User::query()->where('username', $loginValue) 
             ->orWhere('email', $loginValue) 
             ->first(); 
 
@@ -51,7 +51,7 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'login' =>  __('auth.failed'), 
+            'login' => 'Email atau password salah.', 
         ])->onlyInput('login'); 
     }
 

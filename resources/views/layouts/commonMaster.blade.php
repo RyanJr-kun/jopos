@@ -9,26 +9,23 @@
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
     <title>
-        @yield('title') | {{ config('variables.templateName') ? config('variables.templateName') : 'TemplateName' }}
-        - {{ config('variables.templateSuffix') ? config('variables.templateSuffix') : 'TemplateSuffix' }}
+        @yield('title') | {{ config('variables.appName') ? config('variables.appName') : 'AppName' }}
+        - {{ config('variables.appSuffix') ? config('variables.appSuffix') : 'AppSuffix' }}
     </title>
     <meta name="description"
-        content="{{ config('variables.templateDescription') ? config('variables.templateDescription') : '' }}" />
-    <meta name="keywords"
-        content="{{ config('variables.templateKeyword') ? config('variables.templateKeyword') : '' }}" />
+        content="{{ config('variables.appDescription') ? config('variables.appDescription') : '' }}" />
+    <meta name="keywords" content="{{ config('variables.appKeyword') ? config('variables.appKeyword') : '' }}" />
     <meta property="og:title" content="{{ config('variables.ogTitle') ? config('variables.ogTitle') : '' }}" />
     <meta property="og:type" content="{{ config('variables.ogType') ? config('variables.ogType') : '' }}" />
-    <meta property="og:url" content="{{ config('variables.productPage') ? config('variables.productPage') : '' }}" />
+    <meta property="og:url" content="{{ url()->current() }}" />
     <meta property="og:image" content="{{ config('variables.ogImage') ? config('variables.ogImage') : '' }}" />
     <meta property="og:description"
-        content="{{ config('variables.templateDescription') ? config('variables.templateDescription') : '' }}" />
-    <meta property="og:site_name"
-        content="{{ config('variables.creatorName') ? config('variables.creatorName') : '' }}" />
-    <meta name="robots" content="noindex, nofollow" />
+        content="{{ config('variables.appDescription') ? config('variables.appDescription') : '' }}" />
+    <meta property="og:site_name" content="{{ config('variables.appName') ? config('variables.appName') : '' }}" />
     <!-- laravel CRUD token -->
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <!-- Canonical SEO -->
-    <link rel="canonical" href="{{ config('variables.productPage') ? config('variables.productPage') : '' }}" />
+    <link rel="canonical" href="{{ url()->current() }}" />
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
 

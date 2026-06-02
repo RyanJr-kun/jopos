@@ -3,7 +3,7 @@
 @endisset
 
 @extends('layouts/commonMaster')
-@section('title', 'Beranda - JO Computer')
+@section('title', 'Layanan & Bantuan')
 
 @section('vendor-style')
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
@@ -268,9 +268,9 @@
         <div class="container-market" data-aos="fade-up">
             <div class="p-5 text-center bg-body-tertiary rounded-3">
                 <!-- <div class="feature-icon-small d-inline-flex align-items-center justify-content-center text-bg-success bg-gradient fs-2 rounded-3"
-                                                                                                style="width: 3rem; height: 3rem;">
-                                                                                                <i class="bx bxl-whatsapp icon-xl text-white"></i>
-                                                                                            </div> -->
+                                                                                                        style="width: 3rem; height: 3rem;">
+                                                                                                        <i class="bx bxl-whatsapp icon-xl text-white"></i>
+                                                                                                    </div> -->
                 <h3 class="text-body-emphasis fw-bold">Punya Pertanyaan atau Butuh Bantuan?</h3>
                 <p class="col-lg-8 mx-auto fs-5 text-muted">
                     Jangan ragu untuk menghubungi kami. Tim kami siap membantu Anda dengan solusi teknologi yang tepat.
