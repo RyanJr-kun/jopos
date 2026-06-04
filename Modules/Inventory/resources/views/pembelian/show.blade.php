@@ -200,6 +200,72 @@
                     </div>
                 </div>
 
+                {{-- Hutang --}}
+                <div class="mb-4 mt-5">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0"><i class="bx bx-history me-1 text-primary"></i> Riwayat Pembayaran &
+                            Cicilan</h6>
+                        @if ($pembelian->sisa_hutang > 0 && $pembelian->status_pembayaran !== 'Dibatalkan')
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#addCicilanModal">
+                                <i class="bx bx-plus me-1"></i> Bayar Cicilan
+                            </button>
+                        @endif
+                    </div>
+
+                    <div class="table-responsive border rounded-3 bg-white">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-dark">
+                                <tr>
+                                    <th class="text-center text-xs fw-bold py-3" width="5%">No</th>
+                                    <th class="text-xs fw-bold py-3">Tanggal Bayar</th>
+                                    <th class="text-xs fw-bold py-3">Pemasok</th>
+                                    <th class="text-xs fw-bold py-3">Metode</th>
+                                    <th class="text-xs fw-bold py-3">Referensi / Catatan</th>
+                                    <th class="text-end text-xs fw-bold py-3" width="20%">Jumlah Bayar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($pembelian->payments ?? [] as $index => $payment)
+                                    <tr>
+                                        <td class="text-center text-sm">{{ $index + 1 }}</td>
+                                        <td class="text-sm">
+                                            {{ \Carbon\Carbon::parse($payment->tanggal_bayar)->translatedFormat('d F Y') }}
+                                        </td>
+                                        <td class="text-sm fw-semibold text-dark">{{ $payment->user->name ?? 'Sistem' }}
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge bg-label-info text-sm">{{ $payment->metode_pembayaran }}</span>
+                                            @if ($payment->bank)
+                                                <small
+                                                    class="d-block text-muted mt-1 fw-semibold">{{ $payment->bank->nama_bank }}</small>
+                                            @endif
+                                        </td>
+                                        <td class="text-sm text-wrap">
+                                            @if ($payment->referensi_pembayaran)
+                                                <span class="d-block text-xs text-dark fw-bold mb-1">Ref:
+                                                    {{ $payment->referensi_pembayaran }}</span>
+                                            @endif
+                                            <span class="text-muted text-xs">{!! $payment->catatan ?? '-' !!}</span>
+                                        </td>
+                                        <td class="text-end text-sm fw-bold text-success">
+                                            Rp {{ number_format($payment->jumlah_bayar, 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            <i class="bx bx-info-circle d-block fs-3 mb-2"></i> Belum ada rekaman
+                                            pembayaran cicilan untuk transaksi ini.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- CATATAN -->
                 @if ($pembelian->catatan)
                     <div class="row mt-4">
@@ -218,4 +284,202 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal: Input Cicilan Baru --}}
+    <div class="modal fade" id="addCicilanModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bx bx-wallet text-success me-2"></i>Form Pembayaran Cicilan
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('pembelian.payment.store', $pembelian->referensi) }}" method="POST"
+                    id="formCicilan">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="row g-2 text-center mb-4">
+                            <div class="col-6">
+                                <div class="bg-label-secondary rounded p-2">
+                                    <small class="text-muted d-block mb-1">Total Tagihan</small>
+                                    <span class="fw-bold text-dark">Rp
+                                        {{ number_format($pembelian->total_akhir, 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-label-danger rounded p-2">
+                                    <small class="text-danger d-block mb-1">Sisa Hutang</small>
+                                    <span class="fw-bold text-danger">Rp
+                                        {{ number_format($pembelian->sisa_hutang, 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 col-12">
+                                <label for="tanggal_bayar" class="form-label fw-semibold">Tanggal Bayar <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" name="tanggal_bayar" id="tanggal_bayar" class="form-control"
+                                    value="{{ date('Y-m-d') }}" required>
+                            </div>
+
+                            <div class="col-md-6 col-12">
+                                <label class="form-label fw-semibold">Metode Pembayaran <span
+                                        class="text-danger">*</span></label>
+                                <select name="metode_pembayaran" id="modal_metode_pembayaran"
+                                    class="form-select select2-payment" required>
+                                    <option value="TUNAI" selected>Tunai</option>
+                                    <option value="TRANSFER">Transfer Bank</option>
+                                    <option value="QRIS">QRIS</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 d-none animate__animated animate__fadeIn" id="modal-bank-container">
+                                <label for="modal_bank_id" class="form-label fw-semibold">Rekening Tujuan <span
+                                        class="text-danger">*</span></label>
+                                <select name="bank_id" id="modal_bank_id" class="form-select select2-bank-modal">
+                                    <option value="" disabled selected>Pilih Rekening Bank...</option>
+                                    @foreach ($banks as $bank)
+                                        <option value="{{ $bank->id }}">
+                                            {{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="jumlah_bayar_input" class="form-label fw-semibold">Nominal Jumlah Bayar <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text fw-bold">Rp</span>
+                                    <input type="text" id="jumlah_bayar_input"
+                                        class="form-control text-end fw-bold fs-5" placeholder="0" required
+                                        autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-set-lunas"
+                                        title="Bayar Semua Sisa Hutang">Uang Pas</button>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="referensi_pembayaran" class="form-label fw-semibold">Referensi Pembayaran
+                                    (Opsional)</label>
+                                <input type="text" name="referensi_pembayaran" id="referensi_pembayaran"
+                                    class="form-control" placeholder="Nomor struk, id transaksi transfer, dsb.">
+                            </div>
+
+                            <div class="col-12">
+                                <label for="modal_catatan" class="form-label fw-semibold">Catatan Tambahan
+                                    (Opsional)</label>
+                                <textarea name="catatan" id="modal_catatan" class="form-control" rows="2"
+                                    placeholder="Tulis keterangan cicilan di sini..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top pt-3">
+                        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Tutup</button>
+                        <button type="submit" class="btn btn-success px-4" id="btnSaveCicilan">
+                            <i class="bx bx-check-circle me-1"></i> Simpan Pembayaran
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endsection
+@section('page-script')
+    <script type="module">
+        function waitForJQuery(callback) {
+            if (window.$ && window.$.fn && window.$.fn.select2) {
+                callback();
+            } else {
+                setTimeout(function() {
+                    waitForJQuery(callback);
+                }, 100);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            waitForJQuery(function() {
+                // Inisialisasi Select2 di dalam modal
+                $('.select2-payment').select2({
+                    dropdownParent: $('#addCicilanModal'),
+                    width: '100%'
+                });
+
+                $('.select2-bank-modal').select2({
+                    dropdownParent: $('#addCicilanModal'),
+                    placeholder: "Pilih Rekening Bank...",
+                    allowClear: true,
+                    width: '100%'
+                });
+
+                // Ambil nilai sisa hutang mentah dari PHP untuk validasi client-side
+                const sisaHutangMaksimal = {{ $pembelian->sisa_hutang }};
+
+                // Utilitas Format Mata Uang
+                const parseCurrency = (string) => parseFloat(String(string).replace(/[^0-9]/g, '')) || 0;
+
+                function formatNumber(num) {
+                    return new Intl.NumberFormat('id-ID').format(num);
+                }
+
+                // Tampilkan input bank secara berkala jika metode TRANSFER dipilih
+                $('#modal_metode_pembayaran').on('change', function() {
+                    if ($(this).val() === 'TRANSFER') {
+                        $('#modal-bank-container').removeClass('d-none');
+                        $('#modal_bank_id').attr('required', 'required');
+                    } else {
+                        $('#modal-bank-container').addClass('d-none');
+                        $('#modal_bank_id').removeAttribute('required').val('').trigger('change');
+                    }
+                });
+
+                // Format mata uang real-time saat user mengetik nominal cicilan
+                $('#jumlah_bayar_input').on('input', function() {
+                    let val = parseCurrency($(this).val());
+
+                    // Batasi agar input tidak melebihi sisa hutang secara visual
+                    if (val > sisaHutangMaksimal) {
+                        val = sisaHutangMaksimal;
+                    }
+
+                    $(this).val(formatNumber(val));
+                });
+
+                // Tombol Uang Pas langsung isi penuh sisa hutang
+                $('#btn-set-lunas').on('click', function() {
+                    $('#jumlah_bayar_input').val(formatNumber(sisaHutangMaksimal));
+                });
+
+                // Validasi akhir sebelum submit form cicilan
+                $('#formCicilan').on('submit', function(e) {
+                    const inputRaw = parseCurrency($('#jumlah_bayar_input').val());
+
+                    if (inputRaw <= 0) {
+                        e.preventDefault();
+                        alert('Nominal jumlah pembayaran cicilan harus lebih dari Rp 0.');
+                        return;
+                    }
+
+                    if (inputRaw > sisaHutangMaksimal) {
+                        e.preventDefault();
+                        alert('Nominal pembayaran tidak boleh melebihi sisa hutang.');
+                        return;
+                    }
+
+                    // Tempelkan nilai bersih tanpa titik ke input form sebelum dikirim ke backend
+                    if (!document.querySelector('input[name="jumlah_bayar"]')) {
+                        $(this).append(
+                            `<input type="hidden" name="jumlah_bayar" value="${inputRaw}">`);
+                    } else {
+                        $('input[name="jumlah_bayar"]').val(inputRaw);
+                    }
+
+                    $('#btnSaveCicilan').prop('disabled', true).html(
+                        '<i class="bx bx-loader bx-spin me-1"></i> Memproses...');
+                });
+            });
+        });
+    </script>
 @endsection

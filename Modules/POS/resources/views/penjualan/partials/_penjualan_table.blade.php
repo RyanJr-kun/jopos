@@ -115,7 +115,7 @@
                                     <a href="{{ route('penjualan.edit', $item->referensi) }}"
                                         class="dropdown-item text-secondary"data-bs-toggle="tooltip"
                                         data-bs-placement="top" title="Edit Transaksi">
-                                        <i class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
+                                        <i class="bx bx-edit-alt me-2 text-warning"></i> Edit penjualan</a>
                                     </a>
                                     <a href="javascript:void(0);" class="dropdown-item text-danger"
                                         data-bs-toggle="modal" data-bs-target="#cancelConfirmationModal"
@@ -171,7 +171,7 @@
 
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
-                            <h6 class="mb-0 fw-bold text-dark">{{ $item->supplier->name ?? 'Supplier Dihapus' }}</h6>
+                            <h6 class="mb-0 fw-bold text-dark">{{ $item->customer->name ?? 'customer Dihapus' }}</h6>
                             <small class="text-muted"><i
                                     class="bx bx-receipt text-xs me-1"></i>{{ $item->referensi }}</small>
                         </div>
@@ -179,15 +179,15 @@
                             <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
                                 data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded fs-4"></i></button>
                             <div class="dropdown-menu dropdown-menu-end">
-                                <a class="dropdown-item" href="{{ route('pembelian.show', $item->referensi) }}"><i
+                                <a class="dropdown-item" href="{{ route('penjualan.show', $item->referensi) }}"><i
                                         class="bx bx-show-alt me-2 text-info"></i> Lihat Detail</a>
-                                <a class="dropdown-item" href="{{ route('pembelian.edit', $item->referensi) }}"><i
-                                        class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
+                                <a class="dropdown-item" href="{{ route('penjualan.edit', $item->referensi) }}"><i
+                                        class="bx bx-edit-alt me-2 text-warning"></i> Edit penjualan</a>
                                 @if ($item->status_pembayaran != 'Batal')
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
                                         data-bs-target="#cancelConfirmationModal"
-                                        data-pembelian-referensi="{{ $item->referensi }}"><i
+                                        data-penjualan-referensi="{{ $item->referensi }}"><i
                                             class="bx bx-ban me-2"></i> Batalkan</a>
                                 @endif
                             </div>
@@ -252,7 +252,7 @@
         @empty
             <div class="text-center py-5 text-muted bg-lighter rounded border border-dashed">
                 <i class="bx bx-folder-open display-4 mb-2"></i>
-                <h6 class="text-dark fw-bold mb-0">Belum ada data pembelian.</h6>
+                <h6 class="text-dark fw-bold mb-0">Belum ada data penjualan.</h6>
             </div>
         @endforelse
     </div>

@@ -342,15 +342,10 @@
             waitForDependencies(function() {
 
                 // Inisialisasi Default Select2
-                $('.select2:not(#select2)').select2({
+                $('.select2:not(#select2):not(.select2-bank)').select2({
                     placeholder: "Pilih...",
                     allowClear: true,
                     width: '100%',
-                    dropdownParent: function() {
-                        // Fix masalah z-index select2 di dalam modal
-                        let modalParent = $(this).closest('.modal');
-                        return modalParent.length ? modalParent : $(document.body);
-                    }
                 });
 
                 // Utilitas Format
@@ -361,7 +356,14 @@
                     minimumFractionDigits: 0
                 }).format(number);
 
-                const parseCurrency = (string) => parseFloat(String(string).replace(/[^0-9.-]+/g, '')) || 0;
+                const parseCurrency = (string) => {
+                    // Format ID: titik = pemisah ribuan, koma = desimal
+                    // Contoh: "50.000" → 50000 | "1.500,50" → 1500.50
+                    const cleaned = String(string)
+                        .replace(/\./g, '') // hapus titik ribuan
+                        .replace(',', '.'); // ganti koma desimal ke titik
+                    return parseFloat(cleaned) || 0;
+                };
 
                 function formatInputAsCurrency(input) {
                     let value = parseCurrency(input.val());
@@ -370,6 +372,14 @@
 
                 let itemCounter = 0;
                 const editItemModal = new bootstrap.Modal(document.getElementById('editItemModal'));
+
+                // Inisialisasi Select2 di dalam modal Edit Item (harus pakai dropdownParent agar dropdown tidak terpotong)
+                $('#edit-item-pajak-id').select2({
+                    placeholder: "Pilih...",
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('#editItemModal'),
+                });
 
                 function formatProduct(produk) {
                     if (!produk.id) return produk.text;
@@ -695,6 +705,14 @@
                 // ==========================================
                 const paymentModalElement = document.getElementById('paymentModal');
                 if (paymentModalElement) {
+                    // Inisialisasi Select2 bank di dalam payment modal
+                    $('.select2-bank').select2({
+                        placeholder: "Pilih Rekening Bank...",
+                        allowClear: true,
+                        width: '100%',
+                        dropdownParent: $('#paymentModal'),
+                    });
+
                     const inputJumlah = document.getElementById('jumlah-dibayar-input');
                     const displayChange = document.getElementById('change-display');
 
@@ -702,6 +720,7 @@
                         const total = calculateGrandTotal();
                         document.getElementById('payment-modal-total').innerText = formatCurrency(
                             total);
+                        inputJumlah.value = ''; // Reset input setiap kali modal dibuka
                         calculateModalChange(); // Hitung kembalian awal (dari 0)
                         toggleTransferDetails();
                     });
@@ -752,7 +771,7 @@
                     // Toggle rekening transfer
                     const paymentRadios = document.querySelectorAll('input[name="metode_pembayaran"]');
                     const transferDetails = document.getElementById('transfer-details');
-                    const bankTujuanSelect = document.getElementById('bank_tujuan');
+                    const bankTujuanSelect = document.getElementById('bank_id');
 
                     function toggleTransferDetails() {
                         const isTransfer = document.getElementById('pay-transfer').checked;
@@ -784,12 +803,17 @@
                         return;
                     }
 
-                    // Cek kelengkapan status (Hutang / Lunas otomatis dihitung)
+                    // Strip format currency dari jumlah_dibayar (misal "50.000" → "50000")
+                    const inputJumlahEl = document.getElementById('jumlah-dibayar-input');
+                    if (inputJumlahEl) {
+                        inputJumlahEl.value = parseCurrency(inputJumlahEl.value);
+                    }
+
+                    // Hitung status pembayaran di sisi client (fallback, server tetap override)
                     const totalAkhir = calculateGrandTotal();
-                    const bayar = parseCurrency($("#jumlah-dibayar-input").val());
+                    const bayar = parseFloat(inputJumlahEl ? inputJumlahEl.value : 0) || 0;
                     let statusPembayaran = bayar >= totalAkhir ? 'Lunas' : 'Hutang';
 
-                    // Karena di HTML label "status_barang" di hide, kita suntikkan default agar lolos validasi controller
                     if (!document.querySelector('input[name="status_pembayaran"]')) {
                         $(this).append(
                             `<input type="hidden" name="status_pembayaran" value="${statusPembayaran}">`

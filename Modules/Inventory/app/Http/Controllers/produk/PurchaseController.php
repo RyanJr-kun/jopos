@@ -24,11 +24,11 @@ class PurchaseController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:view-pembelian', only: ['index', 'show', 'generatePurchaseInvoiceNumber']), 
+            new Middleware('permission:view-pembelian', only: ['index', 'show', 'generatePurchaseInvoiceNumber']),
             new Middleware('permission:create-pembelian', only: ['create', 'store']),
             new Middleware('permission:edit-pembelian', only: ['edit', 'update']),
             new Middleware('permission:delete-pembelian', only: ['destroy']),
-            new Middleware('permission:print-pembelian', only: ['printThermal','generatePdf']),
+            new Middleware('permission:print-pembelian', only: ['printThermal', 'generatePdf']),
         ];
     }
     /**
@@ -83,7 +83,7 @@ class PurchaseController extends Controller implements HasMiddleware
         $options = Purchase::getPaymentMethods();
         $banks = Bank::all();
 
-        return view('inventory::pembelian.create',compact('supplier', 'taxes', 'nomer_referensi', 'statuses', 'barangs', 'payments', 'options', 'banks'));        
+        return view('inventory::pembelian.create', compact('supplier', 'taxes', 'nomer_referensi', 'statuses', 'barangs', 'payments', 'options', 'banks'));
     }
 
     /**
@@ -117,6 +117,7 @@ class PurchaseController extends Controller implements HasMiddleware
      */
     public function store(Request $request)
     {
+
         $validatedData = $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'tanggal' => 'required|date',
@@ -130,12 +131,13 @@ class PurchaseController extends Controller implements HasMiddleware
             'catatan' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            // Tambahan validasi untuk varian (nullable karena bisa jadi produk simple)
-            'items.*.product_variant_id' => 'nullable|exists:product_variants,id', 
+            'items.*.product_variant_id' => 'nullable|exists:product_variants,id',
             'items.*.qty' => 'required|integer|min:1',
             'items.*.harga_beli' => 'required|numeric|min:0',
             'items.*.diskon' => 'nullable|numeric|min:0',
             'items.*.taxe_id' => 'nullable|exists:taxes,id',
+            'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS',
+            'bank_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:banks,id',
         ]);
 
         try {
@@ -143,20 +145,14 @@ class PurchaseController extends Controller implements HasMiddleware
             $taxesData = Taxe::findMany($pajakIds)->keyBy('id');
 
             $pembelian = DB::transaction(function () use ($validatedData, $request, $taxesData) {
-                // AMBIL DATA STORE
-                // Karena tabel purchases butuh store_id, kita asumsikan ambil dari Store::first() 
-                // atau sesuaikan jika user login terikat dengan store tertentu.
-                $defaultStore = Store::query()->first();
-                $storeId = $defaultStore ? $defaultStore->id : 1;
+                $storeId = Auth::user()->employee?->store_id ?? null;
 
-                // 1. Ambil semua produk dan varian yang relevan
                 $produkIds = collect($validatedData['items'])->pluck('product_id')->unique();
                 $products = Product::whereIn('id', $produkIds)->get()->keyBy('id');
 
                 $variantIds = collect($validatedData['items'])->pluck('product_variant_id')->filter()->unique();
                 $variants = ProductVariant::whereIn('id', $variantIds)->get()->keyBy('id');
 
-                // 2. Hitung total dari sisi server
                 $subtotal_keseluruhan = 0;
                 $total_pajak_item = 0;
                 $itemsForDetail = [];
@@ -184,7 +180,7 @@ class PurchaseController extends Controller implements HasMiddleware
 
                 // 3. Tentukan status pembayaran
                 $sisa = $total_akhir - $jumlah_dibayar;
-                $status_pembayaran = 'Belum Lunas';
+                $status_pembayaran = 'Hutang';
 
                 if ($jumlah_dibayar >= $total_akhir) {
                     $status_pembayaran = 'Lunas';
@@ -204,11 +200,25 @@ class PurchaseController extends Controller implements HasMiddleware
                     'ongkir' => $ongkir,
                     'total_akhir' => $total_akhir,
                     'jumlah_dibayar' => $jumlah_dibayar,
-                    'sisa_hutang' => $sisa, 
+                    'sisa_hutang' => $sisa,
                     'status_pembayaran' => $status_pembayaran,
                     'status_barang' => $validatedData['status_barang'],
+                    'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                    'bank_id' => $validatedData['bank_id'] ?? null,
                     'catatan' => $validatedData['catatan'],
                 ]);
+
+                if ($jumlah_dibayar > 0) {
+                    $pembelian->payments()->create([
+                        'user_id' => Auth::id(),
+                        'tanggal_bayar' => $validatedData['tanggal'],
+                        'jumlah_bayar' => $jumlah_dibayar,
+                        'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                        'bank_id' => $validatedData['bank_id'] ?? null,
+                        'referensi_pembayaran' => $validatedData['referensi'],
+                        'catatan' => $status_pembayaran === 'Lunas' ? 'Pembayaran Lunas Awal' : 'Pembayaran Uang Muka (DP)'
+                    ]);
+                }
 
                 // 5. Buat record PurchaseItem, update stok, dan update harga beli
                 foreach ($itemsForDetail as $itemData) {
@@ -222,7 +232,7 @@ class PurchaseController extends Controller implements HasMiddleware
                         'harga_beli' => $itemData['harga_beli'],
                         'diskon' => $itemData['diskon'] ?? 0,
                         'taxe_id' => $itemData['taxe_id'] ?? null,
-                        'subtotal' => $itemData['subtotal'], 
+                        'subtotal' => $itemData['subtotal'],
                     ]);
 
                     // B. Update data harga beli produk master atau varian
@@ -270,15 +280,15 @@ class PurchaseController extends Controller implements HasMiddleware
      */
     public function show(Purchase $pembelian)
     {
-        // Eager load relasi untuk efisiensi query dan menghindari N+1 problem
-        $pembelian->load('supplier', 'user', 'details.produk');
+        $pembelian->load(['supplier', 'user', 'details.produk', 'payments.user', 'payments.bank']);
         $profilToko = Store::query()->first();
+        $banks = Bank::all(); // Diperlukan untuk pilihan bank di dalam modal cicilan
 
         return view('inventory::pembelian.show', [
             'title' => 'Detail Purchase: ' . $pembelian->referensi,
             'pembelian' => $pembelian,
             'profilToko' => $profilToko,
-
+            'banks' => $banks, // Kirim data bank ke view
         ]);
     }
 
@@ -289,17 +299,17 @@ class PurchaseController extends Controller implements HasMiddleware
     {
         // Eager load relasi untuk efisiensi, termasuk varian dan gambarnya
         $pembelian->load([
-            'details.produk.primaryImage', 
+            'details.produk.primaryImage',
             'details.pajak',
             'details.varian.options' // Asumsi nama relasi di PurchaseItem adalah 'varian'
         ]);
-        
+
         $statuses = Purchase::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
 
         return view('inventory::pembelian.edit', [
             'title' => 'Edit Invoice Purchase: ' . $pembelian->referensi,
             'pembelian' => $pembelian,
-            'pemasok' => Supplier::where('status', 1)->get(), 
+            'pemasok' => Supplier::where('status', 1)->get(),
             'taxes' => Taxe::all(),
             'statuses' => $statuses,
         ]);
@@ -311,11 +321,11 @@ class PurchaseController extends Controller implements HasMiddleware
     public function update(Request $request, Purchase $pembelian)
     {
         // Karena tabel purchases butuh store_id (seperti di fungsi store)
-        $storeId = $pembelian->store_id; 
+        $storeId = $pembelian->store_id;
 
         // --- LOGIKA PEMBATALAN CEPAT DARI HALAMAN INDEX ---
-        if ($request->input('status_pembayaran') === 'Dibatalkan' && !$request->has('items')) {
-            if ($pembelian->status_pembayaran !== 'Dibatalkan') {
+        if ($request->input('status_pembayaran') === 'Batal' && !$request->has('items')) {
+            if ($pembelian->status_pembayaran !== 'Batal') {
                 try {
                     DB::transaction(function () use ($pembelian, $storeId) {
                         // Jika barangnya pernah diterima, kurangi stoknya dari product_stocks
@@ -334,8 +344,8 @@ class PurchaseController extends Controller implements HasMiddleware
                         }
                         // Update status dan reset pembayaran
                         $pembelian->update([
-                            'status_pembayaran' => 'Dibatalkan',
-                            'status_barang' => 'Dibatalkan',
+                            'status_pembayaran' => 'Batal',
+                            'status_barang' => 'Batal',
                             'jumlah_dibayar' => 0,
                             'sisa_hutang' => 0
                         ]);
@@ -350,22 +360,24 @@ class PurchaseController extends Controller implements HasMiddleware
 
         // Membersihkan input mata uang dari format ribuan sebelum validasi
         $request->merge([
+
             'jumlah_dibayar' => preg_replace('/[^0-9]/', '', $request->input('jumlah_dibayar', 0))
         ]);
 
         $validatedData = $request->validate([
+            'bank_id' => 'nullable|exists:banks,id',
             'supplier_id' => 'required|exists:suppliers,id',
             'tanggal' => 'required|date',
             'tanggal_jatuh_tempo' => 'nullable|date|after:tanggal',
-            'status_pembayaran' => 'required|in:Lunas,Belum Lunas,Dibatalkan',
-            'status_barang' => 'required|in:Diterima,Belum Diterima,Dibatalkan',
+            'status_pembayaran' => 'required|in:Lunas,Hutang,Batal',
+            'status_barang' => 'required|in:Diterima,Belum Diterima,Batal',
             'jumlah_dibayar' => 'nullable|numeric|min:0',
             'ongkir' => 'nullable|numeric|min:0',
             'diskon_tambahan' => 'nullable|numeric|min:0',
             'catatan' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.product_variant_id' => 'nullable|exists:product_variants,id', 
+            'items.*.product_variant_id' => 'nullable|exists:product_variants,id',
             'items.*.qty' => 'required|integer|min:1',
             'items.*.harga_beli' => 'required|numeric|min:0',
             'items.*.diskon' => 'nullable|numeric|min:0',
@@ -385,12 +397,12 @@ class PurchaseController extends Controller implements HasMiddleware
                 // --- MANAJEMEN STOK ---
                 $newProductIds = collect($validatedData['items'])->pluck('product_id')->unique();
                 $products = \Modules\Inventory\Models\Product::whereIn('id', $newProductIds)->get()->keyBy('id');
-                
+
                 $variantIds = collect($validatedData['items'])->pluck('product_variant_id')->filter()->unique();
                 $variants = \Modules\Inventory\Models\ProductVariant::whereIn('id', $variantIds)->get()->keyBy('id');
 
                 // 1. Kembalikan stok lama (Reset) dari product_stocks
-                if ($statusLama !== 'Dibatalkan' && $statusBarangLama === 'Diterima') {
+                if ($statusLama !== 'Batal' && $statusBarangLama === 'Diterima') {
                     foreach ($pembelian->details as $oldDetail) {
                         $stockRecord = ProductStock::query()
                             ->where('store_id', $storeId)
@@ -405,10 +417,10 @@ class PurchaseController extends Controller implements HasMiddleware
                 }
 
                 // 2. Tambah stok baru jika transaksi baru aktif dan barang diterima
-                if ($statusBaru !== 'Dibatalkan' && $statusBarangBaru === 'Diterima') {
+                if ($statusBaru !== 'Batal' && $statusBarangBaru === 'Diterima') {
                     foreach ($validatedData['items'] as $itemData) {
                         $variantId = $itemData['product_variant_id'] ?? null;
-                        
+
                         $stockRecord = \App\Models\ProductStock::firstOrCreate(
                             [
                                 'store_id' => $storeId,
@@ -447,7 +459,7 @@ class PurchaseController extends Controller implements HasMiddleware
 
                 // Tentukan status pembayaran
                 $sisa = $total_akhir - $jumlah_dibayar;
-                $status_pembayaran_server = 'Belum Lunas';
+                $status_pembayaran_server = 'Hutang';
                 if ($jumlah_dibayar >= $total_akhir) {
                     $status_pembayaran_server = 'Lunas';
                 }
@@ -457,7 +469,7 @@ class PurchaseController extends Controller implements HasMiddleware
                     'supplier_id' => $validatedData['supplier_id'],
                     'tanggal_pembelian' => $validatedData['tanggal'],
                     'tanggal_jatuh_tempo' => $validatedData['tanggal_jatuh_tempo'] ?? null,
-                    'user_id' => Auth::id(), 
+                    'user_id' => Auth::id(),
                     'subtotal' => $subtotal_keseluruhan,
                     'diskon' => $diskon_tambahan,
                     'pajak' => $total_pajak_item,
@@ -465,7 +477,7 @@ class PurchaseController extends Controller implements HasMiddleware
                     'total_akhir' => $total_akhir,
                     'jumlah_dibayar' => $jumlah_dibayar,
                     'sisa_hutang' => $sisa,
-                    'status_pembayaran' => $statusBaru === 'Dibatalkan' ? 'Dibatalkan' : $status_pembayaran_server,
+                    'status_pembayaran' => $statusBaru === 'Batal' ? 'Batal' : $status_pembayaran_server,
                     'status_barang' => $validatedData['status_barang'],
                     'catatan' => $validatedData['catatan'],
                 ]);
@@ -483,7 +495,7 @@ class PurchaseController extends Controller implements HasMiddleware
                         'harga_beli' => $itemData['harga_beli'],
                         'diskon' => $itemData['diskon'] ?? 0,
                         'taxe_id' => $itemData['taxe_id'] ?? null,
-                        'subtotal' => $itemData['subtotal'], 
+                        'subtotal' => $itemData['subtotal'],
                     ]);
 
                     // Update harga beli master (Produk Induk atau Varian)
@@ -514,8 +526,8 @@ class PurchaseController extends Controller implements HasMiddleware
     {
         // try {
         //     DB::transaction(function () use ($pembelian) {
-        //         // Kembalikan stok hanya jika barangnya pernah diterima dan status belum 'Dibatalkan'
-        //         if ($pembelian->status_barang === 'Diterima' && $pembelian->status_pembayaran !== 'Dibatalkan') {
+        //         // Kembalikan stok hanya jika barangnya pernah diterima dan status belum 'Batal'
+        //         if ($pembelian->status_barang === 'Diterima' && $pembelian->status_pembayaran !== 'Batal') {
         //             foreach ($pembelian->details as $detail) {
         //                 Product::where('id', $detail->product_id)->decrement('qty', $detail->qty);
         //             }
@@ -555,5 +567,65 @@ class PurchaseController extends Controller implements HasMiddleware
         // Membuat PDF
         $pdf = Pdf::loadView('inventory::pembelian.faktur-pdf', $data);
         return $pdf->stream('faktur-pembelian-' . $pembelian->referensi . '.pdf');
+    }
+
+    public function storePayment(Request $request, Purchase $pembelian)
+    {
+        // Hilangkan format ribuan (titik) dari nominal input UI sebelum validasi
+        if ($request->filled('jumlah_bayar')) {
+            $request->merge([
+                'jumlah_bayar' => preg_replace('/[^0-9]/', '', $request->input('jumlah_bayar'))
+            ]);
+        }
+
+        $validatedData = $request->validate([
+            'tanggal_bayar' => 'required|date',
+            'jumlah_bayar' => 'required|numeric|min:1|max:' . $pembelian->sisa_hutang,
+            'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS',
+            'bank_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:banks,id',
+            'referensi_pembayaran' => 'nullable|string|max:100',
+            'catatan' => 'nullable|string',
+        ], [
+            'jumlah_bayar.max' => 'Jumlah pembayaran tidak boleh melebihi sisa hutang (Rp ' . number_format($pembelian->sisa_hutang, 0, ',', '.') . ').',
+            'bank_id.required_if' => 'Rekening tujuan wajib dipilih jika menggunakan metode TRANSFER.'
+        ]);
+
+        try {
+            DB::transaction(function () use ($validatedData, $pembelian) {
+                // 1. Masukkan data ke tabel purchase_payments melalui relasi
+                $pembelian->payments()->create([
+                    'user_id' => Auth::id(),
+                    'tanggal_bayar' => $validatedData['tanggal_bayar'],
+                    'jumlah_bayar' => $validatedData['jumlah_bayar'],
+                    'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                    'bank_id' => $validatedData['bank_id'] ?? null,
+                    'referensi_pembayaran' => $validatedData['referensi_pembayaran'] ?? null,
+                    'catatan' => $validatedData['catatan'] ?? null,
+                ]);
+
+                // 2. Kalkulasi akumulasi pembayaran baru
+                $totalDibayarBaru = $pembelian->jumlah_dibayar + $validatedData['jumlah_bayar'];
+                $sisaHutangBaru = $pembelian->total_akhir - $totalDibayarBaru;
+
+                if ($sisaHutangBaru < 0) {
+                    $sisaHutangBaru = 0;
+                }
+
+                // 3. Tentukan status pembayaran induk
+                $statusPembayaranBaru = $sisaHutangBaru <= 0 ? 'Lunas' : 'Hutang';
+
+                // 4. Update baris data purchases master
+                $pembelian->update([
+                    'jumlah_dibayar' => $totalDibayarBaru,
+                    'sisa_hutang' => $sisaHutangBaru,
+                    'status_pembayaran' => $statusPembayaranBaru
+                ]);
+            });
+
+            return redirect()->route('pembelian.show', $pembelian->referensi)
+                ->with('success', 'Pembayaran cicilan berhasil dicatat.');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 }

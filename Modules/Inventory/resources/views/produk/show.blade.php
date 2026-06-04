@@ -11,17 +11,20 @@
 @endsection
 
 @section('content')
-    <div class="container-fluid p-0">
+    <div class="p-0">
 
         {{-- Header Navigation --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold py-1 mb-0"><span class="text-muted fw-light">Inventaris /</span> Detail Produk</h4>
-            <div class="d-flex gap-2">
-                <a href="{{ route('produk.index') }}" class="btn btn-outline-secondary"><i class="bx bx-arrow-back me-1"></i>
-                    Kembali</a>
-                <a href="{{ route('produk.edit', $produk->slug) }}" class="btn btn-primary"><i
-                        class="bx bx-edit-alt me-1"></i> Edit Produk</a>
-            </div>
+        <div class="d-flex justify-content-start align-items-center mb-4 gap-3">
+            <a href="{{ route('produk.index') }}" class="btn btn-outline-secondary px-2" title="Kembali"
+                data-bs-toggle="tooltip" data-bs-target="up">
+                <i class="bx bx-arrow-back"></i>
+                <span class="text-muted ms-2 d-none d-md-block">Kembali</span>
+            </a>
+            <a href="{{ route('produk.edit', $produk->slug) }}" class="btn btn-primary px-2" title="Edit Produk"
+                data-bs-toggle="tooltip" data-bs-target="up">
+                <i class="bx bx-edit-alt"></i>
+                <span class="text-muted ms-2 d-none d-md-block">Edit Produk</span>
+            </a>
         </div>
 
         <div class="row">
@@ -42,14 +45,14 @@
                                     @foreach ($sortedImages as $img)
                                         <div class="swiper-slide text-center">
                                             <img src="{{ Storage::url($img->path) }}" class="img-fluid rounded shadow-sm"
-                                                style="height: 350px; width: 100%; object-fit: contain; background-color: #f8f9fa;"
+                                                style="height: 400px; width: 400px; object-fit: contain; background-color: #f8f9fa;"
                                                 alt="{{ $produk->name_product }}">
                                         </div>
                                     @endforeach
                                 @else
                                     <div class="swiper-slide text-center">
                                         <img src="{{ asset('assets/img/produk.png') }}" class="img-fluid rounded shadow-sm"
-                                            style="height: 350px; width: 100%; object-fit: contain; background-color: #f8f9fa;"
+                                            style="height: 300px; width: 100%; object-fit: contain; background-color: #f8f9fa;"
                                             alt="Default">
                                     </div>
                                 @endif
@@ -69,7 +72,7 @@
                                     @foreach ($sortedImages as $img)
                                         <div class="swiper-slide">
                                             <img src="{{ Storage::url($img->path) }}" class="rounded border"
-                                                style="width: 100%; height: 70px; object-fit: cover;" alt="Thumbnail">
+                                                style="width: 50px; height: 50px; object-fit: cover;" alt="Thumbnail">
                                         </div>
                                     @endforeach
                                 </div>

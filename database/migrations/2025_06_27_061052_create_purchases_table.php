@@ -27,8 +27,8 @@ return new class extends Migration
                 $table->decimal('total_akhir', 15, 0);
                 $table->decimal('jumlah_dibayar', 15, 0)->default(0);
                 $table->decimal('sisa_hutang', 15, 0)->default(0);
-                $table->string('status_barang', 30)->default('diterima');
-                $table->string('status_pembayaran', 30)->default('lunas');
+                $table->string('status_barang', 30)->default('Diterima');
+                $table->string('status_pembayaran', 30)->default('Lunas');
                 $table->string('metode_pembayaran', 30)->default('TUNAI');
                 $table->foreignId('bank_id')->nullable()->constrained('banks')->onDelete('set null');
                 $table->text('catatan')->nullable();

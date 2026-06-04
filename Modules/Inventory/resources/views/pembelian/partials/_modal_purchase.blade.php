@@ -46,9 +46,9 @@
                         </div>
 
                         <div id="transfer-details" class="d-none mt-3 animate__animated animate__fadeIn">
-                            <label for="bank_tujuan" class="form-label fw-semibold">Rekening Tujuan <span
+                            <label for="bank_id" class="form-label fw-semibold">Rekening Tujuan <span
                                     class="text-danger">*</span></label>
-                            <select name="bank_tujuan" id="bank_tujuan" class="form-select select2 select2-bank"
+                            <select name="bank_id" id="bank_id" class="form-select select2 select2-bank"
                                 data-placeholder="Pilih Rekening Bank" form="formPurchase">
                                 <option value=""></option>
                                 @foreach ($banks as $bank)
@@ -56,7 +56,6 @@
                                         {{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}
                                     </option>
                                 @endforeach
-                            </select>
                             </select>
                         </div>
                     </div>
@@ -90,12 +89,36 @@
                 </div>
 
                 {{-- Kembalian & Catatan --}}
-                <div class="row mb-3">
-                    <div class="col-12 mb-3">
-                        <div class="d-flex justify-content-between align-items-center p-3 border rounded bg-light">
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded bg-label-light">
                             <span class="fw-semibold text-muted">Kembalian</span>
                             <h4 class="mb-0 fw-bold change-value" id="change-display">Rp 0</h4>
                         </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="statusBarang" class="form-label fw-semibold">Status Barang <span
+                                class="text-danger">*</span></label>
+                        <select class="form-select select2 @error('status_barang') is-invalid @enderror"
+                            name="status_barang" id="statusBarang" form="formPurchase" required>
+                            <option value="" disabled selected>Pilih Status</option>
+                            @foreach ($barangs as $barang)
+                                <option value="{{ $barang }}" @selected(old('status_barang') == $barang)>
+                                    {{ $barang }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="statusBayar" class="form-label fw-semibold">Status Pembayaran <span
+                                class="text-danger">*</span></label>
+                        <select class="form-select select2 @error('status_pembayaran') is-invalid @enderror"
+                            name="status_pembayaran" id="statusBayar" form="formPurchase" required>
+                            <option value="" disabled selected>Pilih Status</option>
+                            @foreach ($payments as $payment)
+                                <option value="{{ $payment }}" @selected(old('status_pembayaran') == $payment)>
+                                    {{ $payment }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-12">
                         <label for="catatan" class="form-label fw-semibold">Catatan</label>
@@ -104,7 +127,8 @@
                                 {!! old('catatan') !!}
                             </div>
                         </div>
-                        <input type="hidden" name="catatan" id="catatan" value="{{ old('catatan') }}">
+                        <input type="hidden" name="catatan" id="catatan" form="formPurchase"
+                            value="{{ old('catatan') }}">
                         @error('catatan')
                             <div class="invalid-feedback d-block text-sm">{{ $message }}</div>
                         @enderror
