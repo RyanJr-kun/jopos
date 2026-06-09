@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Ecommerce\Models\Promotion;
 use Modules\Inventory\Models\PurchaseItem;
+use Illuminate\Support\Facades\Storage;
 use Modules\POS\Models\SaleItem;
 
 class Product extends Model
@@ -20,6 +21,8 @@ class Product extends Model
 
     protected $guarded = ['id'];
     protected $with = ['category', 'user', 'brand', 'unit', 'garansi'];
+
+    protected $appends = ['image_url'];
 
     public function sluggable(): array
     {
@@ -110,16 +113,6 @@ class Product extends Model
         return $this->hasOne(PurchaseItem::class)->latestOfMany();
     }
 
-    public function images()
-    {
-        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
-    }
-
-    public function primaryImage()
-    {
-        return $this->hasOne(ProductImage::class)->where('is_primary', true);
-    }
-
     /** Tipe variasi (misal: Warna, RAM, Storage) */
     public function variantTypes(): HasMany
     {
@@ -180,5 +173,26 @@ class Product extends Model
         }
 
         return null;
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    public function primaryImage()
+    {
+        return $this->hasOne(ProductImage::class)->where('is_primary', true);
+    }
+
+    public function getImageUrlAttribute(): string
+    {
+        $imagePath = $this->primaryImage?->path;
+
+        if ($imagePath && Storage::exists($imagePath)) {
+            return Storage::url($imagePath);
+        }
+
+        return asset('assets/img/produk.png');
     }
 }

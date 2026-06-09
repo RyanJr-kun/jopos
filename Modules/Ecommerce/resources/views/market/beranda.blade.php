@@ -340,11 +340,7 @@
                                                 <div class="product-card-img-container">
                                                     <a
                                                         href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                                                        <img src="{{ $produk->primaryImage
-                                                            ? Storage::url($produk->primaryImage->path)
-                                                            : ($produk->img_produk
-                                                                ? Storage::url($produk->img_produk)
-                                                                : asset('assets/img/produk.png')) }}"
+                                                        <img src="{{ $produk->image_url }}"
                                                             alt="{{ $produk->name_product }}" loading="eager"
                                                             class="card-img-top">
                                                         @if ($produk->stocks->sum('qty') < 1)
@@ -496,12 +492,7 @@
                                     <div class="card product-card overflow-hidden h-100 d-flex flex-column">
                                         <div class="product-card-img-container">
                                             <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                                                <img src="{{ $produk->primaryImage
-                                                    ? Storage::url($produk->primaryImage->path)
-                                                    : ($produk->img_produk
-                                                        ? Storage::url($produk->img_produk)
-                                                        : asset('assets/img/produk.png')) }}"
-                                                    loading="eager" class="card-img-top"
+                                                <img src="{{ $produk->image_url }}" loading="eager" class="card-img-top"
                                                     alt="{{ $produk->name_product }}">
 
                                                 @if ($produk->stocks->sum('qty') < 1)
@@ -602,11 +593,7 @@
                         <div class="card product-card overflow-hidden h-100 d-flex flex-column">
                             <div class="product-card-img-container">
                                 <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                                    <img src="{{ $produk->primaryImage
-                                        ? Storage::url($produk->primaryImage->path)
-                                        : ($produk->img_produk
-                                            ? Storage::url($produk->img_produk)
-                                            : asset('assets/img/produk.png')) }}"
+                                    <img src="{{ $produk->image_url }}"
                                         alt="{{ $produk->name_product }}" loading="eager" class="card-img-top">
                                     @if ($produk->stocks->sum('qty') < 1)
                                         <div class="product-badge">

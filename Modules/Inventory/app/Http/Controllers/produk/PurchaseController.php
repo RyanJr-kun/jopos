@@ -301,8 +301,16 @@ class PurchaseController extends Controller implements HasMiddleware
         $pembelian->load([
             'details.produk.primaryImage',
             'details.pajak',
-            'details.varian.options' // Asumsi nama relasi di PurchaseItem adalah 'varian'
+            'details.varian.options'
         ]);
+
+        $supplier = Supplier::query()->where('status', 1)->get();
+        $taxes = Taxe::all();
+        $nomer_referensi = $this->generatePurchaseInvoiceNumber();
+        $barangs = Purchase::getStatusBarangs();
+        $payments = Purchase::getPaymentStatus();
+        $options = Purchase::getPaymentMethods();
+        $banks = Bank::all();
 
         $statuses = Purchase::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
 
@@ -312,6 +320,13 @@ class PurchaseController extends Controller implements HasMiddleware
             'pemasok' => Supplier::where('status', 1)->get(),
             'taxes' => Taxe::all(),
             'statuses' => $statuses,
+            'supplier' => $supplier,
+            'taxes' => $taxes,
+            'nomer_referensi' => $nomer_referensi,
+            'barangs' => $barangs,
+            'payments' => $payments,
+            'options' => $options,
+            'banks' => $banks,
         ]);
     }
 

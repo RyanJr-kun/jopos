@@ -671,7 +671,7 @@ class ProductController extends Controller implements HasMiddleware
                         'qty' => $stokVarian,
                         'harga_beli' => $variant->harga_beli,
                         'harga_jual' => $variant->harga_jual,
-                        // Gunakan gambar varian, jika tidak ada fallback ke primary image produk
+                        'image_url' => $product->image_url,
                         'img_produk' => $variant->img_variant ?? $product->primaryImage->path ?? null,
                         'taxe_id' => $product->taxe_id,
                         'pajak' => $product->pajak ? ['rate' => $product->pajak->rate] : null
@@ -699,6 +699,7 @@ class ProductController extends Controller implements HasMiddleware
                     'qty' => $stokProduk,
                     'harga_beli' => $product->harga_beli,
                     'harga_jual' => $product->harga_jual,
+                    'image_url' => $product->image_url,
                     'img_produk' => $product->primaryImage->path ?? null,
                     'taxe_id' => $product->taxe_id,
                     'pajak' => $product->pajak ? ['rate' => $product->pajak->rate] : null
@@ -769,8 +770,8 @@ class ProductController extends Controller implements HasMiddleware
                     'name_product' => Str::limit($produk->name_product, 30),
                     'qty' => $produk->stocks->firstWhere('product_variant_id', null)?->qty ?? 0, // Atau hitung via subquery
                     'stok_minimum' => $produk->stok_minimum,
-                    'img_url'      => $produk->img_produk
-                        ? asset('storage/' . $produk->img_produk)
+                    'img_url'      => $produk->image_url
+                        ? asset('storage/' . $produk->image_url)
                         : asset('assets/img/produk.png'),
                     'url' => route('stok.rendah')
                 ];
@@ -813,7 +814,7 @@ class ProductController extends Controller implements HasMiddleware
                 return [
                     'name_product' => \Illuminate\Support\Str::limit($produk->name_product, 30),
                     'needed'       => $produk->qty - $produk->sn_tercatat_count,
-                    'img_url'      => $produk->img_produk ? asset('storage/' . $produk->img_produk) : asset('assets/img/produk.png'),
+                    'img_url'      => $produk->image_url ? asset('storage/' . $produk->image_url) : asset('assets/img/produk.png'),
                     'url'          => route('serialNumber.index', ['produk_slug' => $produk->slug])
                 ];
             })

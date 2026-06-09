@@ -127,8 +127,7 @@
                     return produk.text;
                 }
 
-                const defaultImage = "{{ asset('assets/img/produk.png') }}";
-                const imageUrl = produk.img_produk ? `{{ asset('storage/') }}/${produk.img_produk}` : defaultImage;
+                const imageUrl = produk.image_url;
                 const hargaFormatted = new Intl.NumberFormat('id-ID', {
                     style: 'currency',
                     currency: 'IDR',
@@ -174,7 +173,7 @@
                             results: data.data.map(item => ({
                                 id: item.id,
                                 text: item.name_product,
-                                img_produk: item.img_produk,
+                                image_url: item.image_url,
                                 harga_jual: item.harga_jual
                             })),
                             pagination: {

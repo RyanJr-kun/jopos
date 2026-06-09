@@ -349,12 +349,8 @@
                             <div class="card product-card overflow-hidden h-100 d-flex flex-column">
                                 <div class="product-card-img-container">
                                     <a href="{{ route('market.produk.detail', ['slug' => $serupa->slug]) }}">
-                                        <img src="{{ $serupa->primaryImage
-                                            ? Storage::url($serupa->primaryImage->path)
-                                            : ($serupa->img_produk
-                                                ? Storage::url($serupa->img_produk)
-                                                : asset('assets/img/produk.png')) }}"
-                                            alt="{{ $serupa->name_product }}" loading="eager" class="card-img-top">
+                                        <img src="{{ $serupa->image_url }}" alt="{{ $serupa->name_product }}"
+                                            loading="eager" class="card-img-top">
 
                                         @if ($serupa->stocks->sum('qty') < 1)
                                             <div class="product-badge">

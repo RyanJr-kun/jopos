@@ -69,34 +69,12 @@ class MarketController extends Controller
             ->latest()
             ->get();
 
-        // Ambil 6 produk terlaris sepanjang waktu
         $produkTerlaris = Product::with(['unit', 'promotions'])
-            ->select('products.*', DB::raw('SUM(sale_items.jumlah) as total_terjual'))
-            ->join('sale_items', 'products.id', '=', 'sale_items.product_id')
-            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-            ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
-            // PERBAIKAN: Tambahkan semua kolom yang dipilih ke GROUP BY untuk kompatibilitas dengan mode ONLY_FULL_GROUP_BY
-            ->groupBy(
-                'products.id',
-                'products.name_product',
-                'products.slug',
-                'products.barcode',
-                'products.sku',
-                'products.category_id',
-                'products.brand_id',
-                'products.unit_id',
-                'products.specification',
-                'products.description',
-                'products.harga_jual',
-                'products.harga_beli',
-                'products.warrantie_id',
-                'products.stok_minimum',
-                'products.taxe_id',
-                'products.wajib_seri',
-                'products.user_id',
-                'products.created_at',
-                'products.updated_at'
-            )
+            ->withSum(['itemSales as total_terjual' => function ($query) {
+                // Gabungkan ke tabel sales hanya untuk memfilter status pembayaran
+                $query->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                    ->where('sales.status_pembayaran', '!=', 'Dibatalkan');
+            }], 'jumlah') // Menjumlahkan kolom 'jumlah'
             ->orderByDesc('total_terjual')
             ->limit(6)
             ->get();

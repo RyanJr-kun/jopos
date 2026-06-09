@@ -249,6 +249,52 @@
 
 @section('page-script')
     <script type="module">
+        const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                const formatBankLogo = (state) => {
+                    if (!state.id) {
+                        return state.text;
+                    }
+                    const logoUrl = $(state.element).data('logo');
+                    if (!logoUrl) {
+                        return state.text;
+                    }
+                    const $state = $(
+                        '<span class="d-flex align-items-center">' +
+                        '<img src="' + logoUrl +
+                        '" style="width: 24px; height: 24px; object-fit: contain; margin-right: 8px;" alt="logo" />' +
+                        '<span>' + state.text + '</span>' +
+                        '</span>'
+                    );
+
+                    return $state;
+                };
+
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    const isBankSelect = $this.hasClass('select2-bank');
+                    let select2Options = {
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
+                    };
+
+                    if (isBankSelect) {
+                        select2Options.templateResult = formatBankLogo;
+                        select2Options.templateSelection = formatBankLogo;
+                    }
+
+                    $this.select2(select2Options);
+                });
+            } else {
+                setTimeout(initSelect2, 100);
+            }
+        };
+
+        initSelect2();
+    </script>
+    <script type="module">
         // 1. FUNGSI PENUNGGU JQUERY & SELECT2
         function waitForDependencies(callback) {
             if (window.$ && window.$.fn && window.$.fn.select2) {
@@ -340,14 +386,6 @@
 
             // --- B. LOGIKA JQUERY & KASIR ---
             waitForDependencies(function() {
-
-                // Inisialisasi Default Select2
-                $('.select2:not(#select2):not(.select2-bank)').select2({
-                    placeholder: "Pilih...",
-                    allowClear: true,
-                    width: '100%',
-                });
-
                 // Utilitas Format
                 $("#qty").removeAttr("onfocus");
                 const formatCurrency = (number) => new Intl.NumberFormat('id-ID', {
@@ -383,16 +421,14 @@
 
                 function formatProduct(produk) {
                     if (!produk.id) return produk.text;
-                    var defaultImage = "{{ asset('assets/img/produk.png') }}";
-                    var r2BaseUrl = "{{ config('filesystems.disks.r2.url') }}";
-                    var imageUrl = produk.img_produk ? `${r2BaseUrl}/${produk.img_produk}` : defaultImage;
+                    const imageUrl = produk.image_url || "{{ asset('assets/img/produk.png') }}";
                     var variantBadge = produk.variant_id ?
                         `<span class="badge bg-label-info text-xs mt-1"><i class="bx bx-list-ul ms-n1 me-1"></i>Varian</span>` :
                         '';
 
                     return $(`
                         <div class="d-flex align-items-center">
-                            <img src="${imageUrl}" class="avatar avatar-sm me-3" />
+                            <img src="${imageUrl}" class="rounded rounded-2 me-3" style="width:40px; height:40px; object-fit:cover;" />
                             <div>
                                 <h6 class="mb-0 text-sm">${produk.text}</h6>
                                 <p class="text-xs text-muted mb-0">Stock: ${produk.qty} ${variantBadge}</p>
@@ -443,7 +479,7 @@
                                         product_id: item.id,
                                         variant_id: item.variant_id || null,
                                         text: displayName,
-                                        img_produk: item.img_produk,
+                                        image_url: item.image_url,
                                         qty: item.qty,
                                         harga_beli: item.harga_beli,
                                         taxe_id: item.taxe_id,
@@ -475,7 +511,8 @@
                     const produkId = selectedData.product_id;
                     const variantId = selectedData.variant_id;
                     const produkNama = selectedData.text;
-                    const produkImg = selectedData.img_produk;
+                    const imageUrl = selectedData.image_url ||
+                        "{{ asset('assets/img/produk.png') }}";
                     const hargaBeli = selectedData.harga_beli || 0;
                     const pajakId = selectedData.taxe_id || null;
                     const pajakRate = selectedData.pajak_rate || 0;
@@ -489,10 +526,6 @@
                         currentQtyInput.val(newQty);
                         updateRowDisplay(existingRow);
                     } else {
-                        const defaultImage = "{{ asset('assets/img/produk.png') }}";
-                        const r2BaseUrl = "{{ config('filesystems.disks.r2.url') }}";
-                        const imageUrl = produkImg ? `${r2BaseUrl}/${produkImg}` : defaultImage;
-
                         const subtotalAwal = (hargaBeli * qtyToAdd);
                         const pajakAwal = subtotalAwal * (pajakRate / 100);
                         const subtotalDenganTaxe = subtotalAwal + pajakAwal;
@@ -508,7 +541,7 @@
                             <input type="hidden" class="item-pajak-rate-hidden" value="${pajakRate}">
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <img src="${imageUrl}" class="avatar avatar-sm me-3" alt="${produkNama}">
+                                    <img src="${imageUrl}" class="rounded rounded-2 me-3" style="width:40px; height:40px; object-fit:cover;" alt="${produkNama}">
                                     <div>
                                         <h6 class="mb-0 text-sm item-name">${produkNama}</h6>
                                     </div>
@@ -705,14 +738,6 @@
                 // ==========================================
                 const paymentModalElement = document.getElementById('paymentModal');
                 if (paymentModalElement) {
-                    // Inisialisasi Select2 bank di dalam payment modal
-                    $('.select2-bank').select2({
-                        placeholder: "Pilih Rekening Bank...",
-                        allowClear: true,
-                        width: '100%',
-                        dropdownParent: $('#paymentModal'),
-                    });
-
                     const inputJumlah = document.getElementById('jumlah-dibayar-input');
                     const displayChange = document.getElementById('change-display');
 

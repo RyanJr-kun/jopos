@@ -9,6 +9,7 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Modules\Ecommerce\Models\Promotion;
+use Modules\Inventory\Models\Product;
 
 class PromotionController extends Controller implements HasMiddleware
 {
@@ -54,9 +55,11 @@ class PromotionController extends Controller implements HasMiddleware
      */
     public function create()
     {
-        return view('ecommerce::promo.create', [
-            'title' => 'Buat Promotion Baru',
-        ]);
+       $products = Product::with('primaryImage')
+        ->select('id', 'name_product', 'harga_jual')
+        ->get();
+
+        return view('ecommerce::promo.create', compact('products'));
     }
 
     /**

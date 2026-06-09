@@ -63,8 +63,7 @@ class Purchase extends Model
     {
         return [
             'TUNAI',
-            'TRANSFER',
-            'QRIS'
+            'TRANSFER'
         ];
     }
 

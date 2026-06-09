@@ -52,7 +52,7 @@
                                 data-placeholder="Pilih Rekening Bank" form="formPurchase">
                                 <option value=""></option>
                                 @foreach ($banks as $bank)
-                                    <option value="{{ $bank->id }}" data-logo="{{ $bank->logo_bank }}">
+                                    <option value="{{ $bank->id }}" data-logo="{{ $bank->logo_url }}">
                                         {{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}
                                     </option>
                                 @endforeach

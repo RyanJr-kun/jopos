@@ -1,46 +1,63 @@
 @extends('layouts/contentNavbarLayout')
 
 @section('title', 'Edit Purchase - ' . $pembelian->referensi)
+
 @section('vendor-style')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
 @endsection
 
+@section('page-style')
+    @vite(['resources/assets/vendor/scss/pages/page-purchase.scss'])
+@endsection
+
+@section('vendor-script')
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+@endsection
+
 @section('content')
-    <form action="{{ route('pembelian.update', $pembelian->referensi) }}" method="post" id="form-pembelian-edit">
+
+    <form action="{{ route('pembelian.update', $pembelian->referensi) }}" method="post" id="formPurchase">
         @method('PUT')
         @csrf
 
         <div class="card rounded-3 shadow-sm border-0">
-            <div
-                class="card-header bg-transparent border-bottom pt-4 pb-3 d-flex justify-content-between align-items-center">
+            {{-- ✅ Disesuaikan: header style sama dengan create --}}
+            <div class="card-header border-bottom py-3 justify-content-between align-items-center d-flex">
                 <h5 class="mb-0 fw-bold">Edit Purchase <span class="text-muted fs-6 ms-1">#{{ $pembelian->referensi }}</span>
                 </h5>
-                <a href="{{ route('pembelian.index') }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="bx bx-arrow-back me-1"></i> Kembali
+                <a href="{{ route('pembelian.index') }}" class="btn btn-icon btn-outline-secondary btn-sm"
+                    data-bs-toggle="tooltip" aria-label="Kembali" data-bs-original-title="Kembali">
+                    <i class="bx bx-arrow-back"></i>
                 </a>
             </div>
 
             <div class="card-body p-4">
                 <!-- HEADER INFO -->
                 <div class="row g-3 mb-4">
-                    <div class="col-12 col-md-6 col-lg-4">
+                    <div class="col-12 col-md-6 col-lg-3">
                         <label for="Supplier" class="form-label fw-semibold">Supplier <span
                                 class="text-danger">*</span></label>
-                        <select class="form-select  select2 @error('supplier_id') is-invalid @enderror" name="supplier_id"
-                            id="Supplier" required>
-                            <option value="" disabled>Pilih Supplier</option>
-                            {{-- Perhatikan variabel $pemasok atau $supplier tergantung dari controller Anda, saya gunakan $pemasok sesuai file asli Anda --}}
-                            @foreach ($pemasok as $item)
-                                <option value="{{ $item->id }}" @selected(old('supplier_id', $pembelian->supplier_id) == $item->id)>{{ $item->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        {{-- ✅ Disesuaikan: tambah tombol quick-add supplier seperti create --}}
+                        <div class="d-flex gap-2">
+                            <select class="form-select select2 @error('supplier_id') is-invalid @enderror"
+                                name="supplier_id" id="Supplier" required>
+                                <option value="" disabled>Pilih Supplier</option>
+                                @foreach ($pemasok as $item)
+                                    <option value="{{ $item->id }}" @selected(old('supplier_id', $pembelian->supplier_id) == $item->id)>{{ $item->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="btn btn-outline-info rounded-2 px-3" data-bs-toggle="modal"
+                                data-bs-target="#createSupplierModal" title="Tambah Supplier Baru">
+                                <i class="bx bx-plus"></i>
+                            </button>
+                        </div>
                         @error('supplier_id')
                             <div class="invalid-feedback d-block text-sm">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <div class="col-12 col-md-6 col-lg-4">
+                    <div class="col-12 col-md-6 col-lg-3">
                         <label for="tanggal" class="form-label fw-semibold">Tanggal <span
                                 class="text-danger">*</span></label>
                         <input id="tanggal" name="tanggal" type="date"
@@ -51,7 +68,8 @@
                             <div class="invalid-feedback text-sm">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-12 col-md-6 col-lg-4">
+
+                    <div class="col-12 col-md-6 col-lg-3">
                         <label for="tanggal_jatuh_tempo" class="form-label fw-semibold">Tanggal Jatuh Tempo</label>
                         <input id="tanggal_jatuh_tempo" name="tanggal_jatuh_tempo" type="date"
                             class="form-control @error('tanggal_jatuh_tempo') is-invalid @enderror"
@@ -61,17 +79,17 @@
                         @enderror
                     </div>
 
-
-
-                    <div class="col-12 col-md-12 col-lg-4">
+                    <div class="col-12 col-md-12 col-lg-3">
                         <label for="referensi" class="form-label fw-semibold">No Invoice</label>
-                        <input type="text" class="form-control bg-label-light" id="referensi" name="referensi"
+                        {{-- ✅ Disesuaikan: bg-light seperti create --}}
+                        <input type="text" class="form-control bg-light" id="referensi" name="referensi"
                             value="{{ $pembelian->referensi }}" readonly>
                     </div>
                 </div>
 
                 <!-- PRODUCT SEARCH PANEL -->
-                <div class="bg-label-light p-3 rounded-3 border mb-4">
+                {{-- ✅ Disesuaikan: hilangkan bg-label-light, pakai plain border seperti create --}}
+                <div class="p-3 rounded-3 border mb-4">
                     <div class="row g-2 align-items-end">
                         <div class="col-12 col-lg-7">
                             <label for="select2" class="form-label fw-semibold">Cari Product</label>
@@ -116,26 +134,24 @@
                                     $pajak_amount = $subtotal_item * ($pajak_rate / 100);
                                     $subtotal_with_tax = $detail->subtotal;
 
-                                    // Pembentukan ID Unik agar script JS mengenali perbedaannya
                                     $rowId = $detail->product_variant_id
                                         ? "{$detail->product_id}-{$detail->product_variant_id}"
                                         : $detail->product_id;
 
-                                    // Set fallback default
-                                    $imageUrl = asset('assets/img/produk.png');
+                                    // 1. Ambil URL default dari Accessor Product
+                                    $imageUrl = $detail->produk->image_url;
                                     $namaVarian = '';
 
+                                    // 2. Jika ini adalah Varian
                                     if ($detail->product_variant_id && $detail->varian) {
-                                        // 1. Cek gambar varian
+                                        // Timpa gambar produk utama jika varian punya gambar spesifik
                                         if (!empty($detail->varian->img_variant)) {
-                                            $imageUrl = asset('storage/' . $detail->varian->img_variant);
-                                        }
-                                        // 2. Jika kosong, pakai cara jitu kamu: bungkus path primaryImage dengan asset(storage)
-                                        elseif (!empty($detail->produk->primaryImage->path)) {
-                                            $imageUrl = asset('storage/' . $detail->produk->primaryImage->path);
+                                            $imageUrl = \Illuminate\Support\Facades\Storage::url(
+                                                $detail->varian->img_variant,
+                                            );
                                         }
 
-                                        // Susun nama varian jika ada relasi opsi
+                                        // Format Nama Varian
                                         $variantOpts = [];
                                         if ($detail->varian->relationLoaded('options')) {
                                             foreach ($detail->varian->options as $opt) {
@@ -145,11 +161,6 @@
                                         $namaVarian = !empty($variantOpts)
                                             ? implode(' / ', $variantOpts)
                                             : 'SKU: ' . $detail->varian->sku;
-                                    } else {
-                                        // Jika produk simple, sama: bungkus path primaryImage dengan asset(storage)
-                                        if (!empty($detail->produk->primaryImage->path)) {
-                                            $imageUrl = asset('storage/' . $detail->produk->primaryImage->path);
-                                        }
                                     }
                                 @endphp
                                 <tr data-row-id="{{ $rowId }}">
@@ -168,9 +179,11 @@
                                     <input type="hidden" class="item-pajak-rate-hidden" value="{{ $pajak_rate }}">
 
                                     <td>
+                                        {{-- ✅ Disesuaikan: style img sama dengan create (rounded rounded-2, me-3) --}}
                                         <div class="d-flex align-items-center">
-                                            <img src="{{ $imageUrl }}" class="avatar avatar-sm me-3" alt="Produk">
-                                            <div class="d-flex flex-column">
+                                            <img src="{{ $imageUrl }}" class="rounded rounded-2 me-3"
+                                                style="width:40px; height:40px; object-fit:cover;" alt="Produk">
+                                            <div>
                                                 <h6 class="mb-0 text-sm item-name">
                                                     {{ $detail->produk->name_product ?? 'Produk Dihapus' }}</h6>
                                                 @if ($namaVarian)
@@ -207,167 +220,64 @@
                     </table>
                 </div>
 
-                <!-- BOTTOM SECTION: SETTINGS & TOTALS -->
-                <div class="row g-4 mb-4">
+                <!-- BOTTOM SECTION: TOTALS -->
+                {{-- ✅ Disesuaikan: pakai komponen .totals + clickable rows + modal payment seperti create --}}
+                <div class="row g-4">
                     <div class="col-12 col-xl-7">
-                        <div class="row g-3">
-                            <div class="col-12 col-sm-6">
-                                <label for="ongkir" class="form-label fw-semibold">Ongkos Kirim</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-label-light">Rp</span>
-                                    <input type="text" name="ongkir" id="ongkir" class="form-control text-end"
-                                        value="{{ old('ongkir', $pembelian->ongkir) }}">
-                                </div>
-                            </div>
-                            <div class="col-12 col-sm-6">
-                                <label for="diskon-tambahan" class="form-label fw-semibold">Diskon Tambahan</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-label-light">Rp</span>
-                                    <input type="text" name="diskon_tambahan" id="diskon-tambahan"
-                                        class="form-control text-end" value="{{ old('diskon', $pembelian->diskon) }}">
-                                </div>
-                            </div>
-                            <div class="col-12 col-sm-6">
-                                <label for="statusBarang" class="form-label fw-semibold">Status Barang <span
-                                        class="text-danger">*</span></label>
-                                <select class="form-select select2 @error('status_barang') is-invalid @enderror"
-                                    name="status_barang" id="statusBarang" required>
-                                    @foreach ($barangs as $barang)
-                                        <option value="{{ $barang }}" @selected(old('status_barang') == $barang)>
-                                            {{ $barang }}</option>
-                                    @endforeach
-                            </div>
-                            <div class="col-12 col-sm-6">
-                                <label for="statusBayar" class="form-label fw-semibold">Status Pembayaran <span
-                                        class="text-danger">*</span></label>
-                                <select class="form-select select2 @error('status_pembayaran') is-invalid @enderror"
-                                    name="status_pembayaran" id="statusBayar" required>
-                                    @foreach ($payments as $payment)
-                                        <option value="{{ $payment }}" @selected(old('status_pembayaran') == $payment)>
-                                            {{ $payment }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
+                        {{-- Kosong / bisa diisi konten lain jika diperlukan --}}
                     </div>
 
-                    <div class="col-12 col-xl-5">
-                        <div class="bg-label-light p-4 rounded-3 border h-100">
-                            <div class="d-flex justify-content-between mb-3">
-                                <span class="text-muted fw-semibold">Subtotal Keseluruhan</span>
-                                <span id="subtotal-keseluruhan" class="fw-bold">Rp 0</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-3 align-items-center">
-                                <span class="text-dark fw-bold text-uppercase">Total Akhir</span>
-                                <span id="total-akhir" class="fw-bolder fs-5 text-primary">Rp 0</span>
-                            </div>
-                            <hr class="border-secondary opacity-25">
-                            <div class="d-flex justify-content-between mb-3 align-items-center">
-                                <span class="text-dark fw-semibold">Nominal Bayar</span>
-                                <div class="w-50">
-                                    <input type="text" id="bayar" class="form-control text-end fw-bold">
-                                    <input type="hidden" name="jumlah_dibayar" id="jumlah_dibayar_hidden"
-                                        value="{{ old('jumlah_dibayar', $pembelian->jumlah_dibayar) }}">
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-dark fw-semibold">Sisa / Kembalian</span>
-                                <span id="kembalian" class="fw-bold fs-6">Rp 0</span>
-                            </div>
+                    <div class="totals">
+                        <div class="totals-row">
+                            <span class="totals-label">Subtotal Keseluruhan</span>
+                            <span class="totals-value" id="subtotal">Rp 0</span>
+                        </div>
+                        <div class="totals-row">
+                            <span class="totals-label">PPN</span>
+                            <span class="totals-value" id="pajak-total-display">Rp 0</span>
+                        </div>
+                        <div class="totals-row clickable" data-bs-toggle="modal" data-bs-target="#editExtraCostModal"
+                            data-type="ongkir" data-label="Ongkos Kirim" role="button" tabindex="0"
+                            aria-label="Edit ongkos kirim">
+                            <span class="totals-label">Ongkir</span>
+                            <span class="totals-value" id="ongkir-display">Rp 0</span>
+                            <input type="hidden" name="ongkir" id="ongkir-input"
+                                value="{{ old('ongkir', $pembelian->ongkir) }}">
+                        </div>
+                        <div class="totals-row clickable" data-bs-toggle="modal" data-bs-target="#editExtraCostModal"
+                            data-type="diskon" data-label="Diskon" role="button" tabindex="0"
+                            aria-label="Edit diskon">
+                            <span class="totals-label">Diskon (Rp)</span>
+                            <span class="totals-value" id="diskon-display">Rp 0</span>
+                            <input type="hidden" name="diskon_tambahan" id="diskon-tambahan"
+                                value="{{ old('diskon', $pembelian->diskon) }}">
+                        </div>
+                        <div class="totals-grand">
+                            <span class="grand-label">Total</span>
+                            <span class="grand-value" id="total-akhir" aria-live="polite">Rp 0</span>
+                        </div>
+                        <hr class="border-secondary opacity-25">
+                        <div class="d-flex">
+                            <button type="button"
+                                class="btn btn-primary w-100 justify-content-between align-items-center"
+                                id="btn-open-payment" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                                <span class="text-muted">Simpan Perubahan</span>
+                                <span class="text-muted" id="cart-total-btn-display">Rp 0</span>
+                            </button>
                         </div>
                     </div>
-                </div>
-
-                <!-- NOTES -->
-                <div class="mb-4">
-                    <label for="catatan" class="form-label fw-semibold">Catatan</label>
-                    <div class="border rounded-3 bg-white">
-                        <div id="quill-editor-catatan" style="min-height: 120px; border: none;">{!! old('catatan', $pembelian->catatan) !!}
-                        </div>
-                    </div>
-                    <input type="hidden" name="catatan" id="catatan"
-                        value="{{ old('catatan', $pembelian->catatan) }}">
-                    @error('catatan')
-                        <div class="invalid-feedback d-block text-sm">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <!-- ACTIONS -->
-                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-4 pt-3 border-top">
-                    <a href="{{ route('pembelian.index') }}" id="cancel-button"
-                        class="btn btn-outline-secondary w-100 w-sm-auto order-2 order-sm-1">Batalkan</a>
-                    <button id="saveBtn" type="submit"
-                        class="btn btn-info w-100 w-sm-auto order-1 order-sm-2 px-4">Simpan Perubahan</button>
                 </div>
             </div>
         </div>
     </form>
 
-    {{-- Modal Edit Item --}}
-    <div class="modal rounded-3 fade" id="editItemModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title fw-bold" id="editItemModalLabel">Edit Item</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editItemForm" onsubmit="return false;">
-                        <input type="hidden" id="edit-item-id">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label fw-semibold">Nama Product</label>
-                                <input type="text" class="form-control bg-label-light" id="edit-item-name" readonly
-                                    disabled>
-                            </div>
-                            <div class="col-md-6 col-12">
-                                <label for="edit-item-qty" class="form-label fw-semibold">Qty <span
-                                        class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="edit-item-qty" min="1" required>
-                            </div>
-                            <div class="col-md-6 col-12">
-                                <label for="edit-item-harga" class="form-label fw-semibold">Harga Beli <span
-                                        class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-label-light">Rp</span>
-                                    <input type="text" class="form-control text-end" id="edit-item-harga"
-                                        placeholder="0">
-                                </div>
-                            </div>
-                            <div class="col-md-6 col-12">
-                                <label for="edit-item-pajak-id" class="form-label fw-semibold">Pajak (Taxe)</label>
-                                <select class="form-select select2" id="edit-item-pajak-id">
-                                    <option value="" data-rate="0" selected>Tidak ada</option>
-                                    @foreach ($taxes as $pajak)
-                                        <option value="{{ $pajak->id }}" data-rate="{{ $pajak->rate }}">
-                                            {{ $pajak->name_taxe }} ({{ $pajak->rate }}%)</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-6 col-12">
-                                <label for="edit-item-diskon" class="form-label fw-semibold">Diskon Item</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-label-light">Rp</span>
-                                    <input type="text" class="form-control text-end text-danger" id="edit-item-diskon"
-                                        placeholder="0">
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-info" id="saveItemChangesBtn">Simpan Perubahan</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('inventory::pembelian.partials._modal_purchase')
+
 @endsection
 
 @section('page-script')
-    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script type="module">
-        // 1. FUNGSI PENUNGGU JQUERY & SELECT2 (Menghindari "Uncaught ReferenceError: $ is not defined")
+        // 1. FUNGSI PENUNGGU JQUERY & SELECT2
         function waitForDependencies(callback) {
             if (window.$ && window.$.fn && window.$.fn.select2) {
                 callback();
@@ -382,7 +292,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const ASSET_STORAGE = "{{ config('filesystems.disks.r2.url') }}";
 
-            // --- A. INISIALISASI QUILL (Bisa jalan tanpa jQuery) ---
+            // --- A. INISIALISASI QUILL ---
             if (document.getElementById('quill-editor-catatan')) {
                 const hiddenInputCatatan = document.getElementById('catatan');
                 const quillCatatan = new Quill('#quill-editor-catatan', {
@@ -397,17 +307,78 @@
                 }
             }
 
-            // --- B. LOGIKA KASIR MENGGUNAKAN JQUERY ---
+            // --- A2. LOGIKA SUPPLIER MODAL (sama seperti create) ---
+            const createSupplierForm = document.getElementById('createSupplierForm');
+            if (createSupplierForm) {
+                const pemasokSelect = document.getElementById('Supplier');
+                const createSupplierModal = new bootstrap.Modal(document.getElementById('createSupplierModal'));
+
+                createSupplierForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(this);
+
+                    this.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    this.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+
+                    fetch(this.action, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: formData
+                        })
+                        .then(response => {
+                            if (response.status === 422) {
+                                return response.json().then(data => {
+                                    throw {
+                                        errors: data.errors
+                                    };
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                const newOption = new Option(data.data.name, data.data.id, true, true);
+                                pemasokSelect.appendChild(newOption);
+                                pemasokSelect.dispatchEvent(new Event('change'));
+                                createSupplierForm.reset();
+                                createSupplierModal.hide();
+                                if (typeof window.showToast !== 'undefined') window.showToast('success',
+                                    data.message);
+                            }
+                        })
+                        .catch(error => {
+                            if (error.errors) {
+                                Object.keys(error.errors).forEach(key => {
+                                    const input = createSupplierForm.querySelector(
+                                        `[name="${key}"]`);
+                                    if (input) {
+                                        input.classList.add('is-invalid');
+                                        const errorFeedback = input.nextElementSibling;
+                                        if (errorFeedback && errorFeedback.classList.contains(
+                                                'invalid-feedback')) {
+                                            errorFeedback.textContent = error.errors[key][0];
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                });
+            }
+
+            // --- B. LOGIKA JQUERY & KASIR ---
             waitForDependencies(function() {
 
-                // --- Inisialisasi Default Select2 (Status, dll) ---
-                $('.select2:not(#select2)').select2({
+                // Inisialisasi Default Select2
+                $('.select2:not(#select2):not(.select2-bank)').select2({
                     placeholder: "Pilih...",
                     allowClear: true,
-                    width: '100%'
+                    width: '100%',
                 });
 
-                // Utilitas Format Mata Uang
+                // Utilitas Format
                 $("#qty").removeAttr("onfocus");
                 const formatCurrency = (number) => new Intl.NumberFormat('id-ID', {
                     style: 'currency',
@@ -415,30 +386,41 @@
                     minimumFractionDigits: 0
                 }).format(number);
 
-                const parseCurrency = (string) => parseFloat(String(string).replace(/[^0-9]/g, '')) || 0;
+                // ✅ FIX: parseCurrency yang benar untuk format Rupiah (titik = ribuan, koma = desimal)
+                const parseCurrency = (string) => {
+                    const cleaned = String(string)
+                        .replace(/\./g, '') // hapus titik ribuan
+                        .replace(',', '.'); // ganti koma desimal ke titik
+                    return parseFloat(cleaned) || 0;
+                };
 
                 function formatInputAsCurrency(input) {
                     let value = parseCurrency(input.val());
                     input.val(new Intl.NumberFormat('id-ID').format(value));
                 }
 
-                // Ambil nilai tertinggi counter dari backend agar item baru tidak menimpa array yang lama
+                // Ambil nilai tertinggi counter dari backend
                 let itemCounter =
                     {{ $pembelian->details->count() > 0 ? collect($pembelian->details->keys())->max() + 1 : 0 }};
                 const editItemModal = new bootstrap.Modal(document.getElementById('editItemModal'));
 
-                // Select2 untuk Cari Produk
+                // Select2 di dalam modal Edit Item
+                $('#edit-item-pajak-id').select2({
+                    placeholder: "Pilih...",
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('#editItemModal'),
+                });
+
                 function formatProduct(produk) {
                     if (!produk.id) return produk.text;
-                    var defaultImage = "{{ asset('assets/img/produk.png') }}";
-                    var imageUrl = produk.img_produk ? `${ASSET_STORAGE}${produk.img_produk}` :
-                        defaultImage;
+                    const imageUrl = produk.image_url || "{{ asset('assets/img/produk.png') }}";
                     var variantBadge = produk.variant_id ?
                         `<span class="badge bg-label-info text-xs mt-1"><i class="bx bx-list-ul ms-n1 me-1"></i>Varian</span>` :
                         '';
                     return $(`
                         <div class="d-flex align-items-center">
-                            <img src="${imageUrl}" class="avatar avatar-sm me-3" />
+                            <img src="${imageUrl}" class="rounded rounded-2 me-3" style="width:40px; height:40px; object-fit:cover;" />
                             <div>
                                 <h6 class="mb-0 text-sm">${produk.text}</h6>
                                 <p class="text-xs text-muted mb-0">Stock: ${produk.qty} ${variantBadge}</p>
@@ -476,7 +458,6 @@
                             params.page = params.page || 1;
                             let items = data.data ? data.data : (Array.isArray(data) ? data :
                             []);
-
                             return {
                                 results: items.map(function(item) {
                                     let combinedId = item.variant_id ?
@@ -489,7 +470,7 @@
                                         product_id: item.id,
                                         variant_id: item.variant_id || null,
                                         text: displayName,
-                                        img_produk: item.img_produk,
+                                        image_url: item.image_url,
                                         qty: item.qty,
                                         harga_beli: item.harga_beli,
                                         taxe_id: item.taxe_id,
@@ -505,18 +486,15 @@
                     }
                 });
 
-                // Tambah Item ke Tabel
+                // ADD ITEM TO TABLE
                 $("#btn-add").on("click", function() {
                     const selectedData = $("#select2").select2('data')[0];
                     const qty = $("#qty").val();
 
                     if (!selectedData || !selectedData.id || !qty || parseInt(qty) <= 0) {
-                        if (typeof Swal !== 'undefined') {
-                            window.showToast('warning',
-                                'Harap pilih produk dan tentukan jumlah yang valid.');
-                        } else {
-                            alert('Harap pilih produk dan tentukan jumlah yang valid.');
-                        }
+                        if (typeof window.showToast !== 'undefined') window.showToast('warning',
+                            'Harap pilih produk dan tentukan jumlah yang valid.');
+                        else alert('Harap pilih produk dan tentukan jumlah yang valid.');
                         return;
                     }
 
@@ -524,7 +502,8 @@
                     const produkId = selectedData.product_id;
                     const variantId = selectedData.variant_id;
                     const produkNama = selectedData.text;
-                    const produkImg = selectedData.img_produk;
+                    const imageUrl = selectedData.image_url ||
+                        "{{ asset('assets/img/produk.png') }}";
                     const hargaBeli = selectedData.harga_beli || 0;
                     const pajakId = selectedData.taxe_id || null;
                     const pajakRate = selectedData.pajak_rate || 0;
@@ -538,9 +517,6 @@
                         currentQtyInput.val(newQty);
                         updateRowDisplay(existingRow);
                     } else {
-                        const defaultImage = "{{ asset('assets/img/produk.png') }}";
-                        const imageUrl = produkImg ? `${ASSET_STORAGE}${produkImg}` : defaultImage;
-
                         const subtotalAwal = (hargaBeli * qtyToAdd);
                         const pajakAwal = subtotalAwal * (pajakRate / 100);
                         const subtotalDenganTaxe = subtotalAwal + pajakAwal;
@@ -556,8 +532,10 @@
                             <input type="hidden" class="item-pajak-rate-hidden" value="${pajakRate}">
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <img src="${imageUrl}" class="avatar avatar-sm me-3" alt="Produk">
-                                    <h6 class="mb-0 text-sm item-name">${produkNama}</h6>
+                                    <img src="${imageUrl}" class="rounded rounded-2 me-3" style="width:40px; height:40px; object-fit:cover;" alt="${produkNama}">
+                                    <div>
+                                        <h6 class="mb-0 text-sm item-name">${produkNama}</h6>
+                                    </div>
                                 </div>
                             </td>
                             <td class="align-middle text-center"><span class="item-qty">${qtyToAdd}</span></td>
@@ -567,8 +545,12 @@
                             <td class="subtotal-item text-start text-sm fw-bold">${formatCurrency(subtotalDenganTaxe)}</td>
                             <td>
                                 <div class="d-flex">
-                                    <button type="button" class="btn btn-link text-info p-0 m-0 me-2 btn-edit" title="Edit Item"><i class="bx bx-edit"></i></button>
-                                    <button type="button" class="btn btn-link text-danger p-0 m-0 btn-remove" title="Hapus Item"><i class="bx bx-trash"></i></button>
+                                    <button type="button" class="btn btn-link text-info p-0 m-0 me-2 btn-edit" title="Edit Item">
+                                        <i class="bx bx-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-link text-danger p-0 m-0 btn-remove" title="Hapus Item">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -580,10 +562,10 @@
                     $("#select2").val(null).trigger("change");
                     $("#qty").val("");
                     $("#sisa_stok").val("");
-                    calculateChange();
+                    calculateGrandTotal();
                 });
 
-                // Kalkulasi Dinamis
+                // CALCULATIONS
                 function calculateRow(row) {
                     const qty = parseFloat(row.find(".item-qty-hidden").val()) || 0;
                     const hargaBeli = parseFloat(row.find(".item-harga-hidden").val()) || 0;
@@ -600,6 +582,8 @@
 
                 function calculateGrandTotal() {
                     let subtotalKeseluruhan = 0;
+                    let totalPajakKeseluruhan = 0;
+
                     $('#table-pembelian tbody tr').each(function() {
                         const qty = parseFloat($(this).find(".item-qty-hidden").val()) || 0;
                         const hargaBeli = parseFloat($(this).find(".item-harga-hidden").val()) || 0;
@@ -609,41 +593,32 @@
 
                         const subtotalItem = (qty * hargaBeli) - diskon;
                         const pajakItem = subtotalItem * (pajakRate / 100);
-                        subtotalKeseluruhan += subtotalItem + pajakItem;
+
+                        subtotalKeseluruhan += subtotalItem;
+                        totalPajakKeseluruhan += pajakItem;
                     });
 
-                    $("#subtotal-keseluruhan").text(formatCurrency(subtotalKeseluruhan));
+                    $("#subtotal").text(formatCurrency(subtotalKeseluruhan));
+                    $("#pajak-total-display").text(formatCurrency(totalPajakKeseluruhan));
 
-                    const ongkir = parseCurrency($("#ongkir").val());
-                    const diskonTambahan = parseCurrency($("#diskon-tambahan").val());
-                    const totalAkhir = subtotalKeseluruhan - diskonTambahan + ongkir;
+                    const ongkir = parseFloat($("#ongkir-input").val()) || 0;
+                    const diskonTambahan = parseFloat($("#diskon-tambahan").val()) || 0;
+                    const totalAkhir = subtotalKeseluruhan + totalPajakKeseluruhan - diskonTambahan +
+                        ongkir;
+                    const finalTotal = totalAkhir < 0 ? 0 : totalAkhir;
 
-                    $("#total-akhir").text(formatCurrency(totalAkhir < 0 ? 0 : totalAkhir));
-                    return totalAkhir < 0 ? 0 : totalAkhir;
+                    $("#total-akhir").text(formatCurrency(finalTotal));
+                    $("#cart-total-btn-display").text(formatCurrency(finalTotal));
+
+                    const isCartEmpty = $('#table-pembelian tbody tr').length === 0;
+                    $('#btn-open-payment').prop('disabled', isCartEmpty);
+
+                    return finalTotal;
                 }
-
-                function calculateChange() {
-                    const totalAkhir = calculateGrandTotal();
-                    const bayar = parseCurrency($("#bayar").val());
-
-                    $("#jumlah_dibayar_hidden").val(bayar);
-                    const sisa = bayar - totalAkhir;
-
-                    $("#kembalian").text(formatCurrency(sisa));
-                    if (sisa < 0) {
-                        $("#kembalian").removeClass('text-dark').addClass('text-danger');
-                    } else {
-                        $("#kembalian").removeClass('text-danger').addClass('text-dark');
-                    }
-                }
-
-                // Event Listener Hapus & Update Data Tabel
-                $("#ongkir, #diskon-tambahan, #bayar").on("input", calculateChange);
 
                 $("#table-pembelian").on("click", ".btn-remove", function() {
                     const row = $(this).closest("tr");
                     const productName = row.find('.item-name').text();
-
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             title: 'Hapus Item?',
@@ -655,13 +630,13 @@
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 row.remove();
-                                calculateChange();
+                                calculateGrandTotal();
                             }
                         });
                     } else {
                         if (confirm(`Hapus ${productName} dari daftar?`)) {
                             row.remove();
-                            calculateChange();
+                            calculateGrandTotal();
                         }
                     }
                 });
@@ -670,19 +645,19 @@
                     const row = $(this).closest("tr");
                     const rowId = row.data('row-id');
 
-                    $("#edit-item-id").val(rowId);
-                    // Ambil gabungan nama + varian untuk modal agar user jelas
                     let fullName = row.find('.item-name').text();
                     let variantName = row.find('small.text-muted').text();
                     if (variantName) fullName += " " + variantName;
 
+                    $("#edit-item-id").val(rowId);
                     $("#edit-item-name").val(fullName);
                     $("#edit-item-qty").val(row.find(".item-qty-hidden").val());
                     $("#edit-item-harga").val(new Intl.NumberFormat('id-ID').format(row.find(
                         ".item-harga-hidden").val()));
                     $("#edit-item-diskon").val(new Intl.NumberFormat('id-ID').format(row.find(
                         ".item-diskon-hidden").val()));
-                    $("#edit-item-pajak-id").val(row.find(".item-pajak-id-hidden").val());
+                    $("#edit-item-pajak-id").val(row.find(".item-pajak-id-hidden").val()).trigger(
+                        'change');
 
                     editItemModal.show();
                 });
@@ -698,10 +673,14 @@
 
                     const selectedTaxe = $("#edit-item-pajak-id option:selected");
                     row.find(".item-pajak-id-hidden").val(selectedTaxe.val());
-                    row.find(".item-pajak-rate-hidden").val(selectedTaxe.data('rate'));
+                    row.find(".item-pajak-rate-hidden").val(selectedTaxe.data('rate') || 0);
 
                     updateRowDisplay(row);
                     editItemModal.hide();
+                });
+
+                $('#edit-item-harga, #edit-item-diskon').on('input', function() {
+                    formatInputAsCurrency($(this));
                 });
 
                 function updateRowDisplay(row) {
@@ -709,84 +688,217 @@
                     row.find('.item-harga').text(formatCurrency(row.find('.item-harga-hidden').val()));
                     row.find('.item-diskon').text(formatCurrency(row.find('.item-diskon-hidden').val()));
                     calculateRow(row);
-                    calculateChange();
+                    calculateGrandTotal();
                 }
 
-                // Update Status Bayar
-                $("#statusBayar").on("change", function() {
-                    const status = $(this).val();
-                    if (status === 'lunas') {
-                        const totalAkhir = calculateGrandTotal();
-                        $("#bayar").val(totalAkhir).trigger('input');
-                    } else if (status === 'belum lunas') {
-                        $("#bayar").val(0).trigger('input');
-                    }
-                });
+                // ==========================================
+                //  LOGIKA MODAL EXTRA COST (Ongkir/Diskon)
+                // ==========================================
+                const editExtraCostModal = document.getElementById('editExtraCostModal');
+                if (editExtraCostModal) {
+                    editExtraCostModal.addEventListener('show.bs.modal', function(event) {
+                        const trigger = event.relatedTarget;
+                        const type = trigger.getAttribute('data-type');
+                        const label = trigger.getAttribute('data-label');
 
-                // Format Currency saat input
-                $('#edit-item-harga, #edit-item-diskon, #ongkir, #diskon-tambahan, #bayar').on(
-                    'blur focusout',
-                    function() {
-                        formatInputAsCurrency($(this));
+                        document.getElementById('extra-cost-type').value = type;
+                        document.getElementById('editExtraCostModalLabel').innerText = 'Edit ' +
+                            label;
+                        document.getElementById('extra-cost-label').innerText = label;
+
+                        let currentValue = 0;
+                        if (type === 'ongkir') currentValue = document.getElementById(
+                            'ongkir-input').value;
+                        if (type === 'diskon') currentValue = document.getElementById(
+                            'diskon-tambahan').value;
+
+                        document.getElementById('extra-cost-value').value = new Intl.NumberFormat(
+                            'id-ID').format(currentValue);
                     });
 
-                // Validasi saat form disubmit
-                $("#form-pembelian-edit").on("submit", function(e) {
-                    const totalAkhir = calculateGrandTotal();
-                    const bayar = parseCurrency($("#bayar").val());
-                    const statusBayar = $("#statusBayar").val();
+                    document.getElementById('saveExtraCostBtn').addEventListener('click', function() {
+                        const type = document.getElementById('extra-cost-type').value;
+                        const value = parseCurrency(document.getElementById('extra-cost-value')
+                            .value);
+
+                        if (type === 'ongkir') {
+                            document.getElementById('ongkir-input').value = value;
+                            document.getElementById('ongkir-display').innerText = formatCurrency(
+                                value);
+                        } else if (type === 'diskon') {
+                            document.getElementById('diskon-tambahan').value = value;
+                            document.getElementById('diskon-display').innerText = formatCurrency(
+                                value);
+                        }
+
+                        bootstrap.Modal.getInstance(editExtraCostModal).hide();
+                        calculateGrandTotal();
+                    });
+
+                    $('#extra-cost-value').on('input', function() {
+                        let value = parseCurrency($(this).val());
+                        $(this).val(new Intl.NumberFormat('id-ID').format(value));
+                    });
+                }
+
+                // ==========================================
+                //  LOGIKA MODAL PAYMENT
+                // ==========================================
+                const paymentModalElement = document.getElementById('paymentModal');
+                if (paymentModalElement) {
+                    $('.select2-bank').select2({
+                        placeholder: "Pilih Rekening Bank...",
+                        allowClear: true,
+                        width: '100%',
+                        dropdownParent: $('#paymentModal'),
+                    });
+
+                    const inputJumlah = document.getElementById('jumlah-dibayar-input');
+                    const displayChange = document.getElementById('change-display');
+
+                    paymentModalElement.addEventListener('show.bs.modal', function() {
+                        const total = calculateGrandTotal();
+                        document.getElementById('payment-modal-total').innerText = formatCurrency(
+                            total);
+                        // ✅ Edit: pre-fill dengan jumlah_dibayar yang sudah ada
+                        if (inputJumlah && !inputJumlah.value) {
+                            inputJumlah.value = new Intl.NumberFormat('id-ID').format(
+                                {{ old('jumlah_dibayar', $pembelian->jumlah_dibayar ?? 0) }});
+                        }
+                        calculateModalChange();
+                        toggleTransferDetails();
+                    });
+
+                    document.querySelectorAll('.quick-pay-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const amount = parseFloat(this.getAttribute('data-amount'));
+                            let currentVal = parseCurrency(inputJumlah.value);
+                            inputJumlah.value = new Intl.NumberFormat('id-ID').format(
+                                currentVal + amount);
+                            calculateModalChange();
+                        });
+                    });
+
+                    const btnPayExact = document.getElementById('btn-pay-exact');
+                    if (btnPayExact) {
+                        btnPayExact.addEventListener('click', function() {
+                            const total = calculateGrandTotal();
+                            inputJumlah.value = new Intl.NumberFormat('id-ID').format(total);
+                            calculateModalChange();
+                        });
+                    }
+
+                    $(inputJumlah).on('input', function() {
+                        let val = parseCurrency($(this).val());
+                        $(this).val(new Intl.NumberFormat('id-ID').format(val));
+                        calculateModalChange();
+                    });
+
+                    function calculateModalChange() {
+                        const total = calculateGrandTotal();
+                        const bayar = parseCurrency(inputJumlah.value);
+                        const change = bayar - total;
+
+                        displayChange.innerText = formatCurrency(change);
+                        if (change < 0) {
+                            displayChange.classList.remove('text-success');
+                            displayChange.classList.add('text-danger');
+                        } else {
+                            displayChange.classList.remove('text-danger');
+                            displayChange.classList.add('text-success');
+                        }
+                    }
+
+                    const paymentRadios = document.querySelectorAll('input[name="metode_pembayaran"]');
+                    const transferDetails = document.getElementById('transfer-details');
+                    const bankTujuanSelect = document.getElementById('bank_id');
+
+                    function toggleTransferDetails() {
+                        const isTransfer = document.getElementById('pay-transfer').checked;
+                        if (isTransfer) {
+                            transferDetails.classList.remove('d-none');
+                            bankTujuanSelect.setAttribute('required', 'required');
+                        } else {
+                            transferDetails.classList.add('d-none');
+                            bankTujuanSelect.removeAttribute('required');
+                            bankTujuanSelect.value = '';
+                            $(bankTujuanSelect).trigger('change');
+                        }
+                    }
+
+                    paymentRadios.forEach(radio => radio.addEventListener('change', toggleTransferDetails));
+
+                    // ✅ Edit: pre-select metode pembayaran yang sudah tersimpan
+                    @if ($pembelian->metode_pembayaran)
+                        const savedMetode = "{{ $pembelian->metode_pembayaran }}";
+                        const savedRadio = document.querySelector(
+                            `input[name="metode_pembayaran"][value="${savedMetode}"]`);
+                        if (savedRadio) {
+                            savedRadio.checked = true;
+                        }
+                    @endif
+
+                    // ✅ Edit: pre-select bank jika metode transfer
+                    @if ($pembelian->bank_id)
+                        $(bankTujuanSelect).val("{{ $pembelian->bank_id }}").trigger('change');
+                    @endif
+                }
+
+                // ==========================================
+                //  FORM SUBMISSION (Validasi Akhir)
+                // ==========================================
+                $("#formPurchase").on("submit", function(e) {
                     const itemCount = $("#table-pembelian tbody tr").length;
 
                     if (itemCount === 0) {
                         e.preventDefault();
-                        if (typeof Swal !== 'undefined') {
-                            window.showToast('warning', 'Harap tambahkan minimal satu produk.');
-                        } else {
-                            alert('Harap tambahkan minimal satu produk ke dalam daftar pembelian.');
-                        }
+                        if (typeof window.showToast !== 'undefined') window.showToast('warning',
+                            'Harap tambahkan minimal satu produk.');
+                        else alert('Harap tambahkan minimal satu produk.');
                         return;
                     }
-                    if (bayar < totalAkhir && statusBayar === 'Lunas') {
-                        e.preventDefault();
-                        if (typeof Swal !== 'undefined') {
-                            window.showToast('warning',
-                                'Pembayaran kurang dari total akhir. Mohon ubah status pembayaran Anda atau lunasi pembayaran.'
-                            );
-                        } else {
-                            alert('Pembayaran kurang dari total akhir.');
-                        }
-                        return;
+
+                    const inputJumlahEl = document.getElementById('jumlah-dibayar-input');
+                    if (inputJumlahEl) {
+                        inputJumlahEl.value = parseCurrency(inputJumlahEl.value);
                     }
-                    if (statusBayar === 'Belum Lunas' && bayar >= totalAkhir) {
-                        e.preventDefault();
-                        if (typeof Swal !== 'undefined') {
-                            window.showToast('warning',
-                                'Pembayaran sudah lunas. Mohon ubah status pembayaran menjadi "Lunas".'
-                            );
-                        } else {
-                            alert('Ubah status pembayaran menjadi "Lunas".');
-                        }
-                        return;
+
+                    const totalAkhir = calculateGrandTotal();
+                    const bayar = parseFloat(inputJumlahEl ? inputJumlahEl.value : 0) || 0;
+                    let statusPembayaran = bayar >= totalAkhir ? 'Lunas' : 'Hutang';
+
+                    if (!document.querySelector('input[name="status_pembayaran"]')) {
+                        $(this).append(
+                            `<input type="hidden" name="status_pembayaran" value="${statusPembayaran}">`
+                        );
+                    } else {
+                        $('input[name="status_pembayaran"]').val(statusPembayaran);
+                    }
+
+                    if (!document.querySelector('select[name="status_barang"]') && !document
+                        .querySelector('input[name="status_barang"]')) {
+                        $(this).append(
+                            `<input type="hidden" name="status_barang" value="Diterima">`);
                     }
 
                     $("#saveBtn").prop('disabled', true).html(
                         '<i class="bx bx-loader bx-spin me-1"></i> Menyimpan...');
                 });
 
-                // --- TRIGGER AWAL SAAT HALAMAN DILAKUKAN REFRESH ---
-                // 1. Kalkulasi ulang setiap baris yang sudah ada dari database
+                // --- TRIGGER AWAL: Kalkulasi ulang data dari DB ---
+                // 1. Tampilkan ongkir dan diskon dari DB ke display
+                const initOngkir = parseFloat($("#ongkir-input").val()) || 0;
+                const initDiskon = parseFloat($("#diskon-tambahan").val()) || 0;
+                $("#ongkir-display").text(formatCurrency(initOngkir));
+                $("#diskon-display").text(formatCurrency(initDiskon));
+
+                // 2. Kalkulasi ulang setiap baris yang sudah ada
                 $('#table-pembelian tbody tr').each(function() {
                     calculateRow($(this));
                 });
 
-                // 2. Format nilai bayar, ongkir, dan diskon
-                $('#bayar').val($('#jumlah_dibayar_hidden').val());
-                $("#ongkir, #diskon-tambahan, #bayar").each(function() {
-                    formatInputAsCurrency($(this));
-                });
-
-                // 3. Kalkulasi Grand Total dan Kembalian
-                calculateChange();
+                // 3. Kalkulasi Grand Total
+                calculateGrandTotal();
             });
         });
     </script>

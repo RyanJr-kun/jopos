@@ -329,15 +329,13 @@
                                     data.products.forEach(produk => {
                                         const detailUrl =
                                             `{{ url('market/produk') }}/${produk.slug}`;
-                                        const imageUrl = produk.img_produk ?
-                                            `{{ Storage::url('') }}${produk.img_produk}` :
-                                            `{{ asset('assets/img/produk.png') }}`;
+                                        const imageUrl = produk.image_url;
                                         const harga = produk.harga_diskon ?
                                             formatCurrency(produk
                                                 .harga_diskon) :
                                             formatCurrency(produk.harga_jual);
                                         html += `<a href="${detailUrl}" class="list-group-item list-group-item-action d-flex align-items-center">
-                                        <img src="${imageUrl}" alt="${produk.name_product}" class="avatar avatar-md rounded me-3">
+                                        <img src="${imageUrl}" alt="${produk.name_product}" class="rounded rounded-2 me-3" style="width:80px; height:80px; object-fit:cover;">
                                         <div class="flex-grow-1">
                                             <p class="fw-bold mb-0 text-dark text-sm">${produk.name_product}</p>
                                             <span class="badge bg-label-primary me-1 px-2 py-1">${produk.brand ? produk.brand.name : ''}</span><span class="badge bg-label-danger px-2 py-1">${produk.category.name}</span>

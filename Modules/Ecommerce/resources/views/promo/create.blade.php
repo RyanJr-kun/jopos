@@ -282,15 +282,15 @@
                             </div>
                         </div>
 
-                        {{-- Select Produk Tertentu --}}
                         <div id="products-wrapper">
                             <label for="products" class="form-label fw-semibold text-sm mb-1">
                                 Pilih Produk Tertentu
                             </label>
                             <select class="select2 form-select" id="products" name="products[]" multiple>
                                 @if (old('products'))
-                                    @foreach (Modules\Inventory\Models\Product::whereIn('id', old('products'))->get() as $produk)
-                                        <option value="{{ $produk->id }}" selected>
+                                    @foreach ($products as $produk)
+                                        <option value="{{ $produk->id }}" data-image="{{ $produk->image_url }}"
+                                            data-harga="{{ $produk->harga_jual }}" selected>
                                             {{ $produk->name_product }}
                                         </option>
                                     @endforeach
@@ -332,7 +332,6 @@
     <script type="module">
         const ROUTE_PRODUK = "{{ route('get-data.produk') }}";
         const ASSET_DEFAULT = "{{ asset('assets/img/produk.png') }}";
-        const ASSET_STORAGE = "{{ asset('storage') }}";
 
         /* ── 1. TOGGLE TYPE UI ── */
         function toggleTypeUI() {
@@ -375,28 +374,29 @@
         document.getElementById('is_all_products').addEventListener('change', toggleProductsWrapper);
         toggleProductsWrapper();
 
-        /* ── 3. SELECT2 WITH AJAX ── */
         function formatProduct(produk) {
             if (!produk.id) return produk.text;
-            const imageUrl = produk.img_produk ?
-                `${ASSET_STORAGE}/${produk.img_produk}` :
-                ASSET_DEFAULT;
+
+            // Ambil dari JSON (jika via AJAX) ATAU dari atribut HTML (jika old input)
+            const imageUrl = produk.image_url || $(produk.element).data('image') || ASSET_DEFAULT;
+            const hargaAsli = produk.harga_jual || $(produk.element).data('harga') || 0;
+
             const harga = new Intl.NumberFormat('id-ID', {
                 style: 'currency',
                 currency: 'IDR',
                 minimumFractionDigits: 0,
-            }).format(produk.harga_jual);
+            }).format(hargaAsli);
 
             return $(`
-                <div class="d-flex align-items-center gap-2 py-1">
-                    <img src="${imageUrl}" class="rounded" style="width:36px;height:36px;object-fit:cover;"
-                         onerror="this.src='${ASSET_DEFAULT}'">
-                    <div>
-                        <div class="fw-semibold" style="font-size:.85rem;">${produk.text}</div>
-                        <div class="text-muted" style="font-size:.75rem;">${harga}</div>
-                    </div>
-                </div>
-            `);
+        <div class="d-flex align-items-center gap-2 py-1">
+            <img src="${imageUrl}" class="rounded" style="width:36px;height:36px;object-fit:cover;"
+                 onerror="this.src='${ASSET_DEFAULT}'">
+            <div>
+                <div class="fw-semibold" style="font-size:.85rem;">${produk.text}</div>
+                <div class="text-muted" style="font-size:.75rem;">${harga}</div>
+            </div>
+        </div>
+    `);
         }
 
         function initSelect2() {
@@ -423,7 +423,7 @@
                             results: data.data.map(i => ({
                                 id: i.id,
                                 text: i.name_product,
-                                img_produk: i.img_produk,
+                                image_url: i.image_url,
                                 harga_jual: i.harga_jual,
                             })),
                             pagination: {

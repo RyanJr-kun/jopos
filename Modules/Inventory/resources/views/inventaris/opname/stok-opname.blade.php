@@ -105,8 +105,8 @@
                                     <td>
                                         <div class="d-flex px-2 py-1">
                                             <div>
-                                                <img src="{{ $produk->img_produk ? Storage::url($produk->img_produk) : asset('assets/img/produk.png') }}"
-                                                    class="avatar avatar-sm me-3" alt="product image">
+                                                <img src="{{ $produk->image_url }}" class="avatar avatar-sm me-3"
+                                                    alt="product image">
                                             </div>
                                             <div class="d-flex flex-column justify-content-center">
                                                 <h6 class="mb-0 text-sm">{{ $produk->name_product }}</h6>

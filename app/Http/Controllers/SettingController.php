@@ -228,7 +228,7 @@ class SettingController extends Controller
                 'items'       => $lowStockProducts->map(fn($p) => [
                     'id'          => $p->id,
                     'name'        => $p->name_product,
-                    'image'       => $p->img_produk ? Storage::url($p->img_produk) : asset('assets/img/produk.png'),
+                    'image'       => $p->image_url,
                     'slug'        => $p->slug,
                     'meta'        => [
                         ['label' => 'Stok Minimum', 'value' => $p->stok_minimum, 'class' => ''],
@@ -262,7 +262,7 @@ class SettingController extends Controller
                 'items'       => $productsNeedingSerials->map(fn($p) => [
                     'id'          => $p->id,
                     'name'        => $p->name_product,
-                    'image'       => $p->img_produk ? Storage::url($p->img_produk) : asset('assets/img/produk.png'),
+                    'image'       => $p->image_url,
                     'slug'        => $p->slug,
                     'meta'        => [
                         ['label' => 'Stok Fisik',      'value' => $p->total_stok,       'class' => ''],
