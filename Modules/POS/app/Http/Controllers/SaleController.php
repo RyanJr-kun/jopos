@@ -182,13 +182,9 @@ class SaleController extends Controller implements HasMiddleware
                 if ($storeId) {
                     $stockQuery->where('store_id', $storeId);
                 }
-                // Jika satu produk muncul di beberapa toko, kita ambil per product_id
-                // Untuk single-store, keyBy('product_id') cukup
+
                 $stockRecords = $stockQuery->get()->keyBy('product_id');
 
-                // ──────────────────────────────────────────────────────────
-                // PASS 1: Validasi SEMUA item sebelum menyentuh database
-                // ──────────────────────────────────────────────────────────
                 foreach ($validatedData['items'] as $itemData) {
                     $produk = $products->get($itemData['product_id']);
 
@@ -254,7 +250,7 @@ class SaleController extends Controller implements HasMiddleware
                 $diskon_global = (float) ($validatedData['diskon']  ?? 0);
                 $total_akhir   = ($subtotal_dpp + $total_pajak + $service + $ongkir) - $diskon_global;
                 $jumlah_dibayar    = (float) $validatedData['jumlah_dibayar'];
-                $status_pembayaran = ($jumlah_dibayar >= $total_akhir) ? 'Lunas' : 'Belum Lunas';
+                $status_pembayaran = ($jumlah_dibayar >= $total_akhir) ? 'Lunas' : 'Piutang';
                 $sisa_piutang      = max(0, $total_akhir - $jumlah_dibayar);
                 // ──────────────────────────────────────────────────────────
                 // PASS 3: Simpan header penjualan
@@ -283,7 +279,7 @@ class SaleController extends Controller implements HasMiddleware
                 if ($jumlah_dibayar > 0) {
                     $penjualan->payments()->create([
                         'user_id' => Auth::id(),
-                        'tanggal_bayar' => $validatedData['tanggal'],
+                        'tanggal_bayar' => now(),
                         'jumlah_bayar' => $jumlah_dibayar,
                         'metode_pembayaran' => $validatedData['metode_pembayaran'],
                         'bank_id' => $validatedData['bank_id'] ?? null,
@@ -352,7 +348,7 @@ class SaleController extends Controller implements HasMiddleware
      */
     public function show(Sale $penjualan)
     {
-        $penjualan->load('items.product', 'items.serialNumbers', 'customer', 'user','payments.user', 'payments.bank');
+        $penjualan->load('items.product', 'items.serialNumbers', 'customer', 'user', 'payments.user', 'payments.bank');
         $profilToko = Store::find($penjualan->store_id);
         $banks = Bank::all();
 
@@ -791,7 +787,7 @@ class SaleController extends Controller implements HasMiddleware
 
                 $penjualan->update([
                     'jumlah_dibayar'    => $totalDibayarBaru,
-                    'sisa_piutang'      => $sisaPiutangBaru,   
+                    'sisa_piutang'      => $sisaPiutangBaru,
                     'status_pembayaran' => $statusBaru,
                 ]);
             });

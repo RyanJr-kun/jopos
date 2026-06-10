@@ -80,7 +80,7 @@ class Sale extends Model
         return Attribute::make(
             get: function () {
                 if (!$this->tanggal_jatuh_tempo) return false;
-                if ($this->status_pembayaran === 'Lunas' || $this->status_pembayaran === 'Dibatalkan') return false;
+                if ($this->status_pembayaran === 'Lunas' || $this->status_pembayaran === 'Batal') return false;
                 return \Carbon\Carbon::parse($this->tanggal_jatuh_tempo)->isPast();
             }
         );
@@ -93,7 +93,7 @@ class Sale extends Model
             'Batal',
             'Piutang'
         ];
-    } 
+    }
 
     public static function getPaymentMethods()
     {

@@ -302,12 +302,22 @@
 
 
                 {{-- Kembalian & Catatan --}}
-                <div class="row mb-3">
-                    <div class="col-12 mb-3">
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
                         <div class="d-flex justify-content-between align-items-center p-3 border rounded bg-light">
                             <span class="fw-semibold text-muted">Kembalian</span>
                             <h4 class="mb-0 fw-bold change-value" id="change-display">Rp 0</h4>
                         </div>
+                    </div>
+                    {{-- Bungkus dengan div id="jatuh-tempo-wrapper" --}}
+                    <div class="col-12" id="jatuh-tempo-wrapper">
+                        <label for="tanggal_jatuh_tempo" class="form-label fw-semibold">Tanggal Jatuh Tempo</label>
+                        <input id="tanggal_jatuh_tempo" name="tanggal_jatuh_tempo" type="date"
+                            class="form-control @error('tanggal_jatuh_tempo') is-invalid @enderror"
+                            value="{{ old('tanggal_jatuh_tempo') }}" form="penjualanForm">
+                        @error('tanggal_jatuh_tempo')
+                            <div class="invalid-feedback text-sm">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="col-12">
                         <label for="catatan" class="form-label fw-semibold">Catatan <span

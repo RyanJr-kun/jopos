@@ -742,10 +742,28 @@
                 const total = parseFloat(rawText) || 0;
                 const paymentAmount = parseFloat(paymentInputEl.value.replace(/[^0-9]/g, '')) || 0;
                 const change = paymentAmount - total;
+
                 changeDisplay.textContent = formatCurrency(change);
                 changeDisplay.classList.toggle('negative', change < 0);
                 changeDisplay.classList.toggle('text-danger', change < 0);
                 changeDisplay.classList.toggle('text-success', change >= 0);
+
+                // ── LOGIKA TAMBAHAN UNTUK TANGGAL JATUH TEMPO ────────────────
+                const jatuhTempoWrapper = document.getElementById('jatuh-tempo-wrapper');
+                const jatuhTempoInput = document.getElementById('tanggal_jatuh_tempo');
+
+                if (jatuhTempoWrapper && jatuhTempoInput) {
+                    if (paymentAmount >= total && total > 0) {
+                        // JIKA LUNAS (Uang Pas atau Lebih): Sembunyikan & Disable input, lalu kosongkan nilainya
+                        jatuhTempoWrapper.classList.add('d-none');
+                        jatuhTempoInput.disabled = true;
+                        jatuhTempoInput.value = '';
+                    } else {
+                        // JIKA KURANG (Piutang): Munculkan & Aktifkan kembali input
+                        jatuhTempoWrapper.classList.remove('d-none');
+                        jatuhTempoInput.disabled = false;
+                    }
+                }
             };
 
             const toggleSaveButton = () => {

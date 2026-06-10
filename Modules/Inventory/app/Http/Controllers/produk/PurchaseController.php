@@ -63,7 +63,7 @@ class PurchaseController extends Controller implements HasMiddleware
 
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $query->whereBetween('tanggal_pembelian', [
-                $request->input('date_from'), 
+                $request->input('date_from'),
                 $request->input('date_to')
             ]);
             // Sesuaikan 'tanggal_pembelian' dengan nama kolom tanggal di tabel purchases Anda
@@ -132,7 +132,7 @@ class PurchaseController extends Controller implements HasMiddleware
         $validatedData = $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'tanggal' => 'required|date',
-            'tanggal_jatuh_tempo' => 'nullable|date|after:tanggal',
+            'tanggal_jatuh_tempo' => 'nullable|date',
             'referensi' => 'required|string|max:255|unique:purchases',
             'status_barang' => 'required|in:Diterima,Pre Order,Retur,Batal',
             'status_pembayaran' => 'required|in:Lunas,Hutang,Batal',
