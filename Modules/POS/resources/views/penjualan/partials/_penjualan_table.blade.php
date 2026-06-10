@@ -130,7 +130,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-3">
+                        <td colspan="5" class="text-center py-3">
                             <p class=" text-dark text-sm fw-bold mb-0">Belum ada data penjualan.</p>
                         </td>
                     </tr>
@@ -144,16 +144,14 @@
                 $persentase = $item->persentase_bayar;
                 $isJatuhTempo = $item->is_overdue;
 
-                $barColor = 'bg-info';
+                $barColor = 'bg-warning';
                 if ($item->status_pembayaran == 'Lunas') {
                     $barColor = 'bg-success';
-                } elseif ($item->status_pembayaran == 'Piutang') {
+                } elseif ($item->status_pembayaran == 'Batal') {
                     $barColor = 'bg-secondary';
                     $persentase = 0;
                 } elseif ($isJatuhTempo) {
                     $barColor = 'bg-danger';
-                } else {
-                    $barColor = 'bg-warning';
                 }
 
                 $statusPembayaranClass =
@@ -187,8 +185,10 @@
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
                                         data-bs-target="#cancelConfirmationModal"
-                                        data-penjualan-referensi="{{ $item->referensi }}"><i
-                                            class="bx bx-ban me-2"></i> Batalkan</a>
+                                        data-invoice-number="{{ $item->referensi }}"
+                                        data-url="{{ route('penjualan.update', $item->referensi) }}">
+                                        <i class="bx bx-ban me-2"></i> Batalkan
+                                    </a>
                                 @endif
                             </div>
                         </div>
@@ -196,7 +196,7 @@
 
                     <div class="d-flex justify-content-between align-items-center mb-3 text-xs">
                         <span class="text-muted"><i
-                                class="bx bx-calendar text-xs me-1"></i>{{ \Carbon\Carbon::parse($item->tanggal_pembelian)->translatedFormat('d M Y') }}</span>
+                                class="bx bx-calendar text-xs me-1"></i>{{ \Carbon\Carbon::parse($item->tanggal_penjualan)->translatedFormat('d M Y') }}</span>
                         <div class="d-flex align-items-center">
                             @if ($item->user && $item->user->employee && $item->user->employee->avatar)
                                 <img src="{{ Storage::url($item->user->employee->avatar) }}"

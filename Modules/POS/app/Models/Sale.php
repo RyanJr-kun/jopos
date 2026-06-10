@@ -3,6 +3,7 @@
 namespace Modules\POS\Models;
 
 use App\Models\Customer;
+use App\Models\SalePayment;
 use App\Models\Taxe;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -59,11 +60,37 @@ class Sale extends Model
         ]);
     }
 
+    public function payments()
+    {
+        return $this->hasMany(SalePayment::class, 'sale_id');
+    }
+
+    protected function persentaseBayar(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (!$this->total_akhir || $this->total_akhir == 0) return 0;
+                return min(100, round(($this->jumlah_dibayar / $this->total_akhir) * 100));
+            }
+        );
+    }
+
+    protected function isOverdue(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (!$this->tanggal_jatuh_tempo) return false;
+                if ($this->status_pembayaran === 'Lunas' || $this->status_pembayaran === 'Dibatalkan') return false;
+                return \Carbon\Carbon::parse($this->tanggal_jatuh_tempo)->isPast();
+            }
+        );
+    }
+
     public static function getPaymentStatuses()
     {
         return [
             'Lunas',
-            'Kredit',
+            'Batal',
             'Piutang'
         ];
     } 

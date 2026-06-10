@@ -256,9 +256,9 @@
                         </div>
 
                         <div id="transfer-details" class="d-none mt-3 animate__animated animate__fadeIn">
-                            <label for="bank_tujuan" class="form-label fw-semibold">Rekening Tujuan <span
+                            <label for="bank_id" class="form-label fw-semibold">Rekening Tujuan <span
                                     class="text-danger">*</span></label>
-                            <select name="bank_tujuan" id="bank_tujuan" class="form-select select2 select2-bank"
+                            <select name="bank_id" id="bank_id" class="form-select select2 select2-bank"
                                 data-placeholder="Pilih Rekening Bank" form="penjualanForm">
                                 <option value=""></option>
                                 @foreach ($banks as $bank)
@@ -299,6 +299,7 @@
                             data-amount="100000">100 Rb</button>
                     </div>
                 </div>
+
 
                 {{-- Kembalian & Catatan --}}
                 <div class="row mb-3">

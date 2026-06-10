@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('purchase_id')->constrained('purchases')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('restrict'); 
-            $table->date('tanggal_bayar');
+            $table->dateTime('tanggal_bayar');
             $table->decimal('jumlah_bayar', 15, 0); 
             $table->string('metode_pembayaran'); 
             $table->foreignId('bank_id')->nullable()->constrained('banks')->onDelete('set null');

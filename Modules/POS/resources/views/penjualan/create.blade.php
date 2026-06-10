@@ -738,7 +738,8 @@
             };
 
             const calculateChange = () => {
-                const total = parseFloat(totalAkhirEl.textContent.replace(/[^0-9]/g, '')) || 0;
+                const rawText = totalAkhirEl.textContent.replace(/[^\d,]/g, '').replace(',', '.');
+                const total = parseFloat(rawText) || 0;
                 const paymentAmount = parseFloat(paymentInputEl.value.replace(/[^0-9]/g, '')) || 0;
                 const change = paymentAmount - total;
                 changeDisplay.textContent = formatCurrency(change);
@@ -809,9 +810,7 @@
                         harga: data.harga_diskon ?? data.harga_jual,
                         hargaAsli: data.harga_jual,
                         stok: data.qty,
-                        img: data.img_produk ?
-                            `{{ asset('storage/') }}/${data.img_produk}` :
-                            `{{ asset('assets/img/produk.png') }}`,
+                        img: data.image_url,
                         wajibSeri: data.wajib_seri ? 'true' : 'false',
                         pajakId: data.taxe_id,
                         pajakRate: data.pajak ? data.pajak.rate : 0
@@ -1051,20 +1050,66 @@
             document.getElementById('salesHistoryModal')?.addEventListener('show.bs.modal', async () => {
                 const body = document.getElementById('salesHistoryBody');
                 body.innerHTML = `
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Memuat...</span>
-                </div>
-            </div>`;
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Memuat...</span>
+                    </div>
+                </div>`;
                 try {
                     const r = await fetch('{{ route('penjualan.history.today') }}', {
                         headers: defaultHeaders
                     });
-                    const html = await r.text();
-                    body.innerHTML = html;
-                } catch {
+
+                    if (!r.ok) throw new Error('Server error: ' + r.status);
+
+                    const sales = await r.json();
+
+                    if (sales.length === 0) {
+                        body.innerHTML =
+                            '<p class="text-center text-muted py-4">Belum ada transaksi hari ini.</p>';
+                        return;
+                    }
+
+                    // Base URL untuk detail — referensi di-append di tiap baris
+                    const showBaseUrl = '{{ url('penjualan') }}';
+
+                    const rows = sales.map(s => `
+                    <tr class="align-middle" style="cursor:pointer;"
+                        onclick="window.open('${showBaseUrl}/${encodeURIComponent(s.referensi)}', '_blank')">
+                        <td><span class="badge bg-label-primary">${s.referensi}</span></td>
+                        <td>${s.name}</td>
+                        <td class="text-end fw-semibold">Rp ${Number(s.total_akhir).toLocaleString('id-ID')}</td>
+                        <td><span class="badge bg-label-success">${s.status}</span></td>
+                        <td class="text-muted">${s.waktu}</td>
+                        <td>
+                            <a href="${showBaseUrl}/${encodeURIComponent(s.referensi)}"
+                            target="_blank"
+                            class="btn btn-sm btn-outline-primary px-2"
+                            onclick="event.stopPropagation()">
+                                <i class="bx bx-show"></i>
+                            </a>
+                        </td>
+                    </tr>`).join('');
+
+                    body.innerHTML = `
+                    <div class="table-responsive text-nowrap border rounded-3">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="bg-label-light">
+                                <tr>
+                                    <th>Invoice</th>
+                                    <th>Customer</th>
+                                    <th class="text-end">Total</th>
+                                    <th>Status</th>
+                                    <th>Waktu</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`;
+                } catch (err) {
                     body.innerHTML =
-                        '<p class="text-center text-danger py-4">Gagal memuat riwayat.</p>';
+                        `<p class="text-center text-danger py-4">Gagal memuat riwayat: ${err.message}</p>`;
                 }
             });
 
@@ -1189,6 +1234,16 @@
                 calculateChange();
             });
 
+            document.querySelectorAll('.quick-pay-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const amount = parseInt(btn.dataset.amount) || 0;
+                    const currentVal = parseFloat(paymentInputEl.value.replace(/[^0-9]/g, '')) || 0;
+                    const newVal = currentVal + amount;
+                    paymentInputEl.value = new Intl.NumberFormat('id-ID').format(newVal);
+                    calculateChange();
+                });
+            });
+
             // Filter kategori
             const categoryFilterContainer = document.getElementById('category-container');
             if (categoryFilterContainer) {
@@ -1211,13 +1266,11 @@
             // ── Inisialisasi ─────────────────────────────────────────
             document.getElementById('paymentModal').addEventListener('show.bs.modal', function() {
                 const total = parseFloat(document.getElementById('total-akhir').textContent.replace(
-                        /[^0-9]/g, '')) ||
-                    0;
-
-                // Update teks total di dalam modal
+                    /[^0-9]/g, '')) || 0;
                 document.getElementById('payment-modal-total').textContent = formatCurrency(total);
+                paymentInputEl.value = '';
+                calculateChange();
 
-                // Opsional: Fokuskan kursor ke input jumlah bayar
                 setTimeout(() => {
                     document.getElementById('jumlah-dibayar-input').focus();
                 }, 500);
@@ -1226,7 +1279,7 @@
             // ── Handle Detail Transfer ─────────────────────────────────────────
             const paymentRadios = document.querySelectorAll('input[name="metode_pembayaran"]');
             const transferDetails = document.getElementById('transfer-details');
-            const bankTujuanSelect = document.getElementById('bank_tujuan');
+            const bankTujuanSelect = document.getElementById('bank_id');
 
             paymentRadios.forEach(radio => {
                 radio.addEventListener('change', (e) => {

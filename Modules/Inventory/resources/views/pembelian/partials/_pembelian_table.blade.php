@@ -1,8 +1,9 @@
 <div>
     <div class="table-responsive text-nowrap p-0 d-none d-md-block">
         <table class="table table-hover align-middle mb-0">
-            <thead class="table-secondary text-dark border-top">
+            <thead class="bg-label-light">
                 <tr>
+                    <th class="text-center" width="5%">No.</th>
                     <th>Detail Transaksi</th>
                     <th>Keuangan</th>
                     <th class="text-center">Status</th>
@@ -11,8 +12,9 @@
                 </tr>
             </thead>
             <tbody class="table-border-bottom-0">
-                @forelse ($pembelian as $item)
+                @forelse ($pembelian as $key => $item)
                     <tr>
+                        <td class="text-center">{{ ++$key }}.</td>
                         <td>
                             <div class="d-flex flex-column">
                                 <span

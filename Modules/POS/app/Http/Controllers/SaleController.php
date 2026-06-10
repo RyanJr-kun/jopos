@@ -280,6 +280,18 @@ class SaleController extends Controller implements HasMiddleware
                     'sisa_piutang'      => $sisa_piutang,
                 ]);
 
+                if ($jumlah_dibayar > 0) {
+                    $penjualan->payments()->create([
+                        'user_id' => Auth::id(),
+                        'tanggal_bayar' => $validatedData['tanggal'],
+                        'jumlah_bayar' => $jumlah_dibayar,
+                        'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                        'bank_id' => $validatedData['bank_id'] ?? null,
+                        'referensi_pembayaran' => $validatedData['referensi'],
+                        'catatan' => $status_pembayaran === 'Lunas' ? 'Pembayaran Lunas Awal' : 'Pembayaran Uang Muka (DP)'
+                    ]);
+                }
+
                 // ──────────────────────────────────────────────────────────
                 // PASS 4: Simpan item, kurangi stok, update SN
                 // FIX Bug 3: gunakan $stockRecords yang sudah di-pre-fetch
@@ -340,14 +352,15 @@ class SaleController extends Controller implements HasMiddleware
      */
     public function show(Sale $penjualan)
     {
-        // Eager load relasi untuk menghindari N+1 problem
-        $penjualan->load('items.product', 'items.serialNumbers', 'customer', 'user');
+        $penjualan->load('items.product', 'items.serialNumbers', 'customer', 'user','payments.user', 'payments.bank');
         $profilToko = Store::find($penjualan->store_id);
+        $banks = Bank::all();
 
         return view('pos::penjualan.show', [
             'title' => 'Faktur Sale: ' . $penjualan->referensi,
             'penjualan' => $penjualan,
             'profilToko' => $profilToko,
+            'banks' => $banks,
         ]);
     }
 
@@ -728,5 +741,65 @@ class SaleController extends Controller implements HasMiddleware
         $pajak = $harga_setelah_diskon - $dpp;
 
         return [$dpp, $pajak];
+    }
+
+    public function storePayment(Request $request, Sale $penjualan)
+    {
+        // Hilangkan format ribuan (titik) dari nominal input UI sebelum validasi
+        if ($request->filled('jumlah_bayar')) {
+            $request->merge([
+                'jumlah_bayar' => preg_replace('/[^0-9]/', '', $request->input('jumlah_bayar'))
+            ]);
+        }
+
+        $validatedData = $request->validate([
+            'tanggal_bayar' => 'required|date',
+            'jumlah_bayar' => 'required|numeric|min:1|max:' . $penjualan->sisa_piutang,
+            'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS',
+            'bank_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:banks,id',
+            'referensi_pembayaran' => 'nullable|string|max:100',
+            'catatan' => 'nullable|string',
+        ], [
+            'jumlah_bayar.max' => 'Jumlah pembayaran tidak boleh melebihi sisa hutang (Rp ' . number_format($penjualan->sisa_piutang, 0, ',', '.') . ').',
+            'bank_id.required_if' => 'Rekening tujuan wajib dipilih jika menggunakan metode TRANSFER.'
+        ]);
+
+        try {
+            DB::transaction(function () use ($validatedData, $penjualan) {
+                // 1. Masukkan data ke tabel purchase_payments melalui relasi
+                $penjualan->payments()->create([
+                    'user_id' => Auth::id(),
+                    'tanggal_bayar' => $validatedData['tanggal_bayar'],
+                    'jumlah_bayar' => $validatedData['jumlah_bayar'],
+                    'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                    'bank_id' => $validatedData['bank_id'] ?? null,
+                    'referensi_pembayaran' => $validatedData['referensi_pembayaran'] ?? null,
+                    'catatan' => $validatedData['catatan'] ?? null,
+                ]);
+
+                // 2. Kalkulasi akumulasi pembayaran baru
+                $totalDibayarBaru = $penjualan->payments()->sum('jumlah_bayar');
+                $sisaPiutangBaru  = max(0, $penjualan->total_akhir - $totalDibayarBaru);
+                $statusBaru       = $sisaPiutangBaru <= 0 ? 'Lunas' : 'Hutang';
+
+                if ($sisaPiutangBaru < 0) {
+                    $sisaPiutangBaru = 0;
+                }
+
+                // 3. Tentukan status pembayaran induk
+                $statusPembayaranBaru = $sisaPiutangBaru <= 0 ? 'Lunas' : 'Hutang';
+
+                $penjualan->update([
+                    'jumlah_dibayar'    => $totalDibayarBaru,
+                    'sisa_piutang'      => $sisaPiutangBaru,   
+                    'status_pembayaran' => $statusBaru,
+                ]);
+            });
+
+            return redirect()->route('penjualan.show', $penjualan->referensi)
+                ->with('success', 'Pembayaran cicilan berhasil dicatat.');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 }

@@ -143,6 +143,7 @@ class DashboardController extends Controller
         $salesChartLabels = $salesData->pluck('tanggal')->map(function ($date) {
             return Carbon::parse($date)->format('d M');
         });
+        
         $salesChartData = $salesData->pluck('total');
 
 
@@ -179,6 +180,7 @@ class DashboardController extends Controller
             ->keyBy('product_id');
 
         // 3. Gabungkan data dan hitung persentase kenaikan
+        // 3. Gabungkan data dan hitung persentase kenaikan
         $produkTerlaris = $currentMonthSales->map(function ($product) use ($previousMonthSales) {
             $previousSales = $previousMonthSales->get($product->product_id);
             $totalTerjualPreviousMonth = $previousSales ? $previousSales->total_terjual_previous_month : 0;
@@ -187,15 +189,21 @@ class DashboardController extends Controller
             if ($totalTerjualPreviousMonth > 0) {
                 $percentageIncrease = (($product->total_terjual_current_month - $totalTerjualPreviousMonth) / $totalTerjualPreviousMonth) * 100;
             } elseif ($product->total_terjual_current_month > 0) {
-                $percentageIncrease = 100; // Jika bulan sebelumnya 0 dan bulan ini ada penjualan
+                $percentageIncrease = 100; 
             }
 
+            // --- PERBAIKAN MULAI DI SINI ---
+            // Ambil model Product berdasarkan product_id untuk memanggil properti/accessor image_url
+            $productModel = Product::find($product->product_id);
+            
+            // Assign nilai image_url ke dalam objek stdClass $product
+            $product->image_url = $productModel ? $productModel->image_url : asset('assets/img/produk.png'); 
+
             $product->percentage_increase = $percentageIncrease;
-            $product->total_terjual = $product->total_terjual_current_month; // Sesuaikan name variabel untuk blade
+            $product->total_terjual = $product->total_terjual_current_month;
             return $product;
         });
 
-        // --- DATA UNTUK PELANGGAN TERBAIK (BERDASARKAN PERIODE) ---
         $pelangganTerbaik = Sale::join('customers', 'sales.customer_id', '=', 'customers.id')
             ->select(
                 'customers.name',

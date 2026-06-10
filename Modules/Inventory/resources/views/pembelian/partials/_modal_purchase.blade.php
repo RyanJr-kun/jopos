@@ -23,25 +23,18 @@
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Metode Pembayaran</label>
                     <div class="row gx-2">
-                        <div class="col-4">
+                        <div class="col-6">
                             <input type="radio" class="btn-check" name="metode_pembayaran" id="pay-tunai"
                                 value="TUNAI" form="formPurchase" checked required>
                             <label class="btn btn-outline-primary w-100 p-2" for="pay-tunai">
                                 <i class="bx bx-money fs-4 d-block me-2"></i> Tunai
                             </label>
                         </div>
-                        <div class="col-4">
+                        <div class="col-6">
                             <input type="radio" class="btn-check" name="metode_pembayaran" id="pay-transfer"
                                 value="TRANSFER" form="formPurchase">
                             <label class="btn btn-outline-primary w-100 p-2" for="pay-transfer">
                                 <i class="bx bx-transfer fs-4 d-block me-2"></i> Transfer
-                            </label>
-                        </div>
-                        <div class="col-4">
-                            <input type="radio" class="btn-check" name="metode_pembayaran" id="pay-qris"
-                                value="QRIS" form="formPurchase">
-                            <label class="btn btn-outline-primary w-100 p-2" for="pay-qris">
-                                <i class="bx bx-qr-scan fs-4 d-block me-2"></i> QRIS
                             </label>
                         </div>
 

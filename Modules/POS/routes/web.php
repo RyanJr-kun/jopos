@@ -21,6 +21,9 @@ Route::domain('jopos.' . $domain)->group(function () {
         Route::get('/penjualan/{penjualan}/json', [SaleController::class, 'getjson'])->name('penjualan.getjson');
         Route::get('/penjualan/{penjualan:referensi}/thermal', [SaleController::class, 'printThermal'])->name('penjualan.thermal');
         Route::get('/penjualan/{penjualan:referensi}/pdf', [SaleController::class, 'generatePdf'])->name('penjualan.pdf');
+
+        // bayar piutang
+        Route::post('penjualan/{penjualan}/payment', [SaleController::class, 'storePayment'])->name('penjualan.payment.store');
     });
 });
 

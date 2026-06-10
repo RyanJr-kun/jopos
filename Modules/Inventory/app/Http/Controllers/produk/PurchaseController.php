@@ -36,9 +36,8 @@ class PurchaseController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        // Ambil semua status pembayaran yang unik untuk dropdown filter
-        $statuses = Purchase::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
-
+        $statuses = Purchase::getPaymentStatus();
+        $barangs = Purchase::getStatusBarangs();
         // Mulai query builder
         $query = Purchase::with(['supplier', 'user'])->latest();
 
@@ -54,8 +53,20 @@ class PurchaseController extends Controller implements HasMiddleware
         }
 
         // Terapkan filter status jika ada input 'status'
-        if ($request->filled('status')) {
-            $query->where('status_pembayaran', $request->input('status'));
+        if ($request->filled('payment')) {
+            $query->where('status_pembayaran', $request->input('payment'));
+        }
+
+        if ($request->filled('barang')) {
+            $query->where('status_barang', $request->input('barang'));
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('tanggal_pembelian', [
+                $request->input('date_from'), 
+                $request->input('date_to')
+            ]);
+            // Sesuaikan 'tanggal_pembelian' dengan nama kolom tanggal di tabel purchases Anda
         }
 
         $pembelian = $query->paginate(15)->withQueryString();
@@ -66,7 +77,7 @@ class PurchaseController extends Controller implements HasMiddleware
         }
 
         // Jika request biasa, kembalikan view lengkap
-        return view('inventory::pembelian.index', compact('pembelian', 'statuses'));
+        return view('inventory::pembelian.index', compact('pembelian', 'statuses', 'barangs'));
     }
 
     /**

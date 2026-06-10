@@ -27,6 +27,7 @@ return new class extends Migration
                 $table->decimal('jumlah_dibayar', 15, 0)->default(0);
                 $table->decimal('sisa_piutang', 15, 0)->default(0);
                 $table->string('status_pembayaran', 30)->default('lunas');
+                
                 $table->string('metode_pembayaran', 30)->default('TUNAI');
                 $table->foreignId('bank_id')->nullable()->constrained('banks')->onDelete('set null');
                 $table->text('catatan')->nullable();

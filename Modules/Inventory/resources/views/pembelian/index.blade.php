@@ -33,27 +33,42 @@
                     </div>
                 </div>
                 <!-- Filter Dropdown Status -->
-                <div class="col-md-2">
-                    <select name="status" id="statusFilter" class="form-select select2" data-placeholder="Semua Status">
-                        <option value="">Semua Status</option>
-                        @foreach ($statuses as $status)
-                            <option value="{{ $status }}" @selected(request('status') == $status)>{{ $status }}</option>
+                <div class="col-md-3 col-6">
+                    <select name="payment" id="statusPayment" class="form-select select2"
+                        data-placeholder="Status Pembayaran ...">
+                        <option value=""></option>
+                        @foreach ($statuses as $p)
+                            <option value="{{ $p }}" @selected(request('s') == $p)>{{ $p }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 col-6">
+                    <select name="barang" id="statusBarang" class="form-select select2"
+                        data-placeholder="Status Barang ...">
+                        <option value=""></option>
+                        @foreach ($barangs as $b)
+                            <option value="{{ $b }}" @selected(request('b') == $b)>{{ $b }}</option>
                         @endforeach
                     </select>
                 </div>
                 <!-- Tombol Tambah -->
-                <div class="col-md-auto ms-md-auto">
-                    <a href="{{ route('pembelian.create') }}" class="btn btn-outline-info mb-0">
-                        <i class="bx bx-plus me-2"></i>Transaksi
-                    </a>
-                </div>
             </div>
         </div>
     </div>
     <div class="card">
-        <div class="card-header pb-0 px-3 pt-2 mb-3">
-            <h5 class="fw-bolder mb-n1">Invoice Purchase</h5>
-            <p class="text-sm mb-0"> riwayat transaksi pembelian.</p>
+        <div class="card-header pb-0 px-3 pt-2">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="">
+                    <h5 class="fw-bolder mb-n1">Invoice Purchase</h5>
+                    <p class="text-sm mb-0"> riwayat transaksi pembelian.</p>
+                </div>
+                <div class="">
+                    <a href="{{ route('pembelian.create') }}" class="btn btn-outline-info px-2 mb-0">
+                        <i class="bx bx-plus-circle"></i>
+                        <span class="d-none ms-2 d-md-block">Transaksi</span>
+                    </a>
+                </div>
+            </div>
         </div>
         <div class="card-body px-0 pt-0 pb-2">
             <div id="pembelian-table-container" class="mt-3">
@@ -149,7 +164,8 @@
                     // Fungsi Utama Fetch Data
                     window.fetchData = function(page = 1) {
                         let search = $('#searchInput').val();
-                        let status = $('#statusFilter').val();
+                        let statusPayment = $('#statusPayment').val();
+                        let statusBarang = $('#statusBarang').val();
                         let dateRange = $('#flatpickr-date').val();
 
                         let date_from = '';
@@ -166,14 +182,14 @@
                         $.ajax({
                             url: "{{ route('pembelian.index') }}",
                             type: "GET",
-                            // PENTING: Header ini wajib agar $request->ajax() di controller merespon true
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest'
                             },
                             data: {
                                 page: page,
                                 search: search,
-                                status: status,
+                                payment: statusPayment,
+                                barang: statusBarang,
                                 date_from: date_from,
                                 date_to: date_to
                             },
@@ -192,7 +208,9 @@
                                 }
 
                                 // Update URL browser
-                                updateBrowserURL(page, search, status, date_from, date_to);
+                                updateBrowserURL(page, search, statusPayment, statusBarang,
+                                    date_from,
+                                    date_to);
                             },
                             error: function(xhr) {
                                 $('#pembelian-table-container').css('opacity', 1);
@@ -201,11 +219,12 @@
                         });
                     };
 
-                    function updateBrowserURL(page, search, status, from, to) {
+                    function updateBrowserURL(page, search, payment, barang, from, to) {
                         let params = new URLSearchParams();
                         if (page > 1) params.set('page', page);
                         if (search) params.set('search', search);
-                        if (status) params.set('status', status);
+                        if (payment) params.set('payment', payment);
+                        if (barang) params.set('barang', barang);
                         if (from) params.set('date_from', from);
                         if (to) params.set('date_to', to);
 
@@ -228,7 +247,12 @@
                     });
 
                     // 2. Filter Status Select2 (Ditambahkan event select2 spesifik)
-                    $('#statusFilter').on('select2:select select2:clear change', function() {
+                    $('#statusPayment').on('select2:select select2:clear change', function() {
+                        window.fetchData(1);
+                    });
+
+                    // 2. Filter Barang Select2 (Ditambahkan event select2 spesifik)
+                    $('#statusBarang').on('select2:select select2:clear change', function() {
                         window.fetchData(1);
                     });
 

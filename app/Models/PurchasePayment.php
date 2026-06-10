@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Bank;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Inventory\Models\Purchase;
