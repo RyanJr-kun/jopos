@@ -48,7 +48,7 @@ Route::domain('jopos.' . $domain)->group(function () {
 
         // Manajemen Serial Number
         // PENTING: Rute spesifik harus didefinisikan SEBELUM wildcard {produk_slug?}
-        Route::get('serialNumber/get-by-product/{product_id}', [SerialNumberController::class, 'getByProduct'])->name('serialNumber.getByProduct');
+        Route::get('get-data/produk/{product_id}/serial-numbers', [SerialNumberController::class, 'getByProduct'])->name('serialNumber.getByProduct');
         Route::resource('serialNumber', SerialNumberController::class)->except(['show', 'index']);
         Route::get('serialNumber/{produk_slug?}', [SerialNumberController::class, 'index'])->name('serialNumber.index');
 

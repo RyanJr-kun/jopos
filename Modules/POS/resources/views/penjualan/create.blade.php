@@ -882,15 +882,26 @@
             // ── Serial Number Modal ───────────────────────────────────
             const openSerialNumberModal = (productId, productName, requiredQty, existingSerials = []) => {
                 document.getElementById('sn-produk-id').value = productId;
-                snNamaProduct.textContent = productName;
-                snRequiredCount.textContent = requiredQty;
+
+                // Update Teks Nama & Jumlah Dibutuhkan
+                document.getElementById('sn-name-produk').textContent = productName;
+                document.getElementById('sn-required-count').textContent = requiredQty;
+
+                // --- TAMBAHAN BARU: Update Gambar & Info Stok ---
+                // Pastikan memberi fallback image jika produk tidak punya gambar
+                document.getElementById('sn-image-produk').src = tempProductDataForSN.img ||
+                    '/path-ke-gambar-default-anda/default.jpg';
+                document.getElementById('sn-stok-produk').textContent = tempProductDataForSN.stok;
+                // -------------------------------------------------
+
                 snErrorMessage.textContent = '';
                 snListContainer.innerHTML = `
-            <div class="text-center py-3">
-                <div class="spinner-border spinner-border-sm" role="status">
-                    <span class="visually-hidden">Memuat nomor seri...</span>
-                </div>
-            </div>`;
+                <div class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Memuat nomor seri...</span>
+                    </div>
+                </div>`;
+
                 serialNumberModal.show();
 
                 fetch(`{{ url('get-data/produk') }}/${productId}/serial-numbers`, {

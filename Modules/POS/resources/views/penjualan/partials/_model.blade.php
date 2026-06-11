@@ -186,9 +186,18 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="sn-produk-id">
-                <div class="badge bg-label-info p-2 text-sm w-100 text-start mb-2" role="status">
-                    Produk: <strong id="sn-name-produk" class="text-warning">—</strong><br>
-                    Pilih tepat <strong id="sn-required-count">1</strong> nomor seri.
+                <div class="d-flex align-items-center bg-label-secondary border rounded p-2 mb-3 shadow-none">
+                    <div class="flex-shrink-0 me-3">
+                        <img id="sn-image-produk" src="" alt="Gambar Produk" class="rounded border"
+                            style="width: 50px; height: 50px; object-fit: cover; background-color: #fff;">
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 id="sn-name-produk" class="mb-1 text-primary fw-bold" style="font-size: 0.9rem;">—</h6>
+                        <div class="d-flex gap-3 text-sm">
+                            <span>Stok Tersedia: <strong id="sn-stok-produk">0</strong></span>
+                            <span>Butuh: <strong id="sn-required-count" class="text-danger">1</strong> SN</span>
+                        </div>
+                    </div>
                 </div>
                 <div id="sn-list-container" class="list-group" style="max-height: 300px; overflow-y: auto;"
                     role="group" aria-label="Daftar nomor seri">

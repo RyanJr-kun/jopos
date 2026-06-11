@@ -323,6 +323,7 @@ class SaleController extends Controller implements HasMiddleware
                     if ($produk->wajib_seri && !empty($itemData['serial_numbers'])) {
                         SerialNumber::whereIn('nomor_seri', $itemData['serial_numbers'])
                             ->where('product_id', $produk->id)
+                            ->where('store_id', $storeId)
                             ->update([
                                 'status'       => 'Terjual',
                                 'item_sale_id' => $penjualanItem->id,
@@ -385,8 +386,8 @@ class SaleController extends Controller implements HasMiddleware
      */
     public function update(Request $request, Sale $penjualan)
     {
-        if ($request->input('status_pembayaran') === 'Dibatalkan' && !$request->has('items')) {
-            if ($penjualan->status_pembayaran !== 'Dibatalkan') {
+        if ($request->input('status_pembayaran') === 'Batal' && !$request->has('items')) {
+            if ($penjualan->status_pembayaran !== 'Batal') {
                 try {
                     DB::transaction(function () use ($penjualan) {
                         // PERBAIKAN: Ambil store_id dari transaksi asli
@@ -411,7 +412,7 @@ class SaleController extends Controller implements HasMiddleware
                             }
                         }
 
-                        $penjualan->update(['status_pembayaran' => 'Dibatalkan']);
+                        $penjualan->update(['status_pembayaran' => 'Batal']);
                     });
                     session()->flash('success', 'Transaksi berhasil dibatalkan dan stok dikembalikan.');
                 } catch (\Exception $e) {
@@ -420,7 +421,7 @@ class SaleController extends Controller implements HasMiddleware
             } else {
                 session()->flash('info', 'Transaksi ini sudah dalam status Dibatalkan.');
             }
-            return redirect()->route('penjualan.index');
+            return redirect()->route('penjualan.index'); 
         }
 
         // --- Full update ---
@@ -435,7 +436,6 @@ class SaleController extends Controller implements HasMiddleware
             'customer_id'              => 'nullable|exists:customers,id',
             'tanggal_penjualan'        => 'required|date',
             'tanggal_jatuh_tempo'      => 'nullable|date|after:tanggal_penjualan',
-            'status_pembayaran'        => 'required|in:Lunas,Belum Lunas,Dibatalkan',
             'metode_pembayaran'        => 'required|in:TUNAI,TRANSFER,QRIS',
             'bank_id'                  => 'nullable|exists:banks,id|required_if:metode_pembayaran,TRANSFER',
             'catatan'                  => 'nullable|string',
@@ -458,28 +458,20 @@ class SaleController extends Controller implements HasMiddleware
             $taxesData = Taxe::findMany($pajakIds)->keyBy('id');
 
             $penjualan = DB::transaction(function () use ($penjualan, $validatedData, $taxesData) {
+                $storeId    = $penjualan->store_id;
+                $statusLama = $penjualan->status_pembayaran;
 
-                // PERBAIKAN: Ambil store_id dari transaksi asli, bukan dari user yang login
-                $storeId     = $penjualan->store_id;
-                $statusLama  = $penjualan->status_pembayaran;
-                $statusBaru  = $validatedData['status_pembayaran'];
-
-                // ── Manajemen Serial Number ──────────────────────────────
-                $oldItemsWithSerials = $penjualan->items()->with('serialNumbers')->get();
-                $oldSerialNumbers    = $oldItemsWithSerials
-                    ->pluck('serialNumbers')->flatten()->pluck('nomor_seri')->all();
-
-                $newSerialNumbers = collect($validatedData['items'])
-                    ->filter(fn($i) => !empty($i['serial_numbers']))
-                    ->pluck('serial_numbers')->flatten()->all();
-
-                $serialsToRelease = array_diff($oldSerialNumbers, $newSerialNumbers);
-                if (!empty($serialsToRelease)) {
-                    SerialNumber::whereIn('nomor_seri', $serialsToRelease)
-                        ->update(['status' => 'Tersedia', 'item_sale_id' => null]);
+                // ── 1. Release Serial Number Lama ────────────────────────────────
+                $oldItemIds = $penjualan->items()->pluck('id');
+                if ($oldItemIds->isNotEmpty()) {
+                    SerialNumber::whereIn('item_sale_id', $oldItemIds)->update([
+                        'status'       => 'Tersedia',
+                        'item_sale_id' => null, 
+                    ]);
                 }
 
-                // ── Manajemen Stok ───────────────────────────────────────
+                // ── 2. Persiapan Data Produk & Stok ──────────────────────────────
+                $oldItemsWithSerials = $penjualan->items; // Cukup ambil items lama
                 $newProductIds = collect($validatedData['items'])->pluck('product_id');
                 $products      = Product::whereIn('id', $newProductIds)->get()->keyBy('id');
 
@@ -489,81 +481,60 @@ class SaleController extends Controller implements HasMiddleware
                 $stockQuery = ProductStock::whereIn('product_id', $allProductIds)
                     ->whereNull('product_variant_id');
 
-                // Sekarang $storeId dijamin menggunakan toko tempat transaksi terjadi
                 if ($storeId) {
                     $stockQuery->where('store_id', $storeId);
                 }
                 $stockRecords = $stockQuery->get()->keyBy('product_id');
 
-                if ($statusBaru === 'Dibatalkan') {
-                    if ($statusLama !== 'Dibatalkan') {
-                        foreach ($penjualan->items as $oldItem) {
-                            SerialNumber::where('item_sale_id', $oldItem->id)->update([
-                                'status'       => 'Tersedia',
-                                'item_sale_id' => null,
-                            ]);
-                            $stock = $stockRecords->get($oldItem->product_id);
-                            if ($stock) {
-                                $stock->increment('qty', $oldItem->jumlah);
-                            }
-                        }
-                    }
-                } else {
-                    if ($statusLama !== 'Dibatalkan') {
-                        foreach ($penjualan->items as $oldItem) {
-                            $stock = $stockRecords->get($oldItem->product_id);
-                            if ($stock) {
-                                $stock->increment('qty', $oldItem->jumlah);
-                            }
-                        }
-                        $stockRecords = $stockQuery->get()->keyBy('product_id');
-                    }
-
-                    foreach ($validatedData['items'] as $itemData) {
-                        $produk = $products->get($itemData['product_id']);
-                        $stock        = $stockRecords->get($itemData['product_id']);
-                        $stokTersedia = $stock ? $stock->qty : 0;
-
-                        if (!$produk || $stokTersedia < (int) $itemData['jumlah']) {
-                            $nama = $produk?->name_product ?? "ID: {$itemData['product_id']}";
-                            throw new \Exception(
-                                "Stok '{$nama}' tidak mencukupi " .
-                                    "(tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']})."
-                            );
-                        }
-
-                        if ($produk->wajib_seri) {
-                            $snKirim = $itemData['serial_numbers'] ?? [];
-                            if (count($snKirim) !== (int) $itemData['jumlah']) {
-                                throw new \Exception(
-                                    "Jumlah SN untuk '{$produk->name_product}' tidak sesuai."
-                                );
-                            }
-                            $validSnCount = SerialNumber::where('product_id', $produk->id)
-                                ->whereIn('nomor_seri', $snKirim)
-                                ->where(
-                                    fn($q) => $q
-                                        ->where('status', 'Tersedia')
-                                        ->orWhereIn('nomor_seri', $oldSerialNumbers)
-                                )
-                                ->count();
-                            if ($validSnCount !== (int) $itemData['jumlah']) {
-                                throw new \Exception(
-                                    "Satu atau lebih SN untuk '{$produk->name_product}' tidak valid."
-                                );
-                            }
-                        }
-                    }
-
-                    foreach ($validatedData['items'] as $itemData) {
-                        $stock = $stockRecords->get($itemData['product_id']);
+                // ── 3. Kembalikan Stok Lama (Revert) ─────────────────────────────
+                if ($statusLama !== 'Batal') {
+                    foreach ($oldItemsWithSerials as $oldItem) {
+                        $stock = $stockRecords->get($oldItem->product_id);
                         if ($stock) {
-                            $stock->decrement('qty', $itemData['jumlah']);
+                            $stock->increment('qty', $oldItem->jumlah);
                         }
+                    }
+                    // Refresh data stok setelah ditambah
+                    $stockRecords = $stockQuery->get()->keyBy('product_id'); 
+                }
+
+                // ── 4. Validasi Stok Baru & SN Baru ──────────────────────────────
+                foreach ($validatedData['items'] as $itemData) {
+                    $produk = $products->get($itemData['product_id']);
+                    $stock  = $stockRecords->get($itemData['product_id']);
+                    $stokTersedia = $stock ? $stock->qty : 0;
+
+                    // Validasi Ketersediaan Stok
+                    if (!$produk || $stokTersedia < (int) $itemData['jumlah']) {
+                        $nama = $produk?->name_product ?? "ID: {$itemData['product_id']}";
+                        throw new \Exception("Stok '{$nama}' tidak mencukupi (tersedia: {$stokTersedia}, dibutuhkan: {$itemData['jumlah']}).");
+                    }
+
+                    // Validasi Serial Number
+                    if ($produk->wajib_seri) {
+                        $snKirim = $itemData['serial_numbers'] ?? [];
+                        
+                        if (count($snKirim) !== (int) $itemData['jumlah']) {
+                            throw new \Exception("Jumlah SN untuk '{$produk->name_product}' tidak sesuai.");
+                        }
+
+                        $validSnCount = SerialNumber::where('product_id', $produk->id)
+                            ->whereIn('nomor_seri', $snKirim)
+                            ->where('status', 'Tersedia') // Karena SN lama sudah di-release di atas, statusnya pasti Tersedia
+                            ->count();
+
+                        if ($validSnCount !== (int) $itemData['jumlah']) {
+                            throw new \Exception("Satu atau lebih SN untuk '{$produk->name_product}' tidak valid atau sudah terjual.");
+                        }
+                    }
+
+                    // Kurangi Stok Baru (Deduct)
+                    if ($stock) {
+                        $stock->decrement('qty', $itemData['jumlah']);
                     }
                 }
 
-                // ── Hitung ulang total (server-side) ────────────────────
+                // ── 5. Hitung Ulang Total (Server-Side) ──────────────────────────
                 $subtotal_dpp = 0.0;
                 $total_pajak  = 0.0;
 
@@ -584,16 +555,17 @@ class SaleController extends Controller implements HasMiddleware
                 $diskon_global = (float) ($validatedData['diskon']  ?? 0);
                 $total_akhir   = ($subtotal_dpp + $total_pajak + $service + $ongkir) - $diskon_global;
                 $jumlah_dibayar = (float) $validatedData['jumlah_dibayar'];
+                $status_pembayaran = ($jumlah_dibayar >= $total_akhir) ? 'Lunas' : 'Piutang';
                 $sisa_piutang   = max(0, $total_akhir - $jumlah_dibayar);
 
-                // ── Update header penjualan ──────────────────────────────
+                // ── 6. Update Header Penjualan ───────────────────────────────────
                 $penjualan->update([
                     'customer_id'           => $validatedData['customer_id'] ?? null,
                     'tanggal_penjualan'     => $validatedData['tanggal_penjualan'],
                     'tanggal_jatuh_tempo'   => $validatedData['tanggal_jatuh_tempo'] ?? null,
                     'metode_pembayaran'     => $validatedData['metode_pembayaran'],
                     'bank_id'               => $validatedData['bank_id'] ?? null,
-                    'status_pembayaran'     => $statusBaru,
+                    'status_pembayaran'     => $status_pembayaran,
                     'subtotal'              => $subtotal_dpp,
                     'diskon'                => $diskon_global,
                     'service'               => $service,
@@ -605,7 +577,33 @@ class SaleController extends Controller implements HasMiddleware
                     'catatan'               => $validatedData['catatan'] ?? null,
                 ]);
 
-                // ── Hapus & buat ulang item penjualan ───────────────────
+                 if ($jumlah_dibayar > 0) {
+                    // Cari data pembayaran pertama berdasarkan ID transaksi ini
+                    $pembayaranAwal = $penjualan->payments()->oldest('id')->first();
+
+                    if ($pembayaranAwal) {
+                        // Jika sudah ada pembayaran awal, lakukan UPDATE
+                        $pembayaranAwal->update([
+                            'tanggal_bayar' => $validatedData['tanggal'],
+                            'jumlah_bayar' => $jumlah_dibayar,
+                            'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                            'bank_id' => $validatedData['bank_id'] ?? null,
+                            'catatan' => $status_pembayaran === 'Lunas' ? 'Revisi Pembayaran Lunas Awal' : 'Revisi Uang Muka (DP)'
+                        ]);
+                    } else {
+                        // Jika sebelumnya belum ada pembayaran (hutang penuh), lalu saat diedit diisi nominal
+                        $penjualan->payments()->create([
+                            'user_id' => Auth::id(),
+                            'tanggal_bayar' => $validatedData['tanggal'],
+                            'jumlah_bayar' => $jumlah_dibayar,
+                            'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                            'bank_id' => $validatedData['bank_id'] ?? null,
+                            'catatan' => $status_pembayaran === 'Lunas' ? 'Pembayaran Lunas Awal' : 'Pembayaran Uang Muka (DP)'
+                        ]);
+                    }
+                }
+
+                // ── 7. Hapus & Buat Ulang Item (Claim SN) ────────────────────────
                 $penjualan->items()->delete();
 
                 foreach ($validatedData['items'] as $itemData) {

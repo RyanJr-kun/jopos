@@ -71,7 +71,7 @@
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-sm text-muted">Tanggal:</span>
                             <span
-                                class="text-sm fw-semibold">{{ \Carbon\Carbon::parse($pembelian->tanggal_pembelian)->translatedFormat('d F Y, H:i') }}</span>
+                                class="text-sm fw-semibold">{{ \Carbon\Carbon::parse($pembelian->tanggal_pembelian)->translatedFormat('d F Y') }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-sm text-muted">Jatuh Tempo:</span>
@@ -235,12 +235,9 @@
                                     <td class="text-center">{{ $key + 1 }}.</td>
 
                                     <td>
-                                        <div class="fw-semibold" style="font-size:13px">
+                                        <span class="fw-semibold">
                                             {{ \Carbon\Carbon::parse($payment->tanggal_bayar)->translatedFormat('d F Y') }}
-                                        </div>
-                                        <div class="text-muted" style="font-size:11px;margin-top:2px">
-                                            {{ \Carbon\Carbon::parse($payment->tanggal_bayar)->format('H:i') }} WIB
-                                        </div>
+                                        </span>
                                     </td>
                                     <td>{{ $payment->user->name }}</td>
 

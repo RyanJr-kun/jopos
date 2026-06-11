@@ -129,50 +129,10 @@
                 <!-- BOTTOM SECTION: SETTINGS & TOTALS -->
                 <div class="row g-4">
                     <!-- Left: Additional Charges & Status -->
-                    <div class="col-12 col-xl-7">
+                    {{-- <div class="col-12 col-xl-7">
                         <div class="row g-3">
-                            {{-- <div class="col-12 col-sm-6">
-                                <label for="ongkir" class="form-label fw-semibold">Ongkos Kirim</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="number" name="ongkir" id="ongkir-input" class="form-control text-end"
-                                        value="0" min="0">
-                                </div>
-                            </div>
-                            <div class="col-12 col-sm-6">
-                                <label for="diskon-tambahan" class="form-label fw-semibold">Diskon Tambahan</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="number" name="diskon_tambahan" id="diskon-tambahan"
-                                        class="form-control text-end" value="0" min="0">
-                                </div>
-                            </div> --}}
-                            {{-- <div class="col-12 col-sm-6">
-                                <label for="statusBarang" class="form-label fw-semibold">Status Barang <span
-                                        class="text-danger">*</span></label>
-                                <select class="form-select select2 @error('status_barang') is-invalid @enderror"
-                                    name="status_barang" id="statusBarang" required>
-                                    <option value="" disabled selected>Pilih Status</option>
-                                    @foreach ($barangs as $barang)
-                                        <option value="{{ $barang }}" @selected(old('status_barang') == $barang)>
-                                            {{ $barang }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-12 col-sm-6">
-                                <label for="statusBayar" class="form-label fw-semibold">Status Pembayaran <span
-                                        class="text-danger">*</span></label>
-                                <select class="form-select select2 @error('status_pembayaran') is-invalid @enderror"
-                                    name="status_pembayaran" id="statusBayar" required>
-                                    <option value="" disabled selected>Pilih Status</option>
-                                    @foreach ($payments as $payment)
-                                        <option value="{{ $payment }}" @selected(old('status_pembayaran') == $payment)>
-                                            {{ $payment }}</option>
-                                    @endforeach
-                                </select>
-                            </div> --}}
                         </div>
-                    </div>
+                    </div> --}}
 
                     <!-- Right: Calculation Summary Panel -->
                     <div class="totals">
@@ -211,34 +171,9 @@
                                 <span class="text-muted" id="cart-total-btn-display">Rp 0</span>
                             </button>
                         </div>
-                        {{-- <div class="d-flex justify-content-between mb-3 align-items-center">
-                                <span class="text-dark fw-semibold">Nominal Bayar</span>
-                                <div class="w-50">
-                                    <input type="text" id="bayar" class="form-control text-end fw-bold">
-                                    <input type="hidden" name="jumlah_dibayar" id="jumlah_dibayar_hidden"
-                                        value="0">
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-dark fw-semibold">Sisa / Kembalian</span>
-                                <span id="kembalian" class="fw-bold fs-6">Rp 0</span>
-                            </div> --}}
                     </div>
                 </div>
             </div>
-
-            <!-- NOTES -->
-            {{-- <div class="mb-4">
-                <label for="catatan" class="form-label fw-semibold">Catatan</label>
-                <div class="border rounded-3 bg-white">
-                    <div id="quill-editor-catatan" style="min-height: 120px; border: none;">{!! old('catatan') !!}
-                    </div>
-                </div>
-                <input type="hidden" name="catatan" id="catatan" value="{{ old('catatan') }}">
-                @error('catatan')
-                    <div class="invalid-feedback d-block text-sm">{{ $message }}</div>
-                @enderror
-            </div> --}}
         </div>
         </div>
     </form>

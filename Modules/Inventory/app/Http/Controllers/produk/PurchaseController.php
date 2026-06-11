@@ -128,6 +128,11 @@ class PurchaseController extends Controller implements HasMiddleware
      */
     public function store(Request $request)
     {
+        $request->merge([
+            'jumlah_dibayar' => preg_replace('/[^0-9]/', '', $request->input('jumlah_dibayar', 0)),
+            'ongkir'         => preg_replace('/[^0-9]/', '', $request->input('ongkir', 0)),
+            'diskon'         => preg_replace('/[^0-9]/', '', $request->input('diskon', 0)),
+        ]);
 
         $validatedData = $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
@@ -135,7 +140,6 @@ class PurchaseController extends Controller implements HasMiddleware
             'tanggal_jatuh_tempo' => 'nullable|date',
             'referensi' => 'required|string|max:255|unique:purchases',
             'status_barang' => 'required|in:Diterima,Pre Order,Retur,Batal',
-            'status_pembayaran' => 'required|in:Lunas,Hutang,Batal',
             'jumlah_dibayar' => 'nullable|numeric|min:0',
             'ongkir' => 'nullable|numeric|min:0',
             'diskon_tambahan' => 'nullable|numeric|min:0',
@@ -191,15 +195,11 @@ class PurchaseController extends Controller implements HasMiddleware
 
                 // 3. Tentukan status pembayaran
                 $sisa = $total_akhir - $jumlah_dibayar;
-                $status_pembayaran = 'Hutang';
-
-                if ($jumlah_dibayar >= $total_akhir) {
-                    $status_pembayaran = 'Lunas';
-                }
-
+                $status_pembayaran = ($jumlah_dibayar >= $total_akhir) ? 'Lunas' : 'Hutang';
+                
                 // 4. Buat record Purchase
                 $pembelian = Purchase::create([
-                    'store_id' => $storeId, // Wajib diisi berdasarkan struktur tabel purchases
+                    'store_id' => $storeId,
                     'supplier_id' => $validatedData['supplier_id'],
                     'user_id' => Auth::id(),
                     'referensi' => $validatedData['referensi'],
@@ -329,7 +329,6 @@ class PurchaseController extends Controller implements HasMiddleware
             'title' => 'Edit Invoice Purchase: ' . $pembelian->referensi,
             'pembelian' => $pembelian,
             'pemasok' => Supplier::where('status', 1)->get(),
-            'taxes' => Taxe::all(),
             'statuses' => $statuses,
             'supplier' => $supplier,
             'taxes' => $taxes,
@@ -386,12 +385,10 @@ class PurchaseController extends Controller implements HasMiddleware
 
         // Membersihkan input mata uang dari format ribuan sebelum validasi
         $request->merge([
-
             'jumlah_dibayar' => preg_replace('/[^0-9]/', '', $request->input('jumlah_dibayar', 0))
         ]);
 
         $validatedData = $request->validate([
-            'bank_id' => 'nullable|exists:banks,id',
             'supplier_id' => 'required|exists:suppliers,id',
             'tanggal' => 'required|date',
             'tanggal_jatuh_tempo' => 'nullable|date|after:tanggal',
@@ -408,6 +405,8 @@ class PurchaseController extends Controller implements HasMiddleware
             'items.*.harga_beli' => 'required|numeric|min:0',
             'items.*.diskon' => 'nullable|numeric|min:0',
             'items.*.taxe_id' => 'nullable|exists:taxes,id',
+            'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS',
+            'bank_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:banks,id',
         ]);
 
         try {
@@ -485,11 +484,7 @@ class PurchaseController extends Controller implements HasMiddleware
 
                 // Tentukan status pembayaran
                 $sisa = $total_akhir - $jumlah_dibayar;
-                $status_pembayaran_server = 'Hutang';
-                if ($jumlah_dibayar >= $total_akhir) {
-                    $status_pembayaran_server = 'Lunas';
-                }
-
+                $status_pembayaran = ($jumlah_dibayar >= $total_akhir) ? 'Lunas' : 'Hutang';
                 // --- UPDATE DATA PEMBELIAN ---
                 $pembelian->update([
                     'supplier_id' => $validatedData['supplier_id'],
@@ -502,11 +497,39 @@ class PurchaseController extends Controller implements HasMiddleware
                     'ongkir' => $ongkir,
                     'total_akhir' => $total_akhir,
                     'jumlah_dibayar' => $jumlah_dibayar,
+                    'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                    'bank_id' => $validatedData['bank_id'] ?? null,
                     'sisa_hutang' => $sisa,
-                    'status_pembayaran' => $statusBaru === 'Batal' ? 'Batal' : $status_pembayaran_server,
+                    'status_pembayaran' => $statusBaru === 'Batal' ? 'Batal' : $status_pembayaran,
                     'status_barang' => $validatedData['status_barang'],
                     'catatan' => $validatedData['catatan'],
                 ]);
+
+                if ($jumlah_dibayar > 0) {
+                    // Cari data pembayaran pertama berdasarkan ID transaksi ini
+                    $pembayaranAwal = $pembelian->payments()->oldest('id')->first();
+
+                    if ($pembayaranAwal) {
+                        // Jika sudah ada pembayaran awal, lakukan UPDATE
+                        $pembayaranAwal->update([
+                            'tanggal_bayar' => $validatedData['tanggal'],
+                            'jumlah_bayar' => $jumlah_dibayar,
+                            'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                            'bank_id' => $validatedData['bank_id'] ?? null,
+                            'catatan' => $status_pembayaran === 'Lunas' ? 'Revisi Pembayaran Lunas Awal' : 'Revisi Uang Muka (DP)'
+                        ]);
+                    } else {
+                        // Jika sebelumnya belum ada pembayaran (hutang penuh), lalu saat diedit diisi nominal
+                        $pembelian->payments()->create([
+                            'user_id' => Auth::id(),
+                            'tanggal_bayar' => $validatedData['tanggal'],
+                            'jumlah_bayar' => $jumlah_dibayar,
+                            'metode_pembayaran' => $validatedData['metode_pembayaran'],
+                            'bank_id' => $validatedData['bank_id'] ?? null,
+                            'catatan' => $status_pembayaran === 'Lunas' ? 'Pembayaran Lunas Awal' : 'Pembayaran Uang Muka (DP)'
+                        ]);
+                    }
+                }
 
                 // Hapus detail lama dan buat yang baru
                 $pembelian->details()->delete();

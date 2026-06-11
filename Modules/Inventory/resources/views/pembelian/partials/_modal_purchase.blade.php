@@ -89,7 +89,7 @@
                             <h4 class="mb-0 fw-bold change-value" id="change-display">Rp 0</h4>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-6">
+                    <div class="col-12">
                         <label for="statusBarang" class="form-label fw-semibold">Status Barang <span
                                 class="text-danger">*</span></label>
                         <select class="form-select select2 @error('status_barang') is-invalid @enderror"
@@ -101,7 +101,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-12 col-sm-6">
+                    {{-- <div class="col-12 col-sm-6">
                         <label for="statusBayar" class="form-label fw-semibold">Status Pembayaran <span
                                 class="text-danger">*</span></label>
                         <select class="form-select select2 @error('status_pembayaran') is-invalid @enderror"
@@ -112,7 +112,7 @@
                                     {{ $payment }}</option>
                             @endforeach
                         </select>
-                    </div>
+                    </div> --}}
                     <div class="col-12">
                         <label for="catatan" class="form-label fw-semibold">Catatan</label>
                         <div class="border rounded-3 bg-white">

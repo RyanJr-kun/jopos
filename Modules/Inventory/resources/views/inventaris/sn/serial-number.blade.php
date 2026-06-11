@@ -116,7 +116,7 @@
                     </div>
                     <div class="col-md-2">
                         <label for="status_filter" class="form-label fw-medium">Filter Status</label>
-                        <select id="status_filter" name="status" class="form-select form-select-sm">
+                        <select id="status_filter" name="status" class="form-select select2">
                             <option value="">Semua Status</option>
                             <option value="Tersedia" @selected(request('status') == 'Tersedia')>Tersedia</option>
                             <option value="Terjual" @selected(request('status') == 'Terjual')>Terjual</option>
@@ -189,12 +189,12 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-icon btn-outline-primary btn-edit me-1"
+                                <button type="button" class="action-btn text-secondary btn-edit me-1"
                                     data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
                                     data-status="{{ $sn->status }}" title="Edit SN" data-bs-toggle="tooltip">
                                     <i class="bx bx-edit-alt"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-delete"
+                                <button type="button" class="action-btn text-danger btn-delete"
                                     data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}" title="Hapus SN"
                                     data-bs-toggle="tooltip">
                                     <i class="bx bx-trash"></i>
@@ -203,9 +203,12 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="bx bx-info-circle fs-3 d-block mb-2"></i>
-                                Tidak ada data nomor seri yang cocok.
+                            <td colspan="6">
+                                <div class="d-flex flex-column align-items-center justify-content-center">
+                                    <i class="bx bx-info-circle fs-3 mb-2"></i>
+
+                                    <span class="">Tidak ada data nomor seri yang cocok.</span>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
@@ -238,10 +241,13 @@
                         </div>
                         <div class="mb-3">
                             <label for="edit_status" class="form-label fw-medium">Status</label>
-                            <select id="edit_status" name="status" class="form-select form-select-sm" required>
-                                <option value="Tersedia">Tersedia</option>
-                                <option value="Rusak">Rusak</option>
-                                <option value="Hilang">Hilang</option>
+                            <select id="edit_status" name="status" class="form-select select2"
+                                data-placeholder="pilih status ..." required>
+                                <option value="" class=""></option>
+                                @foreach ($status as $s)
+                                    <option value="{{ $s }}" @selected(old('status_barang') == $s)>
+                                        {{ $s }}</option>
+                                @endforeach
                             </select>
                             <div class="form-text text-warning"><i class="bx bx-info-circle me-1"></i>Status "Terjual"
                                 diatur otomatis oleh sistem.</div>
@@ -288,6 +294,22 @@
 
 @section('page-script')
     <script type="module">
+        const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    $this.select2({
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
+                    });
+                });
+            } else {
+                setTimeout(initSelect2, 100);
+            }
+        };
+        initSelect2();
         $(document).ready(function() {
             setTimeout(function() {
                 $('#product_id_filter').select2({

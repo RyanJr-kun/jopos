@@ -3,16 +3,17 @@
 namespace Modules\Inventory\Http\Controllers\master;
 
 use App\Http\Controllers\Controller;
-
-use Modules\Inventory\Models\Product;
-use Modules\Inventory\Models\SerialNumber;
+use App\Models\ProductStock;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule; 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
+use Modules\Inventory\Models\Product;
+use Modules\Inventory\Models\SerialNumber;
 
 class SerialNumberController extends Controller implements HasMiddleware
 {
@@ -59,20 +60,16 @@ class SerialNumberController extends Controller implements HasMiddleware
 
         $serialNumbers = $query->paginate(15)->withQueryString();
         $products = Product::where('wajib_seri', true)->orderBy('name_product')->get();
+        $status = SerialNumber::getStatus();
 
-        return view('inventory::inventaris.sn.serial-number', [
-            'title' => 'Manajemen Nomor Seri',
-            'serialNumbers' => $serialNumbers,
-            'products' => $products,
-            'produkDipilih' => $produkDipilih, // Kirim produk yang dipilih ke view
-        ]);
+        return view('inventory::inventaris.sn.serial-number', compact('serialNumbers', 'products', 'produkDipilih', 'status'));
     }
 
     public function getProductInfo(Request $request)
     {
         $request->validate(['product_id' => 'required|exists:products,id']);
         $produk = Product::find($request->product_id);
-        $stokTercatat = $produk->qty;
+        $stokTercatat = $produk->stocks()->sum('qty');
         $snTerdaftar = SerialNumber::where('product_id', $request->product_id)->count();
         return response()->json([
             'stok_tercatat' => $stokTercatat,
@@ -90,7 +87,6 @@ class SerialNumberController extends Controller implements HasMiddleware
     {
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,id',
-            
             'serial_numbers' => 'required|array|min:1',
             'serial_numbers.*' => [
                 'required',
@@ -114,27 +110,40 @@ class SerialNumberController extends Controller implements HasMiddleware
             ], 422); // 422 Unprocessable Entity is a good choice for validation errors
         }
 
-        $validated = $validator->validated();
-        $serialsToInsert = [];
-        $now = now();
-        $storeId = auth()->user()->employee->store_id;
-        foreach ($validated['serial_numbers'] as $serial) {
-            $serialsToInsert[] = [
-                'store_id'   => $storeId,
-                'product_id' => $validated['product_id'],
-                'nomor_seri' => $serial,
-                'status' => 'Tersedia', // Set default status
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
+        try {
+            $validated = $validator->validated();
+            $serialsToInsert = [];
+            $now = now();
+            $storeId = Auth::user()->employee?->store_id;
+
+            if (!$storeId) {
+                return response()->json(['message' => 'Anda tidak memiliki akses ke cabang/toko manapun.'], 403);
+            }
+
+            foreach ($validated['serial_numbers'] as $serial) {
+                $serialsToInsert[] = [
+                    'store_id'   => $storeId,
+                    'product_id' => $validated['product_id'],
+                    'nomor_seri' => $serial,
+                    'status' => 'Tersedia', // Set default status
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+
+            // Use bulk insert for better performance
+            SerialNumber::insert($serialsToInsert);
+
+            return response()->json([
+                'message' => count($serialsToInsert) . ' nomor seri berhasil ditambahkan.'
+            ], 201); // 201 Created is the correct status code for successful creation
+        } catch (\Exception $e) {
+            // Tangkap error database tak terduga
+            return response()->json([
+                'message' => 'Terjadi kesalahan pada server saat menyimpan data.',
+                'error'   => $e->getMessage() // Sembunyikan pesan asli ini jika di tahap production
+            ], 500);
         }
-
-        // Use bulk insert for better performance
-        SerialNumber::insert($serialsToInsert);
-
-        return response()->json([
-            'message' => count($serialsToInsert) . ' nomor seri berhasil ditambahkan.'
-        ], 201); // 201 Created is the correct status code for successful creation
     }
 
     public function storeMultiple(Request $request)
@@ -145,8 +154,11 @@ class SerialNumberController extends Controller implements HasMiddleware
             'serial_numbers' => 'required|array|min:1',
             'serial_numbers.*' => [
                 'required',
+                'string',
                 'distinct',
-                Rule::unique('serial_numbers', 'nomor_seri')->where('product_id', $request->product_id),
+                Rule::unique('serial_numbers', 'nomor_seri')->where(function ($query) use ($request) {
+                return $query->where('product_id', $request->product_id);
+            }),
             ],
         ], [
             'serial_numbers.*.required' => 'Nomor seri tidak boleh kosong.',
@@ -160,7 +172,11 @@ class SerialNumberController extends Controller implements HasMiddleware
             $serialNumbers = $validated['serial_numbers'];
             $now = now();
             $dataToInsert = [];
-            $storeId = auth()->user()->employee->store_id;
+            $storeId = Auth::user()->employee?->store_id;
+
+            if (!$storeId) {
+                return response()->json(['message' => 'Anda tidak memiliki akses ke cabang/toko manapun.'], 403);
+            }
 
             foreach ($serialNumbers as $sn) {
                 $dataToInsert[] = [
@@ -225,53 +241,32 @@ class SerialNumberController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'serial_number' => [
                 'required',
-                // Pastikan unik untuk produk yang sama, kecuali untuk dirinya sendiri
                 Rule::unique('serial_numbers', 'nomor_seri')->where('product_id', $serialNumber->product_id)->ignore($serialNumber->id),
             ],
-            // Batasi status yang bisa diubah. 'Terjual' tidak bisa diubah dari sini
-            // karena seharusnya diatur oleh transaksi penjualan.
             'status' => 'required|in:Tersedia,Rusak,Hilang',
         ]);
 
         // Memulai transaksi database untuk menjaga integritas data
         DB::beginTransaction();
         try {
-            // 1. Simpan status lama sebelum ada perubahan
-            $old_status = $serialNumber->status;
-            $new_status = $validated['status'];
-
-            // 2. Update data nomor seri
+            // Cukup update data nomor serinya saja
             $serialNumber->update([
                 'nomor_seri' => $validated['serial_number'],
-                'status' => $new_status,
+                'status'     => $validated['status'],
             ]);
 
-            // 3. Logika penyesuaian stok produk
-            // Jika status berubah MENJADI 'Hilang' atau 'Rusak' (dari status apapun yang bukan itu)
-            if (($new_status === 'Hilang' || $new_status === 'Rusak') && ($old_status !== 'Hilang' && $old_status !== 'Rusak')) {
-                $serialNumber->produk->decrement('qty');
-            }
-            // Jika status berubah DARI 'Hilang' atau 'Rusak' MENJADI 'Tersedia' (misal: barang ditemukan kembali)
-            else if (($old_status === 'Hilang' || $old_status === 'Rusak') && $new_status === 'Tersedia') {
-                $serialNumber->produk->increment('qty');
-            }
-            // Tidak ada perubahan stok jika status tidak berubah, atau jika perubahannya antara Rusak dan Hilang.
-
-            // Jika semua berhasil, commit transaksi
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Nomor seri berhasil diperbarui dan stok telah disesuaikan.'
+                'message' => 'Data nomor seri berhasil diperbarui.'
             ]);
         } catch (\Exception $e) {
-            // Jika terjadi error, batalkan semua perubahan
             DB::rollBack();
-
             Log::error('Error update serial number: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui nomor seri. Terjadi kesalahan pada server.'
+                'message' => 'Gagal memperbarui nomor seri.'
             ], 500);
         }
     }
@@ -317,11 +312,17 @@ class SerialNumberController extends Controller implements HasMiddleware
                 return response()->json(['error' => 'Product tidak ditemukan.'], 404);
             }
 
-            $serialNumbers = SerialNumber::where('product_id', $product_id)
-                ->where('status', 'Tersedia')
-                ->pluck('nomor_seri'); // Ambil hanya kolom nomor_seri
+            $storeId = Auth::user()->employee?->store_id;
 
-            return response()->json($serialNumbers);
+            $serialNumbers = SerialNumber::where('product_id', $product_id)
+            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+            ->get(['nomor_seri', 'status']);
+
+            return response()->json(['serial_numbers' => $serialNumbers->map(fn($sn) => [
+                    'serial_number' => $sn->nomor_seri,
+                    'status'        => $sn->status,
+                ])
+            ]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Gagal mengambil data nomor seri.'], 500);
         }

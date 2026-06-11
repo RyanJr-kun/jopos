@@ -20,4 +20,13 @@ class SerialNumber extends Model
     {
         return $this->belongsTo(Sale::class, 'penjualan_id');
     }
+
+    public static function getStatus()
+    {
+        return [
+            'Tersedia',
+            'Rusak',
+            'Hilang',
+        ];
+    }
 }
