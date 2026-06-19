@@ -12,9 +12,26 @@
                     data-stok="{{ $produk->stocks->sum('qty') }}"
                     data-wajib-seri="{{ $produk->wajib_seri ? 'true' : 'false' }}"
                     data-pajak-id="{{ $produk->taxe_id }}" data-pajak-rate="{{ $produk->pajak->rate ?? 0 }}"
-                    data-disabled="{{ $produk->stocks->sum('qty') < 1 ? 'true' : 'false' }}" role="button"
-                    aria-label="Tambah {{ e($produk->name_product) }} ke keranjang"
-                    tabindex="{{ $produk->stocks->sum('qty') < 1 ? '-1' : '0' }}">
+                    {{-- TAMBAHAN: Deteksi Varian --}} data-has-variant="{{ $produk->variants->isNotEmpty() ? 'true' : 'false' }}"
+                    data-variants="{{ $produk->variants->isNotEmpty()
+                        ? json_encode(
+                            $produk->variants->map(function ($v) {
+                                // Kumpulkan semua value dari options (misal: "Hitam", "XL")
+                                $options = $v->options->pluck('value')->toArray();
+                    
+                                // Gabungkan dengan garis miring, atau gunakan SKU jika tidak ada opsi
+                                $variantName = !empty($options) ? implode(' / ', $options) : 'SKU: ' . $v->sku;
+                    
+                                return [
+                                    'id' => $v->id,
+                                    'name' => $variantName, // Sekarang name akan berisi "Hitam / XL"
+                                    'stok' => $v->stocks->sum('qty'),
+                                ];
+                            }),
+                        )
+                        : '[]' }}"
+                    data-disabled="{{ $produk->stocks->sum('qty') < 1 && $produk->variants->isEmpty() ? 'true' : 'false' }}"
+                    role="button">
 
                     {{-- Gambar --}}
                     <div class="product-img-wrap">

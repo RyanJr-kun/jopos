@@ -504,6 +504,8 @@
             const editItemDiskonInput = document.getElementById('edit-item-diskon');
             const serialNumberModalEl = document.getElementById('serialNumberModal');
             const serialNumberModal = new bootstrap.Modal(serialNumberModalEl);
+            const variantModalEl = document.getElementById('variantModal');
+            const variantModal = variantModalEl ? new bootstrap.Modal(variantModalEl) : null;
             const snListContainer = document.getElementById('sn-list-container');
             const snNamaProduct = document.getElementById('sn-name-produk');
             const snRequiredCount = document.getElementById('sn-required-count');
@@ -522,48 +524,43 @@
             };
 
             const addProductToCart = (productData, serialNumbers = []) => {
-                const {
-                    id,
-                    name,
-                    harga,
-                    hargaAsli,
-                    stok,
-                    img,
-                    wajibSeri,
-                    pajakId,
-                    pajakRate
-                } = productData;
-                const parsedId = parseInt(id);
-                const parsedHargaFinal = parseFloat(harga);
-                const parsedHargaAsli = parseFloat(hargaAsli || harga);
-                const parsedStock = parseInt(stok);
+                // Gunakan kombinasi product_id dan variant_id sebagai UNIQUE KEY di keranjang
+                const cartKey = productData.variant_id ? `${productData.id}-${productData.variant_id}` :
+                    productData.id.toString();
 
-                if (cart.has(parsedId)) {
-                    const item = cart.get(parsedId);
+                if (cart.has(cartKey)) {
+                    const item = cart.get(cartKey);
                     if (item.jumlah < item.stok) {
                         item.jumlah++;
                     } else {
-                        showToast(`Stok untuk "${name}" tidak mencukupi.`, 'warning');
+                        showToast(`Stok untuk "${productData.name}" tidak mencukupi.`, 'warning');
                     }
                 } else {
-                    if (parsedStock > 0) {
+                    if (parseInt(productData.stok) > 0) {
                         const initialQuantity = serialNumbers.length > 0 ? serialNumbers.length : 1;
-                        cart.set(parsedId, {
-                            id: parsedId,
-                            name,
-                            harga: parsedHargaAsli,
-                            stok: parsedStock,
-                            img,
+                        const displayName = productData.variant_name ?
+                            `${productData.name} - ${productData.variant_name}` : productData.name;
+
+                        cart.set(cartKey, {
+                            cart_key: cartKey,
+                            id: parseInt(productData.id),
+                            variant_id: productData.variant_id || null, // Tangkap ID Varian
+                            variant_name: productData.variant_name || null,
+                            name: displayName, // Nama yang ditampilkan di keranjang
+                            harga: parseFloat(productData.hargaAsli || productData.harga),
+                            stok: parseInt(productData.stok),
+                            img: productData.image_url || productData.img, // Dukung image_url
                             jumlah: initialQuantity,
-                            harga_jual: parsedHargaFinal,
+                            harga_jual: parseFloat(productData.harga),
                             diskon: 0,
-                            taxe_id: pajakId ? parseInt(pajakId) : null,
-                            pajak_rate: pajakRate ? parseFloat(pajakRate) : 0,
+                            taxe_id: productData.pajakId ? parseInt(productData.pajakId) : null,
+                            pajak_rate: productData.pajakRate ? parseFloat(productData.pajakRate) : 0,
                             serial_numbers: serialNumbers,
-                            wajib_seri: wajibSeri === 'true'
+                            wajib_seri: productData.wajibSeri === 'true' || productData.wajibSeri ===
+                                true
                         });
                     } else {
-                        showToast(`"${name}" kehabisan stok.`, 'warning');
+                        showToast(`"${productData.name}" kehabisan stok.`, 'warning');
                     }
                 }
                 updateCartAndTotals();
@@ -646,51 +643,42 @@
                         <i class="bx bx-edit" aria-hidden="true"></i>
                     </button>`;
 
+                        let namaTampilan = item.variant_name ? `${item.name}` : item.name;
+
                         cartContainer.insertAdjacentHTML('beforeend', `
-                    <tr class="cart-item-row">
-                        <input type="hidden" name="items[${formIndex}][product_id]"  value="${item.id}">
-                        <input type="hidden" name="items[${formIndex}][jumlah]"       value="${item.jumlah}">
-                        <input type="hidden" name="items[${formIndex}][harga_jual]"   value="${item.harga_jual}">
-                        <input type="hidden" name="items[${formIndex}][diskon]"       value="${item.diskon}">
-                        <input type="hidden" name="items[${formIndex}][taxe_id]"      value="${item.taxe_id || ''}">
-                        ${serialNumberInputs}
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <img src="${item.img}" class="avatar avatar-md rounded me-2"
-                                     alt="${item.name}" loading="lazy">
-                                <div class="d-flex flex-column" style="min-width:0;">
-                                    <p class="mb-0 fw-bold text-xs text-wrap text-truncate" title="${item.name}">
-                                        ${item.name.length > 10 ? item.name.substring(0, 10) + ' ...' : item.name}
-                                    </p>
-                                    <small class="d-flex">${serialNumberDisplay}</small>
-                                    <small class="text-muted">${hargaDisplay}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="text-center">
-                            <button class="btn btn-outline-primary btn-sm rounded-circle p-0 qty-decrease"
-                                    data-id="${item.id}" type="button"
-                                    style="width:22px;height:22px;line-height:1;"
-                                    aria-label="Kurangi jumlah ${item.name}">−</button>
-                            <span class="fw-bold px-1 text-sm" aria-label="Jumlah: ${item.jumlah}">${item.jumlah}</span>
-                            <button class="btn btn-outline-primary btn-sm rounded-circle p-0 qty-increase"
-                                    data-id="${item.id}" type="button"
-                                    style="width:22px;height:22px;line-height:1;"
-                                    aria-label="Tambah jumlah ${item.name}">+</button>
-                        </td>
-                        <td><span class="text-xs fw-bold">${formatCurrency(pajakAmountItem)}</span></td>
-                        <td><span class="text-xs fw-bold">${formatCurrency(dppItem)}</span></td>
-                        <td class="text-end">
-                            <div class="d-flex justify-content-end align-items-center">
-                                ${editButtonHtml}
-                                <button class="btn btn-link text-danger p-0 ms-1 remove-item"
-                                        data-id="${item.id}" title="Hapus Item" type="button"
-                                        aria-label="Hapus ${item.name} dari keranjang">
-                                    <i class="bx bx-trash" aria-hidden="true"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>`);
+                            <tr class="cart-item-row">
+                                <input type="hidden" name="items[${formIndex}][product_id]" value="${item.id}">
+                                <input type="hidden" name="items[${formIndex}][product_variant_id]" value="${item.variant_id || ''}"> 
+                                <input type="hidden" name="items[${formIndex}][jumlah]" value="${item.jumlah}">
+                                <input type="hidden" name="items[${formIndex}][harga_jual]" value="${item.harga_jual}">
+                                <input type="hidden" name="items[${formIndex}][diskon]" value="${item.diskon}">
+                                <input type="hidden" name="items[${formIndex}][taxe_id]" value="${item.taxe_id || ''}">
+                                ${serialNumberInputs}
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="${item.img}" class="avatar avatar-md rounded me-2" alt="${item.name}">
+                                        <div class="d-flex flex-column" style="min-width:0;">
+                                            <p class="mb-0 fw-bold text-xs text-wrap" title="${item.name}">${namaTampilan}</p>
+                                            <small class="d-flex">${serialNumberDisplay}</small>
+                                            <small class="text-muted">${hargaDisplay}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-primary btn-sm rounded-circle p-0 qty-decrease" data-cart-key="${item.cart_key}" type="button" style="width:22px;height:22px;line-height:1;">−</button>
+                                    <span class="fw-bold px-1 text-sm">${item.jumlah}</span>
+                                    <button class="btn btn-outline-primary btn-sm rounded-circle p-0 qty-increase" data-cart-key="${item.cart_key}" type="button" style="width:22px;height:22px;line-height:1;">+</button>
+                                </td>
+                                <td><span class="text-xs fw-bold">${formatCurrency(pajakAmountItem)}</span></td>
+                                <td><span class="text-xs fw-bold">${formatCurrency(dppItem)}</span></td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end align-items-center">
+                                        ${editButtonHtml} <button class="btn btn-link text-danger p-0 ms-1 remove-item" data-cart-key="${item.cart_key}" type="button">
+                                            <i class="bx bx-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>`);
                         formIndex++;
                     });
                 }
@@ -1149,6 +1137,7 @@
                 const card = e.target.closest('.product-card-pos');
                 if (!card) return;
 
+                // Ambil data dari atribut HTML
                 const {
                     id,
                     name,
@@ -1159,68 +1148,131 @@
                     img,
                     wajibSeri,
                     pajakId,
-                    pajakRate
+                    pajakRate,
+                    hasVariant,
+                    variants
                 } = card.dataset;
-                if (disabled === 'true') return;
 
-                const isWajibSeri = wajibSeri === 'true';
-                tempProductDataForSN = {
+                // Jangan izinkan klik jika stok habis (dan tidak punya varian)
+                if (disabled === 'true' && hasVariant === 'false') return;
+
+                // Kumpulkan data dasar produk
+                const baseProductData = {
                     id,
                     name,
                     harga,
                     hargaAsli,
                     stok,
                     img,
-                    wajibSeri,
+                    image_url: img,
+                    wajibSeri: wajibSeri,
                     pajakId,
-                    pajakRate
+                    pajakRate,
+                    variant_id: null,
+                    variant_name: null
                 };
 
-                if (isWajibSeri) {
-                    const itemInCart = cart.get(parseInt(id));
-                    const existingSerials = itemInCart ? itemInCart.serial_numbers : [];
-                    const requiredQty = itemInCart ? itemInCart.jumlah + 1 : 1;
-                    openSerialNumberModal(id, name, requiredQty, existingSerials);
+                if (hasVariant === 'true') {
+                    // Jika punya varian, parsing JSON variannya dan buka modal
+                    const parsedVariants = JSON.parse(variants || '[]');
+                    openVariantModal(baseProductData, parsedVariants);
                 } else {
-                    const item = cart.get(parseInt(id));
-                    if (item) {
-                        updateQuantity(parseInt(id), item.jumlah + 1);
-                    } else {
-                        addProductToCart(tempProductDataForSN);
-                    }
+                    // Jika produk tunggal biasa, langsung teruskan
+                    handleProductSelection(baseProductData);
                 }
             });
 
+            // modal varian
+            const openVariantModal = (baseProductData, variants) => {
+                document.getElementById('variant-product-name').textContent = baseProductData.name;
+                document.getElementById('variant-product-img').src = baseProductData.image_url ||
+                    baseProductData.img;
+                document.getElementById('variant-product-price').textContent = formatCurrency(baseProductData
+                    .harga);
+
+                const container = document.getElementById('variant-list-container');
+                container.innerHTML = '';
+
+                variants.forEach(v => {
+                    const isOutOfStock = parseInt(v.stok) <= 0;
+                    const btn = document.createElement('button');
+
+                    // Desain tombol varian
+                    btn.className =
+                        `btn d-flex justify-content-between align-items-center mb-2 ${isOutOfStock ? 'btn-outline-secondary disabled' : 'btn-outline-primary'}`;
+                    btn.innerHTML =
+                        `<span>${v.name}</span> <span class="badge bg-label-${isOutOfStock ? 'secondary' : 'primary'}">Stok: ${v.stok}</span>`;
+
+                    if (!isOutOfStock) {
+                        btn.addEventListener('click', () => {
+                            variantModal.hide(); // Tutup modal varian
+
+                            // Copy data produk utama, lalu timpa dengan data variannya
+                            const selectedProductData = {
+                                ...baseProductData
+                            };
+                            selectedProductData.stok = v.stok;
+                            selectedProductData.variant_id = v.id;
+                            selectedProductData.variant_name = v.name;
+                            // Jika varian punya harga/gambar beda, bisa ditambahkan di sini: selectedProductData.harga = v.harga;
+
+                            handleProductSelection(selectedProductData);
+                        });
+                    }
+                    container.appendChild(btn);
+                });
+
+                variantModal.show();
+            };
+
+            // Fungsi Universal untuk mengecek Wajib SN sebelum masuk keranjang
+            const handleProductSelection = (productData) => {
+                tempProductDataForSN = productData; // Simpan untuk dipakai Modal SN
+
+                if (productData.wajibSeri === 'true' || productData.wajibSeri === true) {
+                    const cartKey = productData.variant_id ? `${productData.id}-${productData.variant_id}` :
+                        productData.id.toString();
+                    const itemInCart = cart.get(cartKey);
+
+                    const existingSerials = itemInCart ? itemInCart.serial_numbers : [];
+                    const requiredQty = itemInCart ? itemInCart.jumlah + 1 : 1;
+
+                    const displayName = productData.variant_name ?
+                        `${productData.name} - ${productData.variant_name}` : productData.name;
+
+                    // Buka modal SN
+                    openSerialNumberModal(productData.id, displayName, requiredQty, existingSerials);
+                } else {
+                    // Jika tidak wajib SN, langsung tembak ke keranjang
+                    addProductToCart(productData);
+                }
+            };
+
             // Aksi dalam tabel keranjang
             cartContainer.addEventListener('click', (e) => {
-                const target = e.target.closest('[data-id]');
+                const target = e.target.closest('[data-cart-key]');
                 if (!target) return;
-                const id = parseInt(target.dataset.id);
-                const item = cart.get(id);
+
+                const cartKey = target.dataset.cartKey; // Sekarang string (contoh: "15-3")
+                const item = cart.get(cartKey);
                 if (!item) return;
 
                 if (e.target.closest('.qty-increase')) {
                     if (item.serial_numbers?.length > 0) {
                         tempProductDataForSN = {
-                            id: item.id,
-                            name: item.name,
-                            harga: item.harga,
-                            stok: item.stok,
-                            img: item.img,
-                            wajibSeri: item.wajib_seri,
-                            pajakId: item.taxe_id,
-                            pajakRate: item.pajak_rate
+                            ...item,
+                            wajibSeri: true
                         };
-                        openSerialNumberModal(item.id, item.name, item.jumlah + 1, item.serial_numbers);
+                        const displayName = item.variant_name ? `${item.name} (${item.variant_name})` : item
+                            .name;
+                        openSerialNumberModal(item.id, displayName, item.jumlah + 1, item.serial_numbers);
                     } else {
-                        updateQuantity(id, item.jumlah + 1);
+                        updateQuantity(cartKey, item.jumlah + 1);
                     }
                 } else if (e.target.closest('.qty-decrease')) {
-                    updateQuantity(id, item.jumlah - 1);
+                    updateQuantity(cartKey, item.jumlah - 1);
                 } else if (e.target.closest('.remove-item')) {
-                    removeFromCart(id);
-                } else if (e.target.closest('.edit-item')) {
-                    openEditModal(id);
+                    removeFromCart(cartKey);
                 }
             });
 

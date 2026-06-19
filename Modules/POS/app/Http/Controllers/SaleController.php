@@ -86,9 +86,16 @@ class SaleController extends Controller implements HasMiddleware
             'stocks',
             'primaryImage',
             'pajak',
+            'variants.stocks',
+            'variants.options'
         ])
             ->select('products.*')
-            ->whereHas('stocks', fn($q) => $q->where('qty', '>', 0));
+            ->where(function ($q) {
+                $q->whereHas('stocks', fn($sq) => $sq->where('qty', '>', 0))
+                    ->orWhereHas('variants.stocks', fn($vq) => $vq->where('qty', '>', 0));
+            });
+
+
 
         if ($request->filled('kategori')) {
             $categoryId  = $request->kategori;
@@ -177,23 +184,25 @@ class SaleController extends Controller implements HasMiddleware
 
                 // FIX Bug 3: pre-fetch semua stok terkait dalam SATU query (bukan per item)
                 $stockQuery = ProductStock::query()
-                    ->whereIn('product_id', $produkIds)
-                    ->whereNull('product_variant_id');
+                    ->whereIn('product_id', $produkIds);
                 if ($storeId) {
                     $stockQuery->where('store_id', $storeId);
                 }
 
-                $stockRecords = $stockQuery->get()->keyBy('product_id');
+                $allStockRecords = $stockQuery->get();
 
                 foreach ($validatedData['items'] as $itemData) {
                     $produk = $products->get($itemData['product_id']);
+                    $variantId = $itemData['product_variant_id'] ?? null;
 
                     if (!$produk) {
                         throw new \Exception("Produk dengan ID {$itemData['product_id']} tidak ditemukan.");
                     }
 
-                    // FIX Bug 1: Gunakan ProductStock, bukan $produk->qty (tidak ada kolomnya)
-                    $stockRecord  = $stockRecords->get($produk->id);
+                    $stockRecord = $allStockRecords->first(function ($st) use ($produk, $variantId) {
+                        return $st->product_id == $produk->id && $st->product_variant_id == $variantId;
+                    });
+
                     $stokTersedia = $stockRecord ? $stockRecord->qty : 0;
 
                     if ($stokTersedia < (int) $itemData['jumlah']) {
@@ -294,6 +303,7 @@ class SaleController extends Controller implements HasMiddleware
                 // ──────────────────────────────────────────────────────────
                 foreach ($validatedData['items'] as $itemData) {
                     $produk = $products->get($itemData['product_id']);
+                    $variantId = $itemData['product_variant_id'] ?? null;
 
                     [$dpp, $pajak] = $this->hitungDppDanPajak(
                         (float) $itemData['harga_jual'],
@@ -305,6 +315,7 @@ class SaleController extends Controller implements HasMiddleware
 
                     $penjualanItem = $penjualan->items()->create([
                         'product_id'  => $produk->id,
+                        'product_variant_id' => $variantId,
                         'jumlah'      => $itemData['jumlah'],
                         'harga_jual'  => $itemData['harga_jual'],
                         'diskon_item' => $itemData['diskon'],
@@ -314,10 +325,9 @@ class SaleController extends Controller implements HasMiddleware
                     ]);
 
                     // FIX Bug 3: pakai stockRecord yang sudah di-fetch, bukan query baru
-                    $stockRecord = $stockRecords->get($produk->id);
-                    if ($stockRecord) {
-                        $stockRecord->decrement('qty', $itemData['jumlah']);
-                    }
+                    $stockRecord = $allStockRecords->first(function ($st) use ($produk, $variantId) {
+                        return $st->product_id == $produk->id && $st->product_variant_id == $variantId;
+                    });
 
                     // Update status serial number
                     if ($produk->wajib_seri && !empty($itemData['serial_numbers'])) {
@@ -399,8 +409,10 @@ class SaleController extends Controller implements HasMiddleware
                                 'item_sale_id' => null,
                             ]);
 
-                            $stockQ = ProductStock::query()->where('product_id', $item->product_id)
-                                ->whereNull('product_variant_id');
+                            $stockQ = ProductStock::query()
+                                ->where('product_id', $item->product_id)
+                                ->where('product_variant_id', $item->product_variant_id);
+
 
                             if ($storeId) {
                                 $stockQ->where('store_id', $storeId);
@@ -421,7 +433,7 @@ class SaleController extends Controller implements HasMiddleware
             } else {
                 session()->flash('info', 'Transaksi ini sudah dalam status Dibatalkan.');
             }
-            return redirect()->route('penjualan.index'); 
+            return redirect()->route('penjualan.index');
         }
 
         // --- Full update ---
@@ -466,7 +478,7 @@ class SaleController extends Controller implements HasMiddleware
                 if ($oldItemIds->isNotEmpty()) {
                     SerialNumber::whereIn('item_sale_id', $oldItemIds)->update([
                         'status'       => 'Tersedia',
-                        'item_sale_id' => null, 
+                        'item_sale_id' => null,
                     ]);
                 }
 
@@ -478,8 +490,11 @@ class SaleController extends Controller implements HasMiddleware
                 $allProductIds = $oldItemsWithSerials->pluck('product_id')
                     ->merge($newProductIds)->unique()->values();
 
-                $stockQuery = ProductStock::whereIn('product_id', $allProductIds)
-                    ->whereNull('product_variant_id');
+                $stockQuery = ProductStock::whereIn('product_id', $allProductIds);
+                if ($storeId) {
+                    $stockQuery->where('store_id', $storeId);
+                }
+                $allStockRecords = $stockQuery->get();
 
                 if ($storeId) {
                     $stockQuery->where('store_id', $storeId);
@@ -489,13 +504,15 @@ class SaleController extends Controller implements HasMiddleware
                 // ── 3. Kembalikan Stok Lama (Revert) ─────────────────────────────
                 if ($statusLama !== 'Batal') {
                     foreach ($oldItemsWithSerials as $oldItem) {
-                        $stock = $stockRecords->get($oldItem->product_id);
+                        $stock = $allStockRecords->first(function ($st) use ($oldItem) {
+                            return $st->product_id == $oldItem->product_id && $st->product_variant_id == $oldItem->product_variant_id;
+                        });
                         if ($stock) {
                             $stock->increment('qty', $oldItem->jumlah);
                         }
                     }
-                    // Refresh data stok setelah ditambah
-                    $stockRecords = $stockQuery->get()->keyBy('product_id'); 
+                    // Refresh data stok dari database setelah di-increment
+                    $allStockRecords = $stockQuery->get();
                 }
 
                 // ── 4. Validasi Stok Baru & SN Baru ──────────────────────────────
@@ -513,7 +530,7 @@ class SaleController extends Controller implements HasMiddleware
                     // Validasi Serial Number
                     if ($produk->wajib_seri) {
                         $snKirim = $itemData['serial_numbers'] ?? [];
-                        
+
                         if (count($snKirim) !== (int) $itemData['jumlah']) {
                             throw new \Exception("Jumlah SN untuk '{$produk->name_product}' tidak sesuai.");
                         }
@@ -577,7 +594,7 @@ class SaleController extends Controller implements HasMiddleware
                     'catatan'               => $validatedData['catatan'] ?? null,
                 ]);
 
-                 if ($jumlah_dibayar > 0) {
+                if ($jumlah_dibayar > 0) {
                     // Cari data pembayaran pertama berdasarkan ID transaksi ini
                     $pembayaranAwal = $penjualan->payments()->oldest('id')->first();
 

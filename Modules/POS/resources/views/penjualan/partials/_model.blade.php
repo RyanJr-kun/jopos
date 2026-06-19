@@ -175,6 +175,33 @@
     </div>
 </div>
 
+{{-- Modal: Pilih Varian Produk --}}
+<div class="modal fade" id="variantModal" tabindex="-1" aria-labelledby="variantModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h6 class="modal-title fw-bold" id="variantModalLabel">Pilih Variasi</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center mb-3">
+                    <img id="variant-product-img" src="" alt="Gambar" class="rounded border me-3"
+                        style="width: 50px; height: 50px; object-fit: cover;">
+                    <div>
+                        <h6 id="variant-product-name" class="mb-0 fw-bold text-primary text-wrap"
+                            style="font-size:.85rem;">Nama Produk</h6>
+                        <span class="badge bg-label-info mt-1" id="variant-product-price">Rp 0</span>
+                    </div>
+                </div>
+
+                <p class="text-xs fw-semibold text-muted mb-2">Pilih salah satu variasi di bawah ini:</p>
+                <div id="variant-list-container" class="d-grid gap-2">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Modal: Pilih Nomor Seri --}}
 <div class="modal fade" id="serialNumberModal" tabindex="-1" aria-labelledby="serialNumberModalLabel"
     aria-hidden="true">

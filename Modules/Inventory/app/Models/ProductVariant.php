@@ -2,6 +2,7 @@
 
 namespace Modules\Inventory\Models;
 
+use App\Models\ProductStock;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -48,5 +49,11 @@ class ProductVariant extends Model
         return $primary
             ? asset('storage/' . $primary->path)
             : asset('assets/img/produk.png');
+    }
+
+    public function stocks()
+    {
+        // Menghubungkan varian dengan stoknya berdasarkan 'product_variant_id'
+        return $this->hasMany(ProductStock::class, 'product_variant_id', 'id');
     }
 }
