@@ -16,6 +16,7 @@
             <form id="addMultipleSerialsForm" onsubmit="return false;">
                 @csrf
                 <input type="hidden" name="product_id" id="selected_product_id">
+                <input type="hidden" name="product_variant_id" id="selected_variant_id">
                 <div class="row g-3 align-items-end">
                     <div class="col-md-6">
                         <label for="select-produk" class="form-label fw-medium">Pilih Produk</label>
@@ -138,6 +139,7 @@
                 <thead class="table-light">
                     <tr>
                         <th class="text-uppercase text-muted small ps-4">Produk</th>
+                        <th class="text-uppercase text-muted small">Varian</th>
                         <th class="text-uppercase text-muted small">Nomor Seri</th>
                         <th class="text-uppercase text-muted small">Status</th>
                         <th class="text-uppercase text-muted small">Tgl. Masuk</th>
@@ -150,8 +152,14 @@
                         <tr>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3">
-                                    @if ($sn->produk->primaryImage->path)
-                                        <img src="{{ Storage::url($sn->produk->primaryImage->path) }}" class="rounded-2"
+                                    @php
+                                        // Prioritaskan gambar varian, fallback ke gambar produk
+                                        $imgPath = $sn->variant?->img_variant
+                                            ?? $sn->produk->primaryImage?->path
+                                            ?? null;
+                                    @endphp
+                                    @if ($imgPath)
+                                        <img src="{{ Storage::url($imgPath) }}" class="rounded-2"
                                             width="36" height="36" style="object-fit:cover;"
                                             alt="{{ $sn->produk->name_product }}">
                                     @else
@@ -160,6 +168,16 @@
                                     @endif
                                     <span class="fw-medium small">{{ $sn->produk->name_product }}</span>
                                 </div>
+                            </td>
+                            <td>
+                                @if ($sn->variant)
+                                    @php
+                                        $variantLabel = $sn->variant->options->pluck('value')->implode(' / ');
+                                    @endphp
+                                    <span class="badge bg-label-info small">{{ $variantLabel ?: $sn->variant->sku }}</span>
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
                             </td>
                             <td>
                                 <span class="badge bg-label-dark fw-mono text-sm px-2 py-1">{{ $sn->nomor_seri }}</span>
@@ -203,10 +221,9 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6">
+                            <td colspan="7">
                                 <div class="d-flex flex-column align-items-center justify-content-center">
                                     <i class="bx bx-info-circle fs-3 mb-2"></i>
-
                                     <span class="">Tidak ada data nomor seri yang cocok.</span>
                                 </div>
                             </td>
@@ -373,7 +390,7 @@
                 }
 
                 // --- FUNGSI: Muat Info Produk ---
-                function updateProductInfo(productId, productSlug) {
+                function updateProductInfo(productId, variantId, productSlug) {
                     if (!productId) {
                         $('#product-info-container').hide();
                         return;
@@ -383,14 +400,18 @@
                     $.ajax({
                         url: url,
                         method: 'GET',
+                        // Kirim variant_id jika ada, agar endpoint bisa filter stok per varian
+                        data: variantId ? { variant_id: variantId } : {},
                         success: function(data) {
                             selectedProductData = {
                                 id: productId,
+                                variant_id: variantId || null,
                                 qty: data.qty,
                                 sn_count: data.sn_tercatat_count,
                                 slug: productSlug
                             };
                             $('#selected_product_id').val(productId);
+                            $('#selected_variant_id').val(variantId || '');
                             $('#info-stok').text(data.qty);
                             $('#info-sn-tercatat').text(data.sn_tercatat_count);
                             $('#info-sn-butuh').text(data.butuh_sn);
@@ -420,14 +441,19 @@
                     const defaultImage = "{{ asset('assets/img/produk.png') }}";
                     const r2BaseUrl = "{{ config('filesystems.disks.r2.url') }}";
                     const cleanBaseUrl = r2BaseUrl.replace(/\/$/, "");
-                    const imageUrl = produk.primaryImage ?
-                        `${cleanBaseUrl}/${produk.primaryImage}` :
+                    // Gunakan img_produk (field dari getData()), bukan primaryImage
+                    const imageUrl = produk.img_produk ?
+                        `${cleanBaseUrl}/${produk.img_produk}` :
                         defaultImage;
+                    // Tampilkan badge varian jika ada
+                    const variantBadge = produk.variant_id ?
+                        `<span class="badge bg-label-info ms-1" style="font-size:0.65rem;">${produk.variant_name}</span>` :
+                        '';
                     return $(
                         `<div class="d-flex align-items-center gap-2 py-1">
                         <img src="${imageUrl}" class="rounded-2" width="32" height="32" style="object-fit:cover;" />
                         <div>
-                            <div class="fw-medium small">${produk.text}</div>
+                            <div class="fw-medium small">${produk.name_product}${variantBadge}</div>
                             <div class="text-muted" style="font-size:0.72rem;">Stok: ${produk.qty ?? '-'}</div>
                         </div>
                     </div>`
@@ -439,7 +465,13 @@
                     allowClear: true,
                     width: '100%',
                     templateResult: formatProduct,
-                    templateSelection: (p) => p.text || 'Pilih Produk',
+                    templateSelection: function(p) {
+                        if (!p.id) return p.text || 'Pilih Produk';
+                        // Tampilkan "Nama Produk — Varian" di field setelah dipilih
+                        return p.variant_name
+                            ? `${p.name_product} — ${p.variant_name}`
+                            : p.name_product || p.text;
+                    },
                     ajax: {
                         url: "{{ route('get-data.produk') }}",
                         dataType: 'json',
@@ -451,13 +483,27 @@
                         }),
                         processResults: function(data) {
                             return {
-                                results: data.data.map(item => ({
-                                    id: item.id,
-                                    text: item.name_product,
-                                    slug: item.slug,
-                                    qty: item.qty,
-                                    primaryImage: item.primaryImage
-                                })),
+                                results: data.data.map(item => {
+                                    // Buat ID unik: "productId-variantId" untuk varian, atau "productId" untuk simple
+                                    const combinedId = item.variant_id
+                                        ? `${item.id}-${item.variant_id}`
+                                        : String(item.id);
+                                    // Teks tampilan: "Nama Produk - Warna / Ukuran" atau hanya "Nama Produk"
+                                    const displayName = item.variant_name
+                                        ? `${item.name_product} - ${item.variant_name}`
+                                        : item.name_product;
+                                    return {
+                                        id: combinedId,
+                                        product_id: item.id,
+                                        variant_id: item.variant_id || null,
+                                        variant_name: item.variant_name || null,
+                                        name_product: item.name_product,
+                                        text: displayName,
+                                        slug: item.slug,
+                                        qty: item.qty,
+                                        img_produk: item.img_produk || null,
+                                    };
+                                }),
                                 pagination: {
                                     more: data.next_page_url !== null
                                 }
@@ -468,7 +514,7 @@
 
                 $('#select-produk').on('select2:select', function(e) {
                     const data = e.params.data;
-                    updateProductInfo(data.id, data.slug);
+                    updateProductInfo(data.product_id, data.variant_id, data.slug);
                 });
 
                 $('#select-produk').on('select2:clear', function() {
@@ -476,6 +522,7 @@
                     $('#product-info-container').hide();
                     $('#serial-input-section').hide();
                     $('#selected_product_id').val('');
+                    $('#selected_variant_id').val('');
                     tempSerials.clear();
                 });
 
@@ -547,6 +594,7 @@
                         data: {
                             _token: '{{ csrf_token() }}',
                             product_id: $('#selected_product_id').val(),
+                            product_variant_id: $('#selected_variant_id').val() || null,
                             serial_numbers: Array.from(tempSerials)
                         },
                         success: (response) => showSuccess(response.message),
@@ -561,16 +609,19 @@
                     });
                 });
 
-                // --- LOGIKA SAAT HALAMAN DIMUAT (jika ada produk dari URL slug) ---
                 @if ($produkDipilih)
-                    var produkOption = new Option(
-                        "{{ $produkDipilih->name_product }}",
-                        "{{ $produkDipilih->id }}",
-                        true, true
-                    );
-                    $('#select-produk').append(produkOption).trigger('change');
-                    updateProductInfo("{{ $produkDipilih->id }}", "{{ $produkDipilih->slug }}");
                     $('#product_id_filter').val("{{ $produkDipilih->id }}").trigger('change');
+                    @if ($produkDipilih->has_variants)
+                        window.showToast('info', 'Silakan pilih varian produk secara spesifik di form pendaftaran untuk menambah SN baru.');
+                    @else
+                        var produkOption = new Option(
+                            "{{ $produkDipilih->name_product }}",
+                            "{{ $produkDipilih->id }}",
+                            true, true
+                        );
+                        $('#select-produk').append(produkOption).trigger('change');
+                        updateProductInfo("{{ $produkDipilih->id }}", null, "{{ $produkDipilih->slug }}");
+                    @endif
                 @endif
 
                 // --- MODAL EDIT ---

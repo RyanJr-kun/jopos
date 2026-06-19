@@ -11,14 +11,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule; 
+use Illuminate\Validation\Rule;
 use Modules\Inventory\Models\Product;
+use Modules\Inventory\Models\ProductVariant;
 use Modules\Inventory\Models\SerialNumber;
 
 class SerialNumberController extends Controller implements HasMiddleware
 {
-    
-
     public static function middleware(): array
     {
         return [
@@ -29,14 +28,14 @@ class SerialNumberController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index(Request $request, $produk_slug = null) // Terima parameter slug
+    public function index(Request $request, $produk_slug = null)
     {
-        $query = SerialNumber::with(['produk', 'penjualan'])->latest();
+        // Terima parameter slug
+        $query = SerialNumber::with(['produk.primaryImage', 'variant', 'penjualan'])->latest();
         $produkDipilih = null; // Variabel untuk menampung produk yang dipilih via slug
 
         // Jika ada slug dari URL, cari produknya
         if ($produk_slug) {
-            // PERBAIKAN: Gunakan withCount untuk efisiensi query saat menghitung SN di view.
             $produkDipilih = Product::withCount('serialNumbers')->where('slug', $produk_slug)->first();
             // Jika produk ditemukan, langsung filter daftar SN untuk produk tersebut
             if ($produkDipilih) {
@@ -62,7 +61,10 @@ class SerialNumberController extends Controller implements HasMiddleware
         $products = Product::where('wajib_seri', true)->orderBy('name_product')->get();
         $status = SerialNumber::getStatus();
 
-        return view('inventory::inventaris.sn.serial-number', compact('serialNumbers', 'products', 'produkDipilih', 'status'));
+        return view(
+            'inventory::inventaris.sn.serial-number',
+            compact('serialNumbers', 'products', 'produkDipilih', 'status'),
+        );
     }
 
     public function getProductInfo(Request $request)
@@ -73,7 +75,7 @@ class SerialNumberController extends Controller implements HasMiddleware
         $snTerdaftar = SerialNumber::where('product_id', $request->product_id)->count();
         return response()->json([
             'stok_tercatat' => $stokTercatat,
-            'sn_terdaftar' => $snTerdaftar
+            'sn_terdaftar' => $snTerdaftar,
         ]);
     }
 
@@ -85,125 +87,99 @@ class SerialNumberController extends Controller implements HasMiddleware
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'required|exists:products,id',
-            'serial_numbers' => 'required|array|min:1',
-            'serial_numbers.*' => [
-                'required',
-                'string',
-                'distinct', // Ensures no duplicates in the submitted list
-                // Ensures the serial number is unique for this specific product
-                Rule::unique('serial_numbers', 'nomor_seri')->where(function ($query) use ($request) {
-                    return $query->where('product_id', $request->product_id);
-                }),
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'product_id' => 'required|exists:products,id',
+                'product_variant_id' => 'nullable|exists:product_variants,id',
+                'serial_numbers' => 'required|array|min:1',
+                'serial_numbers.*' => [
+                    'required',
+                    'string',
+                    'distinct',
+                    // Unique per produk (bukan per varian) — sesuai unique constraint di schema
+                    Rule::unique('serial_numbers', 'nomor_seri')->where(function ($query) use ($request) {
+                        return $query->where('product_id', $request->product_id);
+                    }),
+                ],
             ],
-        ], [
-            // Custom error messages
-            'serial_numbers.*.distinct' => 'Nomor seri :input terduplikasi dalam daftar yang Anda kirim.',
-            'serial_numbers.*.unique' => 'Nomor seri :input sudah terdaftar untuk produk ini.',
-        ]);
+            [
+                'product_variant_id.exists' => 'Varian produk tidak ditemukan.',
+                'serial_numbers.*.distinct' => 'Nomor seri :input terduplikasi dalam daftar yang Anda kirim.',
+                'serial_numbers.*.unique' => 'Nomor seri :input sudah terdaftar untuk produk ini.',
+            ],
+        );
 
         if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Data yang diberikan tidak valid.',
-                'errors' => $validator->errors()
-            ], 422); // 422 Unprocessable Entity is a good choice for validation errors
+            return response()->json(
+                [
+                    'message' => 'Data yang diberikan tidak valid.',
+                    'errors' => $validator->errors(),
+                ],
+                422,
+            );
+        }
+
+        // Jika ada variant_id, pastikan variant tersebut memang milik product_id yang dikirim
+        if ($request->filled('product_variant_id')) {
+            $variantBelongsToProduct = ProductVariant::where('id', $request->product_variant_id)
+                ->where('product_id', $request->product_id)
+                ->exists();
+
+            if (!$variantBelongsToProduct) {
+                return response()->json(
+                    [
+                        'message' => 'Varian tidak sesuai dengan produk yang dipilih.',
+                    ],
+                    422,
+                );
+            }
         }
 
         try {
             $validated = $validator->validated();
-            $serialsToInsert = [];
             $now = now();
             $storeId = Auth::user()->employee?->store_id;
+            $variantId = $request->input('product_variant_id') ?: null;
 
             if (!$storeId) {
-                return response()->json(['message' => 'Anda tidak memiliki akses ke cabang/toko manapun.'], 403);
+                return response()->json(
+                    [
+                        'message' => 'Anda tidak memiliki akses ke cabang/toko manapun.',
+                    ],
+                    403,
+                );
             }
 
+            $serialsToInsert = [];
             foreach ($validated['serial_numbers'] as $serial) {
                 $serialsToInsert[] = [
-                    'store_id'   => $storeId,
+                    'store_id' => $storeId,
                     'product_id' => $validated['product_id'],
+                    'product_variant_id' => $variantId,
                     'nomor_seri' => $serial,
-                    'status' => 'Tersedia', // Set default status
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-
-            // Use bulk insert for better performance
-            SerialNumber::insert($serialsToInsert);
-
-            return response()->json([
-                'message' => count($serialsToInsert) . ' nomor seri berhasil ditambahkan.'
-            ], 201); // 201 Created is the correct status code for successful creation
-        } catch (\Exception $e) {
-            // Tangkap error database tak terduga
-            return response()->json([
-                'message' => 'Terjadi kesalahan pada server saat menyimpan data.',
-                'error'   => $e->getMessage() // Sembunyikan pesan asli ini jika di tahap production
-            ], 500);
-        }
-    }
-
-    public function storeMultiple(Request $request)
-    {
-        // --- PERBAIKAN: Tambahkan Validasi ---
-        $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'serial_numbers' => 'required|array|min:1',
-            'serial_numbers.*' => [
-                'required',
-                'string',
-                'distinct',
-                Rule::unique('serial_numbers', 'nomor_seri')->where(function ($query) use ($request) {
-                return $query->where('product_id', $request->product_id);
-            }),
-            ],
-        ], [
-            'serial_numbers.*.required' => 'Nomor seri tidak boleh kosong.',
-            'serial_numbers.*.distinct' => 'Terdapat nomor seri duplikat pada input Anda.',
-            'serial_numbers.*.unique' => 'Nomor seri :input sudah terdaftar untuk produk ini.',
-        ]);
-
-        DB::beginTransaction();
-        try {
-            $productId = $validated['product_id'];
-            $serialNumbers = $validated['serial_numbers'];
-            $now = now();
-            $dataToInsert = [];
-            $storeId = Auth::user()->employee?->store_id;
-
-            if (!$storeId) {
-                return response()->json(['message' => 'Anda tidak memiliki akses ke cabang/toko manapun.'], 403);
-            }
-
-            foreach ($serialNumbers as $sn) {
-                $dataToInsert[] = [
-                    'store_id'   => $storeId,
-                    'product_id' => $productId,
-                    'nomor_seri' => $sn,
                     'status' => 'Tersedia',
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
             }
 
-            SerialNumber::insert($dataToInsert);
+            SerialNumber::insert($serialsToInsert);
 
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => count($dataToInsert) . ' nomor seri berhasil ditambahkan.'
-            ]);
+            return response()->json(
+                [
+                    'message' => count($serialsToInsert) . ' nomor seri berhasil ditambahkan.',
+                ],
+                201,
+            );
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error saat menyimpan multiple serial numbers: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi.'
-            ], 500);
+            Log::error('Error saat menyimpan serial numbers: ' . $e->getMessage());
+            return response()->json(
+                [
+                    'message' => 'Terjadi kesalahan pada server saat menyimpan data.',
+                ],
+                500,
+            );
         }
     }
 
@@ -213,23 +189,50 @@ class SerialNumberController extends Controller implements HasMiddleware
      * @param  string  $product_id  // Samakan namanya jadi $product_id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getProductInfoForSerial(string $product_id)
+    public function getProductInfoForSerial(Request $request, string $product_id)
     {
         $produk = Product::find($product_id);
+        $variantId = $request->product_variant_id;
 
-        // Jika produk tidak ditemukan, kirim respons JSON yang jelas, bukan 404.
         if (!$produk) {
             return response()->json(['message' => 'Product tidak ditemukan.'], 404);
         }
- 
-        $snTerdaftar = $produk->serialNumbers()
-            ->whereNotIn('status', ['Terjual', 'Hilang'])
-            ->count();
-        
-        $totalQty = $produk->stocks()->sum('qty');
 
-        return response()->json([ 
-            'qty' => $totalQty,
+        $variant_id = $request->query('variant_id');
+
+        $snTerdaftar = SerialNumber::where('product_id', $request->product_id)
+            ->when(
+                $variantId,
+                function ($query, $variantId) {
+                    // Jika ada variant_id, cari yang sesuai
+                    return $query->where('product_variant_id', $variantId);
+                },
+                function ($query) {
+                    // Jika tidak ada variant_id (produk simpel), cari yang null
+                    return $query->whereNull('product_variant_id');
+                },
+            )
+            ->whereNotIn('status', ['Terjual', 'Hilang']) // 👈 JANGAN LUPA INI
+            ->count();
+
+        // 2. Hitung Total Stok KHUSUS UNTUK VARIAN INI
+        $storeId = Auth::user()->employee?->store_id;
+        $stockQuery = ProductStock::where('product_id', $product_id);
+
+        if ($variant_id) {
+            $stockQuery->where('product_variant_id', $variant_id);
+        } else {
+            $stockQuery->whereNull('product_variant_id');
+        }
+
+        if ($storeId) {
+            $stockQuery->where('store_id', $storeId);
+        }
+
+        $totalQty = $stockQuery->sum('qty');
+
+        return response()->json([
+            'qty' => (int) $totalQty,
             'sn_tercatat_count' => $snTerdaftar,
             'butuh_sn' => max(0, $totalQty - $snTerdaftar),
         ]);
@@ -241,7 +244,9 @@ class SerialNumberController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'serial_number' => [
                 'required',
-                Rule::unique('serial_numbers', 'nomor_seri')->where('product_id', $serialNumber->product_id)->ignore($serialNumber->id),
+                Rule::unique('serial_numbers', 'nomor_seri')
+                    ->where('product_id', $serialNumber->product_id)
+                    ->ignore($serialNumber->id),
             ],
             'status' => 'required|in:Tersedia,Rusak,Hilang',
         ]);
@@ -252,22 +257,25 @@ class SerialNumberController extends Controller implements HasMiddleware
             // Cukup update data nomor serinya saja
             $serialNumber->update([
                 'nomor_seri' => $validated['serial_number'],
-                'status'     => $validated['status'],
+                'status' => $validated['status'],
             ]);
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data nomor seri berhasil diperbarui.'
+                'message' => 'Data nomor seri berhasil diperbarui.',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error update serial number: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal memperbarui nomor seri.'
-            ], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Gagal memperbarui nomor seri.',
+                ],
+                500,
+            );
         }
     }
 
@@ -276,54 +284,92 @@ class SerialNumberController extends Controller implements HasMiddleware
     {
         // Tambahkan proteksi: jangan hapus SN yang sudah terjual
         if ($serialNumber->status == 'Terjual') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Nomor seri yang sudah terjual tidak dapat dihapus.'
-            ], 422); // Unprocessable Entity
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Nomor seri yang sudah terjual tidak dapat dihapus.',
+                ],
+                422,
+            ); // Unprocessable Entity
         }
 
         try {
             $serialNumber->delete();
             return response()->json([
                 'success' => true,
-                'message' => 'Nomor seri berhasil dihapus.'
+                'message' => 'Nomor seri berhasil dihapus.',
             ]);
         } catch (\Exception $e) {
             Log::error('Error delete serial number: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus nomor seri.'
-            ], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Gagal menghapus nomor seri.',
+                ],
+                500,
+            );
         }
     }
 
-    public function getByProduct(String $product_id)
+    public function getProduct(Request $request, string $product_id)
     {
         // Pastikan ini adalah request AJAX untuk keamanan
-        if (!request()->ajax()) {
+        if (!$request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
+
         try {
-            // PERBAIKAN: Cari produk secara manual berdasarkan ID
             $produk = Product::find($product_id);
 
-            // Jika produk tidak ditemukan, kirim respons yang jelas, bukan 404
             if (!$produk) {
                 return response()->json(['error' => 'Product tidak ditemukan.'], 404);
             }
 
             $storeId = Auth::user()->employee?->store_id;
+            $search = $request->query('search');
+            $variantId = $request->query('variant_id'); // Amkap dari AJAX jika produk bervarian
 
-            $serialNumbers = SerialNumber::where('product_id', $product_id)
-            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
-            ->get(['nomor_seri', 'status']);
+            // Bangun Query Nomor Seri
+            $query = SerialNumber::where('product_id', $product_id)
+                ->where('status', 'Tersedia') // PENTING: Hanya tampilkan SN yang bisa dijual
+                ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+                ->when(
+                    $variantId,
+                    function ($q) use ($variantId) {
+                        // Jika ada variant_id, cari SN khusus varian tersebut
+                        return $q->where('product_variant_id', $variantId);
+                    },
+                    function ($q) {
+                        // Jika tidak ada varian, pastikan mencari SN produk utama (null)
+                        return $q->whereNull('product_variant_id');
+                    },
+                )
+                ->when($search, function ($q, $search) {
+                    // Filter pencarian jika kasir mengetik nomor seri
+                    return $q->where('nomor_seri', 'like', "%{$search}%");
+                })
+                ->latest(); // Urutkan dari yang terbaru
 
-            return response()->json(['serial_numbers' => $serialNumbers->map(fn($sn) => [
-                    'serial_number' => $sn->nomor_seri,
-                    'status'        => $sn->status,
-                ])
+            // Gunakan paginate agar mirip dengan getData
+            $serialNumbers = $query->paginate(15);
+
+            // Format data agar sesuai dengan standar Select2
+            $formattedData = [];
+            foreach ($serialNumbers as $sn) {
+                $formattedData[] = [
+                    'id' => $sn->nomor_seri, // Value yang akan disubmit (nomor serinya)
+                    'text' => $sn->nomor_seri, // Teks yang tampil di dropdown Select2
+                    'status' => $sn->status,
+                ];
+            }
+
+            return response()->json([
+                'data' => $formattedData,
+                'current_page' => $serialNumbers->currentPage(),
+                'next_page_url' => $serialNumbers->nextPageUrl(),
             ]);
         } catch (\Exception $e) {
+            \Log::error('Error getProduct SN: ' . $e->getMessage());
             return response()->json(['error' => 'Gagal mengambil data nomor seri.'], 500);
         }
     }

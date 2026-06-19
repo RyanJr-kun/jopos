@@ -22,7 +22,7 @@ class EmployeeProfile extends Model
         'avatar',
         'jabatan',
         'nik',
-        'tanggal_bergabung'
+        'tanggal_bergabung',
     ];
 
     /**

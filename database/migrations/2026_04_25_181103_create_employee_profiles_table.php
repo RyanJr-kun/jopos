@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('store_id')->nullable()->constrained('stores')->nullOnDelete();
-            // Biodata & Kontak
             $table->string('kontak', 20)->unique()->nullable();
             $table->text('alamat')->nullable();
             $table->string('nama_bank')->nullable();

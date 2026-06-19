@@ -9,6 +9,7 @@
     "devDependencies": {
         "@iconify/utils": "^3.1.0",
         "@popperjs/core": "^2.11.8",
+        "@prettier/plugin-php": "^0.25.0",
         "@rollup/plugin-html": "^2.0.0",
         "axios": "^1.13.6",
         "bootstrap": "^5.3.8",
@@ -17,6 +18,7 @@
         "glob": "^13.0.0",
         "laravel-vite-plugin": "^2.0.1",
         "perfect-scrollbar": "^1.5.6",
+        "prettier": "^3.8.4",
         "vite": "^7.2.4"
     },
     "dependencies": {
