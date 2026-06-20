@@ -32,23 +32,37 @@
                                 if ($item->status_pembayaran == 'Lunas') {
                                     $barColor = 'bg-success';
                                 } elseif ($item->status_pembayaran == 'Piutang') {
-                                    $barColor = 'bg-secondary';
-                                    $persentase = 0;
+                                    $barColor = 'bg-warning';
+                                } elseif ($item->status_pembayaran == 'Batal') {
+                                    $barColor = 'bg-danger';
                                 } elseif ($isJatuhTempo) {
                                     $barColor = 'bg-danger';
-                                } else {
-                                    $barColor = 'bg-warning';
-                                }
+                                } 
+
+                                $statusClass =
+                                    $item->status_pembayaran == 'Lunas'
+                                        ? 'bg-label-success'
+                                        : ($item->status_pembayaran == 'Piutang'
+                                            ? 'bg-label-warning'
+                                            : ($item->status_pembayaran == 'Batal'
+                                                ? 'bg-label-danger'
+                                                : 'bg-label-secondary'));
                             @endphp
 
                             <div class="d-flex flex-column" style="min-width: 170px;">
                                 <div class="d-flex justify-content-between text-xs mb-1">
                                     <span class="fw-bold text-dark" title="Total Tagihan">Rp
                                         {{ number_format($item->total_akhir, 0, ',', '.') }}</span>
-                                    @if ($item->sisa_piutang > 0)
+                                    
+                                    @if ($item->status_pembayaran === 'Batal')
+                                        {{-- Jika statusnya Batal, tampilkan label Batal --}}
+                                        <span class="text-danger fw-semibold" title="Dibatalkan">Batal</span>
+                                    @elseif ($item->sisa_piutang > 0)
+                                        {{-- Jika tidak batal dan masih ada sisa piutang --}}
                                         <span class="text-danger fw-semibold" title="Sisa Piutang">- Rp
                                             {{ number_format($item->sisa_piutang, 0, ',', '.') }}</span>
                                     @else
+                                        {{-- Jika tidak batal dan sisa piutang 0 --}}
                                         <span class="text-success fw-semibold" title="Lunas">Lunas</span>
                                     @endif
                                 </div>
@@ -71,16 +85,6 @@
                             </div>
                         </td>
                         <td class="text-center">
-                            @php
-                                $statusClass =
-                                    $item->status_pembayaran == 'Lunas'
-                                        ? 'bg-label-success'
-                                        : ($item->status_pembayaran == 'Piutang'
-                                            ? 'bg-label-warning'
-                                            : ($item->status_pembayaran == 'Batal'
-                                                ? 'bg-label-danger'
-                                                : 'bg-label-secondary'));
-                            @endphp
                             <span class="badge {{ $statusClass }}" style="font-size: 0.7rem; width: 110px;">
                                 <i class="bx bx-wallet text-xs me-1"></i> {{ $item->status_pembayaran }}
                             </span>
@@ -144,15 +148,16 @@
                 $persentase = $item->persentase_bayar;
                 $isJatuhTempo = $item->is_overdue;
 
-                $barColor = 'bg-warning';
+                $barColor = 'bg-info';
                 if ($item->status_pembayaran == 'Lunas') {
                     $barColor = 'bg-success';
+                } elseif ($item->status_pembayaran == 'Piutang') {
+                    $barColor = 'bg-warning';
                 } elseif ($item->status_pembayaran == 'Batal') {
-                    $barColor = 'bg-secondary';
-                    $persentase = 0;
+                    $barColor = 'bg-danger';
                 } elseif ($isJatuhTempo) {
                     $barColor = 'bg-danger';
-                }
+                } 
 
                 $statusPembayaranClass =
                     $item->status_pembayaran == 'Lunas'

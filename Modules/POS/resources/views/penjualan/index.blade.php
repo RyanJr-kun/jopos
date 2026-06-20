@@ -88,7 +88,7 @@
                     <form id="cancelInvoiceForm" method="POST" action="">
                         @method('PUT') {{-- Atau PATCH --}}
                         @csrf
-                        <input type="hidden" name="status_pembayaran" value="Dibatalkan">
+                        <input type="hidden" name="status_pembayaran" value="Batal">
                         <button type="submit" class="btn btn-warning btn-sm">Ya, Batalkan</button>
                         {{-- Ganti teks & warna --}}
                         <button type="button" class="btn btn-outline-secondary btn-sm ms-2"

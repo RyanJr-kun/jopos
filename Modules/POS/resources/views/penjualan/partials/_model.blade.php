@@ -213,6 +213,7 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="sn-produk-id">
+                <input type="hidden" id="sn-variant-id"> 
                 <div class="d-flex align-items-center bg-label-secondary border rounded p-2 mb-3 shadow-none">
                     <div class="flex-shrink-0 me-3">
                         <img id="sn-image-produk" src="" alt="Gambar Produk" class="rounded border"
@@ -303,7 +304,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            </select>
+                            
                         </div>
                     </div>
                 </div>

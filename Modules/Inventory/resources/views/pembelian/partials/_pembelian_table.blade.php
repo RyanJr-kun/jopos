@@ -1,4 +1,5 @@
 <div>
+    {{-- desktop --}}
     <div class="table-responsive text-nowrap p-0 d-none d-md-block">
         <table class="table table-hover align-middle mb-0">
             <thead class="bg-label-light">
@@ -149,6 +150,7 @@
         </table>
     </div>
 
+    {{-- mobile --}}
     <div class="d-block d-md-none p-3">
         @forelse ($pembelian as $item)
             @php

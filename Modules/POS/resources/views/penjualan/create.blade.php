@@ -827,7 +827,7 @@
                         const requiredQty = itemInCart ? itemInCart.jumlah + 1 : 1;
                         const existingSerials = itemInCart ? itemInCart.serial_numbers : [];
                         tempProductDataForSN = productData;
-                        openSerialNumberModal(productData.id, productData.name, requiredQty,
+                        openSerialNumberModal(productData.id, null, productData.name, requiredQty,
                             existingSerials);
                     } else {
                         if (itemInCart) {
@@ -868,33 +868,31 @@
             };
 
             // ── Serial Number Modal ───────────────────────────────────
-            const openSerialNumberModal = (productId, productName, requiredQty, existingSerials = []) => {
+            // Tambah parameter variantId
+            const openSerialNumberModal = (productId, variantId, productName, requiredQty, existingSerials = []) => {
+                
                 document.getElementById('sn-produk-id').value = productId;
+                document.getElementById('sn-variant-id').value = variantId || ''; // ← hidden input baru
 
-                // Update Teks Nama & Jumlah Dibutuhkan
                 document.getElementById('sn-name-produk').textContent = productName;
                 document.getElementById('sn-required-count').textContent = requiredQty;
-
-                // --- TAMBAHAN BARU: Update Gambar & Info Stok ---
-                // Pastikan memberi fallback image jika produk tidak punya gambar
-                document.getElementById('sn-image-produk').src = tempProductDataForSN.img ||
-                    '/path-ke-gambar-default-anda/default.jpg';
+                document.getElementById('sn-image-produk').src = tempProductDataForSN.img || '/assets/img/produk.png';
                 document.getElementById('sn-stok-produk').textContent = tempProductDataForSN.stok;
-                // -------------------------------------------------
 
                 snErrorMessage.textContent = '';
                 snListContainer.innerHTML = `
-                <div class="text-center py-3">
-                    <div class="spinner-border spinner-border-sm" role="status">
-                        <span class="visually-hidden">Memuat nomor seri...</span>
-                    </div>
-                </div>`;
+                    <div class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                    </div>`;
 
                 serialNumberModal.show();
 
-                fetch(`{{ url('get-data/produk') }}/${productId}/serial-numbers`, {
-                        headers: defaultHeaders
-                    })
+                // Bangun URL dengan variant_id jika ada
+                const url = new URL(`{{ route('serialNumber.getProduct') }}`);
+                url.searchParams.set('product_id', productId);
+                if (variantId) url.searchParams.set('variant_id', variantId); // ← kirim ke controller
+
+                fetch(url.toString(), { headers: defaultHeaders })
                     .then(r => r.json())
                     .then(data => {
                         snListContainer.innerHTML = '';
@@ -904,22 +902,22 @@
                             return;
                         }
                         data.serial_numbers.forEach(sn => {
-                            const isChecked = existingSerials.includes(sn.serial_number);
+                            const isChecked  = existingSerials.includes(sn.serial_number);
                             const isDisabled = sn.status !== 'Tersedia' && !isChecked;
                             snListContainer.insertAdjacentHTML('beforeend', `
-                        <label class="list-group-item list-group-item-action d-flex gap-2 align-items-center
-                               ${isDisabled ? 'text-muted disabled' : ''}">
-                            <input class="form-check-input flex-shrink-0 sn-checkbox" type="checkbox"
-                                   value="${sn.serial_number}"
-                                   ${isChecked  ? 'checked'  : ''}
-                                   ${isDisabled ? 'disabled' : ''}>
-                            <span class="d-flex justify-content-between align-items-center w-100">
-                                <span>${sn.serial_number}</span>
-                                <small class="badge bg-label-${sn.status === 'Tersedia' ? 'success' : 'secondary'}">
-                                    ${sn.status}
-                                </small>
-                            </span>
-                        </label>`);
+                                <label class="list-group-item list-group-item-action d-flex gap-2 align-items-center
+                                            ${isDisabled ? 'text-muted disabled' : ''}">
+                                    <input class="form-check-input flex-shrink-0 sn-checkbox" type="checkbox"
+                                        value="${sn.serial_number}"
+                                        ${isChecked  ? 'checked'  : ''}
+                                        ${isDisabled ? 'disabled' : ''}>
+                                    <span class="d-flex justify-content-between align-items-center w-100">
+                                        <span>${sn.serial_number}</span>
+                                        <small class="badge bg-label-${sn.status === 'Tersedia' ? 'success' : 'secondary'}">
+                                            ${sn.status}
+                                        </small>
+                                    </span>
+                                </label>`);
                         });
                     })
                     .catch(() => {
@@ -1241,7 +1239,7 @@
                         `${productData.name} - ${productData.variant_name}` : productData.name;
 
                     // Buka modal SN
-                    openSerialNumberModal(productData.id, displayName, requiredQty, existingSerials);
+                    openSerialNumberModal(productData.id, productData.variant_id || null,  displayName, requiredQty, existingSerials);
                 } else {
                     // Jika tidak wajib SN, langsung tembak ke keranjang
                     addProductToCart(productData);
@@ -1265,7 +1263,7 @@
                         };
                         const displayName = item.variant_name ? `${item.name} (${item.variant_name})` : item
                             .name;
-                        openSerialNumberModal(item.id, displayName, item.jumlah + 1, item.serial_numbers);
+                        openSerialNumberModal(item.id, item.variant_id || null, displayName, item.jumlah + 1, item.serial_numbers);
                     } else {
                         updateQuantity(cartKey, item.jumlah + 1);
                     }

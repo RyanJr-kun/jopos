@@ -70,11 +70,14 @@
                             <span
                                 class="text-sm fw-semibold">{{ \Carbon\Carbon::parse($penjualan->tanggal_pembelian)->translatedFormat('d F Y, H:i') }}</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-sm text-muted">Jatuh Tempo:</span>
-                            <span
-                                class="text-sm fw-semibold">{{ \Carbon\Carbon::parse($penjualan->tanggal_jatuh_tempo)->translatedFormat('d F Y') }}</span>
-                        </div>
+                        
+                        @if ($penjualan->status_pembayaran !== 'Lunas' && $penjualan->tanggal_jatuh_tempo)
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-sm text-muted">Jatuh Tempo:</span>
+                                <span
+                                    class="text-sm fw-semibold">{{ \Carbon\Carbon::parse($penjualan->tanggal_jatuh_tempo)->translatedFormat('d F Y') }}</span>
+                            </div>
+                        @endif
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-sm text-muted">Dibuat Oleh:</span>
                             <span class="text-sm fw-semibold">{{ $penjualan->user->name ?? 'Sistem' }}</span>
@@ -106,14 +109,22 @@
                     <tbody>
                         @foreach ($penjualan->items as $item)
                             <tr>
-                                <td class="text-center text-sm">{{ $loop->iteration }}</td>
+                                <td class="text-center text-sm">{{ $loop->iteration }}.</td>
                                 <td class="text-sm">
-                                    {{ $item->product->name_product ?? 'Product Dihapus' }}
+                                    <p class="mb-0">{{ $item->product->name_product ?? ' - ' }} <br>
+                                        {{-- Tinggal panggil atribut "label" dari Accessor yang sudah kamu buat --}}
+                                        @if ($item->product_variant_id && $item->varian && $item->varian->label)
+                                            <small class="text-muted">{{ $item->varian->label }}</small>
+                                        @endif
+                                    </p>
+                                    
+                                    
+                                    
                                     @if ($item->serialNumbers->isNotEmpty())
-                                        <div class="text-muted text-xs mt-1">
+                                        <small class="text-muted mt-1">
                                             <strong>SN:</strong>
                                             {{ $item->serialNumbers->pluck('nomor_seri')->join(', ') }}
-                                        </div>
+                                        </small>
                                     @endif
                                 </td>
                                 <td class="text-center text-sm">{{ $item->jumlah }}</td>

@@ -73,11 +73,14 @@
                             <span
                                 class="text-sm fw-semibold">{{ \Carbon\Carbon::parse($pembelian->tanggal_pembelian)->translatedFormat('d F Y') }}</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-sm text-muted">Jatuh Tempo:</span>
-                            <span
-                                class="text-sm fw-semibold">{{ \Carbon\Carbon::parse($pembelian->tanggal_jatuh_tempo)->translatedFormat('d F Y') }}</span>
-                        </div>
+                        @if ($pembelian->status_pembayaran !== 'Lunas' && $pembelian->tanggal_jatuh_tempo)
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-sm text-muted">Jatuh Tempo:</span>
+                                <span class="text-sm fw-semibold">
+                                    {{ \Carbon\Carbon::parse($pembelian->tanggal_jatuh_tempo)->translatedFormat('d F Y') }}
+                                </span>
+                            </div>
+                        @endif
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-sm text-muted">Dibuat Oleh:</span>
                             <span class="text-sm fw-semibold">{{ $pembelian->user->name ?? 'Sistem' }}</span>
@@ -117,25 +120,13 @@
                                     <td class="text-center text-sm">{{ $loop->iteration }}</td>
                                     <td>
                                         <div class="d-flex flex-column">
-                                            <span
-                                                class="text-sm fw-semibold text-dark">{{ $detail->produk->name_product ?? 'Produk Dihapus' }}</span>
+                                            <span class="text-sm fw-semibold text-dark">
+                                                {{ $detail->produk->name_product ?? ' - ' }}
+                                            </span>
 
-                                            {{-- MENDUKUNG VARIAN: Jika punya varian, tampilkan di bawah nama --}}
-                                            @if ($detail->product_variant_id && $detail->varian)
-                                                @php
-                                                    // Asumsi ada relasi options untuk membentuk nama. Jika tidak, pakai SKU varian.
-                                                    $variantOpts = [];
-                                                    if ($detail->varian->relationLoaded('options')) {
-                                                        foreach ($detail->varian->options as $opt) {
-                                                            $variantOpts[] = $opt->value;
-                                                        }
-                                                    }
-                                                    $namaVarian = !empty($variantOpts)
-                                                        ? implode(' / ', $variantOpts)
-                                                        : 'SKU: ' . $detail->varian->sku;
-                                                @endphp
-                                                <small class="text-muted"><i
-                                                        class="bx bx-list-ul text-xs me-1"></i>{{ $namaVarian }}</small>
+                                            {{-- MENDUKUNG VARIAN: Jika punya varian, panggil atribut label --}}
+                                            @if ($detail->product_variant_id && $detail->varian && $detail->varian->label)
+                                                <small class="text-muted">{{ $detail->varian->label }}</small>
                                             @endif
                                         </div>
                                     </td>
