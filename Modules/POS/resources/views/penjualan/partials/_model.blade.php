@@ -377,3 +377,189 @@
         </div>
     </div>
 </div>
+
+{{-- modal: Pembayaran Edit --}}
+<div class="modal fade" id="paymentModalEdit" tabindex="-1" aria-labelledby="paymentModalEditLabel" aria-hidden="true"
+    data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+ 
+            {{-- Header --}}
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="modal-title fw-bold" id="paymentModalEditLabel">
+                    <i class="bx bx-wallet text-primary me-2"></i>Simpan Perubahan
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+ 
+            <div class="modal-body pb-0">
+                {{-- Total Tagihan Highlight --}}
+                <div class="text-center bg-label-primary rounded p-3 mb-4">
+                    <p class="text-sm mb-1 text-primary fw-semibold">Total Tagihan</p>
+                    {{-- ✅ FIX: ID unik -edit --}}
+                    <h2 class="fw-bolder text-primary mb-0" id="payment-modal-total-edit">Rp 0</h2>
+                </div>
+ 
+                {{-- Metode Pembayaran (Radio Button bergaya Card) --}}
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Metode Pembayaran</label>
+                    <div class="row gx-2">
+                        <div class="col-4">
+                            {{-- ✅ FIX: id unik -edit + form="editSaleForm" --}}
+                            <input type="radio" class="btn-check" name="metode_pembayaran" id="pay-tunai-edit"
+                                value="TUNAI" form="editSaleForm" checked required>
+                            <label class="btn btn-outline-primary w-100 p-2" for="pay-tunai-edit">
+                                <i class="bx bx-money fs-4 d-block me-2"></i> Tunai
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <input type="radio" class="btn-check" name="metode_pembayaran" id="pay-transfer-edit"
+                                value="TRANSFER" form="editSaleForm">
+                            <label class="btn btn-outline-primary w-100 p-2" for="pay-transfer-edit">
+                                <i class="bx bx-transfer fs-4 d-block me-2"></i> Transfer
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <input type="radio" class="btn-check" name="metode_pembayaran" id="pay-qris-edit"
+                                value="QRIS" form="editSaleForm">
+                            <label class="btn btn-outline-primary w-100 p-2" for="pay-qris-edit">
+                                <i class="bx bx-qr-scan fs-4 d-block me-2"></i> QRIS
+                            </label>
+                        </div>
+ 
+                        {{-- ✅ FIX: id="transfer-details-edit" dan id="bank_id-edit" --}}
+                        <div id="transfer-details-edit" class="d-none mt-3 animate__animated animate__fadeIn">
+                            <label for="bank_id_edit" class="form-label fw-semibold">Rekening Tujuan <span
+                                    class="text-danger">*</span></label>
+                            <select name="bank_id" id="bank_id_edit" class="form-select select2 select2-bank-edit"
+                                data-placeholder="Pilih Rekening Bank" form="editSaleForm">
+                                <option value=""></option>
+                                @foreach ($banks as $bank)
+                                    <option value="{{ $bank->id }}" data-logo="{{ $bank->logo_url }}">
+                                        {{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+ 
+                {{-- Input Jumlah Bayar --}}
+                <div class="mb-3">
+                    <label for="jumlah-dibayar-input-edit" class="form-label fw-semibold">Jumlah Uang Diterima</label>
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text text-muted fw-bold">Rp</span>
+                        {{-- ✅ FIX: id unik -edit + form="editSaleForm" --}}
+                        <input type="text" name="jumlah_dibayar" id="jumlah-dibayar-input-edit"
+                            class="form-control text-end fw-bold" inputmode="numeric" form="editSaleForm" required>
+                    </div>
+                </div>
+ 
+                {{-- Tombol Uang Pas / Quick Pay --}}
+                <div class="row gx-2 mb-4">
+                    <div class="col-4">
+                        {{-- ✅ FIX: id unik -edit --}}
+                        <button class="btn bg-label-secondary w-100" id="btn-pay-exact-edit"
+                            type="button">Uang Pas</button>
+                    </div>
+                    <div class="col-4">
+                        {{-- ✅ FIX: class unik quick-pay-btn-edit --}}
+                        <button class="btn bg-label-secondary w-100 quick-pay-btn-edit" type="button" data-amount="50000">50
+                            Rb</button>
+                    </div>
+                    <div class="col-4">
+                        <button class="btn bg-label-secondary w-100 quick-pay-btn-edit" type="button"
+                            data-amount="100000">100 Rb</button>
+                    </div>
+                </div>
+ 
+                {{-- Kembalian & Catatan --}}
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded bg-label-light">
+                            <span class="fw-semibold text-muted">Kembalian</span>
+                            {{-- ✅ FIX: id unik -edit --}}
+                            <h4 class="mb-0 fw-bold" id="change-display-edit">Rp 0</h4>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label for="catatan-edit-quill" class="form-label fw-semibold">Catatan</label>
+                        <div class="border rounded-3 bg-white">
+                            {{-- ✅ FIX: id Quill unik -edit --}}
+                            <div id="quill-editor-catatan-edit" style="min-height: 80px; border: none;">
+                                {!! old('catatan', $penjualan->catatan ?? '') !!}
+                            </div>
+                        </div>
+                        {{-- ✅ FIX: id dan name catatan unik, pre-fill dari $penjualan --}}
+                        <input type="hidden" name="catatan" id="catatan-edit" form="editSaleForm"
+                            value="{{ old('catatan', $penjualan->catatan ?? '') }}">
+                        @error('catatan')
+                            <div class="invalid-feedback d-block text-sm">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 my-4 pt-3 border-top">
+                    <button type="button" class="btn btn-outline-danger w-100 w-sm-auto order-2 order-sm-1"
+                        data-bs-dismiss="modal">Batal</button>
+                    <button type="submit"
+                        class="btn btn-success w-100 w-sm-auto order-1 order-sm-2 px-4"
+                        id="saveBtn" form="editSaleForm">
+                        <i class="bx bx-check-circle me-1"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+{{-- Modal Edit Item Detail --}}
+<div class="modal fade" id="editItemDetailModal" tabindex="-1" aria-labelledby="editItemDetailModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editItemDetailModalLabel">Edit Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editItemDetailForm" onsubmit="return false;">
+                    <input type="hidden" id="edit_item_product_id">
+                    <div class="mb-3">
+                        <label class="form-label">Nama Product</label>
+                        <input type="text" class="form-control" id="edit_item_name" readonly disabled>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label for="edit_item_qty" class="form-label">Qty</label>
+                            <input type="number" class="form-control" id="edit_item_qty" min="1" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="edit_item_harga" class="form-label">Harga Jual</label>
+                            <input type="text" class="form-control" id="edit_item_harga" placeholder="0">
+                        </div>
+                        <div class="col-6">
+                            <label for="edit_item_taxe_id" class="form-label select2">Taxe</label>
+                            <select class="form-select " id="edit_item_taxe_id">
+                                <option value="" data-rate="0" selected>Tidak Ada</option>
+                                @foreach ($taxes as $pajak)
+                                    <option value="{{ $pajak->id }}" data-rate="{{ $pajak->rate }}">
+                                        {{ $pajak->name_taxe }} ({{ $pajak->rate }}%)</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label for="edit_item_diskon" class="form-label">Diskon (Rp)</label>
+                            <input type="text" class="form-control" id="edit_item_diskon" placeholder="0">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-info" id="saveItemDetailChangesBtn">Simpan</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+ 

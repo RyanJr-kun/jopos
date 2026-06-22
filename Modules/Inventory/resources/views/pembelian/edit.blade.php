@@ -23,7 +23,7 @@
         <div class="card rounded-3 shadow-sm border-0">
             {{-- ✅ Disesuaikan: header style sama dengan create --}}
             <div class="card-header border-bottom py-3 justify-content-between align-items-center d-flex">
-                <h5 class="mb-0 fw-bold">Edit Purchase <span class="text-muted fs-6 ms-1">#{{ $pembelian->referensi }}</span>
+                <h5 class="mb-0 fw-bold">Edit Pembelian <span class="text-muted fs-6 ms-1">#{{ $pembelian->referensi }}</span>
                 </h5>
                 <a href="{{ route('pembelian.index') }}" class="btn btn-icon btn-outline-secondary btn-sm"
                     data-bs-toggle="tooltip" aria-label="Kembali" data-bs-original-title="Kembali">

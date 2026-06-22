@@ -2,6 +2,7 @@
 
 namespace Modules\POS\Models;
 
+use App\Models\Taxe;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,6 +23,11 @@ class SaleItem extends Model
   {
     return $this->belongsTo(Product::class, 'product_id');
   }
+
+  public function pajak(): BelongsTo
+    {
+        return $this->belongsTo(Taxe::class, 'taxe_id');
+    }
 
   public function serialNumbers(): HasMany
   {

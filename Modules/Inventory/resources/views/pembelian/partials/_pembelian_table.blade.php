@@ -35,24 +35,38 @@
                                 $barColor = 'bg-info';
                                 if ($item->status_pembayaran == 'Lunas') {
                                     $barColor = 'bg-success';
-                                } elseif ($item->status_pembayaran == 'Dibatalkan') {
-                                    $barColor = 'bg-secondary';
-                                    $persentase = 0;
+                                } elseif ($item->status_pembayaran == 'Hutang') {
+                                    $barColor = 'bg-warning';
+                                } elseif ($item->status_pembayaran == 'Batal') {
+                                    $barColor = 'bg-danger';
+                                    $persentase = 100;
                                 } elseif ($isJatuhTempo) {
                                     $barColor = 'bg-danger';
-                                } else {
-                                    $barColor = 'bg-warning';
-                                }
+                                } 
+
+                                $statusClass =
+                                        $item->status_pembayaran == 'Lunas'
+                                        ? 'bg-label-success'
+                                        : ($item->status_pembayaran == 'Hutang'
+                                            ? 'bg-label-warning'
+                                            : ($item->status_pembayaran == 'Batal'
+                                                ? 'bg-label-danger'
+                                                : 'bg-label-secondary'));
                             @endphp
 
                             <div class="d-flex flex-column" style="min-width: 170px;">
                                 <div class="d-flex justify-content-between text-xs mb-1">
                                     <span class="fw-bold text-dark" title="Total Tagihan">Rp
                                         {{ number_format($item->total_akhir, 0, ',', '.') }}</span>
-                                    @if ($item->sisa_hutang > 0)
-                                        <span class="text-danger fw-semibold" title="Sisa Hutang">- Rp
+                                     @if ($item->status_pembayaran === 'Batal')
+                                        {{-- Jika statusnya Batal, tampilkan label Batal --}}
+                                        <span class="text-danger fw-semibold" title="Dibatalkan">Batal</span>
+                                    @elseif ($item->sisa_hutang > 0)
+                                        {{-- Jika tidak batal dan masih ada sisa piutang --}}
+                                        <span class="text-danger fw-semibold" title="Sisa Piutang">- Rp
                                             {{ number_format($item->sisa_hutang, 0, ',', '.') }}</span>
                                     @else
+                                        {{-- Jika tidak batal dan sisa piutang 0 --}}
                                         <span class="text-success fw-semibold" title="Lunas">Lunas</span>
                                     @endif
                                 </div>
@@ -67,7 +81,7 @@
                                     style="font-size: 0.7rem;">
                                     <span class="text-muted" title="Sudah Dibayar">Bayar: Rp
                                         {{ number_format($item->jumlah_dibayar, 0, ',', '.') }}</span>
-                                    @if ($item->status_pembayaran == 'Belum Lunas' && $item->tanggal_jatuh_tempo)
+                                    @if ($item->status_pembayaran == 'Hutang' && $item->tanggal_jatuh_tempo)
                                         <span class="{{ $isJatuhTempo ? 'text-danger fw-bold' : 'text-muted' }}">Tempo:
                                             {{ \Carbon\Carbon::parse($item->tanggal_jatuh_tempo)->format('d/m/y') }}</span>
                                     @endif
@@ -78,20 +92,12 @@
                         <td class="text-center">
                             <div class="d-flex flex-column gap-2 align-items-center">
                                 <span
-                                    class="badge {{ $item->status_barang == 'Diterima' ? 'bg-label-success' : ($item->status_barang == 'Dibatalkan' ? 'bg-label-danger' : 'bg-label-warning') }}"
-                                    style="font-size: 0.7rem; width: 110px;">
+                                    class="badge {{ $item->status_barang == 'Diterima' ? 'bg-label-success' : ($item->status_barang == 'Batal' ? 'bg-label-danger' : 'bg-label-warning') }}"
+                                     title="Status Barang" data-bs-toggle="tooltip" data-bs-target="up" style="font-size: 0.7rem; width: 110px;">
                                     <i class="bx bx-box text-xs me-1"></i> {{ $item->status_barang }}
                                 </span>
 
-                                @php
-                                    $statusClass =
-                                        $item->status_pembayaran == 'Lunas'
-                                            ? 'bg-label-success'
-                                            : ($item->status_pembayaran == 'Belum Lunas'
-                                                ? 'bg-label-warning'
-                                                : 'bg-label-danger');
-                                @endphp
-                                <span class="badge {{ $statusClass }}" style="font-size: 0.7rem; width: 110px;">
+                                <span class="badge {{ $statusClass }}"  title="Status Pembayaran" data-bs-toggle="tooltip" data-bs-target="up" style="font-size: 0.7rem; width: 110px;">
                                     <i class="bx bx-wallet text-xs me-1"></i> {{ $item->status_pembayaran }}
                                 </span>
                             </div>
@@ -122,9 +128,9 @@
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item" href="{{ route('pembelian.show', $item->referensi) }}"><i
                                             class="bx bx-show-alt me-2 text-info"></i> Lihat Detail</a>
-                                    <a class="dropdown-item" href="{{ route('pembelian.edit', $item->referensi) }}"><i
+                                    @if ($item->status_pembayaran != 'Batal')
+                                        <a class="dropdown-item" href="{{ route('pembelian.edit', $item->referensi) }}"><i
                                             class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
-                                    @if ($item->status_pembayaran != 'Dibatalkan')
                                         <div class="dropdown-divider"></div>
                                         <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
                                             data-bs-target="#cancelConfirmationModal"
@@ -160,27 +166,29 @@
                 $barColor = 'bg-info';
                 if ($item->status_pembayaran == 'Lunas') {
                     $barColor = 'bg-success';
-                } elseif ($item->status_pembayaran == 'Dibatalkan') {
-                    $barColor = 'bg-secondary';
-                    $persentase = 0;
+                } elseif ($item->status_pembayaran == 'Hutang') {
+                    $barColor = 'bg-warning';
+                } elseif ($item->status_pembayaran == 'Batal') {
+                    $barColor = 'bg-danger';
+                    $persentase = 100;
                 } elseif ($isJatuhTempo) {
                     $barColor = 'bg-danger';
-                } else {
-                    $barColor = 'bg-warning';
-                }
+                } 
 
                 $statusBarangClass =
                     $item->status_barang == 'Diterima'
                         ? 'bg-label-success'
-                        : ($item->status_barang == 'Dibatalkan'
+                        : ($item->status_barang == 'Batal'
                             ? 'bg-label-danger'
                             : 'bg-label-warning');
                 $statusPembayaranClass =
                     $item->status_pembayaran == 'Lunas'
                         ? 'bg-label-success'
-                        : ($item->status_pembayaran == 'Belum Lunas'
+                        : ($item->status_pembayaran == 'Hutang'
                             ? 'bg-label-warning'
-                            : 'bg-label-danger');
+                            : ($item->status_pembayaran == 'Batal'
+                                ? 'bg-label-danger'
+                                : 'bg-label-secondary'));
             @endphp
 
             <div class="card mb-3 shadow-sm border">
@@ -198,9 +206,9 @@
                             <div class="dropdown-menu dropdown-menu-end">
                                 <a class="dropdown-item" href="{{ route('pembelian.show', $item->referensi) }}"><i
                                         class="bx bx-show-alt me-2 text-info"></i> Lihat Detail</a>
-                                <a class="dropdown-item" href="{{ route('pembelian.edit', $item->referensi) }}"><i
+                                @if ($item->status_pembayaran != 'Batal')
+                                    <a class="dropdown-item" href="{{ route('pembelian.edit', $item->referensi) }}"><i
                                         class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
-                                @if ($item->status_pembayaran != 'Dibatalkan')
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
                                         data-bs-target="#cancelConfirmationModal"
@@ -243,11 +251,16 @@
                         <div class="d-flex justify-content-between text-sm mb-1">
                             <span class="fw-bold text-dark">Rp
                                 {{ number_format($item->total_akhir, 0, ',', '.') }}</span>
-                            @if ($item->sisa_hutang > 0)
-                                <span class="text-danger fw-semibold">- Rp
+                            @if ($item->status_pembayaran === 'Batal')
+                                {{-- Jika statusnya Batal, tampilkan label Batal --}}
+                                <span class="text-danger fw-semibold" title="Dibatalkan">Batal</span>
+                            @elseif ($item->sisa_hutang > 0)
+                                {{-- Jika tidak batal dan masih ada sisa piutang --}}
+                                <span class="text-danger fw-semibold" title="Sisa Piutang">- Rp
                                     {{ number_format($item->sisa_hutang, 0, ',', '.') }}</span>
                             @else
-                                <span class="text-success fw-semibold">Lunas</span>
+                                {{-- Jika tidak batal dan sisa piutang 0 --}}
+                                <span class="text-success fw-semibold" title="Lunas">Lunas</span>
                             @endif
                         </div>
 
@@ -260,7 +273,7 @@
                         <div class="d-flex justify-content-between align-items-center" style="font-size: 0.75rem;">
                             <span class="text-muted">Bayar: Rp
                                 {{ number_format($item->jumlah_dibayar, 0, ',', '.') }}</span>
-                            @if ($item->status_pembayaran == 'Belum Lunas' && $item->tanggal_jatuh_tempo)
+                            @if ($item->status_pembayaran == 'Hutang' && $item->tanggal_jatuh_tempo)
                                 <span class="{{ $isJatuhTempo ? 'text-danger fw-bold' : 'text-muted' }}">Tempo:
                                     {{ \Carbon\Carbon::parse($item->tanggal_jatuh_tempo)->format('d/m/y') }}</span>
                             @endif

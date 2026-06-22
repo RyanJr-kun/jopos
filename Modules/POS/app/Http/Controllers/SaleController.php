@@ -337,17 +337,25 @@ class SaleController extends Controller implements HasMiddleware
   public function edit(Sale $penjualan)
   {
     // Eager load relasi untuk efisiensi
-    $penjualan->load('items.product', 'customer', 'user');
+    $penjualan->load('items.product.primaryImage', 'customer', 'user', 'items.pajak', 'items.varian.options' );
 
     // Ambil data yang dibutuhkan untuk form, mirip seperti method create()
     $customers = Customer::query()->where('status', 1)->orderBy('name', 'asc')->get();
+    $nomer_referensi = $this->generateInvoiceNumber();
     $taxes = Taxe::all();
+    $payments = Sale::getPaymentStatuses();
+    $options = Sale::getPaymentMethods();
+    $banks = Bank::all();
 
     return view('pos::penjualan.edit', [
       'title' => 'Edit Invoice: ' . $penjualan->referensi,
       'penjualan' => $penjualan,
       'customers' => $customers,
       'taxes' => $taxes,
+      'nomer_referensi' => $nomer_referensi,
+      'payments' => $payments,
+      'options' => $options,
+      'banks' => $banks,
     ]);
   }
 
@@ -380,7 +388,10 @@ class SaleController extends Controller implements HasMiddleware
               }
             }
 
-            $penjualan->update(['status_pembayaran' => 'Batal']);
+            $penjualan->update([
+              'status_pembayaran' => 'Batal',
+              'sisa_piutang' => 0,
+              ]);
           });
           session()->flash('success', 'Transaksi berhasil dibatalkan dan stok dikembalikan.');
         } catch (\Exception $e) {

@@ -192,7 +192,7 @@
             <div class="mb-4 mt-5">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold mb-0"><i class="bx bx-history me-1 text-primary"></i> Riwayat Pembayaran</h6>
-                    @if ($penjualan->sisa_piutang > 0 && $penjualan->status_pembayaran !== 'Dibatalkan')
+                    @if ($penjualan->sisa_piutang > 0 && $penjualan->status_pembayaran !== 'Batal')
                         <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
                             data-bs-target="#addCicilanModal">
                             <i class="bx bx-plus me-1"></i> Bayar Cicilan

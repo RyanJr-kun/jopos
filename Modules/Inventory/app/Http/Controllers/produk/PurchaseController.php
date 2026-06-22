@@ -377,7 +377,6 @@ class PurchaseController extends Controller implements HasMiddleware
             $pembelian->update([
               'status_pembayaran' => 'Batal',
               'status_barang' => 'Batal',
-              'jumlah_dibayar' => 0,
               'sisa_hutang' => 0,
             ]);
           });
