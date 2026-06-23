@@ -108,9 +108,7 @@ Route::domain('jopos.' . $domain)->group(function () {
     // ---------------------------------------------------------
     // 5. DATA PENGAMBILAN (AJAX / API Endpoints)
     // ---------------------------------------------------------
-    Route::prefix('get-data')
-      ->as('get-data.')
-      ->group(function () {
+    Route::prefix('get-data')->as('get-data.')->group(function () {
         Route::get('produk', [ProductController::class, 'getData'])->name('produk');
         Route::get('cek-stok-produk', [ProductController::class, 'cekStock'])->name('cek-stok');
         Route::get('produk-by-barcode/{barcode}', [ProductController::class, 'getByBarcode'])->name('produk.by-barcode');

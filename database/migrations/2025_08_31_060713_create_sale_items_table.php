@@ -17,13 +17,12 @@ return new class extends Migration
                 $table->foreignId('sale_id')->constrained('sales')->onDelete('cascade');
                 $table->foreignId('product_id')->constrained('products')->onDelete('restrict');
                 $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->nullOnDelete();
-                $table->unsignedInteger('jumlah');
+                $table->unsignedInteger('jumlah')->comment('pengganti qty');
                 $table->decimal('harga_jual', 15, 0);
                 $table->decimal('diskon_item', 15, 0)->default(0)->comment('Diskon per item dalam nominal');
                 $table->foreignId('taxe_id')->nullable()->constrained('taxes');
                 $table->decimal('pajak_item', 15, 0)->default(0);
                 $table->decimal('subtotal', 15, 0);
-                $table->integer('qty')->default(0);
                 $table->timestamps();
 
                 $table->index('sale_id');

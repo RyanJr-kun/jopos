@@ -13,17 +13,19 @@ $domain = env('APP_DOMAIN', 'jocomputer.com');
 Route::domain('jopos.' . $domain)->group(function () {
     Route::middleware(['auth', 'verified', 'employee'])->group(function () {
         Route::resource('pos', POSController::class)->names('pos');
-    
-        //transaksi penjualan
+        
+        // 1. Letakkan rute kustom / spesifik di atas
         Route::get('/penjualan/history/today', [SaleController::class, 'getTodayHistory'])->name('penjualan.history.today');
         Route::get('/penjualan/get-products', [SaleController::class, 'getProductsForCashier'])->name('penjualan.get-products');
-        Route::resource('/penjualan', SaleController::class)->except('destroy');
+        Route::get('/penjualan/produk', [SaleController::class, 'getProduct'])->name('getDataProduct');
+        
         Route::get('/penjualan/{penjualan}/json', [SaleController::class, 'getjson'])->name('penjualan.getjson');
         Route::get('/penjualan/{penjualan:referensi}/thermal', [SaleController::class, 'printThermal'])->name('penjualan.thermal');
         Route::get('/penjualan/{penjualan:referensi}/pdf', [SaleController::class, 'generatePdf'])->name('penjualan.pdf');
-
-        // bayar piutang
         Route::post('penjualan/{penjualan}/payment', [SaleController::class, 'storePayment'])->name('penjualan.payment.store');
+
+        // 2. Letakkan Route::resource di paling bawah
+        Route::resource('/penjualan', SaleController::class)->except('destroy');
     });
 });
 

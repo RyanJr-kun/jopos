@@ -337,7 +337,7 @@ class SaleController extends Controller implements HasMiddleware
   public function edit(Sale $penjualan)
   {
     // Eager load relasi untuk efisiensi
-    $penjualan->load('items.product.primaryImage', 'customer', 'user', 'items.pajak', 'items.varian.options' );
+    $penjualan->load('items.product.primaryImage', 'customer', 'user', 'items.pajak', 'items.varian.options', 'items.serialNumbers' );
 
     // Ambil data yang dibutuhkan untuk form, mirip seperti method create()
     $customers = Customer::query()->where('status', 1)->orderBy('name', 'asc')->get();
@@ -781,5 +781,120 @@ class SaleController extends Controller implements HasMiddleware
     }
 
     return ''; // Kosongkan jika tidak ada opsi
+  }
+
+  
+  public function getProduct(Request $request)
+  {
+    $search = $request->query('search');
+
+    // Ambil ID Toko dari user yang login (sesuai logika Anda di cekStock)
+    $storeId = Auth::user()->employee->store_id ?? null;
+
+    // Load relasi pajak, varian, dan opsi variannya
+    $query = Product::with([
+      'pajak',
+      'primaryImage',
+      'variants' => function ($q) {
+        // Pastikan memuat opsi untuk membentuk nama varian (misal: "Merah / XL")
+        $q->where('is_active', 1)->with('options');
+      },
+    ])
+      ->when($search, function ($q, $search) {
+        $q->where(function ($subQ) use ($search) {
+          $subQ
+            ->where('name_product', 'like', "%{$search}%")
+            ->orWhere('sku', 'like', "%{$search}%")
+            ->orWhere('barcode', 'like', "%{$search}%")
+            ->orWhereHas('variants', function ($qv) use ($search) {
+              $qv->where('sku', 'like', "%{$search}%")->orWhere('barcode', 'like', "%{$search}%");
+            });
+        });
+      })
+      ->when($request->boolean('wajib_seri'), function ($q) {
+        $q->where('wajib_seri', true);
+      })
+      ->latest(); // Gunakan latest, jangan orderBy qty karena qty ada di tabel product_stocks
+
+    $products = $query->paginate(15);
+
+    $formattedData = [];
+
+    foreach ($products as $product) {
+      // Skenario 1: Produk memiliki varian
+      if ($product->variants && $product->variants->count() > 0) {
+        foreach ($product->variants as $variant) {
+          // Bentuk nama varian dari opsi (misal: "Hitam / XL")
+          $variantOptions = [];
+          if ($variant->relationLoaded('options') && $variant->options->count() > 0) {
+            foreach ($variant->options as $opt) {
+              $variantOptions[] = $opt->value;
+            }
+          }
+          $variantName = !empty($variantOptions) ? implode(' / ', $variantOptions) : 'SKU: ' . $variant->sku;
+
+          // Hitung stok varian spesifik di toko saat ini
+          $stockQuery = ProductStock::query()->where('product_id', $product->id)->where('product_variant_id', $variant->id);
+          if ($storeId) {
+            $stockQuery->where('store_id', $storeId);
+          }
+          $stokVarian = $stockQuery->sum('qty');
+
+          if ($stokVarian > 0) {
+            $formattedData[] = [
+              'id' => $product->id, // ID Produk Induk
+              'variant_id' => $variant->id,
+              'slug' => $product->slug,
+              'name_product' => $product->name_product,
+              'variant_name' => $variantName,
+              'wajib_seri' => $product->wajib_seri,
+              'sku' => $variant->sku,
+              'qty' => $stokVarian,
+              'harga_beli' => $variant->harga_beli,
+              'harga_jual' => $variant->harga_jual,
+              'image_url' => $product->image_url,
+              'img_produk' => $variant->img_variant ?? ($product->primaryImage->path ?? null),
+              'taxe_id' => $product->taxe_id,
+              'pajak' => $product->pajak ? ['rate' => $product->pajak->rate] : null,
+            ];
+          }
+        }
+      }
+      // Skenario 2: Produk Simple (Tanpa Varian)
+      else {
+        // Hitung stok produk induk (dimana product_variant_id adalah null)
+        $stockQuery = ProductStock::query()->where('product_id', $product->id)->where('product_variant_id', '=', null);
+
+        if ($storeId) {
+          $stockQuery->where('store_id', $storeId);
+        }
+        $stokProduk = $stockQuery->sum('qty');
+        if ($stokProduk > 0) {
+          $formattedData[] = [
+            'id' => $product->id,
+            'variant_id' => null,
+            'name_product' => $product->name_product,
+            'variant_name' => null,
+            'slug' => $product->slug,
+            'sku' => $product->sku,
+            'qty' => $stokProduk,
+            'harga_beli' => $product->harga_beli,
+            'harga_jual' => $product->harga_jual,
+            'image_url' => $product->image_url,
+            'img_produk' => $product->primaryImage->path ?? null,
+            'taxe_id' => $product->taxe_id,
+            'pajak' => $product->pajak ? ['rate' => $product->pajak->rate] : null,
+            'wajib_seri' => $product->wajib_seri,
+          ];
+        }
+      }
+    }
+
+    // Return JSON yang sudah sesuai dengan ekspektasi Select2 di blade Anda
+    return response()->json([
+      'data' => $formattedData,
+      'current_page' => $products->currentPage(),
+      'next_page_url' => $products->nextPageUrl(),
+    ]);
   }
 }

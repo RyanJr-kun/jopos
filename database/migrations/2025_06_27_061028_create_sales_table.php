@@ -15,6 +15,8 @@ return new class extends Migration
             Schema::create('sales', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('store_id')->constrained('stores')->onDelete('cascade');
+                $table->foreignId('customer_id')->nullable()->constrained('customers');
+                $table->foreignId('user_id')->constrained('users');
                 $table->string('referensi', 50)->unique();
                 $table->dateTime('tanggal_penjualan');
                 $table->date('tanggal_jatuh_tempo')->nullable();
@@ -30,8 +32,6 @@ return new class extends Migration
                 $table->string('metode_pembayaran', 30)->default('TUNAI');
                 $table->foreignId('bank_id')->nullable()->constrained('banks')->onDelete('set null');
                 $table->text('catatan')->nullable();
-                $table->foreignId('customer_id')->nullable()->constrained('customers');
-                $table->foreignId('user_id')->constrained('users');
                 $table->timestamps();
 
                 $table->index('tanggal_penjualan');

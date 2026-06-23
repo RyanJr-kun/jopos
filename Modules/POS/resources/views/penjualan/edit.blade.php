@@ -114,32 +114,28 @@
                             </tr>
                         </thead>
                         <tbody class="border-top-0">
-                            <!-- POPULASI DATA LAMA DARI DATABASE -->
                             @foreach ($penjualan->items as $index => $detail)
                                 @php
                                     $pajak_rate = $detail->pajak->rate ?? 0;
-                                    $subtotal_item = $detail->harga_jual * $detail->qty - ($detail->diskon ?? 0);
-                                    $pajak_amount = $subtotal_item * ($pajak_rate / 100);
-                                    $subtotal_with_tax = $detail->subtotal;
+                                    // FIX: Ubah qty menjadi jumlah, diskon menjadi diskon_item
+                                    $subtotal_item = $detail->harga_jual * $detail->jumlah - ($detail->diskon_item ?? 0); 
+                                    $pajak_amount = $detail->pajak_item ?? ($subtotal_item * ($pajak_rate / 100));
+                                    // FIX: Tambahkan pajak ke subtotal agar render awal sesuai dengan perhitungan JS
+                                    $subtotal_with_tax = $detail->subtotal + $pajak_amount; 
 
                                     $rowId = $detail->product_variant_id
                                         ? "{$detail->product_id}-{$detail->product_variant_id}"
                                         : $detail->product_id;
 
-                                    // 1. Ambil URL default dari Accessor Product
                                     $imageUrl = $detail->product->image_url;
                                     $namaVarian = '';
 
-                                    // 2. Jika ini adalah Varian
+
                                     if ($detail->product_variant_id && $detail->varian) {
-                                        // Timpa gambar produk utama jika varian punya gambar spesifik
                                         if (!empty($detail->varian->img_variant)) {
-                                            $imageUrl = \Illuminate\Support\Facades\Storage::url(
-                                                $detail->varian->img_variant,
-                                            );
+                                            $imageUrl = \Illuminate\Support\Facades\Storage::url($detail->varian->img_variant);
                                         }
 
-                                        // Format Nama Varian
                                         $variantOpts = [];
                                         if ($detail->varian->relationLoaded('options')) {
                                             foreach ($detail->varian->options as $opt) {
@@ -156,10 +152,10 @@
                                         value="{{ $detail->product_id }}">
                                     <input type="hidden" name="items[{{ $index }}][product_variant_id]"
                                         value="{{ $detail->product_variant_id ?? '' }}">
-                                    <input type="hidden" name="items[{{ $index }}][qty]" class="item-qty-hidden"
-                                        value="{{ $detail->qty }}">
-                                    <input type="hidden" name="items[{{ $index }}][harga_beli]"
-                                        class="item-harga-hidden" value="{{ $detail->harga_beli }}">
+                                        
+                                    <input type="hidden" name="items[{{ $index }}][jumlah]" class="item-qty-hidden" value="{{ $detail->jumlah }}">
+                                    <input type="hidden" name="items[{{ $index }}][harga_jual]"
+                                        class="item-harga-hidden" value="{{ $detail->harga_jual }}">
                                     <input type="hidden" name="items[{{ $index }}][diskon]"
                                         class="item-diskon-hidden" value="{{ $detail->diskon ?? 0 }}">
                                     <input type="hidden" name="items[{{ $index }}][taxe_id]"
@@ -178,11 +174,26 @@
                                                     <small class="text-muted"><i
                                                             class="bx bx-list-ul text-xs me-1"></i>{{ $namaVarian }}</small>
                                                 @endif
+                                                @if ($detail->product && $detail->product->wajib_seri && $detail->serialNumbers->isNotEmpty())
+                                                    @php
+                                                        $snList = $detail->serialNumbers->pluck('nomor_seri')->toArray();
+                                                    @endphp
+                                                    <small class="text-info d-block mt-1">
+                                                        <i class="bx bx-barcode text-xs me-1"></i>SN: {{ implode(', ', $snList) }}
+                                                    </small>
+
+                                                    {{-- Looping Hidden Input untuk masing-masing SN --}}
+                                                    <div class="sn-hidden-container">
+                                                        @foreach ($snList as $sn)
+                                                            <input type="hidden" name="items[{{ $index }}][serial_numbers][]" class="item-sn-hidden" value="{{ $sn }}">
+                                                        @endforeach
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>
                                     <td class="align-middle text-center"><span
-                                            class="item-qty">{{ $detail->qty }}</span></td>
+                                            class="item-qty">{{ $detail->jumlah }}</span></td>
                                     <td class="align-middle"><span
                                             class="item-harga">{{ 'Rp ' . number_format($detail->harga_jual, 0, ',', '.') }}</span>
                                     </td>
@@ -286,15 +297,77 @@
 
         // 2. JALANKAN SAAT DOM SIAP
         document.addEventListener('DOMContentLoaded', function() {
+            const defaultHeaders = {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}' // Pastikan token CSRF tersedia
+            };
+            let tempRowDataForSN = null; // Menyimpan konteks baris tabel saat modal SN aktif
+            const serialNumberModalEl = document.getElementById('serialNumberModal');
+            const serialNumberModal = serialNumberModalEl ? new bootstrap.Modal(serialNumberModalEl) : null;
+            const snErrorMessage = document.getElementById('sn-error-message');
+            const snListContainer = document.getElementById('sn-list-container');
+            const snRequiredCount = document.getElementById('sn-required-count');
+            const snConfirmBtn = document.getElementById('btn-confirm-sn');
+
+            const openSerialNumberModal = (rowId, productId, variantId, productName, requiredQty, imgUrl, existingSerials = []) => {
+            tempRowDataForSN = rowId; // Simpan rowId
+
+            document.getElementById('sn-produk-id').value = productId;
+            document.getElementById('sn-variant-id').value = variantId || '';
+
+            document.getElementById('sn-name-produk').textContent = productName;
+            document.getElementById('sn-required-count').textContent = requiredQty;
+            document.getElementById('sn-image-produk').src = imgUrl || '/assets/img/produk.png';
+            // Catatan: Stok bisa diambil via AJAX atau dilempar sebagai parameter jika diperlukan, 
+            // untuk saat ini saya hilangkan sementara agar tidak error undefined.
+            document.getElementById('sn-stok-produk').textContent = "-"; 
+
+            snErrorMessage.textContent = '';
+            snListContainer.innerHTML = `
+                <div class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                </div>`;
+
+            serialNumberModal.show();
+
+            const url = new URL(`{{ route('serialNumber.getProduct') }}`);
+            url.searchParams.set('product_id', productId);
+            if (variantId) url.searchParams.set('variant_id', variantId);
+
+            fetch(url.toString(), { headers: defaultHeaders })
+                .then(r => r.json())
+                .then(data => {
+                    snListContainer.innerHTML = '';
+                    if (!data.serial_numbers || data.serial_numbers.length === 0) {
+                        snListContainer.innerHTML = '<p class="text-center text-muted py-3">Tidak ada nomor seri tersedia.</p>';
+                        return;
+                    }
+                    data.serial_numbers.forEach(sn => {
+                        const isChecked  = existingSerials.includes(sn.serial_number);
+                        // Biarkan SN yang sudah terikat pada transaksi ini bisa dipilih (checked)
+                        const isDisabled = sn.status !== 'Tersedia' && !isChecked; 
+                        snListContainer.insertAdjacentHTML('beforeend', `
+                            <label class="list-group-item list-group-item-action d-flex gap-2 align-items-center
+                                        ${isDisabled ? 'text-muted disabled' : ''}">
+                                <input class="form-check-input flex-shrink-0 sn-checkbox" type="checkbox"
+                                    value="${sn.serial_number}"
+                                    ${isChecked  ? 'checked'  : ''}
+                                    ${isDisabled ? 'disabled' : ''}>
+                                <span class="d-flex justify-content-between align-items-center w-100">
+                                    <span>${sn.serial_number}</span>
+                                    <small class="badge bg-label-${sn.status === 'Tersedia' ? 'success' : 'secondary'}">
+                                        ${sn.status}
+                                    </small>
+                                </span>
+                            </label>`);
+                    });
+                })
+                .catch(() => {
+                    snListContainer.innerHTML = '<p class="text-center text-danger py-3">Gagal memuat nomor seri.</p>';
+                });
+        };
+                    
             const ASSET_STORAGE = "{{ config('filesystems.disks.r2.url') }}";
-
-            // --- A. INISIALISASI QUILL (untuk modal payment edit) ---
-            // ✅ FIX: Quill #quill-editor-catatan-edit diinisialisasi di dalam block paymentModalEdit
-            // (lihat bagian LOGIKA MODAL PAYMENT EDIT di bawah)
-            // Placeholder init di sini dihapus agar tidak double-init
-
-            // --- A2. LOGIKA CUSTOMER MODAL ---
-            // ✅ FIX: edit penjualan pakai createCustomerForm, bukan createSupplierForm
             const createCustomerForm = document.getElementById('createCustomerForm');
             if (createCustomerForm) {
                 const pelangganSelect = document.getElementById('customer_id');
@@ -390,7 +463,51 @@
                 // Ambil nilai tertinggi counter dari backend
                 let itemCounter =
                     {{ $penjualan->items->count() > 0 ? collect($penjualan->items->keys())->max() + 1 : 0 }};
-                // ✅ FIX Bug #5: Nama modal yang benar sesuai _model.blade adalah editCartItemModal
+
+                if (snConfirmBtn) {
+                        snConfirmBtn.addEventListener('click', () => {
+                            const requiredQty = parseInt(snRequiredCount.textContent);
+                            const selected = [...document.querySelectorAll('.sn-checkbox:checked')].map(cb => cb.value);
+
+                            if (selected.length !== requiredQty) {
+                                snErrorMessage.textContent = `Pilih tepat ${requiredQty} nomor seri (dipilih: ${selected.length}).`;
+                                return;
+                            }
+                            
+                            snErrorMessage.textContent = '';
+                            
+                            // --- LOGIKA UPDATE BARIS TABEL ---
+                            const row = $(`#table-penjualan tbody tr[data-row-id="${tempRowDataForSN}"]`);
+                            if (row.length > 0) {
+                                // Hapus input hidden SN lama yang ada di row ini
+                                row.find('.item-sn-hidden').remove();
+                                
+                                // Ambil index array name (contoh: items[0][jumlah], kita butuh angka '0')
+                                const nameAttr = row.find('.item-qty-hidden').attr('name');
+                                const match = nameAttr.match(/items\[(\d+)\]/);
+                                const index = match ? match[1] : itemCounter;
+
+                                // Generate ulang info SN di layar & input hidden baru
+                                let snDisplayHtml = `<small class="text-info d-block mt-1 sn-display"><i class="bx bx-barcode text-xs me-1"></i>SN: ${selected.join(', ')}</small>`;
+                                row.find('.sn-display').remove(); // Hapus text info lama
+                                row.find('.item-name').parent().append(snDisplayHtml);
+
+                                // Sisipkan input hidden SN baru
+                                let hiddenInputsHtml = '';
+                                selected.forEach(sn => {
+                                    hiddenInputsHtml += `<input type="hidden" name="items[${index}][serial_numbers][]" class="item-sn-hidden" value="${sn}">`;
+                                });
+                                row.append(hiddenInputsHtml);
+                            } else {
+                                // Jika baris belum ada (kasus nambah produk baru dari Select2), maka jalankan addProductToCart
+                                // (Pastikan fungsi addProductToCart bisa menangani SN, mirip dengan di create.blade.php)
+                                // addProductToCart(tempProductDataForSN, selected); 
+                                console.error("Baris tidak ditemukan untuk SN");
+                            }
+
+                            serialNumberModal.hide();
+                        });
+                    }
                 const editItemModal = new bootstrap.Modal(document.getElementById('editCartItemModal'));
 
                 // Select2 di dalam modal Edit Item
@@ -434,7 +551,7 @@
                         return produk.text || "Ketik untuk mencari...";
                     },
                     ajax: {
-                        url: "{{ route('get-data.produk') }}",
+                        url: "{{ route('getDataProduct') }}",
                         dataType: 'json',
                         delay: 250,
                         data: function(params) {
@@ -461,9 +578,10 @@
                                         text: displayName,
                                         image_url: item.image_url,
                                         qty: item.qty,
-                                        harga_beli: item.harga_beli,
+                                        harga_jual: item.harga_jual,
                                         taxe_id: item.taxe_id,
-                                        pajak_rate: item.pajak ? item.pajak.rate : 0
+                                        pajak_rate: item.pajak ? item.pajak.rate : 0,
+                                        wajib_seri: item.wajib_seri || false
                                     };
                                 }),
                                 pagination: {
@@ -493,10 +611,12 @@
                     const produkNama = selectedData.text;
                     const imageUrl = selectedData.image_url ||
                         "{{ asset('assets/img/produk.png') }}";
-                    const hargaBeli = selectedData.harga_beli || 0;
+                    const hargaJual = selectedData.harga_jual || 0;
                     const pajakId = selectedData.taxe_id || null;
                     const pajakRate = selectedData.pajak_rate || 0;
                     const qtyToAdd = parseInt(qty);
+
+                    const wajibSeri = selectedData.wajib_seri || false;
 
                     let existingRow = $(`#table-penjualan tbody tr[data-row-id="${rowId}"]`);
 
@@ -506,16 +626,17 @@
                         currentQtyInput.val(newQty);
                         updateRowDisplay(existingRow);
                     } else {
-                        const subtotalAwal = (hargaBeli * qtyToAdd);
+                        const subtotalAwal = (hargaJual * qtyToAdd);
                         const pajakAwal = subtotalAwal * (pajakRate / 100);
                         const subtotalDenganTaxe = subtotalAwal + pajakAwal;
+                        const trClass = wajibSeri ? 'is-wajib-seri' : '';
 
                         const newRow = `
                         <tr data-row-id="${rowId}">
                             <input type="hidden" name="items[${itemCounter}][product_id]" value="${produkId}">
                             <input type="hidden" name="items[${itemCounter}][product_variant_id]" value="${variantId || ''}">
-                            <input type="hidden" name="items[${itemCounter}][qty]" class="item-qty-hidden" value="${qtyToAdd}">
-                            <input type="hidden" name="items[${itemCounter}][harga_beli]" class="item-harga-hidden" value="${hargaBeli}">
+                            <input type="hidden" name="items[${itemCounter}][jumlah]" class="item-qty-hidden" value="${qtyToAdd}">
+                            <input type="hidden" name="items[${itemCounter}][harga_jual]" class="item-harga-hidden" value="${hargaJual}">
                             <input type="hidden" name="items[${itemCounter}][diskon]" class="item-diskon-hidden" value="0">
                             <input type="hidden" name="items[${itemCounter}][taxe_id]" class="item-pajak-id-hidden" value="${pajakId || ''}">
                             <input type="hidden" class="item-pajak-rate-hidden" value="${pajakRate}">
@@ -524,11 +645,12 @@
                                     <img src="${imageUrl}" class="rounded rounded-2 me-3" style="width:40px; height:40px; object-fit:cover;" alt="${produkNama}">
                                     <div>
                                         <h6 class="mb-0 text-sm item-name">${produkNama}</h6>
+                                        
                                     </div>
                                 </div>
                             </td>
                             <td class="align-middle text-center"><span class="item-qty">${qtyToAdd}</span></td>
-                            <td class="align-middle"><span class="item-harga">${formatCurrency(hargaBeli)}</span></td>
+                            <td class="align-middle"><span class="item-harga">${formatCurrency(hargaJual)}</span></td>
                             <td class="align-middle"><span class="item-pajak">${formatCurrency(pajakAwal)}</span></td>
                             <td class="align-middle"><span class="item-diskon">Rp 0</span></td>
                             <td class="subtotal-item text-start text-sm fw-bold">${formatCurrency(subtotalDenganTaxe)}</td>
@@ -552,16 +674,31 @@
                     $("#qty").val("");
                     $("#sisa_stok").val("");
                     calculateGrandTotal();
+
+                    if (wajibSeri) {
+                        let targetRow = $(`#table-penjualan tbody tr[data-row-id="${rowId}"]`);
+                        
+                        // Ambil SN yang sudah tersimpan (jika item sudah ada sebelumnya lalu ditambah qty)
+                        const existingSerials = [];
+                        targetRow.find('.item-sn-hidden').each(function() {
+                            existingSerials.push($(this).val());
+                        });
+
+                        // Pastikan mengambil qty terbaru setelah ditambahkan
+                        const currentQty = parseInt(targetRow.find('.item-qty-hidden').val()) || qtyToAdd;
+
+                        openSerialNumberModal(rowId, produkId, variantId, produkNama, currentQty, imageUrl, existingSerials);
+                    }
                 });
 
                 // CALCULATIONS
                 function calculateRow(row) {
                     const qty = parseFloat(row.find(".item-qty-hidden").val()) || 0;
-                    const hargaBeli = parseFloat(row.find(".item-harga-hidden").val()) || 0;
+                    const hargaJual = parseFloat(row.find(".item-harga-hidden").val()) || 0;
                     const diskon = parseFloat(row.find(".item-diskon-hidden").val()) || 0;
                     const pajakRate = parseFloat(row.find(".item-pajak-rate-hidden").val()) || 0;
 
-                    const subtotalSebelumTaxe = (qty * hargaBeli) - diskon;
+                    const subtotalSebelumTaxe = (qty * hargaJual) - diskon;
                     const pajakAmount = subtotalSebelumTaxe * (pajakRate / 100);
                     const subtotalDenganTaxe = subtotalSebelumTaxe + pajakAmount;
 
@@ -575,12 +712,12 @@
 
                     $('#table-penjualan tbody tr').each(function() {
                         const qty = parseFloat($(this).find(".item-qty-hidden").val()) || 0;
-                        const hargaBeli = parseFloat($(this).find(".item-harga-hidden").val()) || 0;
+                        const hargaJual = parseFloat($(this).find(".item-harga-hidden").val()) || 0;
                         const diskon = parseFloat($(this).find(".item-diskon-hidden").val()) || 0;
                         const pajakRate = parseFloat($(this).find(".item-pajak-rate-hidden")
                             .val()) || 0;
 
-                        const subtotalItem = (qty * hargaBeli) - diskon;
+                        const subtotalItem = (qty * hargaJual) - diskon;
                         const pajakItem = subtotalItem * (pajakRate / 100);
 
                         subtotalKeseluruhan += subtotalItem;
@@ -656,30 +793,39 @@
                     const rowId = $("#edit-item-id").val();
                     const row = $(`#table-penjualan tbody tr[data-row-id="${rowId}"]`);
 
-                    row.find(".item-qty, .item-qty-hidden").val($("#edit-item-qty").val());
+                    const newQty = parseInt($("#edit-item-qty").val()) || 1;
+                    row.find(".item-qty, .item-qty-hidden").val(newQty);
                     row.find(".item-harga-hidden").val(parseCurrency($("#edit-item-harga").val()));
-                    row.find(".item-diskon-hidden").val(parseCurrency($("#edit-item-diskon")
-                        .val()));
+                    row.find(".item-diskon-hidden").val(parseCurrency($("#edit-item-diskon").val()));
 
                     const selectedTaxe = $("#edit-item-pajak-id option:selected");
                     row.find(".item-pajak-id-hidden").val(selectedTaxe.val());
                     row.find(".item-pajak-rate-hidden").val(selectedTaxe.data('rate') || 0);
 
-                    updateRowDisplay(row);
-                    editItemModal.hide();
-                });
-
-                $('#edit-item-harga, #edit-item-diskon').on('input', function() {
-                    formatInputAsCurrency($(this));
-                });
-
-                function updateRowDisplay(row) {
-                    row.find('.item-qty').text(row.find('.item-qty-hidden').val());
-                    row.find('.item-harga').text(formatCurrency(row.find('.item-harga-hidden').val()));
-                    row.find('.item-diskon').text(formatCurrency(row.find('.item-diskon-hidden').val()));
                     calculateRow(row);
-                    calculateGrandTotal();
-                }
+                    calculateGrandTotal(); 
+                    editItemModal.hide();
+
+                    // --- CEK APAKAH WAJIB SERI ---
+                    const hasSN = row.hasClass('is-wajib-seri') || row.find('.item-sn-hidden').length > 0;
+                    
+                    if (hasSN) {
+                        // Ambil data yang dibutuhkan untuk memanggil modal SN
+                        const productId = row.find('input[name*="[product_id]"]').val();
+                        const variantId = row.find('input[name*="[product_variant_id]"]').val();
+                        const productName = row.find('.item-name').text();
+                        const imgUrl = row.find('img').attr('src');
+                        
+                        // Ambil SN yang sudah tersimpan sebelumnya sebagai pre-selection
+                        const existingSerials = [];
+                        row.find('.item-sn-hidden').each(function() {
+                            existingSerials.push($(this).val());
+                        });
+
+                        // Buka Modal SN dengan meminta jumlah SN sesuai dengan qty baru
+                        openSerialNumberModal(rowId, productId, variantId, productName, newQty, imgUrl, existingSerials);
+                    }
+                });
 
                 // ==========================================
                 //  LOGIKA MODAL EXTRA COST (Ongkir/Diskon)
