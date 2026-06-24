@@ -75,26 +75,59 @@ class SaleController extends Controller implements HasMiddleware
    */
   public function create(Request $request)
   {
-    $query = Product::with(['category', 'unit', 'promotions', 'stocks', 'primaryImage', 'pajak', 'variants.stocks', 'variants.options'])
-      ->select('products.*')
-      ->where(function ($q) {
-        $q->whereHas('stocks', fn($sq) => $sq->where('qty', '>', 0))->orWhereHas('variants.stocks', fn($vq) => $vq->where('qty', '>', 0));
+      $storeId = Auth::user()->employee?->store_id; // ← Pindah ke atas, reuse
+
+      $query = Product::with([
+          'category',                  
+          'unit',
+          'pajak',
+          'primaryImage',
+          'promotions' => function ($q) {
+              $q->select('promotions.id', 'promotions.type', 'promotions.nilai_diskon',
+                          'promotions.max_diskon', 'promotions.status',
+                          'promotions.tanggal_mulai', 'promotions.tanggal_berakhir')
+                ->where('promotions.status', true)
+                ->where('promotions.tanggal_mulai', '<=', now())
+                ->where('promotions.tanggal_berakhir', '>=', now());
+          },
+          'variants' => function ($q) use ($storeId) {
+              $q->with([
+                  'stocks' => function ($sq) use ($storeId) {
+                      if ($storeId) $sq->where('store_id', $storeId);
+                  },
+                  'options.variantType',     // ← TAMBAH: eager-load ProductVariantType sekaligus
+              ]);
+          },
+          'stocks' => function ($q) use ($storeId) {
+              if ($storeId) $q->where('store_id', $storeId);
+          },
+      ])
+      ->where(function ($q) use ($storeId) {
+          $q->whereHas('stocks', fn($sq) => $sq->where('qty', '>', 0)
+                ->when($storeId, fn($sq2) => $sq2->where('store_id', $storeId)))
+            ->orWhereHas('variants.stocks', fn($vq) => $vq->where('qty', '>', 0)
+                ->when($storeId, fn($vq2) => $vq2->where('store_id', $storeId)));
       });
 
-    if ($request->filled('kategori')) {
-      $categoryId = $request->kategori;
-      $categoryIds = Category::where('id', $categoryId)->orWhere('parent_id', $categoryId)->pluck('id');
-      $query->whereIn('category_id', $categoryIds);
-    }
+      if ($request->filled('kategori')) {
+          $categoryId = $request->kategori;
+          $categoryIds = Category::where('id', $categoryId)
+              ->orWhere('parent_id', $categoryId)
+              ->pluck('id');
+          $query->whereIn('category_id', $categoryIds);
+      }
 
-    $products = $query->orderBy('name_product', 'asc')->get();
-    $customers = Customer::query()->where('status', 1)->orderBy('name', 'asc')->get();
-    $kategoris = Category::whereNull('parent_id')->with('children')->get();
-    $taxes = Taxe::all();
-    $referensi = $this->generateInvoiceNumber();
-    $banks = Bank::query()->where('is_active', true)->orderBy('nama_bank', 'asc')->get();
+      $products = $query->orderBy('name_product', 'asc')->get();
 
-    return view('pos::penjualan.create', compact('products', 'customers', 'kategoris', 'taxes', 'referensi', 'banks'));
+      $customers = Customer::where('status', 1)->orderBy('name', 'asc')->get();
+      $kategoris = Category::whereNull('parent_id')->with('children')->get();
+      $taxes     = Taxe::all();
+      $referensi = $this->generateInvoiceNumber();
+      $banks     = Bank::where('is_active', true)->orderBy('nama_bank', 'asc')->get();
+
+      return view('pos::penjualan.create', compact(
+          'products', 'customers', 'kategoris', 'taxes', 'referensi', 'banks'
+      ));
   }
 
   private function generateInvoiceNumber()

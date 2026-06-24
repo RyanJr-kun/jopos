@@ -2,54 +2,67 @@
 <div class="pos-product-scroll" id="pos-product-scroll">
     <div id="product-list">
 
-        @forelse ($products as $produk)
-            {{-- Wrapper untuk animasi + filter kategori --}}
+       @forelse ($products as $produk)
+            @php
+                $hargaDiskon = $produk->harga_diskon;
+                // Hitung SEKALI, pakai berkali-kali
+                $stokSimple  = $produk->stocks->sum('qty');
+                $hasVariant  = $produk->variants->isNotEmpty();
+                $imgUrl      = $produk->primaryImage
+                                ? Storage::url($produk->primaryImage->path)
+                                : asset('assets/img/produk.png');
+                $promoAktif  = $produk->promotions->first(); // sudah eager-load
+
+                // JSON variants dihitung sekali
+                $variantsJson = $hasVariant
+                    ? json_encode(
+                        $produk->variants->map(fn($v) => [
+                            'id'   => $v->id,
+                            'name' => $v->options->pluck('value')->implode(' / ')
+                                        ?: 'SKU: ' . $v->sku,
+                            'stok' => $v->stocks->sum('qty'),
+                        ])
+                    )
+                    : '[]';
+
+                // Stok total = simple + semua varian (jika ada)
+                $stokTotal = $hasVariant
+                    ? $produk->variants->sum(fn($v) => $v->stocks->sum('qty'))
+                    : $stokSimple;
+            @endphp
+
             <div class="product-card-wrap" data-product-category-id="{{ $produk->category_id }}">
-                <div class="product-card-pos" data-id="{{ $produk->id }}" data-name="{{ e($produk->name_product) }}"
-                    data-harga="{{ $produk->harga_diskon ?? $produk->harga_jual }}"
+                <div class="product-card-pos"
+                    data-id="{{ $produk->id }}"
+                    data-name="{{ e($produk->name_product) }}"
+                    data-harga="{{ $hargaDiskon ?? $produk->harga_jual }}"
                     data-harga-asli="{{ $produk->harga_jual }}"
-                    data-img="{{ $produk->primaryImage ? Storage::url($produk->primaryImage->path) : asset('assets/img/produk.png') }}"
-                    data-stok="{{ $produk->stocks->sum('qty') }}"
+                    data-img="{{ $imgUrl }}"
+                    data-stok="{{ $stokTotal }}"
                     data-wajib-seri="{{ $produk->wajib_seri ? 'true' : 'false' }}"
-                    data-pajak-id="{{ $produk->taxe_id }}" data-pajak-rate="{{ $produk->pajak->rate ?? 0 }}"
-                    {{-- TAMBAHAN: Deteksi Varian --}} data-has-variant="{{ $produk->variants->isNotEmpty() ? 'true' : 'false' }}"
-                    data-variants="{{ $produk->variants->isNotEmpty()
-                        ? json_encode(
-                            $produk->variants->map(function ($v) {
-                                // Kumpulkan semua value dari options (misal: "Hitam", "XL")
-                                $options = $v->options->pluck('value')->toArray();
-                    
-                                // Gabungkan dengan garis miring, atau gunakan SKU jika tidak ada opsi
-                                $variantName = !empty($options) ? implode(' / ', $options) : 'SKU: ' . $v->sku;
-                    
-                                return [
-                                    'id' => $v->id,
-                                    'name' => $variantName, // Sekarang name akan berisi "Hitam / XL"
-                                    'stok' => $v->stocks->sum('qty'),
-                                ];
-                            }),
-                        )
-                        : '[]' }}"
-                    data-disabled="{{ $produk->stocks->sum('qty') < 1 && $produk->variants->isEmpty() ? 'true' : 'false' }}"
+                    data-pajak-id="{{ $produk->taxe_id }}"
+                    data-pajak-rate="{{ $produk->pajak->rate ?? 0 }}"
+                    data-has-variant="{{ $hasVariant ? 'true' : 'false' }}"
+                    data-variants="{{ $variantsJson }}"
+                    data-disabled="{{ $stokTotal < 1 ? 'true' : 'false' }}"
                     role="button">
 
-                    {{-- Gambar --}}
+                    {{-- Gambar — $imgUrl dipakai ulang, tidak hitung ulang --}}
                     <div class="product-img-wrap">
-                        <img src="{{ $produk->primaryImage ? Storage::url($produk->primaryImage->path) : asset('assets/img/produk.png') }}"
-                            alt="Gambar {{ e($produk->name_product) }}" loading="lazy"
-                            class="w-100 h-100 object-cover">
+                        <img src="{{ $imgUrl }}"
+                            alt="Gambar {{ e($produk->name_product) }}"
+                            loading="lazy" class="w-100 h-100 object-cover">
                     </div>
 
                     {{-- Badge --}}
-                    @if ($produk->stocks->sum('qty') < 1)
+                    @if ($stokTotal < 1)
                         <div class="product-badge">
                             <span class="badge bg-label-danger">Stok Habis</span>
                         </div>
-                    @elseif($produk->promotions->isNotEmpty() && ($promo = $produk->promotions->first()))
+                    @elseif ($promoAktif)
                         <div class="product-badge">
-                            @if ($promo->type == 'percentage')
-                                <span class="badge bg-label-danger">{{ (int) $promo->nilai_diskon }}%
-                                    OFF</span>
+                            @if ($promoAktif->type == 'percentage')
+                                <span class="badge bg-label-danger">{{ (int) $promoAktif->nilai_diskon }}% OFF</span>
                             @else
                                 <span class="badge bg-label-info">PROMO</span>
                             @endif
@@ -61,19 +74,17 @@
                         <p class="product-category">{{ $produk->category->name }}</p>
                         <p class="product-name">{{ $produk->name_product }}</p>
                         <div class="d-flex flex-column">
-                            @if ($produk->harga_diskon)
+                            @if ($hargaDiskon)
                                 <span class="price-original">{{ $produk->harga_formatted }}</span>
-                                <span class="price-main text-hover">
-                                    {{ 'Rp ' . number_format($produk->harga_diskon, 0, ',', '.') }}
-                                </span>
+                                <span class="price-main">Rp {{ number_format($hargaDiskon, 0, ',', '.') }}</span>
                             @else
-                                <span class="price-main text-hover">{{ $produk->harga_formatted }}</span>
+                                <span class="price-main">{{ $produk->harga_formatted }}</span>
                             @endif
                             <span class="stock-info">
-                                {{ $produk->stocks->sum('qty') }} {{ $produk->unit->singkat }}
+                                {{ $stokTotal }} {{ $produk->unit->singkat }}
                             </span>
                         </div>
-                        @if ($produk->stocks->sum('qty') < 1)
+                        @if ($stokTotal < 1)
                             <p class="text-danger text-center fw-bold mb-0" style="font-size:.65rem; margin-top:4px;">
                                 Stok Habis
                             </p>
