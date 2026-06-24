@@ -32,62 +32,82 @@ class MarketController extends Controller
             ->groupBy('posisi');  // groupBy di PHP, bukan SQL
 
         // ── FIX B: Products — tambah withSum stocks (ganti ->with('stocks')) ─
-        $products = Product::with(['category', 'unit', 'brand', 'primaryImage',
+        $products = Product::with([
+            'category',
+            'unit',
+            'brand',
+            'primaryImage',
             'promotions' => fn($q) => $q->select(
-                    'promotions.id','promotions.type','promotions.nilai_diskon',
-                    'promotions.max_diskon','promotions.status',
-                    'promotions.tanggal_mulai','promotions.tanggal_berakhir'
-                )
+                'promotions.id',
+                'promotions.type',
+                'promotions.nilai_diskon',
+                'promotions.max_diskon',
+                'promotions.status',
+                'promotions.tanggal_mulai',
+                'promotions.tanggal_berakhir'
+            )
                 ->where('promotions.status', true)
                 ->where('promotions.tanggal_mulai', '<=', now())
                 ->where('promotions.tanggal_berakhir', '>=', now()),
         ])
-        ->withSum('stocks', 'qty')
-        ->latest()
-        ->paginate(10);
+            ->withSum('stocks', 'qty')
+            ->latest()
+            ->paginate(10);
 
         // ── FIX C: produkTerlaris — tambah primaryImage + withSum stocks ───
         $produkTerlaris = Product::with([
-            'unit', 'primaryImage',
+            'unit',
+            'primaryImage',
             'promotions' => fn($q) => $q->select(
-                    'promotions.id','promotions.type','promotions.nilai_diskon',
-                    'promotions.max_diskon','promotions.status',
-                    'promotions.tanggal_mulai','promotions.tanggal_berakhir'
-                )
+                'promotions.id',
+                'promotions.type',
+                'promotions.nilai_diskon',
+                'promotions.max_diskon',
+                'promotions.status',
+                'promotions.tanggal_mulai',
+                'promotions.tanggal_berakhir'
+            )
                 ->where('promotions.status', true)
                 ->where('promotions.tanggal_mulai', '<=', now())
                 ->where('promotions.tanggal_berakhir', '>=', now()),
         ])
-        ->withSum('stocks', 'qty')
-        ->withSum(['itemSales as total_terjual' => function ($query) {
-            $query->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-                ->where('sales.status_pembayaran', '!=', 'Dibatalkan');
-        }], 'jumlah')
-        ->orderByDesc('total_terjual')
-        ->limit(6)
-        ->get();
+            ->withSum('stocks', 'qty')
+            ->withSum(['itemSales as total_terjual' => function ($query) {
+                $query->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                    ->where('sales.status_pembayaran', '!=', 'Dibatalkan');
+            }], 'jumlah')
+            ->orderByDesc('total_terjual')
+            ->limit(6)
+            ->get();
 
         // ── FIX D: produkPromotion — tambah primaryImage + withSum stocks ──
         $produkPromotion = Product::with([
-            'unit', 'primaryImage',
+            'unit',
+            'primaryImage',
             'promotions' => fn($q) => $q->select(
-                    'promotions.id','promotions.type','promotions.nilai_diskon',
-                    'promotions.max_diskon','promotions.status',
-                    'promotions.tanggal_mulai','promotions.tanggal_berakhir'
-                )
+                'promotions.id',
+                'promotions.type',
+                'promotions.nilai_diskon',
+                'promotions.max_diskon',
+                'promotions.status',
+                'promotions.tanggal_mulai',
+                'promotions.tanggal_berakhir'
+            )
                 ->where('promotions.status', true)
                 ->where('promotions.tanggal_mulai', '<=', now())
                 ->where('promotions.tanggal_berakhir', '>=', now()),
         ])
-        ->withSum('stocks', 'qty')
-        ->whereHas('promotions', fn($q) => $q
-            ->where('status', true)
-            ->where('tanggal_mulai', '<=', now())
-            ->where('tanggal_berakhir', '>=', now())
-        )
-        ->inRandomOrder()
-        ->limit(8)
-        ->get();
+            ->withSum('stocks', 'qty')
+            ->whereHas(
+                'promotions',
+                fn($q) => $q
+                    ->where('status', true)
+                    ->where('tanggal_mulai', '<=', now())
+                    ->where('tanggal_berakhir', '>=', now())
+            )
+            ->inRandomOrder()
+            ->limit(8)
+            ->get();
 
         $promotions = Promotion::where('status', true)
             ->where('tanggal_mulai', '<=', now())
@@ -119,9 +139,16 @@ class MarketController extends Controller
      * @return \Illuminate\View\View
      */
 
-    public function produk(\Illuminate\Http\Request $request)
+    public function produk(Request $request)
     {
-        $query = Product::with(['category', 'unit', 'brand', 'promotions', 'stocks']);
+        $query = Product::with([
+            'category',
+            'unit',
+            'brand',
+            'promotions',
+            'stocks',
+            'primaryImage'
+        ]);
 
         // Filter Kategori (Mencakup Parent & Child)
         if ($request->filled('kategori')) {
@@ -190,12 +217,10 @@ class MarketController extends Controller
         }
 
         $products = $query->paginate(20)->withQueryString();
-        $kategorisForFilter = Category::whereHas('products')->orderBy('name')->get();
 
         if ($request->ajax()) {
             return view('ecommerce::market._produk_list', compact('products'))->render();
         }
-
         $kategoris = Category::with('children')->whereNull('parent_id')->get();
 
         $brands = Brand::whereHas('products')
@@ -204,9 +229,8 @@ class MarketController extends Controller
 
         return view('ecommerce::market.produk', compact(
             'products',
-            'kategorisForFilter',
             'kategoris',
-            'brands'          // ← Data brand dikirim ke view
+            'brands'
         ));
     }
 
@@ -222,24 +246,29 @@ class MarketController extends Controller
         $produk = Product::with(['category', 'brand', 'unit', 'garansi', 'pajak', 'user', 'images', 'variants.options', 'stocks'])
             ->where('slug', $slug)
             ->firstOrFail();
-        // MarketController@produkDetail
+
         $produkSerupa = Product::with([
-            'unit', 'primaryImage',
+            'unit',
+            'primaryImage',
             'promotions' => fn($q) => $q->select(
-                    'promotions.id','promotions.type','promotions.nilai_diskon',
-                    'promotions.max_diskon','promotions.status',
-                    'promotions.tanggal_mulai','promotions.tanggal_berakhir'
-                )
+                'promotions.id',
+                'promotions.type',
+                'promotions.nilai_diskon',
+                'promotions.max_diskon',
+                'promotions.status',
+                'promotions.tanggal_mulai',
+                'promotions.tanggal_berakhir'
+            )
                 ->where('promotions.status', true)
                 ->where('promotions.tanggal_mulai', '<=', now())
                 ->where('promotions.tanggal_berakhir', '>=', now()),
         ])
-        ->withSum('stocks', 'qty')              // ← tambah ini
-        ->where('category_id', $produk->category_id)
-        ->where('id', '!=', $produk->id)
-        ->inRandomOrder()
-        ->limit(5)
-        ->get();
+            ->withSum('stocks', 'qty')
+            ->where('category_id', $produk->category_id)
+            ->where('id', '!=', $produk->id)
+            ->inRandomOrder()
+            ->limit(5)
+            ->get();
 
         $kategoris = Category::with('children')->whereNull('parent_id')->get();
 

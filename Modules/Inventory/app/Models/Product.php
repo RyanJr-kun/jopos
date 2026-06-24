@@ -21,7 +21,7 @@ class Product extends Model
 
   protected $guarded = ['id'];
   protected $with = [];
-  
+
   public function sluggable(): array
   {
     return [
@@ -65,7 +65,7 @@ class Product extends Model
   }
   public function category(): BelongsTo
   {
-    return $this->belongsTo(Category::class);
+    return $this->belongsTo(Category::class, 'category_id');
   }
   public function brand(): BelongsTo
   {
@@ -130,67 +130,67 @@ class Product extends Model
   // PROMO (tidak diubah)
   // -------------------------------------------------------
   public function getActivePromotionAttribute()
-    {
-        // ── Jalur 1: Relasi sudah di-eager-load dari controller ──────────────
-        // Ini yang terjadi di POS create() setelah kita tambahkan with('promotions')
-        if ($this->relationLoaded('promotions')) {
-            // Cari promo aktif dari collection yang sudah ada di memory
-            $promo = $this->promotions
-                ->where('status', true)
-                ->filter(fn($p) => $p->tanggal_mulai <= now() && $p->tanggal_berakhir >= now())
-                ->first();
+  {
+    // ── Jalur 1: Relasi sudah di-eager-load dari controller ──────────────
+    // Ini yang terjadi di POS create() setelah kita tambahkan with('promotions')
+    if ($this->relationLoaded('promotions')) {
+      // Cari promo aktif dari collection yang sudah ada di memory
+      $promo = $this->promotions
+        ->where('status', true)
+        ->filter(fn($p) => $p->tanggal_mulai <= now() && $p->tanggal_berakhir >= now())
+        ->first();
 
-            // Fallback global promo: tidak bisa dicek dari memory karena
-            // global promo tidak di-attach ke produk ini.
-            // Untuk POS/listing, kita skip global promo (return null saja).
-            // Untuk halaman detail produk, eager-load tidak dipakai jadi masuk Jalur 2.
-            return $promo;
-        }
-
-        // ── Jalur 2: Relasi belum di-load — query normal (untuk halaman detail, dll) ──
-        $promo = $this->promotions()
-            ->where('status', true)
-            ->where('tanggal_mulai', '<=', now())
-            ->where('tanggal_berakhir', '>=', now())
-            ->first();
-
-        if (! $promo) {
-            // Global promotion: berlaku untuk semua produk tanpa assignment spesifik
-            $promo = Promotion::where('status', true)
-                ->where('tanggal_mulai', '<=', now())
-                ->where('tanggal_berakhir', '>=', now())
-                ->whereDoesntHave('products')
-                ->first();
-        }
-
-        return $promo;
+      // Fallback global promo: tidak bisa dicek dari memory karena
+      // global promo tidak di-attach ke produk ini.
+      // Untuk POS/listing, kita skip global promo (return null saja).
+      // Untuk halaman detail produk, eager-load tidak dipakai jadi masuk Jalur 2.
+      return $promo;
     }
+
+    // ── Jalur 2: Relasi belum di-load — query normal (untuk halaman detail, dll) ──
+    $promo = $this->promotions()
+      ->where('status', true)
+      ->where('tanggal_mulai', '<=', now())
+      ->where('tanggal_berakhir', '>=', now())
+      ->first();
+
+    if (! $promo) {
+      // Global promotion: berlaku untuk semua produk tanpa assignment spesifik
+      $promo = Promotion::where('status', true)
+        ->where('tanggal_mulai', '<=', now())
+        ->where('tanggal_berakhir', '>=', now())
+        ->whereDoesntHave('products')
+        ->first();
+    }
+
+    return $promo;
+  }
 
   public function getHargaDiskonAttribute()
-    {
-        // ── Fix: simpan ke variabel lokal — jangan panggil $this->active_promotion DUA KALI ──
-        $promo = $this->active_promotion; // ← cukup sekali
+  {
+    // ── Fix: simpan ke variabel lokal — jangan panggil $this->active_promotion DUA KALI ──
+    $promo = $this->active_promotion; // ← cukup sekali
 
-        if (! $promo) {
-            return null;
-        }
-
-        $hargaAsli = $this->harga_jual;
-
-        if ($promo->type === 'percentage') {
-            $diskon = ($hargaAsli * $promo->nilai_diskon) / 100;
-            if ($promo->max_diskon && $diskon > $promo->max_diskon) {
-                $diskon = $promo->max_diskon;
-            }
-            return $hargaAsli - $diskon;
-        }
-
-        if ($promo->type === 'fixed') {
-            return max(0, $hargaAsli - $promo->nilai_diskon);
-        }
-
-        return null;
+    if (! $promo) {
+      return null;
     }
+
+    $hargaAsli = $this->harga_jual;
+
+    if ($promo->type === 'percentage') {
+      $diskon = ($hargaAsli * $promo->nilai_diskon) / 100;
+      if ($promo->max_diskon && $diskon > $promo->max_diskon) {
+        $diskon = $promo->max_diskon;
+      }
+      return $hargaAsli - $diskon;
+    }
+
+    if ($promo->type === 'fixed') {
+      return max(0, $hargaAsli - $promo->nilai_diskon);
+    }
+
+    return null;
+  }
 
   public function images()
   {

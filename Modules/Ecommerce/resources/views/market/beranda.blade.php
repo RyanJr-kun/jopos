@@ -335,38 +335,41 @@
                                 data-lg-slides="{{ $promoImg->isNotEmpty() ? 4 : 5 }}">
                                 <div class="swiper-wrapper py-2">
                                     @foreach ($produkPromotion as $produk)
-                                    @php
-                                        $promoAktif  = $produk->promotions->first();   // ← pakai relasi, bukan accessor
-                                        $hargaDiskon = $produk->harga_diskon;          // ← cache sekali
-                                        $stokQty     = $produk->stocks_sum_qty ?? 0;   // ← dari withSum, 0 query
-                                        $imgUrl      = $produk->primaryImage
-                                                        ? Storage::url($produk->primaryImage->path)
-                                                        : asset('assets/img/produk.png');
-                                    @endphp
+                                        @php
+                                            $promoAktif = $produk->promotions->first(); // ← pakai relasi, bukan accessor
+                                            $hargaDiskon = $produk->harga_diskon; // ← cache sekali
+                                            $stokQty = $produk->stocks_sum_qty ?? 0; // ← dari withSum, 0 query
+                                            $imgUrl = $produk->primaryImage
+                                                ? Storage::url($produk->primaryImage->path)
+                                                : asset('assets/img/produk.png');
+                                        @endphp
 
                                         <div class="swiper-slide h-auto">
                                             <div class="card product-card overflow-hidden h-100 d-flex flex-column">
                                                 <div class="product-card-img-container">
-                                                    <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                                                        <img src="{{ $imgUrl }}"
-                                                            alt="{{ $produk->name_product }}" loading="eager"
-                                                            class="card-img-top">
+                                                    <a
+                                                        href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
+                                                        <img src="{{ $imgUrl }}" alt="{{ $produk->name_product }}"
+                                                            loading="eager" class="card-img-top">
                                                         <div class="product-badge">
                                                             @if ($stokQty < 1)
                                                                 <span class="badge bg-danger">Habis</span>
                                                             @elseif ($promoAktif)
                                                                 @if ($promoAktif->type == 'percentage')
-                                                                    <span class="badge bg-danger">{{ (int) $promoAktif->nilai_diskon }}% OFF</span>
+                                                                    <span
+                                                                        class="badge bg-danger">{{ (int) $promoAktif->nilai_diskon }}%
+                                                                        OFF</span>
                                                                 @else
                                                                     <span class="badge bg-info">PROMO</span>
-                                                                @endif                                                            
-                                                            @else                                                        
-                                                                <span class="badge bg-warning fw-bolder rounded-4">Populer</span>
+                                                                @endif
+                                                            @else
+                                                                <span
+                                                                    class="badge bg-warning fw-bolder rounded-4">Populer</span>
                                                             @endif
                                                         </div>
                                                     </a>
                                                     <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
-                                                         @if ($stokQty > 0)
+                                                        @if ($stokQty > 0)
                                                             <button type="button"
                                                                 class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
                                                                 <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
@@ -394,14 +397,17 @@
                                                         </p>
                                                     </a>
                                                     <div class="mt-auto">
-                                                       @if ($hargaDiskon)
+                                                        @if ($hargaDiskon)
                                                             <div class="d-flex flex-column align-items-start">
-                                                                <span class="text-decoration-line-through">{{ $produk->harga_formatted }}</span>
-                                                                <span>Rp {{ number_format($hargaDiskon, 0, ',', '.') }}</span>
+                                                                <span
+                                                                    class="text-muted text-decoration-line-through product-price-old">{{ $produk->harga_formatted }}</span>
+                                                                <span class="fw-bold product-price-current text-hover">Rp
+                                                                    {{ number_format($hargaDiskon, 0, ',', '.') }}</span>
                                                             </div>
                                                         @else
                                                             <div>
-                                                                <span>{{ $produk->harga_formatted }}</span>
+                                                                <span
+                                                                    class="fw-bold mb-0 product-price-current text-hover">{{ $produk->harga_formatted }}</span>
                                                             </div>
                                                         @endif
                                                     </div>
@@ -483,13 +489,13 @@
                     <div class="swiper myBestsellerProductSwiper {{ $bestsellerImg->isNotEmpty() ? 'mt-0' : 'mt-2' }}">
                         <div class="swiper-wrapper py-2">
                             @foreach ($produkTerlaris as $produk)
-                                @php    
-                                    $promoAktif  = $produk->promotions->first();   // ← pakai relasi, bukan accessor
-                                    $hargaDiskon = $produk->harga_diskon;          // ← cache sekali
-                                    $stokQty     = $produk->stocks_sum_qty ?? 0;   // ← dari withSum, 0 query
-                                    $imgUrl      = $produk->primaryImage
-                                                    ? Storage::url($produk->primaryImage->path)
-                                                    : asset('assets/img/produk.png');
+                                @php
+                                    $promoAktif = $produk->promotions->first(); // ← pakai relasi, bukan accessor
+                                    $hargaDiskon = $produk->harga_diskon; // ← cache sekali
+                                    $stokQty = $produk->stocks_sum_qty ?? 0; // ← dari withSum, 0 query
+                                    $imgUrl = $produk->primaryImage
+                                        ? Storage::url($produk->primaryImage->path)
+                                        : asset('assets/img/produk.png');
                                 @endphp
                                 <div class="swiper-slide h-auto">
                                     <div class="card product-card overflow-hidden h-100 d-flex flex-column">
@@ -503,17 +509,20 @@
                                                         <span class="badge bg-danger">Habis</span>
                                                     @elseif ($promoAktif)
                                                         @if ($promoAktif->type == 'percentage')
-                                                            <span class="badge bg-danger">{{ (int) $promoAktif->nilai_diskon }}% OFF</span>
+                                                            <span
+                                                                class="badge bg-danger">{{ (int) $promoAktif->nilai_diskon }}%
+                                                                OFF</span>
                                                         @else
                                                             <span class="badge bg-info">PROMO</span>
-                                                        @endif                                                            
-                                                    @else                                                        
-                                                        <span class="badge bg-warning fw-bolder rounded-4">Bestseller</span>
+                                                        @endif
+                                                    @else
+                                                        <span
+                                                            class="badge bg-warning fw-bolder rounded-4">Bestseller</span>
                                                     @endif
                                                 </div>
                                             </a>
                                             <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
-                                                 @if ($stokQty > 0)
+                                                @if ($stokQty > 0)
                                                     <button type="button"
                                                         class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
                                                         <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
@@ -544,12 +553,15 @@
                                             <div class="mt-auto">
                                                 @if ($hargaDiskon)
                                                     <div class="d-flex flex-column align-items-start">
-                                                        <span class="text-decoration-line-through">{{ $produk->harga_formatted }}</span>
-                                                        <span>Rp {{ number_format($hargaDiskon, 0, ',', '.') }}</span>
+                                                        <span
+                                                            class="text-muted text-decoration-line-through product-price-old">{{ $produk->harga_formatted }}</span>
+                                                        <span class="fw-bold product-price-current text-hover">Rp
+                                                            {{ number_format($hargaDiskon, 0, ',', '.') }}</span>
                                                     </div>
                                                 @else
                                                     <div>
-                                                        <span>{{ $produk->harga_formatted }}</span>
+                                                        <span
+                                                            class="fw-bold mb-0 product-price-current text-hover">{{ $produk->harga_formatted }}</span>
                                                     </div>
                                                 @endif
                                             </div>
@@ -581,36 +593,37 @@
             </div>
             <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3">
                 @foreach ($products as $produk)
-                @php
-                    $promoAktif  = $produk->promotions->first();   // ← pakai relasi, bukan accessor
-                    $hargaDiskon = $produk->harga_diskon;          // ← cache sekali
-                    $stokQty     = $produk->stocks_sum_qty ?? 0;   // ← dari withSum, 0 query
-                    $imgUrl      = $produk->primaryImage
-                                    ? Storage::url($produk->primaryImage->path)
-                                    : asset('assets/img/produk.png');
-                @endphp
+                    @php
+                        $promoAktif = $produk->promotions->first(); // ← pakai relasi, bukan accessor
+                        $hargaDiskon = $produk->harga_diskon; // ← cache sekali
+                        $stokQty = $produk->stocks_sum_qty ?? 0; // ← dari withSum, 0 query
+                        $imgUrl = $produk->primaryImage
+                            ? Storage::url($produk->primaryImage->path)
+                            : asset('assets/img/produk.png');
+                    @endphp
                     <div class="col">
                         <div class="card product-card overflow-hidden h-100 d-flex flex-column">
                             <div class="product-card-img-container">
                                 <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                                    <img src="{{ $imgUrl }}"
-                                        alt="{{ $produk->name_product }}" loading="eager" class="card-img-top">
+                                    <img src="{{ $imgUrl }}" alt="{{ $produk->name_product }}" loading="eager"
+                                        class="card-img-top">
                                     <div class="product-badge">
                                         @if ($stokQty < 1)
                                             <span class="badge bg-danger">Habis</span>
                                         @elseif ($promoAktif)
                                             @if ($promoAktif->type == 'percentage')
-                                                <span class="badge bg-danger">{{ (int) $promoAktif->nilai_diskon }}% OFF</span>
+                                                <span class="badge bg-danger">{{ (int) $promoAktif->nilai_diskon }}%
+                                                    OFF</span>
                                             @else
                                                 <span class="badge bg-info">PROMO</span>
-                                            @endif                                                            
-                                        @else                                                        
+                                            @endif
+                                        @else
                                             <span class="badge bg-warning fw-bolder rounded-4">Baru</span>
                                         @endif
                                     </div>
                                 </a>
                                 <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
-                                     @if ($stokQty > 0)
+                                    @if ($stokQty > 0)
                                         <button type="button"
                                             class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
                                             <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
@@ -637,15 +650,18 @@
                                 </a>
                                 @if ($hargaDiskon)
                                     <div class="d-flex flex-column align-items-start">
-                                        <span class="text-decoration-line-through">{{ $produk->harga_formatted }}</span>
-                                        <span>Rp {{ number_format($hargaDiskon, 0, ',', '.') }}</span>
+                                        <span
+                                            class="text-muted text-decoration-line-through product-price-old">{{ $produk->harga_formatted }}</span>
+                                        <span class="fw-bold product-price-current text-hover">Rp
+                                            {{ number_format($hargaDiskon, 0, ',', '.') }}</span>
                                     </div>
                                 @else
                                     <div>
-                                        <span>{{ $produk->harga_formatted }}</span>
+                                        <span
+                                            class="fw-bold mb-0 product-price-current text-hover">{{ $produk->harga_formatted }}</span>
                                     </div>
                                 @endif
-                                
+
                             </div>
                         </div>
                     </div>

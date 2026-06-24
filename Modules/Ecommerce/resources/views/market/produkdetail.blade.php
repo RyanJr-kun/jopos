@@ -345,31 +345,38 @@
                 <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3 g-lg-4" data-aos="fade-up"
                     data-aos-delay="100">
                     @foreach ($produkSerupa as $serupa)
+                        @php
+                            $hargaDiskon = $serupa->harga_diskon;
+                            $stokQty = $serupa->stocks_sum_qty ?? 0;
+                            $promoAktif = $serupa->promotions->first();
+                            $imgUrl =
+                                $serupa->primaryImage && $serupa->primaryImage->path
+                                    ? Storage::url($serupa->primaryImage->path)
+                                    : asset('assets/img/produk.png');
+                        @endphp
                         <div class="col">
                             <div class="card product-card overflow-hidden h-100 d-flex flex-column">
                                 <div class="product-card-img-container">
                                     <a href="{{ route('market.produk.detail', ['slug' => $serupa->slug]) }}">
-                                        <img src="{{ $serupa->image_url }}" alt="{{ $serupa->name_product }}"
-                                            loading="eager" class="card-img-top">
-
-                                        @if ($serupa->stocks->sum('qty') < 1)
-                                            <div class="product-badge">
-                                                <span class="badge bg-danger fw-bold rounded-4">Habis</span>
-                                            </div>
-                                        @elseif($serupa->active_promotion)
-                                            @php $promo = $serupa->active_promotion @endphp
-                                            <div class="product-badge">
-                                                @if ($promo->type == 'percentage')
-                                                    <span class="badge bg-danger">{{ (int) $promo->nilai_diskon }}%
+                                        <img src="{{ $imgUrl }}" alt="{{ $serupa->name_product }}"
+                                            class="card-img-top">
+                                        <div class="product-badge">
+                                            @if ($stokQty < 1)
+                                                <span class="badge bg-danger">Habis</span>
+                                            @elseif ($promoAktif)
+                                                @if ($promoAktif->type == 'percentage')
+                                                    <span class="badge bg-danger">{{ (int) $promoAktif->nilai_diskon }}%
                                                         OFF</span>
                                                 @else
                                                     <span class="badge bg-info">PROMO</span>
                                                 @endif
-                                            </div>
-                                        @endif
+                                            @else
+                                                <span class="badge bg-warning fw-bolder rounded-4">Baru</span>
+                                            @endif
+                                        </div>
                                     </a>
                                     <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
-                                        @if ($produk->stocks->sum('qty') > 0)
+                                        @if ($stokQty > 0)
                                             <button type="button"
                                                 class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
                                                 <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
@@ -395,17 +402,17 @@
                                         <p class="product-title fw-bold" title="{{ $serupa->name_product }}">
                                             {{ $serupa->name_product }}</p>
                                     </a>
-                                    @if ($serupa->harga_diskon)
-                                        <div>
-                                            <span class="text-muted text-decoration-line-through product-price-old">
-                                                {{ $serupa->harga_formatted }}</span>
-                                            <span class="fw-bold product-price-current text-hover">
-                                                {{ 'Rp ' . number_format($serupa->harga_diskon, 0, ',', '.') }}</span>
+                                    @if ($hargaDiskon)
+                                        <div class="d-flex flex-column align-items-start">
+                                            <span
+                                                class="text-muted text-decoration-line-through product-price-old">{{ $serupa->harga_formatted }}</span>
+                                            <span class="fw-bold product-price-current text-hover">Rp
+                                                {{ number_format($hargaDiskon, 0, ',', '.') }}</span>
                                         </div>
                                     @else
                                         <div>
-                                            <span class="fw-bold mb-0 product-price-current text-hover">
-                                                {{ $serupa->harga_formatted }}</span>
+                                            <span
+                                                class="fw-bold mb-0 product-price-current text-hover">{{ $serupa->harga_formatted }}</span>
                                         </div>
                                     @endif
                                 </div>

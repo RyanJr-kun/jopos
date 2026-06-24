@@ -2,56 +2,47 @@
 <div class="pos-product-scroll" id="pos-product-scroll">
     <div id="product-list">
 
-       @forelse ($products as $produk)
+        @forelse ($products as $produk)
             @php
                 $hargaDiskon = $produk->harga_diskon;
-                // Hitung SEKALI, pakai berkali-kali
-                $stokSimple  = $produk->stocks->sum('qty');
-                $hasVariant  = $produk->variants->isNotEmpty();
-                $imgUrl      = $produk->primaryImage
-                                ? Storage::url($produk->primaryImage->path)
-                                : asset('assets/img/produk.png');
-                $promoAktif  = $produk->promotions->first(); // sudah eager-load
+                $stokSimple = $produk->stocks_sum_qty ?? 0;
+                $hasVariant = $produk->variants->isNotEmpty();
+                $imgUrl =
+                    $produk->primaryImage && $produk->primaryImage->path
+                        ? Storage::url($produk->primaryImage->path)
+                        : asset('assets/img/produk.png');
+                $promoAktif = $produk->promotions->first(); // sudah eager-load
 
                 // JSON variants dihitung sekali
                 $variantsJson = $hasVariant
                     ? json_encode(
-                        $produk->variants->map(fn($v) => [
-                            'id'   => $v->id,
-                            'name' => $v->options->pluck('value')->implode(' / ')
-                                        ?: 'SKU: ' . $v->sku,
-                            'stok' => $v->stocks->sum('qty'),
-                        ])
+                        $produk->variants->map(
+                            fn($v) => [
+                                'id' => $v->id,
+                                'name' => $v->options->pluck('value')->implode(' / ') ?: 'SKU: ' . $v->sku,
+                                'stok' => $v->stocks->sum('qty'),
+                            ],
+                        ),
                     )
                     : '[]';
 
                 // Stok total = simple + semua varian (jika ada)
-                $stokTotal = $hasVariant
-                    ? $produk->variants->sum(fn($v) => $v->stocks->sum('qty'))
-                    : $stokSimple;
+                $stokTotal = $hasVariant ? $produk->variants->sum(fn($v) => $v->stocks->sum('qty')) : $stokSimple;
             @endphp
 
             <div class="product-card-wrap" data-product-category-id="{{ $produk->category_id }}">
-                <div class="product-card-pos"
-                    data-id="{{ $produk->id }}"
-                    data-name="{{ e($produk->name_product) }}"
-                    data-harga="{{ $hargaDiskon ?? $produk->harga_jual }}"
-                    data-harga-asli="{{ $produk->harga_jual }}"
-                    data-img="{{ $imgUrl }}"
-                    data-stok="{{ $stokTotal }}"
+                <div class="product-card-pos" data-id="{{ $produk->id }}" data-name="{{ e($produk->name_product) }}"
+                    data-harga="{{ $hargaDiskon ?? $produk->harga_jual }}" data-harga-asli="{{ $produk->harga_jual }}"
+                    data-img="{{ $imgUrl }}" data-stok="{{ $stokTotal }}"
                     data-wajib-seri="{{ $produk->wajib_seri ? 'true' : 'false' }}"
-                    data-pajak-id="{{ $produk->taxe_id }}"
-                    data-pajak-rate="{{ $produk->pajak->rate ?? 0 }}"
-                    data-has-variant="{{ $hasVariant ? 'true' : 'false' }}"
-                    data-variants="{{ $variantsJson }}"
-                    data-disabled="{{ $stokTotal < 1 ? 'true' : 'false' }}"
-                    role="button">
+                    data-pajak-id="{{ $produk->taxe_id }}" data-pajak-rate="{{ $produk->pajak->rate ?? 0 }}"
+                    data-has-variant="{{ $hasVariant ? 'true' : 'false' }}" data-variants="{{ $variantsJson }}"
+                    data-disabled="{{ $stokTotal < 1 ? 'true' : 'false' }}" role="button">
 
                     {{-- Gambar — $imgUrl dipakai ulang, tidak hitung ulang --}}
                     <div class="product-img-wrap">
-                        <img src="{{ $imgUrl }}"
-                            alt="Gambar {{ e($produk->name_product) }}"
-                            loading="lazy" class="w-100 h-100 object-cover">
+                        <img src="{{ $imgUrl }}" alt="Gambar {{ e($produk->name_product) }}" loading="lazy"
+                            class="w-100 h-100 object-cover">
                     </div>
 
                     {{-- Badge --}}

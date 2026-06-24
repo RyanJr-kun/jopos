@@ -75,59 +75,71 @@ class SaleController extends Controller implements HasMiddleware
    */
   public function create(Request $request)
   {
-      $storeId = Auth::user()->employee?->store_id; // ← Pindah ke atas, reuse
+    $storeId = Auth::user()->employee?->store_id; // ← Pindah ke atas, reuse
 
-      $query = Product::with([
-          'category',                  
-          'unit',
-          'pajak',
-          'primaryImage',
-          'promotions' => function ($q) {
-              $q->select('promotions.id', 'promotions.type', 'promotions.nilai_diskon',
-                          'promotions.max_diskon', 'promotions.status',
-                          'promotions.tanggal_mulai', 'promotions.tanggal_berakhir')
-                ->where('promotions.status', true)
-                ->where('promotions.tanggal_mulai', '<=', now())
-                ->where('promotions.tanggal_berakhir', '>=', now());
+    $query = Product::with([
+      'category',
+      'unit',
+      'pajak',
+      'primaryImage',
+      'promotions' => function ($q) {
+        $q->select(
+          'promotions.id',
+          'promotions.type',
+          'promotions.nilai_diskon',
+          'promotions.max_diskon',
+          'promotions.status',
+          'promotions.tanggal_mulai',
+          'promotions.tanggal_berakhir'
+        )
+          ->where('promotions.status', true)
+          ->where('promotions.tanggal_mulai', '<=', now())
+          ->where('promotions.tanggal_berakhir', '>=', now());
+      },
+      'variants' => function ($q) use ($storeId) {
+        $q->with([
+          'stocks' => function ($sq) use ($storeId) {
+            if ($storeId) $sq->where('store_id', $storeId);
           },
-          'variants' => function ($q) use ($storeId) {
-              $q->with([
-                  'stocks' => function ($sq) use ($storeId) {
-                      if ($storeId) $sq->where('store_id', $storeId);
-                  },
-                  'options.variantType',     // ← TAMBAH: eager-load ProductVariantType sekaligus
-              ]);
-          },
-          'stocks' => function ($q) use ($storeId) {
-              if ($storeId) $q->where('store_id', $storeId);
-          },
-      ])
+          'options.variantType',     // ← TAMBAH: eager-load ProductVariantType sekaligus
+        ]);
+      },
+      'stocks' => function ($q) use ($storeId) {
+        if ($storeId) $q->where('store_id', $storeId);
+      },
+    ])
+      ->withSum('stocks', 'qty')
       ->where(function ($q) use ($storeId) {
-          $q->whereHas('stocks', fn($sq) => $sq->where('qty', '>', 0)
-                ->when($storeId, fn($sq2) => $sq2->where('store_id', $storeId)))
-            ->orWhereHas('variants.stocks', fn($vq) => $vq->where('qty', '>', 0)
-                ->when($storeId, fn($vq2) => $vq2->where('store_id', $storeId)));
+        $q->whereHas('stocks', fn($sq) => $sq->where('qty', '>', 0)
+          ->when($storeId, fn($sq2) => $sq2->where('store_id', $storeId)))
+          ->orWhereHas('variants.stocks', fn($vq) => $vq->where('qty', '>', 0)
+            ->when($storeId, fn($vq2) => $vq2->where('store_id', $storeId)));
       });
 
-      if ($request->filled('kategori')) {
-          $categoryId = $request->kategori;
-          $categoryIds = Category::where('id', $categoryId)
-              ->orWhere('parent_id', $categoryId)
-              ->pluck('id');
-          $query->whereIn('category_id', $categoryIds);
-      }
+    if ($request->filled('kategori')) {
+      $categoryId = $request->kategori;
+      $categoryIds = Category::where('id', $categoryId)
+        ->orWhere('parent_id', $categoryId)
+        ->pluck('id');
+      $query->whereIn('category_id', $categoryIds);
+    }
 
-      $products = $query->orderBy('name_product', 'asc')->get();
+    $products = $query->orderBy('name_product', 'asc')->get();
 
-      $customers = Customer::where('status', 1)->orderBy('name', 'asc')->get();
-      $kategoris = Category::whereNull('parent_id')->with('children')->get();
-      $taxes     = Taxe::all();
-      $referensi = $this->generateInvoiceNumber();
-      $banks     = Bank::where('is_active', true)->orderBy('nama_bank', 'asc')->get();
+    $customers = Customer::where('status', 1)->orderBy('name', 'asc')->get();
+    $kategoris = Category::whereNull('parent_id')->with('children')->get();
+    $taxes     = Taxe::all();
+    $referensi = $this->generateInvoiceNumber();
+    $banks     = Bank::where('is_active', true)->orderBy('nama_bank', 'asc')->get();
 
-      return view('pos::penjualan.create', compact(
-          'products', 'customers', 'kategoris', 'taxes', 'referensi', 'banks'
-      ));
+    return view('pos::penjualan.create', compact(
+      'products',
+      'customers',
+      'kategoris',
+      'taxes',
+      'referensi',
+      'banks'
+    ));
   }
 
   private function generateInvoiceNumber()
@@ -371,7 +383,7 @@ class SaleController extends Controller implements HasMiddleware
   public function edit(Sale $penjualan)
   {
     // Eager load relasi untuk efisiensi
-    $penjualan->load('items.product.primaryImage', 'customer', 'user', 'items.pajak', 'items.varian.options', 'items.serialNumbers' );
+    $penjualan->load('items.product.primaryImage', 'customer', 'user', 'items.pajak', 'items.varian.options', 'items.serialNumbers');
 
     // Ambil data yang dibutuhkan untuk form, mirip seperti method create()
     $customers = Customer::query()->where('status', 1)->orderBy('name', 'asc')->get();
@@ -425,7 +437,7 @@ class SaleController extends Controller implements HasMiddleware
             $penjualan->update([
               'status_pembayaran' => 'Batal',
               'sisa_piutang' => 0,
-              ]);
+            ]);
           });
           session()->flash('success', 'Transaksi berhasil dibatalkan dan stok dikembalikan.');
         } catch (\Exception $e) {
@@ -451,27 +463,27 @@ class SaleController extends Controller implements HasMiddleware
 
     // prettier-ignore
     $validatedData = $request->validate([
-            'customer_id'           => 'nullable|exists:customers,id',
-            'tanggal_penjualan'     => 'required|date',
-            'tanggal_jatuh_tempo'   => 'nullable|date|after:tanggal_penjualan',
-            'metode_pembayaran'     => 'required|in:TUNAI,TRANSFER,QRIS',
-            'bank_id'               => 'nullable|exists:banks,id|required_if:metode_pembayaran,TRANSFER',
-            'catatan'               => 'nullable|string',
-            'jumlah_dibayar'        => 'required|numeric|min:0',
-            'service'               => 'nullable|numeric|min:0',
-            'ongkir'                => 'nullable|numeric|min:0',
-            'diskon'                => 'nullable|numeric|min:0',
+      'customer_id'           => 'nullable|exists:customers,id',
+      'tanggal_penjualan'     => 'required|date',
+      'tanggal_jatuh_tempo'   => 'nullable|date|after:tanggal_penjualan',
+      'metode_pembayaran'     => 'required|in:TUNAI,TRANSFER,QRIS',
+      'bank_id'               => 'nullable|exists:banks,id|required_if:metode_pembayaran,TRANSFER',
+      'catatan'               => 'nullable|string',
+      'jumlah_dibayar'        => 'required|numeric|min:0',
+      'service'               => 'nullable|numeric|min:0',
+      'ongkir'                => 'nullable|numeric|min:0',
+      'diskon'                => 'nullable|numeric|min:0',
 
-            'items'                         => 'required|array|min:1',
-            'items.*.product_id'            => 'required|exists:products,id',
-            'items.*.product_variant_id'    => 'nullable|exists:product_variants,id',
-            'items.*.jumlah'                => 'required|integer|min:1',
-            'items.*.harga_jual'            => 'required|numeric|min:0',
-            'items.*.diskon'                => 'required|numeric|min:0',
-            'items.*.taxe_id'               => 'nullable|exists:taxes,id',
-            'items.*.serial_numbers'        => 'nullable|array',
-            'items.*.serial_numbers.*'      => 'string',
-        ]);
+      'items'                         => 'required|array|min:1',
+      'items.*.product_id'            => 'required|exists:products,id',
+      'items.*.product_variant_id'    => 'nullable|exists:product_variants,id',
+      'items.*.jumlah'                => 'required|integer|min:1',
+      'items.*.harga_jual'            => 'required|numeric|min:0',
+      'items.*.diskon'                => 'required|numeric|min:0',
+      'items.*.taxe_id'               => 'nullable|exists:taxes,id',
+      'items.*.serial_numbers'        => 'nullable|array',
+      'items.*.serial_numbers.*'      => 'string',
+    ]);
 
     try {
       $pajakIds = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
@@ -817,7 +829,7 @@ class SaleController extends Controller implements HasMiddleware
     return ''; // Kosongkan jika tidak ada opsi
   }
 
-  
+
   public function getProduct(Request $request)
   {
     $search = $request->query('search');
@@ -825,47 +837,47 @@ class SaleController extends Controller implements HasMiddleware
 
     // Load relasi pajak, varian, dan opsi variannya
     $query = Product::with([
-          'pajak',
-          'primaryImage',
-          'variants' => function ($q) use ($storeId) {
-              $q->where('is_active', 1)
-                ->with('options')
-                // HITUNG STOK VARIAN LANGSUNG DI DATABASE
-                ->withSum(['stocks as stok_varian' => function ($sq) use ($storeId) {
-                    if ($storeId) {
-                        $sq->where('store_id', $storeId);
-                    }
-                }], 'qty')
-                // HITUNG SN VARIAN LANGSUNG DI DATABASE
-                ->withCount(['serialNumbers as sn_count' => function ($sq) {
-                    $sq->where('status', 'Tersedia');
-                }]);
-          }
-      ])
+      'pajak',
+      'primaryImage',
+      'variants' => function ($q) use ($storeId) {
+        $q->where('is_active', 1)
+          ->with('options')
+          // HITUNG STOK VARIAN LANGSUNG DI DATABASE
+          ->withSum(['stocks as stok_varian' => function ($sq) use ($storeId) {
+            if ($storeId) {
+              $sq->where('store_id', $storeId);
+            }
+          }], 'qty')
+          // HITUNG SN VARIAN LANGSUNG DI DATABASE
+          ->withCount(['serialNumbers as sn_count' => function ($sq) {
+            $sq->where('status', 'Tersedia');
+          }]);
+      }
+    ])
       // HITUNG STOK PRODUK SIMPLE (Tanpa Varian) DI DATABASE
       ->withSum(['stocks as stok_produk_simple' => function ($sq) use ($storeId) {
-          $sq->whereNull('product_variant_id');
-          if ($storeId) {
-              $sq->where('store_id', $storeId);
-          }
+        $sq->whereNull('product_variant_id');
+        if ($storeId) {
+          $sq->where('store_id', $storeId);
+        }
       }], 'qty')
       // HITUNG SN PRODUK SIMPLE DI DATABASE
       ->withCount(['serialNumbers as sn_count_simple' => function ($sq) {
-          $sq->whereNull('product_variant_id')
-            ->where('status', 'Tersedia');
+        $sq->whereNull('product_variant_id')
+          ->where('status', 'Tersedia');
       }])
       ->when($search, function ($q, $search) {
-          $q->where(function ($subQ) use ($search) {
-              $subQ->where('name_product', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%")
-                  ->orWhere('barcode', 'like', "%{$search}%")
-                  ->orWhereHas('variants', function ($qv) use ($search) {
-                      $qv->where('sku', 'like', "%{$search}%")->orWhere('barcode', 'like', "%{$search}%");
-                  });
-          });
+        $q->where(function ($subQ) use ($search) {
+          $subQ->where('name_product', 'like', "%{$search}%")
+            ->orWhere('sku', 'like', "%{$search}%")
+            ->orWhere('barcode', 'like', "%{$search}%")
+            ->orWhereHas('variants', function ($qv) use ($search) {
+              $qv->where('sku', 'like', "%{$search}%")->orWhere('barcode', 'like', "%{$search}%");
+            });
+        });
       })
       ->when($request->boolean('wajib_seri'), function ($q) {
-          $q->where('wajib_seri', true);
+        $q->where('wajib_seri', true);
       })
       ->latest();
 

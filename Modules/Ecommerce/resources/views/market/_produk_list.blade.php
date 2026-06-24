@@ -24,32 +24,34 @@
 {{-- Grid Product: 2 kolom mobile, 3 tablet, 5 desktop --}}
 <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3" id="product-grid">
     @forelse ($products as $produk)
-     @php
-        $hargaDiskon = $produk->harga_diskon;          // cache sekali
-        $stokQty     = $produk->stocks_sum_qty         // dari withSum di produk()
-                    ?? $produk->stocks->sum('qty');     // fallback jika tidak ada
-        $promoAktif  = $produk->promotions->first();
-    @endphp
+        @php
+            $hargaDiskon = $produk->harga_diskon;
+            $stokQty = $produk->stocks_sum_qty ?? 0;
+            $promoAktif = $produk->promotions->first();
+            $imgUrl =
+                $produk->primaryImage && $produk->primaryImage->path
+                    ? Storage::url($produk->primaryImage->path)
+                    : asset('assets/img/produk.png');
+        @endphp
         <div class="col product-col">
             <div class="card product-card-pos product-card-compact h-100 overflow-hidden">
                 <div class="product-card-img-container">
                     <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
-                        <img src="{{ $produk->image_url }}" alt="{{ $produk->name_product }}" loading="lazy"
-                            class="card-img-top" alt="{{ $produk->name_product }}">
-                        {{-- Badge Promotion --}}
-                        @if ($stokQty < 1)
-                            <div class="product-badge">
-                                <span class="badge bg-danger badge-sm">Stok Habis</span>
-                            </div>
-                        @elseif($promoAktif)
-                            <div class="product-badge">
+                        <img src="{{ $imgUrl }}" class="card-img-top" alt="{{ $produk->name_product }}">
+                        <div class="product-badge">
+                            @if ($stokQty < 1)
+                                <span class="badge bg-danger">Habis</span>
+                            @elseif ($promoAktif)
                                 @if ($promoAktif->type == 'percentage')
-                                    <span class="badge bg-danger badge-sm">{{ (int) $promo->nilai_diskon }}% OFF</span>
+                                    <span class="badge bg-danger">{{ (int) $promoAktif->nilai_diskon }}%
+                                        OFF</span>
                                 @else
-                                    <span class="badge bg-info badge-sm">PROMO</span>
+                                    <span class="badge bg-info">PROMO</span>
                                 @endif
-                            </div>
-                        @endif
+                            @else
+                                <span class="badge bg-warning fw-bolder rounded-4">Baru</span>
+                            @endif
+                        </div>
                     </a>
                     <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
                         @if ($stokQty > 0)

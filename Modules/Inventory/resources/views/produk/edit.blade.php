@@ -129,7 +129,7 @@
                     </div>
 
                     {{-- Deskripsi Pakai Quill --}}
-                    <div class="col-md-12 mt-4">
+                    <div class="col-md-12">
                         <label class="form-label">Deskripsi Lengkap</label>
                         <div class="quill-wrapper">
                             <div id="quill-description">{!! old('description', $produk->description) !!}</div>

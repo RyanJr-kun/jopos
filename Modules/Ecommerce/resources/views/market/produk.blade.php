@@ -384,8 +384,6 @@
         </div>
     </section>
 
-    <x-market-footer></x-market-footer>
-
 @endsection
 
 @section('page-script')
