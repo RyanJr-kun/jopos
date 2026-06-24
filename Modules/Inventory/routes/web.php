@@ -43,22 +43,10 @@ Route::domain('jopos.' . $domain)->group(function () {
       ->name('stok.rendah')
       ->middleware('permission:view-stok-rendah');
 
-    // ---------------------------------------------------------
-    // 2. DATA UTAMA PRODUK (Master Data Products)
-    // ---------------------------------------------------------
-    Route::prefix('produk')
-      ->name('produk.')
-      ->group(function () {
-        Route::post('upload', [ProductController::class, 'upload'])->name('upload');
-        Route::delete('revert', [ProductController::class, 'revert'])->name('revert');
-        Route::get('checkSlug', [ProductController::class, 'checkSlug'])->name('checkSlug');
-      });
-    Route::resource('produk', ProductController::class)->parameter('produk', 'produk:slug');
-
     // Manajemen Serial Number
     Route::get('get-data/serial-number/produk', [SerialNumberController::class, 'getProduct'])->name('serialNumber.getProduct');
-    Route::resource('serialNumber', SerialNumberController::class)->except(['show', 'index']);
-    Route::get('serialNumber/{produk_slug?}', [SerialNumberController::class, 'index'])->name('serialNumber.index');
+    Route::get('serial-number/{produk_slug?}', [SerialNumberController::class, 'index'])->name('serial-number.index');
+    Route::resource('serial-number', SerialNumberController::class)->except(['show', 'index', 'create', 'edit']);
 
     // ---------------------------------------------------------
     // 3. MASTER DATA PENDUKUNG (Categories, Brands, Units, etc.)
@@ -118,5 +106,16 @@ Route::domain('jopos.' . $domain)->group(function () {
         Route::get('low-stock-notifications', [ProductController::class, 'getLowStockNotifications'])->name('notifications.low-stock');
         Route::get('notifications/unregistered-serials', [ProductController::class, 'getUnregisteredSerialNotifications'])->name('notifications.unregistered-serials');
       });
+
+    // ---------------------------------------------------------
+    // 2. DATA UTAMA PRODUK (Master Data Products)
+    // ---------------------------------------------------------
+
+    Route::prefix('produk')->name('produk.')->group(function () {
+        Route::post('upload', [ProductController::class, 'upload'])->name('upload');
+        Route::delete('revert', [ProductController::class, 'revert'])->name('revert');
+        Route::get('checkSlug', [ProductController::class, 'checkSlug'])->name('checkSlug');
+      });
+    Route::resource('produk', ProductController::class)->parameter('produk', 'produk:slug');
   });
 });

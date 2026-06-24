@@ -15,6 +15,7 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Modules\Inventory\Models\Category;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\SerialNumber;
@@ -787,36 +788,55 @@ class SaleController extends Controller implements HasMiddleware
   public function getProduct(Request $request)
   {
     $search = $request->query('search');
-
-    // Ambil ID Toko dari user yang login (sesuai logika Anda di cekStock)
     $storeId = Auth::user()->employee->store_id ?? null;
 
     // Load relasi pajak, varian, dan opsi variannya
     $query = Product::with([
-      'pajak',
-      'primaryImage',
-      'variants' => function ($q) {
-        // Pastikan memuat opsi untuk membentuk nama varian (misal: "Merah / XL")
-        $q->where('is_active', 1)->with('options');
-      },
-    ])
+          'pajak',
+          'primaryImage',
+          'variants' => function ($q) use ($storeId) {
+              $q->where('is_active', 1)
+                ->with('options')
+                // HITUNG STOK VARIAN LANGSUNG DI DATABASE
+                ->withSum(['stocks as stok_varian' => function ($sq) use ($storeId) {
+                    if ($storeId) {
+                        $sq->where('store_id', $storeId);
+                    }
+                }], 'qty')
+                // HITUNG SN VARIAN LANGSUNG DI DATABASE
+                ->withCount(['serialNumbers as sn_count' => function ($sq) {
+                    $sq->where('status', 'Tersedia');
+                }]);
+          }
+      ])
+      // HITUNG STOK PRODUK SIMPLE (Tanpa Varian) DI DATABASE
+      ->withSum(['stocks as stok_produk_simple' => function ($sq) use ($storeId) {
+          $sq->whereNull('product_variant_id');
+          if ($storeId) {
+              $sq->where('store_id', $storeId);
+          }
+      }], 'qty')
+      // HITUNG SN PRODUK SIMPLE DI DATABASE
+      ->withCount(['serialNumbers as sn_count_simple' => function ($sq) {
+          $sq->whereNull('product_variant_id')
+            ->where('status', 'Tersedia');
+      }])
       ->when($search, function ($q, $search) {
-        $q->where(function ($subQ) use ($search) {
-          $subQ
-            ->where('name_product', 'like', "%{$search}%")
-            ->orWhere('sku', 'like', "%{$search}%")
-            ->orWhere('barcode', 'like', "%{$search}%")
-            ->orWhereHas('variants', function ($qv) use ($search) {
-              $qv->where('sku', 'like', "%{$search}%")->orWhere('barcode', 'like', "%{$search}%");
-            });
-        });
+          $q->where(function ($subQ) use ($search) {
+              $subQ->where('name_product', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%")
+                  ->orWhere('barcode', 'like', "%{$search}%")
+                  ->orWhereHas('variants', function ($qv) use ($search) {
+                      $qv->where('sku', 'like', "%{$search}%")->orWhere('barcode', 'like', "%{$search}%");
+                  });
+          });
       })
       ->when($request->boolean('wajib_seri'), function ($q) {
-        $q->where('wajib_seri', true);
+          $q->where('wajib_seri', true);
       })
-      ->latest(); // Gunakan latest, jangan orderBy qty karena qty ada di tabel product_stocks
+      ->latest();
 
-    $products = $query->paginate(15);
+    $products = $query->paginate(30);
 
     $formattedData = [];
 
@@ -838,7 +858,11 @@ class SaleController extends Controller implements HasMiddleware
           if ($storeId) {
             $stockQuery->where('store_id', $storeId);
           }
-          $stokVarian = $stockQuery->sum('qty');
+
+          $stokVarian = $variant->stok_varian ?? 0;
+
+          $imagePath = $variant->img_variant ?? $product->primaryImage->path ?? null;
+          $finalImageUrl = $imagePath ? Storage::url($imagePath) : asset('assets/img/produk.png');
 
           if ($stokVarian > 0) {
             $formattedData[] = [
@@ -852,8 +876,7 @@ class SaleController extends Controller implements HasMiddleware
               'qty' => $stokVarian,
               'harga_beli' => $variant->harga_beli,
               'harga_jual' => $variant->harga_jual,
-              'image_url' => $product->image_url,
-              'img_produk' => $variant->img_variant ?? ($product->primaryImage->path ?? null),
+              'img_produk' => $finalImageUrl,
               'taxe_id' => $product->taxe_id,
               'pajak' => $product->pajak ? ['rate' => $product->pajak->rate] : null,
             ];
@@ -863,12 +886,11 @@ class SaleController extends Controller implements HasMiddleware
       // Skenario 2: Produk Simple (Tanpa Varian)
       else {
         // Hitung stok produk induk (dimana product_variant_id adalah null)
-        $stockQuery = ProductStock::query()->where('product_id', $product->id)->where('product_variant_id', '=', null);
+        $stokProduk = $product->stok_produk_simple ?? 0;
 
-        if ($storeId) {
-          $stockQuery->where('store_id', $storeId);
-        }
-        $stokProduk = $stockQuery->sum('qty');
+        $imagePath = $variant->img_variant ?? $product->primaryImage->path ?? null;
+        $finalImageUrl = $imagePath ? Storage::url($imagePath) : asset('assets/img/produk.png');
+
         if ($stokProduk > 0) {
           $formattedData[] = [
             'id' => $product->id,
@@ -880,8 +902,7 @@ class SaleController extends Controller implements HasMiddleware
             'qty' => $stokProduk,
             'harga_beli' => $product->harga_beli,
             'harga_jual' => $product->harga_jual,
-            'image_url' => $product->image_url,
-            'img_produk' => $product->primaryImage->path ?? null,
+            'img_produk' => $finalImageUrl,
             'taxe_id' => $product->taxe_id,
             'pajak' => $product->pajak ? ['rate' => $product->pajak->rate] : null,
             'wajib_seri' => $product->wajib_seri,

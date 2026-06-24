@@ -22,8 +22,6 @@ class Product extends Model
   protected $guarded = ['id'];
   protected $with = ['category', 'user', 'brand', 'unit', 'garansi'];
 
-  protected $appends = ['image_url'];
-
   public function sluggable(): array
   {
     return [

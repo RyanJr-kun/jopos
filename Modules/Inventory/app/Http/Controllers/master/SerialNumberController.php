@@ -28,19 +28,22 @@ class SerialNumberController extends Controller implements HasMiddleware
     ];
   }
 
-  public function index(Request $request, $produk_slug = null)
+  public function index(Request $request, $slug = null)
   {
     // Terima parameter slug
-    $query = SerialNumber::with(['produk.primaryImage', 'variant', 'penjualan'])->latest();
-    $produkDipilih = null; // Variabel untuk menampung produk yang dipilih via slug
+    $query = SerialNumber::with(['produk.primaryImage', 'variant.options', 'penjualan'])->latest();
+    $produkDipilih = null;
+    $varianDipilih = null;
 
-    // Jika ada slug dari URL, cari produknya
-    if ($produk_slug) {
-      $produkDipilih = Product::withCount('serialNumbers')->where('slug', $produk_slug)->first();
-      // Jika produk ditemukan, langsung filter daftar SN untuk produk tersebut
-      if ($produkDipilih) {
-        $query->where('product_id', $produkDipilih->id);
-      }
+    if ($slug) {
+        $produkDipilih = Product::where('slug', $slug)->firstOrFail();
+        
+        if ($request->has('variant_id')) {
+            $varianDipilih = ProductVariant::with('options')
+                ->where('id', $request->variant_id)
+                ->where('product_id', $produkDipilih->id)
+                ->first();
+        }
     }
 
     // Filter lainnya tetap berfungsi seperti biasa
@@ -61,7 +64,13 @@ class SerialNumberController extends Controller implements HasMiddleware
     $products = Product::where('wajib_seri', true)->orderBy('name_product')->get();
     $status = SerialNumber::getStatus();
 
-    return view('inventory::inventaris.sn.serial-number', compact('serialNumbers', 'products', 'produkDipilih', 'status'));
+    return view('inventory::inventaris.sn.serial-number', compact(
+      'produkDipilih', 
+      'varianDipilih',
+      'serialNumbers', 
+      'products',
+      'status'
+      ));
   }
 
   /**

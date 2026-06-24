@@ -93,7 +93,7 @@
             </div>
         </div>
         <div class="card-body p-4 pb-2">
-            <form method="GET" action="{{ route('serialNumber.index') }}">
+            <form method="GET" action="{{ route('serial-number.index') }}">
                 <div class="row g-3 align-items-end">
                     <div class="col-md-4">
                         <label for="search" class="form-label fw-medium">Cari Nomor Seri</label>
@@ -128,7 +128,7 @@
                     <div class="col-md-3 d-flex gap-2">
                         <button type="submit" class="btn btn-primary px-4"><i
                                 class="bx bx-filter me-1"></i>Filter</button>
-                        <a href="{{ route('serialNumber.index') }}" class="btn btn-outline-secondary px-3"><i
+                        <a href="{{ route('serial-number.index') }}" class="btn btn-outline-secondary px-3"><i
                                 class="bx bx-reset me-1"></i>Reset</a>
                     </div>
                 </div>
@@ -329,12 +329,6 @@
         initSelect2();
         $(document).ready(function() {
             setTimeout(function() {
-                $('#product_id_filter').select2({
-                    placeholder: 'Semua Produk',
-                    allowClear: true,
-                    width: '100%'
-                });
-
                 // --- INISIALISASI GLOBAL ---
                 let tempSerials = new Set();
                 let selectedProductData = null;
@@ -400,7 +394,6 @@
                     $.ajax({
                         url: url,
                         method: 'GET',
-                        // Kirim variant_id jika ada, agar endpoint bisa filter stok per varian
                         data: variantId ? { variant_id: variantId } : {},
                         success: function(data) {
                             selectedProductData = {
@@ -419,7 +412,7 @@
                             $('#serial-input-section').show();
 
                             if (productSlug) {
-                                const newUrl = `/serialNumber/${productSlug}`;
+                                const newUrl = `/serial-number/${productSlug}`;
                                 history.pushState({
                                     path: newUrl
                                 }, '', newUrl);
@@ -438,25 +431,22 @@
                 // --- SELECT2: Pilih Produk (AJAX) ---
                 function formatProduct(produk) {
                     if (!produk.id) return produk.text;
-                    const defaultImage = "{{ asset('assets/img/produk.png') }}";
-                    const r2BaseUrl = "{{ config('filesystems.disks.r2.url') }}";
-                    const cleanBaseUrl = r2BaseUrl.replace(/\/$/, "");
-                    // Gunakan img_produk (field dari getData()), bukan primaryImage
-                    const imageUrl = produk.img_produk ?
-                        `${cleanBaseUrl}/${produk.img_produk}` :
-                        defaultImage;
-                    // Tampilkan badge varian jika ada
+                    
+                    // JS tinggal pakai img_produk karena URL-nya sudah matang dari server
+                    const imageUrl = produk.img_produk; 
+                    
                     const variantBadge = produk.variant_id ?
                         `<span class="badge bg-label-info ms-1" style="font-size:0.65rem;">${produk.variant_name}</span>` :
                         '';
+                        
                     return $(
                         `<div class="d-flex align-items-center gap-2 py-1">
-                        <img src="${imageUrl}" class="rounded-2" width="32" height="32" style="object-fit:cover;" />
-                        <div>
-                            <div class="fw-medium small">${produk.name_product}${variantBadge}</div>
-                            <div class="text-muted" style="font-size:0.72rem;">Stok: ${produk.qty ?? '-'}</div>
-                        </div>
-                    </div>`
+                            <img src="${imageUrl}" class="rounded-2" width="32" height="32" style="object-fit:cover;" />
+                            <div>
+                                <div class="fw-medium small">${produk.name_product}${variantBadge}</div>
+                                <div class="text-muted" style="font-size:0.72rem;">Stok: ${produk.qty ?? '-'}</div>
+                            </div>
+                        </div>`
                     );
                 }
 
@@ -479,7 +469,8 @@
                         data: (params) => ({
                             search: params.term,
                             page: params.page || 1,
-                            wajib_seri: 1
+                            wajib_seri: 1,
+                            hide_fulfilled: 1
                         }),
                         processResults: function(data) {
                             return {
@@ -589,7 +580,7 @@
                         '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...'
                     );
                     $.ajax({
-                        url: "{{ route('serialNumber.store') }}",
+                        url: "{{ route('serial-number.store') }}",
                         method: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',
@@ -611,8 +602,22 @@
 
                 @if ($produkDipilih)
                     $('#product_id_filter').val("{{ $produkDipilih->id }}").trigger('change');
+
                     @if ($produkDipilih->has_variants)
-                        window.showToast('info', 'Silakan pilih varian produk secara spesifik di form pendaftaran untuk menambah SN baru.');
+                        {{-- Mengecek apakah ada data varian spesifik yang dikirim dari controller --}}
+                        @if(isset($varianDipilih) && $varianDipilih)
+                            var combinedId = "{{ $produkDipilih->id }}-{{ $varianDipilih->id }}";
+                            
+                            var variantName = "{{ $varianDipilih->options->pluck('value')->implode(' / ') ?: $varianDipilih->sku }}";
+                            var displayName = "{{ $produkDipilih->name_product }} — " + variantName;
+
+                            var produkOption = new Option(displayName, combinedId, true, true);
+                            $('#select-produk').append(produkOption).trigger('change');
+                            
+                            updateProductInfo("{{ $produkDipilih->id }}", "{{ $varianDipilih->id }}", "{{ $produkDipilih->slug }}");
+                        @else
+                            window.showToast('info', 'Silakan pilih varian produk secara spesifik di form pendaftaran untuk menambah SN baru.');
+                        @endif
                     @else
                         var produkOption = new Option(
                             "{{ $produkDipilih->name_product }}",
@@ -629,7 +634,7 @@
                     const id = $(this).data('id');
                     const serial = $(this).data('serial');
                     const status = $(this).data('status');
-                    const url = "{{ route('serialNumber.update', ':id') }}".replace(':id', id);
+                    const url = "{{ route('serial-number.update', ':id') }}".replace(':id', id);
 
                     $('#editSerialForm').attr('action', url);
                     $('#edit_serial_number').val(serial).removeClass('is-invalid');
@@ -667,7 +672,7 @@
                 $('#tableData').on('click', '.btn-delete', function() {
                     const id = $(this).data('id');
                     const serial = $(this).data('serial');
-                    const url = "{{ route('serialNumber.destroy', ':id') }}".replace(':id', id);
+                    const url = "{{ route('serial-number.destroy', ':id') }}".replace(':id', id);
                     $('#deleteSerialForm').attr('action', url);
                     $('#serialNumberToDelete').text(`"${serial}"`);
                     deleteSerialModal.show();

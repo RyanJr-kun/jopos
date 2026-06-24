@@ -118,10 +118,10 @@
       ]
     },
     {
-      "url": "serialNumber",
+      "url": "serial-number",
       "name": "Serial Number",
       "icon": "menu-icon icon-base bx bx-serial",
-      "slug": "serialNumber.index",
+      "slug": "serial-number.index",
       "permission": "view-serialnumber"
     },
     {

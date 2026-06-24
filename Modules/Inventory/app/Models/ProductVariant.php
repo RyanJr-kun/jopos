@@ -53,7 +53,11 @@ class ProductVariant extends Model
 
     public function stocks()
     {
-        // Menghubungkan varian dengan stoknya berdasarkan 'product_variant_id'
-        return $this->hasMany(ProductStock::class, 'product_variant_id', 'id');
+        return $this->hasMany(ProductStock::class, 'product_variant_id');
+    }
+
+    public function serialNumbers()
+    {
+        return $this->hasMany(SerialNumber::class, 'product_variant_id');
     }
 }

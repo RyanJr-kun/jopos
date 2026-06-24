@@ -520,9 +520,10 @@
 
                 function formatProduct(produk) {
                     if (!produk.id) return produk.text;
-                    const imageUrl = produk.image_url || "{{ asset('assets/img/produk.png') }}";
+                    const defaultImage = "{{ asset('assets/img/produk.png') }}";
+                    const imageUrl = produk.img_produk ? produk.img_produk : defaultImage;
                     var variantBadge = produk.variant_id ?
-                        `<span class="badge bg-label-info text-xs mt-1"><i class="bx bx-list-ul ms-n1 me-1"></i>Varian</span>` :
+                        `<span class="badge bg-label-info text-xs mt-1"><i class="bx bx-list-ul ms-n1 me-1"></i>${produk.text2}</span>` :
                         '';
                     return $(`
                         <div class="d-flex align-items-center">
@@ -568,15 +569,16 @@
                                 results: items.map(function(item) {
                                     let combinedId = item.variant_id ?
                                         `${item.id}-${item.variant_id}` : item.id;
-                                    let displayName = item.variant_name ?
-                                        `${item.name_product} - ${item.variant_name}` :
-                                        item.name_product;
+                                    // let displayName = item.variant_name ?
+                                    //     `${item.name_product} - ${item.variant_name}` :
+                                    //     item.name_product;
                                     return {
                                         id: combinedId,
                                         product_id: item.id,
                                         variant_id: item.variant_id || null,
-                                        text: displayName,
-                                        image_url: item.image_url,
+                                        text: item.name_product,
+                                        text2: item.variant_name,
+                                        img_produk: item.img_produk || null,
                                         qty: item.qty,
                                         harga_jual: item.harga_jual,
                                         taxe_id: item.taxe_id,
@@ -609,8 +611,8 @@
                     const produkId = selectedData.product_id;
                     const variantId = selectedData.variant_id;
                     const produkNama = selectedData.text;
-                    const imageUrl = selectedData.image_url ||
-                        "{{ asset('assets/img/produk.png') }}";
+                    const produkNama2 = selectedData.text2;
+                    const imageUrl = selectedData.img_produk ? selectedData.img_produk : defaultImage;
                     const hargaJual = selectedData.harga_jual || 0;
                     const pajakId = selectedData.taxe_id || null;
                     const pajakRate = selectedData.pajak_rate || 0;
@@ -631,6 +633,11 @@
                         const subtotalDenganTaxe = subtotalAwal + pajakAwal;
                         const trClass = wajibSeri ? 'is-wajib-seri' : '';
 
+                        const variantHtml = produkNama2 ? 
+                            `<small class="text-muted d-block">
+                                <i class="bx bx-list-ul text-xs me-1"></i>${produkNama2}
+                            </small>` : '';
+
                         const newRow = `
                         <tr data-row-id="${rowId}">
                             <input type="hidden" name="items[${itemCounter}][product_id]" value="${produkId}">
@@ -645,7 +652,7 @@
                                     <img src="${imageUrl}" class="rounded rounded-2 me-3" style="width:40px; height:40px; object-fit:cover;" alt="${produkNama}">
                                     <div>
                                         <h6 class="mb-0 text-sm item-name">${produkNama}</h6>
-                                        
+                                        ${variantHtml}
                                     </div>
                                 </div>
                             </td>
