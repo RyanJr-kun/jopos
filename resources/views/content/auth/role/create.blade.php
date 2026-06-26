@@ -60,8 +60,8 @@
                         <div class="alert alert-primary d-flex gap-2 py-2 px-3 small" role="alert">
                             <i class="bx bx-bulb flex-shrink-0 fs-5"></i>
                             <span>
-                                Pilih permission yang ingin diberikan kepada role ini di sebelah kanan. Anda dapat
-                                mengubahnya kapan saja.
+                                Pilih permission yang ingin diberikan kepada role ini di sebelah kanan.
+                                Anda dapat mengubahnya kapan saja.
                             </span>
                         </div>
 
@@ -69,8 +69,9 @@
                         <div class="mt-3 p-3 rounded-2 bg-light-subtle border">
                             <p class="small text-muted mb-1 fw-semibold">Permission Dipilih:</p>
                             <h4 class="mb-0 fw-bold text-primary" id="selectedCount">0</h4>
-                            <p class="small text-muted mb-0">dari {{ collect($groupedPermissions)->flatten()->count() }}
-                                total permission</p>
+                            <p class="small text-muted mb-0">
+                                dari {{ collect($groupedPermissions)->flatten()->count() }} total permission
+                            </p>
                         </div>
                     </div>
 
@@ -86,7 +87,7 @@
                 </div>
             </div>
 
-            {{-- RIGHT: Permission Matrix Table --}}
+            {{-- RIGHT: Permission Matrix --}}
             <div class="col-lg-8">
                 <div class="card shadow-sm">
                     <div class="card-header border-bottom py-3 d-flex align-items-center justify-content-between">
@@ -108,12 +109,16 @@
                             <div class="text-center py-5 text-muted">
                                 <i class="bx bx-lock fs-1 mb-2 d-block"></i>
                                 <p class="mb-0">Belum ada permission yang terdaftar.</p>
-                                <small>Tambahkan permission terlebih dahulu melalui seeder atau panel admin.</small>
+                                <small>Tambahkan permission terlebih dahulu melalui seeder.</small>
                             </div>
                         @else
                             @php
-                                // Kumpulkan semua action unik dari seluruh permission (sebagai kolom header)
-                                $allActions = [
+                                /*
+                                 * Definisi kolom aksi — urutannya adalah urutan kolom di tabel.
+                                 * Karena sekarang pakai $p->action (bukan parse string),
+                                 * kita cukup tentukan action mana yang BENAR-BENAR ada di data.
+                                 */
+                                $actionMeta = [
                                     'view' => ['label' => 'View', 'icon' => 'bx-show', 'color' => 'info'],
                                     'create' => ['label' => 'Create', 'icon' => 'bx-plus-circle', 'color' => 'success'],
                                     'edit' => ['label' => 'Edit', 'icon' => 'bx-edit', 'color' => 'warning'],
@@ -121,30 +126,32 @@
                                     'print' => ['label' => 'Print', 'icon' => 'bx-printer', 'color' => 'secondary'],
                                     'export' => ['label' => 'Export', 'icon' => 'bx-export', 'color' => 'primary'],
                                 ];
-                                // Kumpulkan action yang benar-benar ada di data
+
+                                // Kumpulkan action yang benar-benar ada — pakai $p->action langsung
                                 $usedActions = [];
                                 foreach ($groupedPermissions as $perms) {
                                     foreach ($perms as $p) {
-                                        $act = explode('-', $p->name)[0];
-                                        if (array_key_exists($act, $allActions)) {
-                                            $usedActions[$act] = true;
+                                        if (isset($actionMeta[$p->action])) {
+                                            $usedActions[$p->action] = true;
                                         }
                                     }
                                 }
-                                $activeActions = array_intersect_key($allActions, $usedActions);
+                                // Pertahankan urutan definisi $actionMeta, bukan urutan kemunculan
+                                $activeActions = array_intersect_key($actionMeta, $usedActions);
                             @endphp
 
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover permission-matrix mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            {{-- Kolom nama group + checkbox select all group --}}
-                                            <th class="ps-3 py-3" style="min-width:180px">
+                                            {{-- Kolom modul + global select-all --}}
+                                            <th class="ps-3 py-3" style="min-width:190px">
                                                 <div class="d-flex align-items-center gap-2">
                                                     <input type="checkbox" class="form-check-input mt-0"
                                                         id="cbSelectAllGlobal" title="Pilih / Hapus Semua">
-                                                    <span class="fw-bold text-muted small text-uppercase">Menu /
-                                                        Modul</span>
+                                                    <span class="fw-bold text-muted small text-uppercase">
+                                                        Menu / Modul
+                                                    </span>
                                                 </div>
                                             </th>
                                             {{-- Kolom per action --}}
@@ -160,37 +167,44 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($groupedPermissions as $groupName => $permissions)
+                                        @foreach ($groupedPermissions as $moduleName => $permissions)
                                             @php
-                                                $groupKey = Str::slug($groupName);
-                                                // Buat map: action => permission untuk grup ini
+                                                $groupKey = Str::slug($moduleName);
+
+                                                /*
+                                                 * Buat map: action => permission untuk modul ini.
+                                                 * Pakai $p->action — tidak ada string-parsing lagi.
+                                                 */
                                                 $permMap = [];
                                                 foreach ($permissions as $p) {
-                                                    $act = explode('-', $p->name)[0];
-                                                    $permMap[$act] = $p;
+                                                    $permMap[$p->action] = $p;
                                                 }
+
                                                 $checkedInGroup = collect($permissions)
                                                     ->filter(
                                                         fn($p) => is_array(old('permissions')) &&
                                                             in_array($p->id, old('permissions')),
                                                     )
                                                     ->count();
+
                                                 $allChecked = $checkedInGroup === count($permissions);
                                             @endphp
+
                                             <tr class="permission-row {{ $checkedInGroup > 0 ? 'row-has-active' : '' }}"
                                                 data-group="{{ $groupKey }}">
 
-                                                {{-- Nama Grup + Checkbox Select All Group --}}
+                                                {{-- Nama Modul + Group select-all --}}
                                                 <td class="ps-3 py-2 align-middle">
                                                     <div class="d-flex align-items-center gap-2">
                                                         <input class="form-check-input mt-0 select-all-group flex-shrink-0"
                                                             type="checkbox" id="selectAll-{{ $groupKey }}"
                                                             data-group="{{ $groupKey }}"
                                                             {{ $allChecked ? 'checked' : '' }}
-                                                            title="Pilih semua {{ $groupName }}">
+                                                            title="Pilih semua {{ $moduleName }}">
                                                         <label for="selectAll-{{ $groupKey }}"
-                                                            class="mb-0 fw-semibold small" style="cursor:pointer">
-                                                            {{ $groupName }}
+                                                            class="mb-0 fw-semibold small text-capitalize"
+                                                            style="cursor:pointer">
+                                                            {{ $moduleName }}
                                                         </label>
                                                         <span class="badge bg-primary rounded-pill ms-auto group-badge"
                                                             data-group="{{ $groupKey }}">
@@ -204,22 +218,23 @@
                                                     <td class="text-center align-middle py-2">
                                                         @if (isset($permMap[$actKey]))
                                                             @php
-                                                                $permission = $permMap[$actKey];
-                                                                $isOldChecked =
+                                                                $perm = $permMap[$actKey];
+                                                                $isChecked =
                                                                     is_array(old('permissions')) &&
-                                                                    in_array($permission->id, old('permissions'));
+                                                                    in_array($perm->id, old('permissions'));
                                                             @endphp
-                                                            <div class="perm-cell {{ $isOldChecked ? 'cell-active' : '' }}"
+                                                            <div class="perm-cell {{ $isChecked ? 'cell-active' : '' }}"
                                                                 data-group="{{ $groupKey }}">
                                                                 <input class="form-check-input permission-checkbox"
                                                                     type="checkbox" name="permissions[]"
-                                                                    value="{{ $permission->id }}"
-                                                                    id="perm-{{ $permission->id }}"
+                                                                    value="{{ $perm->id }}"
+                                                                    id="perm-{{ $perm->id }}"
                                                                     data-group="{{ $groupKey }}"
-                                                                    {{ $isOldChecked ? 'checked' : '' }}
-                                                                    title="{{ $permission->name }}">
+                                                                    {{ $isChecked ? 'checked' : '' }}
+                                                                    title="{{ $perm->name }}">
                                                             </div>
                                                         @else
+                                                            {{-- Aksi tidak ada untuk modul ini --}}
                                                             <span class="text-muted" style="font-size:.75rem">—</span>
                                                         @endif
                                                     </td>
@@ -254,7 +269,6 @@
 
 @section('page-script')
     <style>
-        /* ── Permission Matrix Table ── */
         .permission-matrix th,
         .permission-matrix td {
             vertical-align: middle;
@@ -268,7 +282,6 @@
             border-left: 3px solid var(--bs-primary);
         }
 
-        /* Cell wrapper untuk highlight saat checked */
         .perm-cell {
             display: inline-flex;
             align-items: center;
@@ -279,10 +292,7 @@
             transition: background .15s;
         }
 
-        .perm-cell.cell-active {
-            background-color: var(--bs-primary-bg-subtle);
-        }
-
+        .perm-cell.cell-active,
         .perm-cell:has(input:checked) {
             background-color: var(--bs-primary-bg-subtle);
         }
@@ -298,6 +308,7 @@
             white-space: nowrap;
         }
     </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
@@ -307,70 +318,74 @@
             const btnClearAll = document.getElementById('btnClearAll');
             const cbGlobal = document.getElementById('cbSelectAllGlobal');
 
-            // ─── Helpers ──────────────────────────────────────────────────────────────
-
-            function updateBadge(groupKey) {
-                const groupCbs = document.querySelectorAll(`.permission-checkbox[data-group="${groupKey}"]`);
-                const checkedCount = [...groupCbs].filter(cb => cb.checked).length;
-                const total = groupCbs.length;
-                const badge = document.querySelector(`.group-badge[data-group="${groupKey}"]`);
-                const groupAllCb = document.getElementById(`selectAll-${groupKey}`);
-                const row = document.querySelector(`tr.permission-row[data-group="${groupKey}"]`);
-
-                if (badge) badge.textContent = `${checkedCount}/${total}`;
-                if (groupAllCb) {
-                    groupAllCb.checked = checkedCount === total && total > 0;
-                    groupAllCb.indeterminate = checkedCount > 0 && checkedCount < total;
-                }
-                if (row) row.classList.toggle('row-has-active', checkedCount > 0);
-            }
-
-            function updateGlobalCount() {
-                const checkedCount = [...allCheckboxes].filter(cb => cb.checked).length;
-                if (selectedCountEl) selectedCountEl.textContent = checkedCount;
-            }
-
-            function syncCellState(checkbox) {
-                const cell = checkbox.closest('.perm-cell');
-                if (cell) cell.classList.toggle('cell-active', checkbox.checked);
-            }
+            // ── Helpers ──────────────────────────────────────────────
 
             function allGroups() {
                 return new Set([...allCheckboxes].map(cb => cb.dataset.group));
             }
 
-            // ─── Init ─────────────────────────────────────────────────────────────────
+            function syncCellState(cb) {
+                const cell = cb.closest('.perm-cell');
+                if (cell) cell.classList.toggle('cell-active', cb.checked);
+            }
+
+            function updateBadge(groupKey) {
+                const cbs = document.querySelectorAll(`.permission-checkbox[data-group="${groupKey}"]`);
+                const checked = [...cbs].filter(cb => cb.checked).length;
+                const total = cbs.length;
+
+                const badge = document.querySelector(`.group-badge[data-group="${groupKey}"]`);
+                const groupCb = document.getElementById(`selectAll-${groupKey}`);
+                const row = document.querySelector(`tr.permission-row[data-group="${groupKey}"]`);
+
+                if (badge) badge.textContent = `${checked}/${total}`;
+                if (groupCb) {
+                    groupCb.checked = checked === total && total > 0;
+                    groupCb.indeterminate = checked > 0 && checked < total;
+                }
+                if (row) row.classList.toggle('row-has-active', checked > 0);
+            }
+
+            function updateGlobalCount() {
+                const total = [...allCheckboxes].filter(cb => cb.checked).length;
+                if (selectedCountEl) selectedCountEl.textContent = total;
+            }
+
+            // ── Init ─────────────────────────────────────────────────
+
             function initState() {
                 allGroups().forEach(g => updateBadge(g));
                 updateGlobalCount();
                 allCheckboxes.forEach(cb => syncCellState(cb));
             }
 
-            // ─── Individual checkbox change ────────────────────────────────────────────
-            allCheckboxes.forEach(function(checkbox) {
-                checkbox.addEventListener('change', function() {
+            // ── Individual checkbox ───────────────────────────────────
+
+            allCheckboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
                     syncCellState(this);
                     updateBadge(this.dataset.group);
                     updateGlobalCount();
                 });
             });
 
-            // ─── Group "Select All" checkboxes (per baris) ────────────────────────────
-            document.querySelectorAll('.select-all-group').forEach(function(groupAllCb) {
-                groupAllCb.addEventListener('change', function() {
+            // ── Group select-all (per baris) ──────────────────────────
+
+            document.querySelectorAll('.select-all-group').forEach(groupCb => {
+                groupCb.addEventListener('change', function() {
                     const groupKey = this.dataset.group;
-                    const groupCheckboxes = document.querySelectorAll(
-                        `.permission-checkbox[data-group="${groupKey}"]`);
-                    groupCheckboxes.forEach(cb => {
-                        cb.checked = this.checked;
-                        syncCellState(cb);
-                    });
+                    document.querySelectorAll(`.permission-checkbox[data-group="${groupKey}"]`)
+                        .forEach(cb => {
+                            cb.checked = this.checked;
+                            syncCellState(cb);
+                        });
                     updateBadge(groupKey);
                     updateGlobalCount();
                 });
             });
 
-            // ─── Global header checkbox ───────────────────────────────────────────────
+            // ── Global header checkbox ────────────────────────────────
+
             if (cbGlobal) {
                 cbGlobal.addEventListener('change', function() {
                     allCheckboxes.forEach(cb => {
@@ -382,7 +397,8 @@
                 });
             }
 
-            // ─── "Pilih Semua" button ─────────────────────────────────────────────────
+            // ── Tombol Pilih Semua ────────────────────────────────────
+
             if (btnSelectAll) {
                 btnSelectAll.addEventListener('click', function() {
                     allCheckboxes.forEach(cb => {
@@ -395,7 +411,8 @@
                 });
             }
 
-            // ─── "Hapus Semua" button ─────────────────────────────────────────────────
+            // ── Tombol Hapus Semua ────────────────────────────────────
+
             if (btnClearAll) {
                 btnClearAll.addEventListener('click', function() {
                     allCheckboxes.forEach(cb => {

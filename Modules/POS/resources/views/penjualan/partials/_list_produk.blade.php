@@ -41,7 +41,7 @@
 
                     {{-- Gambar — $imgUrl dipakai ulang, tidak hitung ulang --}}
                     <div class="product-img-wrap">
-                        <img src="{{ $imgUrl }}" alt="Gambar {{ e($produk->name_product) }}" loading="lazy"
+                        <img src="{{ $imgUrl }}" alt="{{ $produk->name_product }}"
                             class="w-100 h-100 object-cover">
                     </div>
 

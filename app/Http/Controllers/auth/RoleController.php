@@ -14,34 +14,45 @@ class RoleController extends Controller implements HasMiddleware
 {
     public static function middleware(): array
     {
-        return [ 
-            new Middleware('permission:view-roles', only: ['index','groupedPermissions']), // Tambahkan permission untuk akses index dan groupedPermissions
+        return [
+            new Middleware('permission:view-roles',   only: ['index']),
             new Middleware('permission:create-roles', only: ['create', 'store']),
-            new Middleware('permission:edit-roles', only: ['edit', 'update']),
+            new Middleware('permission:edit-roles',   only: ['edit', 'update']),
             new Middleware('permission:delete-roles', only: ['destroy']),
         ];
     }
+
     /**
-     * Kelompokkan permissions berdasarkan prefix kata pertama.
-     * Contoh: "view users" => Group "Users"
+     * Kelompokkan permissions berdasarkan modules.name (kolom baru).
+     * Memanfaatkan relasi ke tabel modules agar tidak perlu string-parsing.
+     *
+     * Return: ['banner' => [Permission, ...], 'brand' => [...], ...]
      */
     private function groupedPermissions(): array
     {
-        $allPermissions = Permission::orderBy('name')->get();
+        // Eager-load relasi module sekaligus, satu query + join
+        $permissions = Permission::select('permissions.*')
+            ->join('modules', 'modules.id', '=', 'permissions.modules_id')
+            ->orderBy('modules.name')   // urut alfabet per modul
+            ->orderByRaw("FIELD(permissions.action, 'view','create','edit','delete','print','export')")
+            ->get();
 
         $groups = [];
-        foreach ($allPermissions as $permission) {
-            // Ambil kata terakhir sebagai nama "modul" (lebih natural untuk format: "view users")
-            $parts = explode(' ', $permission->name);
-            // Gunakan kata terakhir sebagai grup jika formatnya "action module"
-            $groupName = count($parts) > 1
-                ? ucwords(implode(' ', array_slice($parts, 1)))
-                : ucfirst($parts[0]);
+        foreach ($permissions as $permission) {
+            // Gunakan nama modul dari DB — tidak perlu parse string lagi
+            $moduleName = $permission->module_name ?? $permission->getRelationValue('module')?->name;
 
-            $groups[$groupName][] = $permission;
+            // Fallback: ambil via join alias jika relasi belum didefinisikan di model
+            if (!$moduleName) {
+                // kolom modules.name ikut di-select via join
+                $moduleName = \DB::table('modules')
+                    ->where('id', $permission->modules_id)
+                    ->value('name');
+            }
+
+            $groups[$moduleName][] = $permission;
         }
 
-        ksort($groups);
         return $groups;
     }
 
@@ -69,9 +80,9 @@ class RoleController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'        => ['required', 'string', 'max:100', 'unique:roles,name'],
-            'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['integer', 'exists:permissions,id'],
+            'name'            => ['required', 'string', 'max:100', 'unique:roles,name'],
+            'permissions'     => ['nullable', 'array'],
+            'permissions.*'   => ['integer', 'exists:permissions,id'],
         ], [
             'name.required' => 'Nama role wajib diisi.',
             'name.unique'   => 'Nama role sudah digunakan, silakan pilih nama lain.',
@@ -97,8 +108,8 @@ class RoleController extends Controller implements HasMiddleware
      */
     public function edit(Role $role)
     {
-        $groupedPermissions  = $this->groupedPermissions();
-        $rolePermissionIds   = $role->permissions->pluck('id')->toArray();
+        $groupedPermissions = $this->groupedPermissions();
+        $rolePermissionIds  = $role->permissions->pluck('id')->toArray();
 
         return view('content.auth.role.edit', compact('role', 'groupedPermissions', 'rolePermissionIds'));
     }
@@ -108,9 +119,8 @@ class RoleController extends Controller implements HasMiddleware
      */
     public function update(Request $request, Role $role)
     {
-        // Cegah perubahan nama pada role "admin" yang kritis
         if (strtolower($role->name) === 'admin') {
-            $request->merge(['name' => 'admin']); // paksa tetap admin
+            $request->merge(['name' => 'admin']);
         }
 
         $validated = $request->validate([
@@ -139,19 +149,19 @@ class RoleController extends Controller implements HasMiddleware
      */
     public function destroy(Role $role)
     {
-        // Tolak penghapusan role admin
         if (strtolower($role->name) === 'admin') {
             return redirect()->route('roles.index')
                 ->with('error', 'Role <strong>Admin</strong> tidak dapat dihapus karena merupakan role sistem.');
         }
 
-        if ($role->users()->count() > 0) {
+        $userCount = $role->users()->count();
+        if ($userCount > 0) {
             return redirect()->route('roles.index')
-                ->with('error', "Role \"<strong>{$role->name}</strong>\" tidak dapat dihapus karena masih digunakan oleh {$role->users()->count()} pengguna.");
+                ->with('error', "Role \"<strong>{$role->name}</strong>\" tidak dapat dihapus karena masih digunakan oleh {$userCount} pengguna.");
         }
 
         $roleName = $role->name;
-        $role->syncPermissions([]); // Hapus semua relasi permission
+        $role->syncPermissions([]);
         $role->delete();
 
         return redirect()->route('roles.index')

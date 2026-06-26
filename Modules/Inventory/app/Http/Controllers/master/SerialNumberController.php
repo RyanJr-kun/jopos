@@ -288,47 +288,53 @@ class SerialNumberController extends Controller implements HasMiddleware
 
   public function getProduct(Request $request)
   {
-    if (!$request->ajax()) {
-      return response()->json(['error' => 'Invalid request'], 400);
-    }
+      if (!$request->ajax()) {
+          return response()->json(['error' => 'Invalid request'], 400);
+      }
 
-    $productId = $request->query('product_id');
-    $variantId = $request->query('variant_id'); // null = produk simple
-    $storeId = Auth::user()->employee?->store_id;
-    $search = $request->query('search');
+      $productId = $request->query('product_id');
+      $variantId = $request->query('variant_id'); 
+      $storeId = Auth::user()->employee?->store_id;
+      $search = $request->query('search');
+      
+      // Tangkap parameter existing_sns dari frontend
+      $existingSns = $request->query('existing_sns'); 
 
-    if (!$productId) {
-      return response()->json(['error' => 'product_id wajib diisi.'], 422);
-    }
+      if (!$productId) {
+          return response()->json(['error' => 'product_id wajib diisi.'], 422);
+      }
 
-    $produk = Product::find($productId);
-    if (!$produk) {
-      return response()->json(['error' => 'Product tidak ditemukan.'], 404);
-    }
+      $produk = Product::find($productId);
+      if (!$produk) {
+          return response()->json(['error' => 'Product tidak ditemukan.'], 404);
+      }
 
-    $serialNumbers = SerialNumber::where('product_id', $productId)
-      ->where('status', 'Tersedia')
-      ->when($storeId, fn($q) => $q->where('store_id', $storeId))
-      ->when(
-        $variantId,
-        fn($q) => $q->where('product_variant_id', $variantId),
-        fn($q) => $q->whereNull('product_variant_id'), // produk simple
-      )
-      ->when($search, fn($q) => $q->where('nomor_seri', 'like', "%{$search}%"))
-      ->latest()
-      ->paginate(15);
+      $serialNumbers = SerialNumber::where('product_id', $productId)
+          ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+          ->when(
+              $variantId,
+              fn($q) => $q->where('product_variant_id', $variantId),
+              fn($q) => $q->whereNull('product_variant_id')
+          )
+          // PERBAIKAN: Ambil yang 'Tersedia' ATAU yang termasuk dalam 'existing_sns'
+          ->where(function ($q) use ($existingSns) {
+              $q->where('status', 'Tersedia');
+              if ($existingSns) {
+                  $snsArray = explode(',', $existingSns);
+                  $q->orWhereIn('nomor_seri', $snsArray);
+              }
+          })
+          ->when($search, fn($q) => $q->where('nomor_seri', 'like', "%{$search}%"))
+          ->latest()
+          ->paginate(15);
 
-    return response()->json([
-      'serial_numbers' => $serialNumbers
-        ->map(
-          fn($sn) => [
-            'serial_number' => $sn->nomor_seri,
-            'status' => $sn->status,
-          ],
-        )
-        ->values(),
-      'current_page' => $serialNumbers->currentPage(),
-      'next_page_url' => $serialNumbers->nextPageUrl(),
-    ]);
+      return response()->json([
+          'serial_numbers' => $serialNumbers->map(fn($sn) => [
+              'serial_number' => $sn->nomor_seri,
+              'status' => $sn->status,
+          ])->values(),
+          'current_page' => $serialNumbers->currentPage(),
+          'next_page_url' => $serialNumbers->nextPageUrl(),
+      ]);
   }
 }

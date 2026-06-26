@@ -245,7 +245,19 @@ class SaleController extends Controller implements HasMiddleware
               throw new \Exception("Jumlah nomor seri untuk '{$produk->name_product}' tidak sesuai. " . "Dibutuhkan: {$itemData['jumlah']}, dikirim: " . count($snKirim) . '.');
             }
 
-            $snValid = SerialNumber::where('product_id', $produk->id)->whereIn('nomor_seri', $snKirim)->where('status', 'Tersedia')->count();
+            $snQuery = SerialNumber::where('product_id', $produk->id)
+                ->whereIn('nomor_seri', $snKirim)
+                ->where('status', 'Tersedia')
+                ->where('store_id', $storeId);
+
+            // Filter variant jika ada
+            if ($variantId) {
+                $snQuery->where('product_variant_id', $variantId);
+            } else {
+                $snQuery->whereNull('product_variant_id');
+            }
+
+            $snValid = $snQuery->count();
 
             if ($snValid !== (int) $itemData['jumlah']) {
               throw new \Exception("Satu atau lebih nomor seri untuk '{$produk->name_product}' " . 'tidak valid atau sudah terjual.');
@@ -555,7 +567,19 @@ class SaleController extends Controller implements HasMiddleware
               throw new \Exception("Jumlah SN untuk '{$produk->name_product}' tidak sesuai.");
             }
 
-            $validSnCount = SerialNumber::where('product_id', $produk->id)->whereIn('nomor_seri', $snKirim)->where('status', 'Tersedia')->count();
+            $snQuery = SerialNumber::where('product_id', $produk->id)
+                ->whereIn('nomor_seri', $snKirim)
+                ->where('status', 'Tersedia')
+                ->where('store_id', $storeId);
+
+            // Filter variant jika ada
+            if ($variantId) {
+                $snQuery->where('product_variant_id', $variantId);
+            } else {
+                $snQuery->whereNull('product_variant_id');
+            }
+
+            $validSnCount = $snQuery->count();
 
             if ($validSnCount !== (int) $itemData['jumlah']) {
               throw new \Exception("Satu atau lebih SN untuk '{$produk->name_product}' tidak valid atau sudah terjual.");

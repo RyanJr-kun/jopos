@@ -530,10 +530,16 @@
 
                 if (cart.has(cartKey)) {
                     const item = cart.get(cartKey);
-                    if (item.jumlah < item.stok) {
-                        item.jumlah++;
+                    if (item.wajib_seri && serialNumbers.length > 0) {
+                        item.jumlah = serialNumbers.length;
+                        item.serial_numbers = serialNumbers;
                     } else {
-                        showToast(`Stok untuk "${productData.name}" tidak mencukupi.`, 'warning');
+                        // Logika produk reguler
+                        if (item.jumlah < item.stok) {
+                            item.jumlah++;
+                        } else {
+                            showToast(`Stok untuk "${productData.name}" tidak mencukupi.`, 'warning');
+                        }
                     }
                 } else {
                     if (parseInt(productData.stok) > 0) {
@@ -869,14 +875,16 @@
 
             // ── Serial Number Modal ───────────────────────────────────
             // Tambah parameter variantId
-            const openSerialNumberModal = (productId, variantId, productName, requiredQty, existingSerials = []) => {
-                
+            const openSerialNumberModal = (productId, variantId, productName, requiredQty,
+                existingSerials = []) => {
+
                 document.getElementById('sn-produk-id').value = productId;
                 document.getElementById('sn-variant-id').value = variantId || ''; // ← hidden input baru
 
                 document.getElementById('sn-name-produk').textContent = productName;
                 document.getElementById('sn-required-count').textContent = requiredQty;
-                document.getElementById('sn-image-produk').src = tempProductDataForSN.img || '/assets/img/produk.png';
+                document.getElementById('sn-image-produk').src = tempProductDataForSN.img ||
+                    '/assets/img/produk.png';
                 document.getElementById('sn-stok-produk').textContent = tempProductDataForSN.stok;
 
                 snErrorMessage.textContent = '';
@@ -892,7 +900,9 @@
                 url.searchParams.set('product_id', productId);
                 if (variantId) url.searchParams.set('variant_id', variantId); // ← kirim ke controller
 
-                fetch(url.toString(), { headers: defaultHeaders })
+                fetch(url.toString(), {
+                        headers: defaultHeaders
+                    })
                     .then(r => r.json())
                     .then(data => {
                         snListContainer.innerHTML = '';
@@ -902,7 +912,7 @@
                             return;
                         }
                         data.serial_numbers.forEach(sn => {
-                            const isChecked  = existingSerials.includes(sn.serial_number);
+                            const isChecked = existingSerials.includes(sn.serial_number);
                             const isDisabled = sn.status !== 'Tersedia' && !isChecked;
                             snListContainer.insertAdjacentHTML('beforeend', `
                                 <label class="list-group-item list-group-item-action d-flex gap-2 align-items-center
@@ -939,9 +949,15 @@
                             `Pilih tepat ${requiredQty} nomor seri (dipilih: ${selected.length}).`;
                         return;
                     }
+                    if (tempProductDataForSN && parseInt(tempProductDataForSN.id) !== productId) {
+                        snErrorMessage.textContent =
+                            'Terjadi kesalahan konteks produk. Tutup modal dan coba lagi.';
+                        return;
+                    }
                     snErrorMessage.textContent = '';
                     addProductToCart(tempProductDataForSN, selected);
                     serialNumberModal.hide();
+
                 });
             }
 
@@ -1239,7 +1255,8 @@
                         `${productData.name} - ${productData.variant_name}` : productData.name;
 
                     // Buka modal SN
-                    openSerialNumberModal(productData.id, productData.variant_id || null,  displayName, requiredQty, existingSerials);
+                    openSerialNumberModal(productData.id, productData.variant_id || null, displayName,
+                        requiredQty, existingSerials);
                 } else {
                     // Jika tidak wajib SN, langsung tembak ke keranjang
                     addProductToCart(productData);
@@ -1263,12 +1280,29 @@
                         };
                         const displayName = item.variant_name ? `${item.name} (${item.variant_name})` : item
                             .name;
-                        openSerialNumberModal(item.id, item.variant_id || null, displayName, item.jumlah + 1, item.serial_numbers);
+                        openSerialNumberModal(item.id, item.variant_id || null, displayName, item.jumlah +
+                            1, item.serial_numbers);
                     } else {
                         updateQuantity(cartKey, item.jumlah + 1);
                     }
                 } else if (e.target.closest('.qty-decrease')) {
-                    updateQuantity(cartKey, item.jumlah - 1);
+                    if (item.serial_numbers?.length > 0) {
+                        if (item.jumlah - 1 === 0) {
+                            removeFromCart(cartKey);
+                        } else {
+                            tempProductDataForSN = {
+                                ...item,
+                                wajibSeri: true
+                            };
+                            const displayName = item.variant_name ? `${item.name} (${item.variant_name})` :
+                                item.name;
+                            openSerialNumberModal(item.id, item.variant_id || null, displayName, item
+                                .jumlah - 1, item.serial_numbers);
+                        }
+                    } else {
+                        // Produk reguler tanpa SN
+                        updateQuantity(cartKey, item.jumlah - 1);
+                    }
                 } else if (e.target.closest('.remove-item')) {
                     removeFromCart(cartKey);
                 }

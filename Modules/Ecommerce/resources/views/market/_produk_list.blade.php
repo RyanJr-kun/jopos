@@ -74,7 +74,7 @@
                     </div>
                 </div>
                 <div class="card-body p-2">
-                    <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}"
+                    <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }} class"
                         class="text-decoration-none text-dark">
                         <p class="product-title-compact fw-semibold mb-1" title="{{ $produk->name_product }}">
                             {{ $produk->name_product }}</p>
