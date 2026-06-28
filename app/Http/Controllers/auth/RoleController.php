@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -62,7 +63,9 @@ class RoleController extends Controller implements HasMiddleware
     public function index()
     {
         $roles = Role::with('permissions')->withCount('users')->orderBy('id')->get();
-        return view('content.auth.role.index', compact('roles'));
+        $modules = DB::table('modules')->pluck('name', 'id');
+
+        return view('content.auth.role.index', compact('roles', 'modules'));
     }
 
     /**

@@ -2,12 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use App\Models\User;
+use Spatie\Permission\PermissionRegistrar;
 
 class SpatieRoleSeeder extends Seeder
 {
@@ -16,27 +17,22 @@ class SpatieRoleSeeder extends Seeder
         // =========================================================
         // 1. RESET CACHE
         // =========================================================
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // =========================================================
         // 2. DEFINISI MODUL DAN AKSI
-        //
-        //    Key   = modules.name  (label menu di sidebar/UI)
-        //    Value = aksi tersedia → mengisi permissions.action
-        //
-        //    Nama permission tetap format standar: "{action}-{module}"
-        //    Contoh: "view-penjualan", "create-produk", "export-laporan-penjualan"
         // =========================================================
+
         $modules = [
             // Umum
             'dashboard'          => ['view'],
 
             // Master & Produk
-            'produk'             => ['view', 'create', 'edit', 'delete'],
+            'produk'             => ['view', 'create', 'edit', 'delete', 'HPP'],
             'kategoriproduk'     => ['view', 'create', 'edit', 'delete'],
             'brand'              => ['view', 'create', 'edit', 'delete'],
             'unit'               => ['view', 'create', 'edit', 'delete'],
-            'garansi'            => ['view', 'create', 'edit', 'delete'],
+            'garansi'            => ['view', 'create', 'edit', 'delete', 'claim'],
             'serialnumber'       => ['view', 'create', 'edit', 'delete'],
             'pemasok'            => ['view', 'create', 'edit', 'delete'],
             'pelanggan'          => ['view', 'create', 'edit', 'delete'],
@@ -84,10 +80,6 @@ class SpatieRoleSeeder extends Seeder
 
         // =========================================================
         // 3. UPSERT MODULES DAN PERMISSIONS
-        //
-        //    Gunakan DB::table() langsung karena kolom modules_id
-        //    dan action adalah kolom tambahan yang tidak dikenal
-        //    oleh Spatie Permission::create() / firstOrCreate().
         // =========================================================
         $permTable = config('permission.table_names.permissions', 'permissions');
 
@@ -157,8 +149,12 @@ class SpatieRoleSeeder extends Seeder
         // Manager → semua kecuali manajemen user/role dan pengaturan sensitif
         $manager->syncPermissions(
             Permission::whereNotIn('name', [
-                'create-users',  'edit-users',  'delete-users',
-                'create-roles',  'edit-roles',  'delete-roles',
+                'create-users',
+                'edit-users',
+                'delete-users',
+                'create-roles',
+                'edit-roles',
+                'delete-roles',
                 'edit-pengaturan',
             ])->get()
         );
@@ -166,8 +162,11 @@ class SpatieRoleSeeder extends Seeder
         // Kasir → operasi penjualan dan pelanggan
         $kasir->syncPermissions([
             'view-dashboard',
-            'view-penjualan', 'create-penjualan', 'print-penjualan',
-            'view-pelanggan',  'create-pelanggan',
+            'view-penjualan',
+            'create-penjualan',
+            'print-penjualan',
+            'view-pelanggan',
+            'create-pelanggan',
             'view-produk',
             'view-stok-rendah',
             'view-keuangan',
@@ -176,15 +175,28 @@ class SpatieRoleSeeder extends Seeder
         // Gudang → inventaris dan pembelian
         $gudang->syncPermissions([
             'view-dashboard',
-            'view-produk',         'create-produk',         'edit-produk',
-            'view-kategoriproduk', 'create-kategoriproduk', 'edit-kategoriproduk',
-            'view-brand',    'view-unit',    'view-garansi',
-            'view-serialnumber', 'create-serialnumber', 'edit-serialnumber',
-            'view-pembelian',    'create-pembelian',
-            'view-stok-penyesuaian', 'create-stok-penyesuaian',
-            'view-stok-opname',      'create-stok-opname',
+            'view-produk',
+            'create-produk',
+            'edit-produk',
+            'view-kategoriproduk',
+            'create-kategoriproduk',
+            'edit-kategoriproduk',
+            'view-brand',
+            'view-unit',
+            'view-garansi',
+            'view-serialnumber',
+            'create-serialnumber',
+            'edit-serialnumber',
+            'view-pembelian',
+            'create-pembelian',
+            'view-stok-penyesuaian',
+            'create-stok-penyesuaian',
+            'view-stok-opname',
+            'create-stok-opname',
             'view-stok-rendah',
-            'view-toko-gudang', 'create-toko-gudang', 'edit-toko-gudang',
+            'view-toko-gudang',
+            'create-toko-gudang',
+            'edit-toko-gudang',
             'view-laporan-inventaris',
         ]);
 
@@ -192,7 +204,9 @@ class SpatieRoleSeeder extends Seeder
         $teknisi->syncPermissions([
             'view-dashboard',
             'view-produk',
-            'view-serialnumber', 'create-serialnumber', 'edit-serialnumber',
+            'view-serialnumber',
+            'create-serialnumber',
+            'edit-serialnumber',
             'view-stok-rendah',
         ]);
 
@@ -231,7 +245,7 @@ class SpatieRoleSeeder extends Seeder
         }
 
         // Reset cache setelah semua selesai
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // =========================================================
         // 7. SUMMARY OUTPUT
