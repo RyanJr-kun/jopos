@@ -743,18 +743,17 @@ class SaleController extends Controller implements HasMiddleware
   }
 
   /**
-   * Menampilkan struk thermal untuk penjualan.
+   * Menampilkan struk mmatrix untuk penjualan.
    *
    * @param  Sale  $penjualan
    * @return \Illuminate\View\View
    */
   public function printThermal(Sale $penjualan)
   {
-    // Eager load relasi yang dibutuhkan untuk efisiensi
     $penjualan->load('customer', 'user', 'items.product', 'items.serialNumbers');
     $profilToko = Store::find($penjualan->store_id);
 
-    return view('pos::penjualan.thermal', compact('penjualan', 'profilToko'));
+    return view('pos::penjualan.print-matrix', compact('penjualan', 'profilToko'));
   }
 
   private function hitungDppDanPajak(float $harga_jual, int $jumlah, float $diskon_item, ?int $taxe_id, \Illuminate\Support\Collection $taxesData): array
@@ -777,7 +776,6 @@ class SaleController extends Controller implements HasMiddleware
 
   public function storePayment(Request $request, Sale $penjualan)
   {
-    // Hilangkan format ribuan (titik) dari nominal input UI sebelum validasi
     if ($request->filled('jumlah_bayar')) {
       $request->merge([
         'jumlah_bayar' => preg_replace('/[^0-9]/', '', $request->input('jumlah_bayar')),
@@ -852,7 +850,6 @@ class SaleController extends Controller implements HasMiddleware
 
     return ''; // Kosongkan jika tidak ada opsi
   }
-
 
   public function getProduct(Request $request)
   {

@@ -17,7 +17,7 @@
                             #{{ $penjualan->referensi }}</span></h5>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{{ route('penjualan.thermal', $penjualan->referensi) }}" target="_blank"
+                    <a href="{{ route('penjualan.matrix', $penjualan->referensi) }}" target="_blank"
                         class="btn btn-sm btn-dark flex-grow-1 flex-md-grow-0">
                         <i class="bx bx-receipt me-1"></i> Struk
                     </a>

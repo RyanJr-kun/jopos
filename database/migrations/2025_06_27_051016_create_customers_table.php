@@ -20,7 +20,7 @@ return new class extends Migration
                 $table->string('email')->unique()->nullable();
                 $table->integer('loyalti_points')->nullable()->default(0);
                 $table->boolean('status')->default(true);
-
+                $table->text('alamat')->nullable();
                 $table->timestamps();
             });
         }

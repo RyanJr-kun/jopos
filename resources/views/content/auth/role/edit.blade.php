@@ -157,6 +157,8 @@
                                     'delete' => ['label' => 'Delete', 'icon' => 'bx-trash', 'color' => 'danger'],
                                     'print' => ['label' => 'Print', 'icon' => 'bx-printer', 'color' => 'secondary'],
                                     'export' => ['label' => 'Export', 'icon' => 'bx-export', 'color' => 'primary'],
+                                    'HPP' => ['label' => 'HPP', 'icon' => 'bx-show', 'color' => 'info'],
+                                    'claim' => ['label' => 'claim', 'icon' => 'bx-edit', 'color' => 'info'],
                                 ];
 
                                 // Gunakan $p->action — tidak perlu explode() lagi

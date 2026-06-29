@@ -113,11 +113,6 @@
                             </div>
                         @else
                             @php
-                                /*
-                                 * Definisi kolom aksi — urutannya adalah urutan kolom di tabel.
-                                 * Karena sekarang pakai $p->action (bukan parse string),
-                                 * kita cukup tentukan action mana yang BENAR-BENAR ada di data.
-                                 */
                                 $actionMeta = [
                                     'view' => ['label' => 'View', 'icon' => 'bx-show', 'color' => 'info'],
                                     'create' => ['label' => 'Create', 'icon' => 'bx-plus-circle', 'color' => 'success'],
@@ -125,9 +120,10 @@
                                     'delete' => ['label' => 'Delete', 'icon' => 'bx-trash', 'color' => 'danger'],
                                     'print' => ['label' => 'Print', 'icon' => 'bx-printer', 'color' => 'secondary'],
                                     'export' => ['label' => 'Export', 'icon' => 'bx-export', 'color' => 'primary'],
+                                    'HPP' => ['label' => 'HPP', 'icon' => 'bx-show', 'color' => 'info'],
+                                    'claim' => ['label' => 'claim', 'icon' => 'bx-edit', 'color' => 'info'],
                                 ];
 
-                                // Kumpulkan action yang benar-benar ada — pakai $p->action langsung
                                 $usedActions = [];
                                 foreach ($groupedPermissions as $perms) {
                                     foreach ($perms as $p) {
@@ -136,13 +132,12 @@
                                         }
                                     }
                                 }
-                                // Pertahankan urutan definisi $actionMeta, bukan urutan kemunculan
                                 $activeActions = array_intersect_key($actionMeta, $usedActions);
                             @endphp
 
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover permission-matrix mb-0">
-                                    <thead class="table-light">
+                                    <thead class="bg-label-light">
                                         <tr>
                                             {{-- Kolom modul + global select-all --}}
                                             <th class="ps-3 py-3" style="min-width:190px">
@@ -170,11 +165,6 @@
                                         @foreach ($groupedPermissions as $moduleName => $permissions)
                                             @php
                                                 $groupKey = Str::slug($moduleName);
-
-                                                /*
-                                                 * Buat map: action => permission untuk modul ini.
-                                                 * Pakai $p->action — tidak ada string-parsing lagi.
-                                                 */
                                                 $permMap = [];
                                                 foreach ($permissions as $p) {
                                                     $permMap[$p->action] = $p;

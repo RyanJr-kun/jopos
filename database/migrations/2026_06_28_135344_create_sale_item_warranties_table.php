@@ -13,17 +13,17 @@ return new class extends Migration
     {
         Schema::create('sale_item_warranties', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sale_id')->constrained('sales');
-            $table->foreignId('sale_item_id')->constrained('sale_items');
-            $table->foreignId('warranty_id')->constrained('warranties');
+            $table->foreignId('sale_id')->constrained('sales')->cascadeOnDelete();
+            $table->foreignId('sale_item_id')->constrained('sale_items')->cascadeOnDelete();
+            $table->foreignId('warranty_id')->constrained('warranties'); 
             $table->foreignId('product_id')->constrained('products');
             $table->foreignId('product_variant_id')->nullable()->constrained('product_variants');
-            $table->string('nomer_seri')->unique();
+            $table->foreignId('customer_id')->constrained('customers');
+            $table->string('nomer_seri')->nullable()->unique(); 
             $table->string('nomer_garansi')->unique();
             $table->date('tanggal_mulai');
             $table->date('tanggal_selesai');
-            $table->string('status');
-            $table->foreignId('customer_id')->constrained('customers');
+            $table->string('status')->comment('active, expired, void');
             $table->text('catatan')->nullable();
             $table->timestamps();
         });

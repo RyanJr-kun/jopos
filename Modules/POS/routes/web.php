@@ -20,7 +20,7 @@ Route::domain('jopos.' . $domain)->group(function () {
         Route::get('/penjualan/produk', [SaleController::class, 'getProduct'])->name('getDataProduct');
         
         Route::get('/penjualan/{penjualan}/json', [SaleController::class, 'getjson'])->name('penjualan.getjson');
-        Route::get('/penjualan/{penjualan:referensi}/thermal', [SaleController::class, 'printThermal'])->name('penjualan.thermal');
+        Route::get('/penjualan/{penjualan:referensi}/matrix', [SaleController::class, 'printThermal'])->name('penjualan.matrix');
         Route::get('/penjualan/{penjualan:referensi}/pdf', [SaleController::class, 'generatePdf'])->name('penjualan.pdf');
         Route::post('penjualan/{penjualan}/payment', [SaleController::class, 'storePayment'])->name('penjualan.payment.store');
 

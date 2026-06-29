@@ -14,19 +14,19 @@ return new class extends Migration
         Schema::create('claim_warranties', function (Blueprint $table) {
             $table->id();
             $table->string('nomer_claim')->unique();
-            $table->foreignId('warranty_id')->constrained('warranties');
-            $table->string('channel')->comment('pos / marketplace');
+            $table->foreignId('sale_item_warranty_id')->constrained('sale_item_warranties');
+            $table->string('channel')->comment('pos, marketplace');
             $table->date('tanggal_claim');
-            $table->text('keluhan')->nullable();
-            $table->string('bukti');
-            $table->string('metode_pengiriman');
-            $table->string('nomor_resi');
-            $table->string('status');
-            $table->string('tipe_resolusi');
+            $table->text('keluhan');
+            $table->string('bukti')->nullable();
+            $table->string('metode_pengiriman')->nullable();
+            $table->string('nomor_resi')->nullable();
+            $table->string('status')->default('Pending');
+            $table->string('tipe_resolusi')->nullable();
             $table->text('catatan_teknisi')->nullable();
-            $table->date('tanggal_selesai');
-            $table->foreignId('handled_by')->constrained('employees');
-            $table->dateTime('customer_notified_at');
+            $table->date('tanggal_selesai')->nullable();
+            $table->foreignId('handled_by')->nullable()->constrained('employee_profiles');
+            $table->dateTime('customer_notified_at')->nullable();
             $table->timestamps();
         });
     }
