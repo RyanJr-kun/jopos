@@ -54,7 +54,7 @@
         </div>
     </div>
     <div class="card rounded-2">
-        <div class="card-header pb-0 px-3 pt-2 mb-3">
+        <div class="card-header pb-0 mb-3">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-n1 fw-bolder">List Pelanggan</h5>

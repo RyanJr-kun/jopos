@@ -801,7 +801,7 @@ use Carbon\Carbon;
             </table>
         @endif
 
-    </div>{{-- end .container --}}
+    </div>
 
 </body>
 </html>
