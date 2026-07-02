@@ -4,7 +4,7 @@ namespace Modules\Inventory\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class StockTakeItem extends Model
+class StockOpnameItem extends Model
 {
     protected $guarded = ['id'];
 
@@ -15,7 +15,7 @@ class StockTakeItem extends Model
      */
     public function stokOpname()
     {
-        return $this->belongsTo(StockTake::class);
+        return $this->belongsTo(StockOpname::class);
     }
 
     /**

@@ -9,7 +9,7 @@ use Modules\Inventory\Http\Controllers\master\SupplierController;
 use Modules\Inventory\Http\Controllers\master\UnitController;
 use Modules\Inventory\Http\Controllers\master\WarrantieController;
 use Modules\Inventory\Http\Controllers\stok\StockAdjustmentController;
-use Modules\Inventory\Http\Controllers\stok\StockTakeController;
+use Modules\Inventory\Http\Controllers\stok\StockOpnameController;
 use Modules\Inventory\Http\Controllers\produk\PurchaseController;
 use Modules\Inventory\Http\Controllers\produk\ProductController;
 
@@ -25,16 +25,16 @@ Route::domain('jopos.' . $domain)->group(function () {
     // ---------------------------------------------------------
     // 1. MANAJEMEN STOK (Stock Management)
     // ---------------------------------------------------------
-    Route::get('stok-opname', [StockTakeController::class, 'index'])
+    Route::get('stok-opname', [StockOpnameController::class, 'index'])
       ->name('stok-opname.index')
       ->middleware('permission:create-stok-opname');
-    Route::post('stok-opname', [StockTakeController::class, 'store'])
+    Route::post('stok-opname', [StockOpnameController::class, 'store'])
       ->name('stok-opname.store')
       ->middleware('permission:create-stok-opname');
-    Route::get('stok-opname/history', [StockTakeController::class, 'history'])
+    Route::get('stok-opname/history', [StockOpnameController::class, 'history'])
       ->name('stok-opname.history')
       ->middleware('permission:view-stok-opname');
-    Route::get('stok-opname/history/{stok_opname}', [StockTakeController::class, 'show'])
+    Route::get('stok-opname/history/{stok_opname}', [StockOpnameController::class, 'show'])
       ->name('stok-opname.show')
       ->middleware('permission:view-stok-opname');
 

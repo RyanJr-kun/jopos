@@ -5,7 +5,7 @@ namespace Modules\Inventory\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
-class StockTake extends Model
+class StockOpname extends Model
 {
     protected $guarded = ['id'];
 
@@ -15,17 +15,17 @@ class StockTake extends Model
 
 
     /**
-     * Mendapatkan semua detail untuk StockTake.
+     * Mendapatkan semua detail untuk StockOpname.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function details()
     {
-        return $this->hasMany(StockTakeItem::class);
+        return $this->hasMany(StockOpnameItem::class);
     }
 
     /**
-     * Mendapatkan user yang melakukan StockTake.
+     * Mendapatkan user yang melakukan StockOpname.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
