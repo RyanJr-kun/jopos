@@ -8,12 +8,12 @@
     <div class="card rounded-2 printable-area">
         <div class="card-header bg-transparent border-bottom pt-4 pb-3">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                <div class="d-flex align-items-center gap-2">
-                    <a href="{{ url()->previous() }}" class="btn btn-icon btn-outline-secondary btn-sm"
+                <div class="d-md-flex align-items-center gap-3">
+                    <a href="{{ url()->previous() }}" class="btn btn-icon btn-outline-secondary btn-sm mb-2 mb-md-0"
                         data-bs-toggle="tooltip" title="Kembali">
                         <i class="bx bx-arrow-back"></i>
                     </a>
-                    <h5 class="mb-0 fw-bold">Detail Penjualan<span class="text-muted fs-6 ms-1">
+                    <h5 class="mb-2 mb-md-0 fw-bold">Detail Penjualan<span class="text-muted fs-6 ms-1">
                             #{{ $penjualan->referensi }}</span></h5>
                 </div>
                 <div class="d-flex gap-2">
@@ -25,6 +25,11 @@
                         class="btn btn-sm btn-outline-danger px-3" data-bs-toggle="tooltip" title="Download PDF">
                         <i class="bx bxs-file-pdf"></i>
                     </a>
+                    <button id="btnShareFile" data-url="{{ route('faktur.download', $penjualan->id) }}"
+                        class="btn btn-sm btn-outline-blue d-md-none d-block px-3"><i class="bx bx-share-alt me-2"
+                            aria-hidden="true"></i>
+                        <span>Kirim Struk</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -70,7 +75,7 @@
                             <span
                                 class="text-sm fw-semibold">{{ \Carbon\Carbon::parse($penjualan->tanggal_pembelian)->translatedFormat('d F Y, H:i') }}</span>
                         </div>
-                        
+
                         @if ($penjualan->status_pembayaran !== 'Lunas' && $penjualan->tanggal_jatuh_tempo)
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-sm text-muted">Jatuh Tempo:</span>
@@ -117,9 +122,9 @@
                                             <small class="text-muted">{{ $item->varian->label }}</small>
                                         @endif
                                     </p>
-                                    
-                                    
-                                    
+
+
+
                                     @if ($item->serialNumbers->isNotEmpty())
                                         <small class="text-muted mt-1">
                                             <strong>SN:</strong>
@@ -543,6 +548,39 @@
                         '<i class="bx bx-loader bx-spin me-1"></i> Memproses...');
                 });
             });
+        });
+    </script>
+    <script>
+        document.getElementById('btnShareFile').addEventListener('click', async function() {
+            const url = this.getAttribute('data-url');
+
+            try {
+                // 1. Ambil file PDF dari server
+                const response = await fetch(url);
+                const blob = await response.blob();
+
+                // 2. Ubah menjadi objek File
+                const file = new File([blob], 'Faktur-Penjualan.pdf', {
+                    type: 'application/pdf'
+                });
+
+                // 3. Cek apakah browser HP mendukung share file
+                if (navigator.canShare && navigator.canShare({
+                        files: [file]
+                    })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Faktur Penjualan',
+                        text: 'Berikut adalah lampiran faktur penjualan Anda.'
+                    });
+                } else {
+                    alert(
+                        'Browser perangkat ini tidak mendukung fitur kirim file langsung. Silakan download PDF terlebih dahulu.'
+                    );
+                }
+            } catch (error) {
+                console.error('Gagal membagikan file:', error);
+            }
         });
     </script>
 @endsection

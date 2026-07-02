@@ -29,19 +29,53 @@ class StoreController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index()
+   public function index(Request $request)
     {
-        // Kita pisahkan datanya di sini agar di Blade tinggal pakai Tabs
-        $tokos = Store::toko()->latest()->get();
-        $gudangs = Store::gudang()->latest()->get();
+        $query = Store::query()->with(['pic', 'employees']);
 
-        // Ambil user untuk dropdown pilihan Kepala Toko (PIC) saat Create/Edit
-        $users = User::all();
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name_toko', 'LIKE', "%{$search}%")
+                ->orWhere('alamat', 'LIKE', "%{$search}%");
+            });
+        }
+        if ($request->filled('daerah')) {
+            $daerah = $request->daerah;
+            $query->where(function ($q) use ($daerah) {
+                $q->where('provinsi', 'LIKE', "%{$daerah}%")
+                ->orWhere('kabupaten_kota', 'LIKE', "%{$daerah}%")
+                ->orWhere('kecamatan', 'LIKE', "%{$daerah}%")
+                ->orWhere('desa', 'LIKE', "%{$daerah}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $isActive = $request->status === 'Aktif' ? 1 : 0;
+            $query->where('is_active', $isActive);
+        }
+
+        $filteredStores = $query->latest()->get();
+
+        $tokos = $filteredStores->filter(fn ($item) => strtolower($item->type) === 'toko')->values();
+        $gudangs = $filteredStores->filter(fn ($item) => strtolower($item->type) === 'gudang')->values();
+
+        // Response AJAX untuk live filter (tanpa reload / tombol submit)
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'tokos_html'   => view('content.hrd.store._toko-cards', compact('tokos'))->render(),
+                'gudangs_html' => view('content.hrd.store._gudang-cards', compact('gudangs'))->render(),
+                'tokos_count'  => $tokos->count(),
+                'gudangs_count' => $gudangs->count(),
+                'total'        => $filteredStores->count(),
+            ]);
+        }
+
         $types = Store::getTypes();
+        $employees = User::with('employee')->get(); // Sesuaikan relasimu
 
-        return view('content.hrd.store.index', compact('tokos', 'gudangs', 'users', 'types'));
+        return view('content.hrd.store.index', compact('tokos', 'gudangs', 'types', 'employees'));
     }
-
     /**
      * Menyimpan data toko/gudang baru.
      */
@@ -65,13 +99,12 @@ class StoreController extends Controller implements HasMiddleware
             'is_active' => 'nullable|boolean',
         ]);
 
-        // Default is_active = true jika tidak dikirim dari form
         $validatedData['is_active'] = $request->has('is_active');
 
         // Handle FilePond Upload
         if (!empty($validatedData['logo'])) {
             $tempPath = $validatedData['logo'];
-            if (Storage::disk('r2')->exists($tempPath)) {
+            if (str_starts_with($tempPath, 'tmp/') && Storage::disk('r2')->exists($tempPath)) {
                 $newPath = 'profil-toko/' . basename($tempPath);
                 Storage::disk('r2')->move($tempPath, $newPath);
                 $validatedData['logo'] = $newPath;
@@ -142,9 +175,22 @@ class StoreController extends Controller implements HasMiddleware
         return redirect()->route('toko.index')->with('success', 'Profil lokasi berhasil diperbarui.');
     }
 
+    /**
+     * Menghapus data toko/gudang.
+     */
+    public function destroy(Store $toko)
+    {
+        if ($toko->logo && Storage::disk('r2')->exists($toko->logo)) {
+            Storage::disk('r2')->delete($toko->logo);
+        }
+
+        $toko->delete();
+
+        return redirect()->route('toko.index')->with('success', 'Lokasi berhasil dihapus.');
+    }
+
     public function upload(Request $request)
     {
-        // Deteksi nama field otomatis (apakah FilePond mengirim 'logo' atau 'filepond')
         $inputName = $request->hasFile('logo') ? 'logo' : 'filepond';
 
         // Validasi input
@@ -175,7 +221,6 @@ class StoreController extends Controller implements HasMiddleware
     {
         $filePath = $request->getContent();
 
-        // Tambahkan pengecekan untuk memastikan filePath bukan HTML
         if (str_starts_with(trim($filePath), '<!DOCTYPE')) {
             return response()->json(['error' => 'Invalid path provided.'], 400);
         }
@@ -184,14 +229,18 @@ class StoreController extends Controller implements HasMiddleware
             Storage::disk('r2')->delete($filePath);
             return response()->noContent();
         }
-        return response()->json(['error' => 'File not found.'], 404); // Tetap JSON untuk error
+        return response()->json(['error' => 'File not found.'], 404); 
     }
-    // Tambahkan di App\Http\Controllers\dashboard\StoreController.php
 
     /**
      * Mengambil daftar semua karyawan dan status keanggotaan di toko tertentu (AJAX).
      */
-    public function getMembers($id)
+    /**
+     * Mengambil daftar semua karyawan dan status keanggotaan di toko tertentu (AJAX).
+     * Tambahkan ?members_only=1 untuk dapat payload ringan (khusus anggota toko ini saja),
+     * dipakai oleh popover detail anggota di kartu toko/gudang.
+     */
+    public function getMembers(Request $request, $id)
     {
         $store = Store::findOrFail($id);
 
@@ -204,10 +253,15 @@ class StoreController extends Controller implements HasMiddleware
                     'id' => $user->id,
                     'name' => $user->name,
                     'jabatan' => $user->employee->jabatan ?? '-',
+                    'avatar' => $user->employee->avatar ? Storage::disk('r2')->url($user->employee->avatar) : null,
                     'is_member' => $user->employee->store_id == $id,
-                    'current_store' => $user->employee->store->name_toko ?? 'Belum Ditempatkan'
+                    'current_store' => $user->employee->store?->name_toko ?? 'Belum Ditempatkan'
                 ];
             });
+
+        if ($request->boolean('members_only')) {
+            $allEmployees = $allEmployees->where('is_member', true)->values();
+        }
 
         return response()->json([
             'store_name' => $store->name_toko,

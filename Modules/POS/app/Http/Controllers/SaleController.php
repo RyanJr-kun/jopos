@@ -714,6 +714,14 @@ class SaleController extends Controller implements HasMiddleware
     return $pdf->stream('faktur-penjualan-' . $penjualan->referensi . '.pdf');
   }
 
+    public function downloadFaktur($id)
+  {
+      $penjualan = Penjualan::findOrFail($id);
+      $pdf = Pdf::loadView('faktur-penjualan-pdf', compact('penjualan'));
+      
+      return $pdf->stream('faktur.pdf');
+  }
+
   public function getTodayHistory(Request $request)
   {
     if ($request->ajax()) {

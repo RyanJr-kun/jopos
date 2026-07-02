@@ -22,6 +22,7 @@ Route::domain('jopos.' . $domain)->group(function () {
         Route::get('/penjualan/{penjualan}/json', [SaleController::class, 'getjson'])->name('penjualan.getjson');
         Route::get('/penjualan/{penjualan:referensi}/matrix', [SaleController::class, 'printThermal'])->name('penjualan.matrix');
         Route::get('/penjualan/{penjualan:referensi}/pdf', [SaleController::class, 'generatePdf'])->name('penjualan.pdf');
+        Route::get('/penjualan/{penjualan:id}/faktur', [SaleController::class, 'downloadPdf'])->name('faktur.download');
         Route::post('penjualan/{penjualan}/payment', [SaleController::class, 'storePayment'])->name('penjualan.payment.store');
 
         // 2. Letakkan Route::resource di paling bawah

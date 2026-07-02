@@ -32,8 +32,6 @@ class UserController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        // Menggunakan whereHas('employee') memastikan HANYA user yang punya relasi
-        // di tabel employee_profiles yang akan ditarik. Jauh lebih aman dari cek Role.
         $query = User::with(['roles', 'employee.store'])
             ->whereHas('employee') 
             ->orderBy('id', 'DESC');

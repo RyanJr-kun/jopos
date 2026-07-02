@@ -8,7 +8,6 @@ use Carbon\Carbon;
     <meta charset="UTF-8">
     <title>Faktur Penjualan - {{ $penjualan->referensi }}</title>
     <style>
-
         /* ══════════════════════════════════════════════════════════
          * PAGE SETUP — A4 Portrait
          * Margin kiri/kanan 20mm memberi "napas" agar konten
@@ -16,7 +15,8 @@ use Carbon\Carbon;
          * ══════════════════════════════════════════════════════════ */
         @page {
             size: A4 portrait;
-            margin: 0;          /* dihandle manual via padding container */
+            margin: 0;
+            /* dihandle manual via padding container */
         }
 
         /* ══════════════════════════════════════════════════════════
@@ -44,10 +44,9 @@ use Carbon\Carbon;
             top: 0;
             left: 0;
             right: 0;
-            height: 52px;
-            padding: 12px 20mm 10px;        /* kiri-kanan ikut margin 20mm */
+            height: 40px;
+            padding: 12px 20mm 10px;
             background: #fff;
-            border-bottom: 2px solid #1a1a2e;
         }
 
         .pdf-header-inner {
@@ -62,7 +61,7 @@ use Carbon\Carbon;
         }
 
         .pdf-header-logo img {
-            height: 24px;
+            height: 40px;
             width: auto;
         }
 
@@ -96,7 +95,8 @@ use Carbon\Carbon;
             left: 0;
             right: 0;
             height: 28px;
-            padding: 7px 20mm;              /* ikut margin 20mm */
+            padding: 7px 20mm;
+            /* ikut margin 20mm */
             border-top: 1px solid #e8e8ee;
             background: #fff;
         }
@@ -119,22 +119,15 @@ use Carbon\Carbon;
             content: "Halaman " counter(page) " dari " counter(pages);
         }
 
-        /* ══════════════════════════════════════════════════════════
-         * CONTAINER UTAMA
-         * padding-top/bottom menjaga konten tidak tertutup
-         * header/footer yang fixed.
-         * padding kiri/kanan = margin fisik 20mm.
-         * ══════════════════════════════════════════════════════════ */
         .container {
-            padding-top: 64px;      /* header 52px + gap 12px */
-            padding-bottom: 40px;   /* footer 28px + gap 12px */
+            padding-top: 64px;
+            /* header 52px + gap 12px */
+            padding-bottom: 40px;
+            /* footer 28px + gap 12px */
             padding-left: 20mm;
             padding-right: 20mm;
         }
 
-        /* ══════════════════════════════════════════════════════════
-         * SECTION TITLE
-         * ══════════════════════════════════════════════════════════ */
         .section-title {
             font-size: 8px;
             font-weight: bold;
@@ -147,11 +140,6 @@ use Carbon\Carbon;
             border-bottom: 1px solid #ebebf0;
         }
 
-        /* ══════════════════════════════════════════════════════════
-         * 3 INFO BOX
-         * Menggunakan display:table karena DomPDF lebih stabil
-         * dengan table dibanding flexbox.
-         * ══════════════════════════════════════════════════════════ */
         .info-grid {
             display: table;
             width: 100%;
@@ -174,7 +162,9 @@ use Carbon\Carbon;
             vertical-align: top;
         }
 
-        .info-box:first-child { margin-left: 0; }
+        .info-box:first-child {
+            margin-left: 0;
+        }
 
         .info-box-shade {
             background-color: #f6f6fa;
@@ -239,9 +229,20 @@ use Carbon\Carbon;
             letter-spacing: 0.03em;
         }
 
-        .badge-success { background: #dcf3e5; color: #166534; }
-        .badge-warning { background: #fef9c3; color: #854d0e; }
-        .badge-danger  { background: #fee2e2; color: #991b1b; }
+        .badge-success {
+            background: #dcf3e5;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
 
         /* ══════════════════════════════════════════════════════════
          * TABEL PRODUK
@@ -446,8 +447,13 @@ use Carbon\Carbon;
             font-weight: bold;
         }
 
-        .ssl-val.is-green { color: #166534; }
-        .ssl-val.is-red   { color: #991b1b; }
+        .ssl-val.is-green {
+            color: #166534;
+        }
+
+        .ssl-val.is-red {
+            color: #991b1b;
+        }
 
         /* ══════════════════════════════════════════════════════════
          * TABEL RIWAYAT PEMBAYARAN
@@ -499,28 +505,75 @@ use Carbon\Carbon;
             border-top: 1px solid #e0e0ea;
         }
 
-        .pay-date-main { font-weight: 600; font-size: 9px; }
-        .pay-date-time { font-size: 8px; color: #aaa; margin-top: 1px; }
-        .pay-ref       { font-weight: 600; color: #1a3a8f; margin-bottom: 2px; font-size: 8.5px; }
-        .pay-note      { color: #888; font-size: 8.5px; }
+        .pay-date-main {
+            font-weight: 600;
+            font-size: 9px;
+        }
+
+        .pay-date-time {
+            font-size: 8px;
+            color: #aaa;
+            margin-top: 1px;
+        }
+
+        .pay-ref {
+            font-weight: 600;
+            color: #1a3a8f;
+            margin-bottom: 2px;
+            font-size: 8.5px;
+        }
+
+        .pay-note {
+            color: #888;
+            font-size: 8.5px;
+        }
 
         /* ══════════════════════════════════════════════════════════
          * UTILITY CLASSES
          * ══════════════════════════════════════════════════════════ */
-        .text-right  { text-align: right; }
-        .text-center { text-align: center; }
-        .text-left   { text-align: left; }
-        .fw-bold     { font-weight: bold; }
-        .text-green  { color: #166534; font-weight: bold; }
-        .text-blue   { color: #1a3a8f; font-weight: bold; }
-
-        @media print {
-            .no-print { display: none !important; }
-            .items-table tr   { page-break-inside: avoid; }
-            .payment-table tr { page-break-inside: avoid; }
-            .bottom-grid      { page-break-inside: avoid; }
+        .text-right {
+            text-align: right;
         }
 
+        .text-center {
+            text-align: center;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        .fw-bold {
+            font-weight: bold;
+        }
+
+        .text-green {
+            color: #166534;
+            font-weight: bold;
+        }
+
+        .text-blue {
+            color: #1a3a8f;
+            font-weight: bold;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .items-table tr {
+                page-break-inside: avoid;
+            }
+
+            .payment-table tr {
+                page-break-inside: avoid;
+            }
+
+            .bottom-grid {
+                page-break-inside: avoid;
+            }
+        }
     </style>
 </head>
 
@@ -530,8 +583,7 @@ use Carbon\Carbon;
     <div class="pdf-header">
         <div class="pdf-header-inner">
             <div class="pdf-header-logo">
-                <img src="{{ asset('assets/img/LM-Default.png') }}"
-                     alt="{{ $profilToko->name_toko ?? 'JO COMPUTER' }}">
+                <img src="{{ asset('assets/img/LM-Default.png') }}" alt="{{ $profilToko->name_toko ?? 'JO COMPUTER' }}">
             </div>
             <div class="pdf-header-title">
                 <h1>FAKTUR PENJUALAN</h1>
@@ -544,7 +596,8 @@ use Carbon\Carbon;
     <div class="pdf-footer">
         <table>
             <tr>
-                <td>&copy; {{ date('Y') }} {{ $profilToko->name_toko ?? config('app.name') }}. All rights reserved.</td>
+                <td>&copy; {{ date('Y') }} {{ $profilToko->name_toko ?? config('app.name') }}. All rights reserved.
+                </td>
                 <td class="text-right page-number"></td>
             </tr>
         </table>
@@ -584,13 +637,15 @@ use Carbon\Carbon;
                     </div>
                     <div class="data-row">
                         <span class="data-key">Tanggal</span>
-                        <span class="data-val">{{ Carbon::parse($penjualan->tanggal_penjualan)->translatedFormat('d F Y') }}</span>
+                        <span
+                            class="data-val">{{ Carbon::parse($penjualan->tanggal_penjualan)->translatedFormat('d F Y') }}</span>
                     </div>
                     @if ($penjualan->status_pembayaran !== 'Lunas' && $penjualan->tanggal_jatuh_tempo)
-                    <div class="data-row">
-                        <span class="data-key">Jatuh Tempo</span>
-                        <span class="data-val">{{ Carbon::parse($penjualan->tanggal_jatuh_tempo)->translatedFormat('d F Y') }}</span>
-                    </div>
+                        <div class="data-row">
+                            <span class="data-key">Jatuh Tempo</span>
+                            <span
+                                class="data-val">{{ Carbon::parse($penjualan->tanggal_jatuh_tempo)->translatedFormat('d F Y') }}</span>
+                        </div>
                     @endif
                     <div class="data-row">
                         <span class="data-key">Metode</span>
@@ -604,10 +659,10 @@ use Carbon\Carbon;
                         <span class="data-key">Status</span>
                         <span class="data-val">
                             @php
-                                $statusClass = match($penjualan->status_pembayaran) {
-                                    'Lunas'      => 'badge-success',
+                                $statusClass = match ($penjualan->status_pembayaran) {
+                                    'Lunas' => 'badge-success',
                                     'Dibatalkan' => 'badge-danger',
-                                    default      => 'badge-warning',
+                                    default => 'badge-warning',
                                 };
                             @endphp
                             <span class="badge {{ $statusClass }}">{{ $penjualan->status_pembayaran }}</span>
@@ -633,24 +688,25 @@ use Carbon\Carbon;
             </thead>
             <tbody>
                 @foreach ($penjualan->items as $item)
-                <tr>
-                    <td class="text-center">{{ $loop->iteration }}.</td>
-                    <td>
-                        <span class="product-name">
-                            {{ $item->product->name_product ?? 'Produk Dihapus' }}
-                            @if ($item->product_variant_id && $item->varian && $item->varian->label)
-                                &mdash; {{ $item->varian->label }}
+                    <tr>
+                        <td class="text-center">{{ $loop->iteration }}.</td>
+                        <td>
+                            <span class="product-name">
+                                {{ $item->product->name_product ?? 'Produk Dihapus' }}
+                                @if ($item->product_variant_id && $item->varian && $item->varian->label)
+                                    &mdash; {{ $item->varian->label }}
+                                @endif
+                            </span>
+                            @if ($item->serialNumbers->isNotEmpty())
+                                <span class="serial-num">S/N:
+                                    {{ $item->serialNumbers->pluck('nomor_seri')->join(', ') }}</span>
                             @endif
-                        </span>
-                        @if ($item->serialNumbers->isNotEmpty())
-                            <span class="serial-num">S/N: {{ $item->serialNumbers->pluck('nomor_seri')->join(', ') }}</span>
-                        @endif
-                    </td>
-                    <td class="text-center">{{ $item->jumlah }}</td>
-                    <td class="text-right">@money($item->harga_jual)</td>
-                    <td class="text-right">@money($item->diskon_item)</td>
-                    <td class="text-right fw-bold">@money($item->subtotal)</td>
-                </tr>
+                        </td>
+                        <td class="text-center">{{ $item->jumlah }}</td>
+                        <td class="text-right">@money($item->harga_jual)</td>
+                        <td class="text-right">@money($item->diskon_item)</td>
+                        <td class="text-right fw-bold">@money($item->subtotal)</td>
+                    </tr>
                 @endforeach
             </tbody>
         </table>
@@ -682,31 +738,44 @@ use Carbon\Carbon;
                             <table style="width:100%;border:none;margin:0;border-collapse:collapse;">
                                 <tr>
                                     <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Subtotal Produk</td>
-                                    <td style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">@money($penjualan->subtotal)</td>
+                                    <td
+                                        style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                        @money($penjualan->subtotal)</td>
                                 </tr>
                                 @if ($penjualan->pajak > 0)
-                                <tr>
-                                    <td style="border:none;padding:2px 0;font-size:9px;color:#666;">PPN / Pajak</td>
-                                    <td style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">@money($penjualan->pajak)</td>
-                                </tr>
+                                    <tr>
+                                        <td style="border:none;padding:2px 0;font-size:9px;color:#666;">PPN / Pajak</td>
+                                        <td
+                                            style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                            @money($penjualan->pajak)</td>
+                                    </tr>
                                 @endif
                                 @if ($penjualan->diskon > 0)
-                                <tr>
-                                    <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Diskon Tambahan</td>
-                                    <td style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#991b1b;">&#8722;&nbsp;@money($penjualan->diskon)</td>
-                                </tr>
+                                    <tr>
+                                        <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Diskon Tambahan
+                                        </td>
+                                        <td
+                                            style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#991b1b;">
+                                            &#8722;&nbsp;@money($penjualan->diskon)</td>
+                                    </tr>
                                 @endif
                                 @if ($penjualan->ongkir > 0)
-                                <tr>
-                                    <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Ongkos Kirim</td>
-                                    <td style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">@money($penjualan->ongkir)</td>
-                                </tr>
+                                    <tr>
+                                        <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Ongkos Kirim
+                                        </td>
+                                        <td
+                                            style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                            @money($penjualan->ongkir)</td>
+                                    </tr>
                                 @endif
                                 @if ($penjualan->service > 0)
-                                <tr>
-                                    <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Biaya Servis</td>
-                                    <td style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">@money($penjualan->service)</td>
-                                </tr>
+                                    <tr>
+                                        <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Biaya Servis
+                                        </td>
+                                        <td
+                                            style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                            @money($penjualan->service)</td>
+                                    </tr>
                                 @endif
                             </table>
                         </div>
@@ -718,7 +787,8 @@ use Carbon\Carbon;
                             <table style="width:100%;border:none;margin:0;border-collapse:collapse;">
                                 <tr>
                                     <td style="border:none;padding:0;" class="stl-label">Total Akhir</td>
-                                    <td style="border:none;padding:0;" class="stl-value text-right">@money($penjualan->total_akhir)</td>
+                                    <td style="border:none;padding:0;" class="stl-value text-right">@money($penjualan->total_akhir)
+                                    </td>
                                 </tr>
                             </table>
                         </div>
@@ -728,23 +798,33 @@ use Carbon\Carbon;
                         {{-- Dibayar & sisa/kembalian --}}
                         <table style="width:100%;border:none;margin:0;border-collapse:collapse;">
                             @if ($penjualan->status_pembayaran === 'Piutang')
-                            <tr>
-                                <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Jumlah Dibayar</td>
-                                <td style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">@money($penjualan->jumlah_dibayar)</td>
-                            </tr>
-                            <tr>
-                                <td style="border:none;padding:2px 0;font-size:9px;font-weight:bold;color:#1a1a2e;">Sisa Piutang</td>
-                                <td style="border:none;padding:2px 0;font-size:9.5px;font-weight:bold;text-align:right;color:#991b1b;">@money($penjualan->sisa_piutang)</td>
-                            </tr>
+                                <tr>
+                                    <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Jumlah Dibayar</td>
+                                    <td
+                                        style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                        @money($penjualan->jumlah_dibayar)</td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none;padding:2px 0;font-size:9px;font-weight:bold;color:#1a1a2e;">
+                                        Sisa Piutang</td>
+                                    <td
+                                        style="border:none;padding:2px 0;font-size:9.5px;font-weight:bold;text-align:right;color:#991b1b;">
+                                        @money($penjualan->sisa_piutang)</td>
+                                </tr>
                             @elseif ($penjualan->status_pembayaran === 'Lunas')
-                            <tr>
-                                <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Dibayar</td>
-                                <td style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">@money($penjualan->jumlah_dibayar)</td>
-                            </tr>
-                            <tr>
-                                <td style="border:none;padding:2px 0;font-size:9px;font-weight:bold;color:#1a1a2e;">Kembalian</td>
-                                <td style="border:none;padding:2px 0;font-size:9.5px;font-weight:bold;text-align:right;color:#166534;">@money(abs($penjualan->kembalian))</td>
-                            </tr>
+                                <tr>
+                                    <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Dibayar</td>
+                                    <td
+                                        style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                        @money($penjualan->jumlah_dibayar)</td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none;padding:2px 0;font-size:9px;font-weight:bold;color:#1a1a2e;">
+                                        Kembalian</td>
+                                    <td
+                                        style="border:none;padding:2px 0;font-size:9.5px;font-weight:bold;text-align:right;color:#166534;">
+                                        @money(abs($penjualan->kembalian))</td>
+                                </tr>
                             @endif
                         </table>
 
@@ -761,40 +841,43 @@ use Carbon\Carbon;
                 <thead>
                     <tr>
                         <th class="text-center" width="4%">No.</th>
-                        <th width="18%">Tanggal Bayar</th>
-                        <th width="14%">Kasir</th>
-                        <th width="12%">Metode</th>
-                        <th>Referensi / Catatan</th>
+                        <th class="text-left" width="18%">Tanggal Bayar</th>
+                        <th class="text-left" width="14%">Kasir</th>
+                        <th class="text-center" width="12%">Metode</th>
+                        <th class="text-left">Referensi / Catatan</th>
                         <th class="text-right" width="18%">Jumlah Bayar</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($penjualan->payments as $key => $payment)
-                    <tr>
-                        <td class="text-center">{{ $key + 1 }}.</td>
-                        <td>
-                            <div class="pay-date-main">{{ Carbon::parse($payment->tanggal_bayar)->translatedFormat('d F Y') }}</div>
-                            <div class="pay-date-time">{{ Carbon::parse($payment->tanggal_bayar)->format('H:i') }} WIB</div>
-                        </td>
-                        <td>{{ $payment->user->name ?? '-' }}</td>
-                        <td>
-                            <span class="badge badge-{{ $payment->metode_pembayaran === 'TRANSFER' ? 'success' : 'warning' }}">
-                                {{ $payment->metode_pembayaran ?? '-' }}
-                            </span>
-                        </td>
-                        <td>
-                            @if ($payment->referensi_pembayaran)
-                                <div class="pay-ref">Ref: {{ $payment->referensi_pembayaran }}</div>
-                            @endif
-                            <div class="pay-note">{!! $payment->catatan ?? '-' !!}</div>
-                        </td>
-                        <td class="text-right text-green">@money($payment->jumlah_bayar)</td>
-                    </tr>
+                        <tr>
+                            <td class="text-center">{{ $key + 1 }}.</td>
+                            <td>
+                                <div class="pay-date-main">
+                                    {{ Carbon::parse($payment->tanggal_bayar)->translatedFormat('d F Y') }}</div>
+                                <div class="pay-date-time">{{ Carbon::parse($payment->tanggal_bayar)->format('H:i') }}
+                                    WIB</div>
+                            </td>
+                            <td>{{ $payment->user->name ?? '-' }}</td>
+                            <td class="text-center">
+                                <span
+                                    class="badge badge-{{ $payment->metode_pembayaran === 'TRANSFER' ? 'success' : 'warning' }}">
+                                    {{ $payment->metode_pembayaran ?? '-' }}
+                                </span>
+                            </td>
+                            <td>
+                                @if ($payment->referensi_pembayaran)
+                                    <div class="pay-ref">Ref: {{ $payment->referensi_pembayaran }}</div>
+                                @endif
+                                <div class="pay-note">{!! $payment->catatan ?? '-' !!}</div>
+                            </td>
+                            <td class="text-right text-green">@money($payment->jumlah_bayar)</td>
+                        </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5">Total Pembayaran</td>
+                        <td class="text-left" colspan="5">Total Pembayaran</td>
                         <td class="text-right text-blue">@money($penjualan->payments->sum('jumlah_bayar'))</td>
                     </tr>
                 </tfoot>
@@ -804,4 +887,5 @@ use Carbon\Carbon;
     </div>
 
 </body>
+
 </html>

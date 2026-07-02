@@ -22,7 +22,6 @@ class PurchaseItem extends Model
 
     public function produk(): BelongsTo
     {
-        // Tambahkan 'product_id'
         return $this->belongsTo(Product::class, 'product_id');
     }
 

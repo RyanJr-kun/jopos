@@ -20,199 +20,135 @@
 @endsection
 
 @section('content')
-    {{-- ── Page Header ── --}}
-    <div class="loc-page-header">
-        <h4 class="loc-page-title">
-            <span class="loc-breadcrumb">Master /</span> Toko &amp; Gudang
-        </h4>
-        <button type="button" class="btn btn-loc-add btn-add" data-bs-toggle="modal" data-bs-target="#modalStore">
-            <i class="bx bx-plus"></i> Tambah Lokasi
-        </button>
-    </div>
 
-    {{-- ── Tabs + Content ── --}}
-    <div class="card">
-        <div class="card-header">
-            <ul class="nav loc-nav-tabs" id="locTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button type="button" class="nav-link active" id="tab-toko" role="tab" data-bs-toggle="tab"
-                        data-bs-target="#navs-toko" aria-controls="navs-toko" aria-selected="true">
-                        <i class="bx bx-store"></i>
-                        Daftar Toko
-                        <span class="loc-tab-badge">{{ $tokos->count() }}</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button type="button" class="nav-link" id="tab-gudang" role="tab" data-bs-toggle="tab"
-                        data-bs-target="#navs-gudang" aria-controls="navs-gudang" aria-selected="false">
-                        <i class="bx bx-building-house"></i>
-                        Daftar Gudang
-                        <span class="loc-tab-badge">{{ $gudangs->count() }}</span>
-                    </button>
-                </li>
-            </ul>
-        </div>
-        <div class="card-body">
-            <div class="tab-content p-0">
 
-                {{-- ══ TAB TOKO ══ --}}
-                <div class="tab-pane fade show active" id="navs-toko" role="tabpanel">
-                    <div class="row g-3 loc-cards-grid">
-                        @forelse ($tokos as $toko)
-                            <div class="col-md-6 col-lg-4">
-                                <div class="loc-card loc-card-toko">
-                                    <div class="loc-card-body">
-
-                                        <div class="loc-card-header">
-                                            <div class="d-flex align-items-center" style="min-width:0">
-                                                <div class="loc-logo-wrap me-3">
-                                                    <img src="{{ $toko->logo ? Storage::url($toko->logo) : asset('assets/img/default-store.png') }}"
-                                                        alt="Logo" class="loc-logo">
-                                                    <span class="loc-type-dot"></span>
-                                                </div>
-                                                <div class="loc-name-block">
-                                                    <h6>{{ $toko->name_toko }}</h6>
-                                                    @if ($toko->is_active)
-                                                        <span class="loc-status-badge status-active">Aktif</span>
-                                                    @else
-                                                        <span class="loc-status-badge status-inactive">Non-Aktif</span>
-                                                    @endif
-                                                </div>
-                                            </div>
-
-                                            <div class="dropdown ms-2">
-                                                <div class="dropdown">
-                                                    <button class="btn p-0" type="button" data-bs-toggle="dropdown"
-                                                        aria-haspopup="true" aria-expanded="false">
-                                                        <i class="bx bx-dots-vertical-rounded"></i>
-                                                    </button>
-                                                    <div class="dropdown-menu dropdown-menu-end">
-                                                        <a class="dropdown-item btn-edit" href="javascript:void(0);"
-                                                            data-store='@json($toko)'
-                                                            data-logo-url="{{ $toko->logo ? Storage::url($toko->logo) : '' }}">
-                                                            <i class="bx bx-edit-alt me-1 text-info"></i> Edit
-                                                        </a>
-                                                        {{-- FIX: Ganti inline confirm() dengan delete modal component --}}
-                                                        <button type="button" class="dropdown-item btn-delete-trigger"
-                                                            data-bs-toggle="modal" data-bs-target="#modalDeleteStore"
-                                                            data-title="{{ $toko->name_toko }}"
-                                                            data-action="{{ route('toko.destroy', $toko->id) }}">
-                                                            <i class="bx bx-trash me-1 text-danger"></i> Hapus
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="loc-info-row">
-                                            <i class="bx bx-map loc-info-icon"></i>
-                                            <span>{{ $toko->full_region }}</span>
-                                        </div>
-                                        <div class="loc-info-row">
-                                            <i class="bx bx-user loc-info-icon"></i>
-                                            <span>PIC: <strong>{{ $toko->pic->name ?? 'Belum Ditentukan' }}</strong></span>
-                                        </div>
-                                        <div class="loc-info-row mt-2">
-                                            <i class="bx bx-group loc-info-icon"></i>
-                                            <span>Anggota: <strong>{{ $toko->employees->count() }} Orang</strong></span>
-                                        </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-3 btn-members"
-                                            data-id="{{ $toko->id }}">
-                                            <i class="bx bx-user-plus me-1"></i> Atur Anggota
-                                        </button>
-
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="col-12">
-                                <div class="loc-empty-state">
-                                    <img class="loc-empty-img"
-                                        src="{{ asset('assets/img/illustrations/man-with-laptop-light.png') }}"
-                                        width="140" alt="Kosong">
-                                    <h6 class="mt-2">Belum ada data Toko</h6>
-                                </div>
-                            </div>
-                        @endforelse
+    <div class="row g-4 align-items-stretch ">
+        <div class="col-12 col-md-4 col-xl-3 mb-md-0">
+            <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4d50eb 0%, #8592ff 100%);">
+                <div class="card-body d-flex align-items-center">
+                    <div class="avatar avatar-md me-3">
+                        <span class="avatar-initial rounded bg-white text-primary shadow-sm">
+                            <i class="bx bx-user fs-4"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <p class="text-white text-opacity-75 mb-0 text-sm fw-medium">Toko &amp; Gudang</p>
+                        <h2 class="text-white mb-0 fw-bold" id="resumeTotaluser">
+                            {{ $tokos->count() + $gudangs->count() }}
+                        </h2>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                {{-- ══ TAB GUDANG ══ --}}
-                <div class="tab-pane fade" id="navs-gudang" role="tabpanel">
-                    <div class="row g-3 loc-cards-grid">
-                        @forelse ($gudangs as $gudang)
-                            <div class="col-md-6 col-lg-4">
-                                <div class="loc-card loc-card-gudang">
-                                    <div class="loc-card-body">
+        {{-- Filter & Tombol Tambah --}}
+        <div class="col-12 col-md-8 col-xl-9">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
 
-                                        <div class="loc-card-header">
-                                            <div class="d-flex align-items-center" style="min-width:0">
-                                                <div class="loc-logo-wrap me-3">
-                                                    <img src="{{ $gudang->logo ? Storage::url($gudang->logo) : asset('assets/img/default-store.png') }}"
-                                                        alt="Logo" class="loc-logo">
-                                                    <span class="loc-type-dot"></span>
-                                                </div>
-                                                <div class="loc-name-block">
-                                                    <h6>{{ $gudang->name_toko }}</h6>
-                                                    @if ($gudang->is_active)
-                                                        <span class="loc-status-badge status-active">Aktif</span>
-                                                    @else
-                                                        <span class="loc-status-badge status-inactive">Non-Aktif</span>
-                                                    @endif
-                                                </div>
-                                            </div>
+                    {{-- Form filter: sekarang AJAX (live-filter), fallback GET tetap jalan
+                         jika JS mati / user menekan Enter sebelum JS siap --}}
+                    <form id="filterForm" action="{{ route('toko.index') }}" method="GET" class="row g-3 align-items-end">
 
-                                            <div class="dropdown ms-2">
-                                                <button class="loc-dropdown-btn" type="button"
-                                                    data-bs-toggle="dropdown">
-                                                    <i class="bx bx-dots-vertical-rounded"></i>
-                                                </button>
-                                                <div class="dropdown-menu dropdown-menu-end loc-dropdown-menu">
-                                                    <a class="dropdown-item btn-edit" href="javascript:void(0);"
-                                                        data-store='@json($gudang)'
-                                                        data-logo-url="{{ $gudang->logo ? Storage::url($gudang->logo) : '' }}">
-                                                        <i class="bx bx-edit-alt me-1 text-info"></i> Edit
-                                                    </a>
-                                                    {{-- FIX: Ganti inline confirm() dengan delete modal component --}}
-                                                    <button type="button" class="dropdown-item btn-delete-trigger"
-                                                        data-bs-toggle="modal" data-bs-target="#modalDeleteStore"
-                                                        data-title="{{ $gudang->name_toko }}"
-                                                        data-action="{{ route('toko.destroy', $gudang->id) }}">
-                                                        <i class="bx bx-trash text-danger"></i> Hapus
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
+                        {{-- Filter Pencarian --}}
+                        <div class="col-12 col-sm-3 col-md-4">
+                            <label class="form-label mb-1 text-muted">Pencarian</label>
+                            <input type="text" name="search" class="form-control" placeholder="Nama Toko, alamat..."
+                                value="{{ request('search') }}" autocomplete="off">
+                        </div>
 
-                                        <div class="loc-info-row">
-                                            <i class="bx bx-map loc-info-icon"></i>
-                                            <span>{{ $gudang->full_region }}</span>
-                                        </div>
-                                        <div class="loc-info-row">
-                                            <i class="bx bx-user loc-info-icon"></i>
-                                            <span>PIC:
-                                                <strong>{{ $gudang->pic->name ?? 'Belum Ditentukan' }}</strong></span>
-                                        </div>
+                        {{-- Filter Daerah --}}
+                        <div class="col-12 col-sm-3 col-md-3">
+                            <label class="form-label mb-1 text-muted">Daerah / Wilayah</label>
+                            <input type="text" name="daerah" class="form-control" placeholder="Prov, Kota, Kec..."
+                                value="{{ request('daerah') }}" autocomplete="off">
+                        </div>
 
-                                    </div>
-                                </div>
+                        {{-- Filter Status --}}
+                        <div class="col-8 col-sm-3 col-md-2">
+                            <label class="form-label mb-1 text-muted"
+                                style="font-size: 0.75rem; text-transform: uppercase;">Status</label>
+                            <select name="status" class="form-select form-select-sm select2"
+                                data-placeholder="Semua Status">
+                                <option value="">Semua</option>
+                                <option value="Aktif" @selected(request('status') == 'Aktif')>Aktif</option>
+                                <option value="Tidak Aktif" @selected(request('status') == 'Tidak Aktif')>Nonaktif</option>
+                            </select>
+                        </div>
+
+                        {{-- Tombol Terapkan Filter (fallback) & Reset --}}
+                        <div class="col-4 col-sm-auto">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary px-2" title="Terapkan Filter">
+                                    <i class="bx bx-search fs-5" id="filterIcon"></i>
+                                </button>
+                                <a href="{{ route('toko.index') }}" id="filterResetBtn"
+                                    class="btn btn-outline-secondary px-2 {{ request()->anyFilled(['search', 'daerah', 'status']) ? '' : 'd-none' }}"
+                                    title="Reset Filter">
+                                    <i class="bx bx-reset fs-5"></i>
+                                </a>
                             </div>
-                        @empty
-                            <div class="col-12">
-                                <div class="loc-empty-state">
-                                    <img class="loc-empty-img"
-                                        src="{{ asset('assets/img/illustrations/man-with-laptop-light.png') }}"
-                                        width="140" alt="Kosong">
-                                    <h6 class="mt-2">Belum ada data Gudang</h6>
-                                </div>
+                        </div>
+
+                        {{-- Tombol Tambah --}}
+                        <div class="col-12 col-sm-auto ms-sm-auto mt-3 mt-sm-0">
+                            <button type="button" class="btn btn-outline-blue w-100 px-2 btn-add" data-bs-toggle="modal"
+                                data-bs-target="#modalStore" title="Tambah Lokasi Baru">
+                                <i class="bx bx-plus-circle fs-5"></i>
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav loc-nav-tabs" id="locTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button type="button" class="nav-link active" id="tab-toko" role="tab"
+                                data-bs-toggle="tab" data-bs-target="#navs-toko" aria-controls="navs-toko"
+                                aria-selected="true">
+                                <i class="bx bx-store"></i>
+                                Daftar Toko
+                                <span class="loc-tab-badge" id="tokoBadgeCount">{{ $tokos->count() }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button type="button" class="nav-link" id="tab-gudang" role="tab" data-bs-toggle="tab"
+                                data-bs-target="#navs-gudang" aria-controls="navs-gudang" aria-selected="false">
+                                <i class="bx bx-building-house"></i>
+                                Daftar Gudang
+                                <span class="loc-tab-badge" id="gudangBadgeCount">{{ $gudangs->count() }}</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content p-0">
+
+                        {{-- ══ TAB TOKO ══ --}}
+                        <div class="tab-pane fade show active" id="navs-toko" role="tabpanel">
+                            <div class="row g-3 loc-cards-grid" id="tokoCardsGrid">
+                                @include('content.hrd.store._toko-cards', ['tokos' => $tokos])
                             </div>
-                        @endforelse
+                        </div>
+
+                        {{-- ══ TAB GUDANG ══ --}}
+                        <div class="tab-pane fade" id="navs-gudang" role="tabpanel">
+                            <div class="row g-3 loc-cards-grid" id="gudangCardsGrid">
+                                @include('content.hrd.store._gudang-cards', ['gudangs' => $gudangs])
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
             </div>
         </div>
-
     </div>
 
 
@@ -250,8 +186,8 @@
                                 <select name="pic_id" id="pic_id" class="form-select select2"
                                     data-placeholder="Pilih Penanggung Jawab">
                                     <option value="">-- Pilih Karyawan --</option>
-                                    @foreach ($users as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @foreach ($employees as $employee)
+                                        <option value="{{ $employee->id }}">{{ $employee->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -370,21 +306,32 @@
     </div>
 
     <div class="modal fade" id="modalMembers" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content loc-emp-modal">
                 <div class="modal-header">
-                    <h5 class="modal-title">Atur Anggota: <span id="memberStoreName" class="fw-bold"></span></h5>
+                    <div>
+                        <h5 class="modal-title mb-0">Atur Anggota</h5>
+                        <small class="text-muted" id="memberStoreName">-</small>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="formMembers">
+                <form id="formMembers" class="d-flex flex-column" style="min-height:0;">
                     @csrf
                     <input type="hidden" id="memberStoreId" name="store_id">
-                    <div class="modal-body p-0">
-                        <div class="list-group list-group-flush" id="employeeListContainer"
-                            style="max-height: 400px; overflow-y: auto;">
+
+                    <div class="loc-emp-toolbar">
+                        <div class="loc-emp-search">
+                            <i class="bx bx-search"></i>
+                            <input type="text" id="memberSearchInput" placeholder="Cari nama atau jabatan...">
                         </div>
+                        <button type="button" class="loc-emp-selectall" id="memberSelectAllBtn">Pilih Semua</button>
                     </div>
-                    <div class="modal-footer">
+
+                    <div class="modal-body p-0">
+                        <div class="loc-emp-list" id="employeeListContainer"></div>
+                    </div>
+                    <div class="modal-footer d-flex align-items-center">
+                        <span class="loc-emp-counter me-auto" id="memberSelectedCount">0 dipilih</span>
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                     </div>
@@ -406,6 +353,16 @@
         'itemTitleId' => 'deleteStoreName',
         'confirmBtnId' => 'confirmDeleteStore',
     ])
+
+    {{-- ── Panel Popover Detail Anggota (satu instance, dipakai ulang) ── --}}
+    <div class="loc-anggota-popover" id="locAnggotaPopover">
+        <div class="loc-anggota-popover-header">
+            <span id="locAnggotaPopoverTitle">Anggota</span>
+            <button type="button" class="btn-close" style="transform:scale(.75)" aria-label="Close"
+                id="locAnggotaPopoverClose"></button>
+        </div>
+        <div class="loc-anggota-popover-body" id="locAnggotaPopoverBody"></div>
+    </div>
 
 @endsection
 
@@ -657,7 +614,8 @@
                 acceptedFileTypes: ['image/png', 'image/jpeg', 'image/jpg'],
                 server: {
                     process: {
-                        url: 'toko/upload',
+                        // FIX: URL relatif diganti absolut (lihat alasan yang sama di formStore.action)
+                        url: '{{ url('toko/upload') }}',
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -666,7 +624,7 @@
                         onerror: (response) => response,
                     },
                     revert: {
-                        url: 'toko/revert',
+                        url: '{{ url('toko/revert') }}',
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -719,62 +677,76 @@
             });
 
             // ── Tombol Edit: isi form dengan data existing ───────────────────
-            document.querySelectorAll('.btn-edit').forEach(button => {
-                button.addEventListener('click', function() {
-                    const data = JSON.parse(this.getAttribute('data-store'));
-                    const logoUrl = this.getAttribute(
-                        'data-logo-url'); // <-- Mengambil URL lengkap gambar dari Blade
+            // FIX: dibungkus jadi fungsi (bukan langsung querySelectorAll+forEach)
+            // supaya bisa dipanggil ulang setelah kartu di-refresh via AJAX filter,
+            // karena listener lama tidak menempel ke elemen HTML yang baru disisipkan.
+            window.wireEditButtons = function() {
+                document.querySelectorAll('.btn-edit').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const data = JSON.parse(this.getAttribute('data-store'));
+                        const logoUrl = this.getAttribute(
+                            'data-logo-url'); // <-- Mengambil URL lengkap gambar dari Blade
 
-                    modalTitle.textContent = 'Edit Data Lokasi';
-                    formStore.action = `toko/${data.id}`;
-                    methodContainer.innerHTML = '<input type="hidden" name="_method" value="PUT">';
+                        modalTitle.textContent = 'Edit Data Lokasi';
+                        // FIX: sebelumnya URL relatif `toko/${id}` yang resolusinya
+                        // tergantung ada/tidaknya trailing slash pada URL halaman saat ini.
+                        // Pakai URL absolut dari route() supaya selalu benar.
+                        formStore.action = `{{ url('toko') }}/${data.id}`;
+                        methodContainer.innerHTML =
+                            '<input type="hidden" name="_method" value="PUT">';
 
-                    // Isi field biasa
-                    document.getElementById('name_toko').value = data.name_toko || '';
-                    document.getElementById('telepon').value = data.telepon || '';
-                    document.getElementById('email').value = data.email || '';
-                    document.getElementById('alamat').value = data.alamat || '';
-                    document.getElementById('map_url').value = data.map_url || '';
-                    document.getElementById('latitude').value = data.latitude || '';
-                    document.getElementById('longitude').value = data.longitude || '';
-                    document.getElementById('is_active').checked = data.is_active == 1;
+                        // Isi field biasa
+                        document.getElementById('name_toko').value = data.name_toko || '';
+                        document.getElementById('telepon').value = data.telepon || '';
+                        document.getElementById('email').value = data.email || '';
+                        document.getElementById('alamat').value = data.alamat || '';
+                        document.getElementById('map_url').value = data.map_url || '';
+                        document.getElementById('latitude').value = data.latitude || '';
+                        document.getElementById('longitude').value = data.longitude || '';
+                        document.getElementById('is_active').checked = data.is_active == 1;
 
-                    // Select2 fields
-                    if (typeof $ !== 'undefined' && $.fn.select2) {
-                        $('#type').val(data.type || 'toko').trigger('change.select2');
-                        $('#pic_id').val(data.pic_id || '').trigger('change.select2');
-                    } else {
-                        document.getElementById('type').value = data.type || 'toko';
-                        document.getElementById('pic_id').value = data.pic_id || '';
-                    }
+                        // Select2 fields
+                        if (typeof $ !== 'undefined' && $.fn.select2) {
+                            $('#type').val(data.type || 'toko').trigger('change.select2');
+                            $('#pic_id').val(data.pic_id || '').trigger('change.select2');
+                        } else {
+                            document.getElementById('type').value = data.type || 'toko';
+                            document.getElementById('pic_id').value = data.pic_id || '';
+                        }
 
-                    // ── Perbaikan Logika Gambar Modal Edit ──
-                    const previewContainer = document.getElementById('existing-logo-preview');
-                    const previewImg = document.getElementById('preview-img');
-                    const filepondWrapper = document.getElementById(
-                        'filepond-wrapper'); // Ambil elemen filepond
+                        // ── Perbaikan Logika Gambar Modal Edit ──
+                        const previewContainer = document.getElementById(
+                            'existing-logo-preview');
+                        const previewImg = document.getElementById('preview-img');
+                        const filepondWrapper = document.getElementById(
+                            'filepond-wrapper'); // Ambil elemen filepond
 
-                    // Reset penanda hapus logo
-                    document.getElementById('remove_logo').value = '0';
+                        // Reset penanda hapus logo
+                        document.getElementById('remove_logo').value = '0';
 
-                    // Cek jika logoUrl berisi string (berarti gambar ada)
-                    if (logoUrl) {
-                        previewImg.src = logoUrl; // Masukkan URL asli R2
-                        previewContainer.style.display = 'block'; // Tampilkan gambar lama
-                        filepondWrapper.style.display = 'none'; // Sembunyikan FilePond
-                    } else {
-                        previewContainer.style.display = 'none'; // Sembunyikan frame gambar
-                        filepondWrapper.style.display = 'block'; // Munculkan form unggah FilePond
-                    }
+                        // Cek jika logoUrl berisi string (berarti gambar ada)
+                        if (logoUrl) {
+                            previewImg.src = logoUrl; // Masukkan URL asli R2
+                            previewContainer.style.display = 'block'; // Tampilkan gambar lama
+                            filepondWrapper.style.display = 'none'; // Sembunyikan FilePond
+                        } else {
+                            previewContainer.style.display = 'none'; // Sembunyikan frame gambar
+                            filepondWrapper.style.display =
+                                'block'; // Munculkan form unggah FilePond
+                        }
 
-                    fillRegionForEdit(data);
-                    pond.removeFiles();
+                        fillRegionForEdit(data);
+                        pond.removeFiles();
 
-                    // Tampilkan modal
-                    var myModal = new bootstrap.Modal(document.getElementById('modalStore'));
-                    myModal.show();
+                        // Tampilkan modal
+                        var myModal = new bootstrap.Modal(document.getElementById(
+                            'modalStore'));
+                        myModal.show();
+                    });
                 });
-            });
+            }; // end wireEditButtons
+
+            wireEditButtons(); // pasang listener untuk kartu yang di-render server-side
 
             // ── Delete Modal: wiring tombol konfirmasi ───────────────────────
             const formDelete = document.getElementById('formDelete');
@@ -800,70 +772,162 @@
         document.addEventListener('DOMContentLoaded', function() {
             const modalMembersEl = document.getElementById('modalMembers');
             const modalMembers = new bootstrap.Modal(modalMembersEl);
+            const container = document.getElementById('employeeListContainer');
+            const searchInput = document.getElementById('memberSearchInput');
+            const selectAllBtn = document.getElementById('memberSelectAllBtn');
+            const counterEl = document.getElementById('memberSelectedCount');
 
-            document.querySelectorAll('.btn-members').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    const storeId = this.dataset.id;
-                    const container = document.getElementById('employeeListContainer');
+            function escapeHtml(str) {
+                return String(str ?? '').replace(/[&<>"']/g, m => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                } [m]));
+            }
 
-                    // Tampilkan loading
-                    container.innerHTML =
-                        '<div class="p-4 text-center"><i class="bx bx-loader-alt bx-spin fs-2"></i><br>Memuat data...</div>';
-                    modalMembers.show();
+            function initials(name) {
+                if (!name) return '?';
+                return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+            }
 
-                    // ✅ Fix Bug 1: Gunakan URL absolut dengan leading slash
-                    fetch(`/toko/${storeId}/members`, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        // ✅ Fix Bug 3: Cek response.ok sebelum parse JSON
-                        .then(r => {
-                            if (!r.ok) throw new Error(`Server error: ${r.status}`);
-                            return r.json();
-                        })
-                        .then(data => {
-                            document.getElementById('memberStoreName').textContent = data
-                                .store_name;
-                            document.getElementById('memberStoreId').value = storeId;
+            function updateCounter() {
+                const count = container.querySelectorAll('.loc-emp-input:checked').length;
+                counterEl.textContent = `${count} dipilih`;
+            }
 
-                            // ✅ Fix Bug 3: Pastikan employees adalah array
-                            const employees = Array.isArray(data.employees) ? data.employees :
-                            [];
-                            let html = '';
+            function visibleItems() {
+                return [...container.querySelectorAll('.loc-emp-item')].filter(i => i.style.display !== 'none');
+            }
 
-                            employees.forEach(emp => {
-                                html += `
-                    <label class="list-group-item d-flex justify-content-between align-items-center cursor-pointer">
-                        <div class="d-flex align-items-center">
-                            <input class="form-check-input me-3" type="checkbox"
-                                   name="user_ids[]" value="${emp.id}"
-                                   ${emp.is_member ? 'checked' : ''}>
-                            <div>
-                                <div class="fw-bold text-dark">${emp.name}</div>
-                                <small class="text-muted">${emp.jabatan} •
-                                    <span class="badge bg-label-secondary">${emp.current_store}</span>
-                                </small>
-                            </div>
-                        </div>
+            function refreshSelectAllLabel() {
+                const items = visibleItems();
+                const allChecked = items.length > 0 && items.every(i => i.querySelector('.loc-emp-input').checked);
+                selectAllBtn.textContent = allChecked ? 'Batal Semua' : 'Pilih Semua';
+            }
+
+            // Toggle visual "is-selected" + counter setiap checkbox berubah
+            // (delegasi di container yang statis, jadi tetap jalan walau isinya diganti-ganti)
+            container.addEventListener('change', function(e) {
+                if (!e.target.matches('.loc-emp-input')) return;
+                e.target.closest('.loc-emp-item').classList.toggle('is-selected', e.target.checked);
+                updateCounter();
+                refreshSelectAllLabel();
+            });
+
+            // Cari nama / jabatan secara live
+            searchInput.addEventListener('input', function() {
+                const q = this.value.trim().toLowerCase();
+                container.querySelectorAll('.loc-emp-item').forEach(item => {
+                    item.style.display = item.dataset.search.includes(q) ? '' : 'none';
+                });
+                refreshSelectAllLabel();
+            });
+
+            // Pilih/batalkan semua yang sedang terlihat (menghormati hasil pencarian)
+            selectAllBtn.addEventListener('click', function() {
+                const items = visibleItems();
+                const allChecked = items.length > 0 && items.every(i => i.querySelector('.loc-emp-input')
+                    .checked);
+                items.forEach(item => {
+                    const input = item.querySelector('.loc-emp-input');
+                    input.checked = !allChecked;
+                    item.classList.toggle('is-selected', input.checked);
+                });
+                updateCounter();
+                refreshSelectAllLabel();
+            });
+
+            // FIX: dibungkus jadi fungsi supaya bisa dipanggil ulang setelah
+            // kartu di-refresh via AJAX filter (lihat alasan yang sama di wireEditButtons)
+            window.wireMemberButtons = function() {
+                document.querySelectorAll('.btn-members').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const storeId = this.dataset.id;
+
+                        // Reset toolbar setiap kali modal dibuka
+                        searchInput.value = '';
+                        selectAllBtn.textContent = 'Pilih Semua';
+                        counterEl.textContent = '0 dipilih';
+
+                        container.innerHTML =
+                            '<div class="loc-emp-loading"><i class="bx bx-loader-alt bx-spin fs-3"></i><br>Memuat data...</div>';
+                        modalMembers.show();
+
+                        // ✅ Fix Bug 1: Gunakan URL absolut dengan leading slash
+                        fetch(`/toko/${storeId}/members`, {
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            })
+                            // ✅ Fix Bug 3: Cek response.ok sebelum parse JSON
+                            .then(r => {
+                                if (!r.ok) throw new Error(`Server error: ${r.status}`);
+                                return r.json();
+                            })
+                            .then(data => {
+                                document.getElementById('memberStoreName').textContent =
+                                    data.store_name;
+                                document.getElementById('memberStoreId').value = storeId;
+
+                                // ✅ Fix Bug 3: Pastikan employees adalah array
+                                const employees = Array.isArray(data.employees) ? data
+                                    .employees : [];
+                                let html = '';
+
+                                employees.forEach(emp => {
+                                    const checked = emp.is_member ? 'checked' : '';
+                                    const selectedClass = emp.is_member ?
+                                        'is-selected' : '';
+                                    const avatarHtml = emp.avatar ?
+                                        `<img class="loc-emp-avatar" src="${escapeHtml(emp.avatar)}" alt="${escapeHtml(emp.name)}">` :
+                                        `<div class="loc-emp-avatar loc-emp-avatar-initial">${escapeHtml(initials(emp.name))}</div>`;
+
+                                    let tagHtml = '';
+                                    if (emp.current_store === 'Belum Ditempatkan') {
+                                        tagHtml =
+                                            `<span class="loc-emp-tag loc-emp-tag-muted">Belum ditempatkan</span>`;
+                                    } else if (emp.current_store !== data
+                                        .store_name) {
+                                        tagHtml =
+                                            `<span class="loc-emp-tag loc-emp-tag-warning" title="Saat ini di ${escapeHtml(emp.current_store)}">${escapeHtml(emp.current_store)}</span>`;
+                                    }
+
+                                    html += `
+                    <label class="loc-emp-item ${selectedClass}" data-search="${escapeHtml((emp.name + ' ' + emp.jabatan).toLowerCase())}">
+                        <input class="loc-emp-input" type="checkbox" name="user_ids[]" value="${emp.id}" ${checked}>
+                        <span class="loc-emp-check"><i class="bx bx-check"></i></span>
+                        ${avatarHtml}
+                        <span class="loc-emp-info">
+                            <span class="loc-emp-name">${escapeHtml(emp.name)}</span>
+                            <span class="loc-emp-jabatan">${escapeHtml(emp.jabatan)}</span>
+                        </span>
+                        ${tagHtml}
                     </label>`;
-                            });
+                                });
 
-                            container.innerHTML = html ||
-                                '<div class="p-4 text-center text-muted">Belum ada data karyawan.</div>';
-                        })
-                        // ✅ Fix Bug 5: Tambah .catch() agar error terlihat di modal
-                        .catch(err => {
-                            container.innerHTML = `
-                    <div class="p-4 text-center text-danger">
+                                container.innerHTML = html ||
+                                    '<div class="loc-emp-empty"><i class="bx bx-user-x fs-3"></i><br>Belum ada data karyawan.</div>';
+
+                                updateCounter();
+                                refreshSelectAllLabel();
+                            })
+                            // ✅ Fix Bug 5: Tambah .catch() agar error terlihat di modal
+                            .catch(err => {
+                                container.innerHTML = `
+                    <div class="loc-emp-error">
                         <i class="bx bx-error-circle fs-2 d-block mb-2"></i>
                         Gagal memuat data anggota.<br>
-                        <small class="text-muted">${err.message}</small>
+                        <small class="text-muted">${escapeHtml(err.message)}</small>
                     </div>`;
-                            console.error('Fetch members error:', err);
-                        });
+                                console.error('Fetch members error:', err);
+                            });
+                    });
                 });
-            });
+            }; // end wireMemberButtons
+
+            wireMemberButtons(); // pasang listener untuk kartu yang di-render server-side
 
             document.getElementById('formMembers').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -893,6 +957,253 @@
                         alert('Gagal menyimpan perubahan: ' + err.message);
                         console.error('Update members error:', err);
                     });
+            });
+        });
+    </script>
+
+    {{-- ── AJAX Live Filter (tanpa perlu klik tombol) ────────────────────── --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.getElementById('filterForm');
+            const searchInput = filterForm.querySelector('[name="search"]');
+            const daerahInput = filterForm.querySelector('[name="daerah"]');
+            const statusSelect = filterForm.querySelector('[name="status"]');
+            const filterIcon = document.getElementById('filterIcon');
+            const filterResetBtn = document.getElementById('filterResetBtn');
+
+            const tokoGrid = document.getElementById('tokoCardsGrid');
+            const gudangGrid = document.getElementById('gudangCardsGrid');
+            const tokoBadge = document.getElementById('tokoBadgeCount');
+            const gudangBadge = document.getElementById('gudangBadgeCount');
+            const totalBadge = document.getElementById('resumeTotaluser');
+
+            let debounceTimer = null;
+            let activeRequest = null;
+
+            function setLoading(isLoading) {
+                tokoGrid.style.opacity = isLoading ? 0.5 : 1;
+                gudangGrid.style.opacity = isLoading ? 0.5 : 1;
+                filterIcon.classList.toggle('bx-search', !isLoading);
+                filterIcon.classList.toggle('bx-loader-alt', isLoading);
+                filterIcon.classList.toggle('bx-spin', isLoading);
+            }
+
+            function runFilter() {
+                const params = new URLSearchParams(new FormData(filterForm)).toString();
+
+                // Batalkan request sebelumnya jika masih berjalan (mencegah race
+                // condition: hasil filter lama tiba lebih lambat lalu menimpa yang baru)
+                if (activeRequest) activeRequest.abort();
+                activeRequest = new AbortController();
+
+                setLoading(true);
+
+                fetch(`${filterForm.action}?${params}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        signal: activeRequest.signal,
+                    })
+                    .then(r => {
+                        if (!r.ok) throw new Error(`Server error: ${r.status}`);
+                        return r.json();
+                    })
+                    .then(data => {
+                        tokoGrid.innerHTML = data.tokos_html;
+                        gudangGrid.innerHTML = data.gudangs_html;
+                        tokoBadge.textContent = data.tokos_count;
+                        gudangBadge.textContent = data.gudangs_count;
+                        totalBadge.textContent = data.total;
+
+                        // Pasang ulang listener tombol Edit & Atur Anggota
+                        // untuk kartu-kartu yang baru saja disisipkan
+                        if (typeof window.wireEditButtons === 'function') window.wireEditButtons();
+                        if (typeof window.wireMemberButtons === 'function') window.wireMemberButtons();
+
+                        // Toggle tombol reset
+                        const hasFilter = filterForm.search.value || filterForm.daerah.value || filterForm
+                            .status.value;
+                        filterResetBtn.classList.toggle('d-none', !hasFilter);
+
+                        // Update URL browser tanpa reload, biar bisa di-refresh/share
+                        window.history.replaceState(null, '', `${filterForm.action}?${params}`);
+                    })
+                    .catch(err => {
+                        if (err.name !== 'AbortError') {
+                            console.error('Gagal memuat filter:', err);
+                        }
+                    })
+                    .finally(() => setLoading(false));
+            }
+
+            function debounceFilter(delay = 400) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(runFilter, delay);
+            }
+
+            // Input teks: debounce supaya tidak fetch di setiap ketikan huruf
+            searchInput.addEventListener('input', () => debounceFilter());
+            daerahInput.addEventListener('input', () => debounceFilter());
+
+            // Select status: pakai jQuery karena elemen dibungkus Select2
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $(statusSelect).on('change', () => debounceFilter(100));
+            } else {
+                statusSelect.addEventListener('change', () => debounceFilter(100));
+            }
+
+            // Fallback: tombol submit / tekan Enter tetap berfungsi tanpa reload
+            filterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                clearTimeout(debounceTimer);
+                runFilter();
+            });
+        });
+    </script>
+
+    {{-- ── Popover Detail Anggota ──────────────────────────────────────────
+         Dipasang via event delegation di document, jadi otomatis jalan juga
+         untuk kartu-kartu baru hasil AJAX filter tanpa perlu di-wire ulang. --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const popover = document.getElementById('locAnggotaPopover');
+            const popoverTitle = document.getElementById('locAnggotaPopoverTitle');
+            const popoverBody = document.getElementById('locAnggotaPopoverBody');
+            const popoverClose = document.getElementById('locAnggotaPopoverClose');
+
+            let currentTrigger = null;
+            let currentRequest = null;
+
+            function initials(name) {
+                if (!name) return '?';
+                return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+            }
+
+            function escapeHtml(str) {
+                return String(str ?? '').replace(/[&<>"']/g, m => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                } [m]));
+            }
+
+            function positionPopover(trigger) {
+                const rect = trigger.getBoundingClientRect();
+                const popW = 280;
+                let left = rect.right - popW; // rata kanan ke tombol
+                if (left < 8) left = 8;
+                if (left + popW > window.innerWidth - 8) left = window.innerWidth - popW - 8;
+
+                let top = rect.bottom + 8;
+                // Kalau kepotong bawah layar, tampilkan di atas tombol
+                if (top + 200 > window.innerHeight) {
+                    top = rect.top - 8;
+                    popover.style.transform = 'translateY(-100%)';
+                    popover.dataset.flip = '1';
+                } else {
+                    popover.style.transform = '';
+                    popover.dataset.flip = '0';
+                }
+
+                popover.style.left = `${left}px`;
+                popover.style.top = `${top}px`;
+            }
+
+            function closePopover() {
+                popover.classList.remove('is-visible');
+                if (currentTrigger) currentTrigger.classList.remove('is-open');
+                currentTrigger = null;
+                if (currentRequest) currentRequest.abort();
+            }
+
+            function openPopover(trigger) {
+                const storeId = trigger.dataset.id;
+                const storeName = trigger.dataset.storeName || 'Lokasi';
+
+                currentTrigger = trigger;
+                trigger.classList.add('is-open');
+                popoverTitle.textContent = `Anggota ${storeName}`;
+                popoverBody.innerHTML =
+                    '<div class="loc-anggota-popover-loading"><i class="bx bx-loader-alt bx-spin fs-4"></i><br>Memuat...</div>';
+
+                positionPopover(trigger);
+                popover.classList.add('is-visible');
+
+                if (currentRequest) currentRequest.abort();
+                currentRequest = new AbortController();
+
+                fetch(`/toko/${storeId}/members?members_only=1`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        signal: currentRequest.signal,
+                    })
+                    .then(r => {
+                        if (!r.ok) throw new Error(`Server error: ${r.status}`);
+                        return r.json();
+                    })
+                    .then(data => {
+                        const members = Array.isArray(data.employees) ? data.employees : [];
+
+                        if (!members.length) {
+                            popoverBody.innerHTML =
+                                '<div class="loc-anggota-popover-empty"><i class="bx bx-user-x fs-3"></i><br>Belum ada anggota</div>';
+                            return;
+                        }
+
+                        popoverBody.innerHTML = members.map(m => `
+                            <div class="loc-anggota-popover-item">
+                                ${m.avatar
+                                    ? `<img class="loc-anggota-popover-avatar" src="${escapeHtml(m.avatar)}" alt="${escapeHtml(m.name)}">`
+                                    : `<div class="loc-anggota-popover-avatar">${escapeHtml(initials(m.name))}</div>`}
+                                <div>
+                                    <div class="loc-anggota-popover-name">${escapeHtml(m.name)}</div>
+                                    <div class="loc-anggota-popover-jabatan">${escapeHtml(m.jabatan)}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    })
+                    .catch(err => {
+                        if (err.name === 'AbortError') return;
+                        popoverBody.innerHTML =
+                            '<div class="loc-anggota-popover-error"><i class="bx bx-error-circle fs-3"></i><br>Gagal memuat data anggota</div>';
+                        console.error('Gagal memuat anggota:', err);
+                    });
+            }
+
+            // Delegasi klik: bekerja untuk trigger yang ada sekarang MAUPUN
+            // yang baru muncul lewat AJAX filter (tidak perlu wiring ulang)
+            document.addEventListener('click', function(e) {
+                const trigger = e.target.closest('.loc-anggota-trigger');
+                if (trigger) {
+                    e.stopPropagation();
+                    if (currentTrigger === trigger) {
+                        closePopover();
+                    } else {
+                        openPopover(trigger);
+                    }
+                    return;
+                }
+
+                // Klik di luar popover -> tutup
+                if (!e.target.closest('.loc-anggota-popover')) {
+                    closePopover();
+                }
+            });
+
+            popoverClose.addEventListener('click', closePopover);
+
+            // Tutup saat scroll / resize / ganti tab / Escape supaya posisi tidak "ngambang"
+            window.addEventListener('scroll', closePopover, true);
+            window.addEventListener('resize', closePopover);
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') closePopover();
+            });
+            document.querySelectorAll('#locTabs button').forEach(tab => {
+                tab.addEventListener('shown.bs.tab', closePopover);
             });
         });
     </script>

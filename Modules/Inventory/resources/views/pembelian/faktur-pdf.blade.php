@@ -1,77 +1,527 @@
+<?php
+use Carbon\Carbon;
+?>
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faktur Purchase - {{ $pembelian->referensi }}</title>
+    <title>Faktur pembelian - {{ $pembelian->referensi }}</title>
     <style>
+        /* ══════════════════════════════════════════════════════════
+         * PAGE SETUP — A4 Portrait
+         * Margin kiri/kanan 20mm memberi "napas" agar konten
+         * tidak terlalu mepet tepi kertas.
+         * ══════════════════════════════════════════════════════════ */
+        @page {
+            size: A4 portrait;
+            margin: 0;
+            /* dihandle manual via padding container */
+        }
+
+        /* ══════════════════════════════════════════════════════════
+         * RESET & BASE
+         * ══════════════════════════════════════════════════════════ */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 11px;
-            color: #333;
+            font-size: 10px;
+            color: #2d2d2d;
+            background: #fff;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+         * FIXED HEADER — muncul di tiap halaman
+         * Tinggi total ≈ 52px → padding-top container = 62px
+         * ══════════════════════════════════════════════════════════ */
+        .pdf-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            padding: 12px 20mm 10px;
+            background: #fff;
+        }
+
+        .pdf-header-inner {
+            display: table;
+            width: 100%;
+        }
+
+        .pdf-header-logo {
+            display: table-cell;
+            vertical-align: middle;
+            width: 55%;
+        }
+
+        .pdf-header-logo img {
+            height: 40px;
+            width: auto;
+        }
+
+        .pdf-header-title {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+            width: 45%;
+        }
+
+        .pdf-header-title h1 {
+            font-size: 15px;
+            font-weight: bold;
+            color: #1a1a2e;
+            letter-spacing: 0.05em;
+        }
+
+        .pdf-header-title .ref-number {
+            font-size: 9px;
+            color: #888;
+            margin-top: 2px;
+            letter-spacing: 0.02em;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+         * FIXED FOOTER — muncul di tiap halaman
+         * ══════════════════════════════════════════════════════════ */
+        .pdf-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 28px;
+            padding: 7px 20mm;
+            /* ikut margin 20mm */
+            border-top: 1px solid #e8e8ee;
+            background: #fff;
+        }
+
+        .pdf-footer table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        .pdf-footer td {
+            border: none;
+            padding: 0;
+            font-size: 8px;
+            color: #aaa;
+            vertical-align: middle;
+        }
+
+        .page-number::before {
+            content: "Halaman " counter(page) " dari " counter(pages);
         }
 
         .container {
+            padding-top: 64px;
+            /* header 52px + gap 12px */
+            padding-bottom: 40px;
+            /* footer 28px + gap 12px */
+            padding-left: 20mm;
+            padding-right: 20mm;
+        }
+
+        .section-title {
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #888;
+            margin-bottom: 6px;
+            margin-top: 18px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #ebebf0;
+        }
+
+        .info-grid {
+            display: table;
             width: 100%;
-            margin: 0 auto;
-            /* Space for header */
-            padding-top: 140px;
-            padding-bottom: 50px;
-            /* Space for footer */
+            border-collapse: separate;
+            border-spacing: 6px 0;
+            margin-top: 16px;
+            margin-bottom: 4px;
         }
 
-        .header,
-        .footer {
-            position: fixed;
-            left: 0;
-            right: 0;
-            padding-left: 25px;
-            padding-right: 25px;
+        .info-grid-row {
+            display: table-row;
+        }
+
+        .info-box {
+            display: table-cell;
+            width: 33.33%;
+            border: 1px solid #e8e8ee;
+            border-radius: 6px;
+            padding: 10px 11px;
+            vertical-align: top;
+        }
+
+        .info-box:first-child {
+            margin-left: 0;
+        }
+
+        .info-box-shade {
+            background-color: #f6f6fa;
+        }
+
+        .info-box .box-label {
+            font-size: 7.5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #aaa;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .info-box .box-name {
+            font-size: 10.5px;
+            font-weight: bold;
+            color: #1a1a2e;
+            margin-bottom: 5px;
+            line-height: 1.3;
+        }
+
+        .info-box p {
+            font-size: 9px;
+            color: #666;
+            margin-bottom: 2px;
+            line-height: 1.5;
+        }
+
+        /* Baris key-value di box transaksi */
+        .data-row {
+            display: table;
             width: 100%;
-            color: #333;
+            margin-bottom: 3px;
         }
 
-        .header {
-            top: 0;
+        .data-key {
+            display: table-cell;
+            font-size: 8.5px;
+            color: #aaa;
+            width: 42%;
+            vertical-align: top;
         }
 
-        .footer {
-            bottom: 0;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-            font-size: 10px;
+        .data-val {
+            display: table-cell;
+            font-size: 9px;
+            font-weight: 600;
+            color: #2d2d2d;
+            text-align: right;
+            vertical-align: top;
         }
 
-        .header-table {
+        /* ── Badge status ── */
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: bold;
+            letter-spacing: 0.03em;
+        }
+
+        .badge-success {
+            background: #dcf3e5;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+         * TABEL PRODUK
+         * ══════════════════════════════════════════════════════════ */
+        .items-table {
             width: 100%;
             border-collapse: collapse;
+            border: 1px solid #e8e8ee;
+            border-radius: 6px;
+            overflow: hidden;
         }
 
-        .header-table td {
+        .items-table thead tr {
+            background-color: #f0f0f6;
+        }
+
+        .items-table th {
+            padding: 8px 9px;
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #666;
             border: none;
-            /* Menghilangkan border dari sel header */
+            border-bottom: 1px solid #e0e0ea;
         }
 
-        table {
+        .items-table td {
+            padding: 8px 9px;
+            font-size: 9.5px;
+            border: none;
+            border-bottom: 1px solid #f2f2f6;
+            vertical-align: top;
+        }
+
+        .items-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Baris genap sedikit lebih terang — subtle zebra */
+        .items-table tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: #1a1a2e;
+            display: block;
+        }
+
+        .product-variant {
+            font-size: 8.5px;
+            color: #888;
+            margin-top: 2px;
+            display: block;
+        }
+
+
+        .bottom-grid {
+            display: table;
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+            border-collapse: separate;
+            border-spacing: 0;
         }
 
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+        .bottom-grid-row {
+            display: table-row;
         }
 
-        th {
-            background-color: #f2f2f2;
+        .bottom-left {
+            display: table-cell;
+            width: 54%;
+            vertical-align: top;
+            padding-right: 10px;
+        }
+
+        .bottom-right {
+            display: table-cell;
+            width: 46%;
+            vertical-align: top;
+        }
+
+        /* Catatan */
+        .notes-box {
+            border: 1px solid #e8e8ee;
+            border-radius: 6px;
+            padding: 10px 12px;
+            background: #fafafa;
+        }
+
+        .notes-title {
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #aaa;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .notes-box p {
+            font-size: 9px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* Summary box */
+        .summary-box {
+            border: 1px solid #e8e8ee;
+            border-radius: 6px;
+            padding: 11px 14px;
+            background: #f6f6fa;
+        }
+
+        .summary-line {
+            display: table;
+            width: 100%;
+            margin-bottom: 3px;
+        }
+
+        .summary-line td {
+            display: table-cell;
+            border: none;
+            padding: 1.5px 0;
+            font-size: 9px;
+            color: #666;
+            vertical-align: middle;
+        }
+
+        .summary-line .sl-val {
+            text-align: right;
+            font-weight: 600;
+            color: #2d2d2d;
+        }
+
+        .summary-line .sl-val.is-discount {
+            color: #991b1b;
+        }
+
+        .summary-divider {
+            border: none;
+            border-top: 1px solid #dcdcea;
+            margin: 7px 0;
+        }
+
+        /* Baris Total Akhir — lebih besar dan menonjol */
+        .summary-total-line {
+            display: table;
+            width: 100%;
+            margin-bottom: 2px;
+        }
+
+        .summary-total-line td {
+            display: table-cell;
+            border: none;
+            padding: 2px 0;
+            vertical-align: middle;
+        }
+
+        .stl-label {
+            font-size: 9.5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #1a1a2e;
+            letter-spacing: 0.04em;
+        }
+
+        .stl-value {
+            text-align: right;
+            font-size: 14px;
+            font-weight: bold;
+            color: #1a3a8f;
+        }
+
+        /* Dibayar / kembalian / sisa */
+        .summary-sub-line {
+            display: table;
+            width: 100%;
+            margin-top: 2px;
+        }
+
+        .summary-sub-line td {
+            display: table-cell;
+            border: none;
+            padding: 1.5px 0;
+            font-size: 9px;
+            vertical-align: middle;
+        }
+
+        .ssl-val {
+            text-align: right;
             font-weight: bold;
         }
 
-        .text-end {
+        .ssl-val.is-green {
+            color: #166534;
+        }
+
+        .ssl-val.is-red {
+            color: #991b1b;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+         * TABEL RIWAYAT PEMBAYARAN
+         * ══════════════════════════════════════════════════════════ */
+        .payment-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #e8e8ee;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .payment-table thead tr {
+            background-color: #f0f0f6;
+        }
+
+        .payment-table th {
+            padding: 7px 9px;
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #666;
+            border: none;
+            border-bottom: 1px solid #e0e0ea;
+        }
+
+        .payment-table td {
+            padding: 7px 9px;
+            font-size: 9px;
+            border: none;
+            border-bottom: 1px solid #f2f2f6;
+            vertical-align: middle;
+        }
+
+        .payment-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .payment-table tfoot tr {
+            background-color: #f0f0f6;
+        }
+
+        .payment-table tfoot td {
+            font-weight: bold;
+            font-size: 9px;
+            padding: 7px 9px;
+            border: none;
+            border-top: 1px solid #e0e0ea;
+        }
+
+        .pay-date-main {
+            font-weight: 600;
+            font-size: 9px;
+        }
+
+        .pay-date-time {
+            font-size: 8px;
+            color: #aaa;
+            margin-top: 1px;
+        }
+
+        .pay-ref {
+            font-weight: 600;
+            color: #1a3a8f;
+            margin-bottom: 2px;
+            font-size: 8.5px;
+        }
+
+        .pay-note {
+            color: #888;
+            font-size: 8.5px;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+         * UTILITY CLASSES
+         * ══════════════════════════════════════════════════════════ */
+        .text-right {
             text-align: right;
         }
 
@@ -79,164 +529,354 @@
             text-align: center;
         }
 
-        .w-50 {
-            width: 50%;
+        .text-left {
+            text-align: left;
         }
 
-        .align-top {
-            vertical-align: top;
-        }
-
-        .info-box {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            font-size: 11px;
-        }
-
-        .summary {
-            width: 45%;
-            margin-left: 55%;
-            margin-top: 20px;
-        }
-
-        .summary td {
-            border: none;
-            padding: 4px 8px;
-        }
-
-        .summary .total-akhir {
+        .fw-bold {
             font-weight: bold;
-            background-color: #f2f2f2;
-            border-bottom: 1px solid #ddd;
         }
 
-        .notes {
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            padding: 10px;
-            font-size: 11px;
-            border-radius: 5px;
+        .text-green {
+            color: #166534;
+            font-weight: bold;
         }
 
-        .page-number:before {
-            content: "Halaman " counter(page);
+        .text-blue {
+            color: #1a3a8f;
+            font-weight: bold;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .items-table tr {
+                page-break-inside: avoid;
+            }
+
+            .payment-table tr {
+                page-break-inside: avoid;
+            }
+
+            .bottom-grid {
+                page-break-inside: avoid;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="footer">
-        <table style="border: none;">
+    {{-- ══ HEADER TETAP ════════════════════════════════════════════ --}}
+    <div class="pdf-header">
+        <div class="pdf-header-inner">
+            <div class="pdf-header-logo">
+                <img src="{{ asset('assets/img/LM-Default.png') }}" alt="{{ $profilToko->name_toko ?? 'JO COMPUTER' }}">
+            </div>
+            <div class="pdf-header-title">
+                <h1>FAKTUR pembelian</h1>
+                <div class="ref-number">No. {{ $pembelian->referensi }}</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ══ FOOTER TETAP ════════════════════════════════════════════ --}}
+    <div class="pdf-footer">
+        <table>
             <tr>
-                <td style="border: none; text-align: left; width: 50%;">© {{ date('Y') }}
-                    {{ $profilToko->name_toko ?? config('app.name') }}. All rights reserved.</td>
-                <td style="border: none; text-align: right; width: 50%;" class="page-number"></td>
+                <td>&copy; {{ date('Y') }} {{ $profilToko->name_toko ?? config('app.name') }}. All rights reserved.
+                </td>
+                <td class="text-right page-number"></td>
             </tr>
         </table>
     </div>
 
+    {{-- ══ KONTEN UTAMA ════════════════════════════════════════════ --}}
     <div class="container">
-        <div style="text-align: center; padding: 8px 0; margin-bottom: 25px; border-radius: 5px;">
-            <h3 style="margin: 0; font-size: 16px; font-weight: bold;">FAKTUR PEMBELIAN</h3>
+
+        {{-- ── 3 INFO BOX ────────────────────────────────────────── --}}
+        <div class="info-grid">
+            <div class="info-grid-row">
+
+                {{-- Dari Toko --}}
+                <div class="info-box info-box-shade">
+                    <span class="box-label">Dari (Penerima)</span>
+                    <div class="box-name">{{ $profilToko->name_toko ?? 'JO COMPUTER' }}</div>
+                    <p>{{ $profilToko->alamat ?? 'Alamat toko belum diatur' }}</p>
+                    <p>{{ $profilToko->email ?? '-' }}</p>
+                    <p>{{ $profilToko->telepon ?? '-' }}</p>
+                </div>
+
+                {{-- Kepada Customer --}}
+                <div class="info-box">
+                    <span class="box-label">Kepada (Customer)</span>
+                    <div class="box-name"> {{ $pembelian->supplier->name ?? 'Supplier Dihapus' }}</div>
+                    <p>{{ $pembelian->supplier->alamat ?? '-' }}</p>
+                    <p>{{ $pembelian->supplier->email ?? '-' }}</p>
+                    <p>{{ $pembelian->supplier->kontak ?? '-' }}</p>
+                </div>
+
+                {{-- Info Transaksi --}}
+                <div class="info-box">
+                    <span class="box-label">Data Transaksi</span>
+                    <div class="data-row">
+                        <span class="data-key">Tanggal</span>
+                        <span
+                            class="data-val">{{ Carbon::parse($pembelian->tanggal_pembelian)->translatedFormat('d F Y') }}</span>
+                    </div>
+                    @if ($pembelian->status_pembayaran !== 'Lunas' && $pembelian->tanggal_jatuh_tempo)
+                        <div class="data-row">
+                            <span class="data-key">Jatuh Tempo</span>
+                            <span
+                                class="data-val">{{ Carbon::parse($pembelian->tanggal_jatuh_tempo)->translatedFormat('d F Y') }}</span>
+                        </div>
+                    @endif
+                    <div class="data-row">
+                        <span class="data-key">Dibuat Oleh</span>
+                        <span class="data-val">{{ $pembelian->user->name ?? 'Sistem' }}</span>
+                    </div>
+                    <div class="data-row" style="margin-top: 5px;">
+                        <span class="data-key">Status Bayar</span>
+                        <span class="data-val">
+                            @php
+                                $statusClass = match ($pembelian->status_pembayaran) {
+                                    'Lunas' => 'badge-success',
+                                    'Dibatalkan' => 'badge-danger',
+                                    default => 'badge-warning',
+                                };
+                            @endphp
+                            <span class="badge {{ $statusClass }}">{{ $pembelian->status_pembayaran }}</span>
+                        </span>
+                    </div>
+                    <div class="data-row" style="margin-top: 5px;">
+                        <span class="data-key">Status Barang</span>
+                        <span class="data-val">
+                            @php
+                                $statusClass = match ($pembelian->status_barang) {
+                                    'Diterima' => 'badge-success',
+                                    'Dibatalkan' => 'badge-danger',
+                                    default => 'badge-warning',
+                                };
+                            @endphp
+                            <span class="badge {{ $statusClass }}">{{ $pembelian->status_barang }}</span>
+                        </span>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
-        <table style="border: none; margin-bottom: 25px; margin-top: 0; width: 100%;">
-            <tr class="align-top">
-                <td style="border: none; width: 33%; padding-right: 10px;">
-                    <p style="margin:0;"><strong>Dari:</strong></p>
-                    <h4 style="margin: 2px 0;">{{ $profilToko->name_toko ?? 'Nama Toko Anda' }}</h4>
-                    <p style="margin: 2px 0;">{{ $profilToko->alamat ?? 'Alamat toko belum diatur' }}</p>
-                    <p style="margin: 2px 0;">Email: {{ $profilToko->email ?? '-' }}</p>
-                    <p style="margin: 2px 0;">Telp: {{ $profilToko->telepon ?? '-' }}</p>
-                </td>
-                <td style="border: none; width: 33%; padding-left: 10px; padding-right: 10px;">
-                    <p style="margin:0;"><strong>Kepada (Supplier):</strong></p>
-                    <h4 style="margin: 2px 0;">{{ $pembelian->pemasok->name ?? 'Supplier Dihapus' }}</h4>
-                    <p style="margin: 2px 0;">{{ $pembelian->pemasok->alamat ?? 'Alamat tidak tersedia' }}</p>
-                    <p style="margin: 2px 0;">Email: {{ $pembelian->pemasok->email ?? '-' }}</p>
-                    <p style="margin: 2px 0;">Kontak: {{ $pembelian->pemasok->kontak ?? '-' }}</p>
-                </td>
-                <td style="border: none; width: 34%; padding-left: 10px;">
-                    <p style="margin:0;"><strong>Info Transaksi:</strong></p>
-                    <p style="margin: 2px 0;"><strong>Referensi:</strong> {{ $pembelian->referensi }}</p>
-                    <p style="margin: 2px 0;"><strong>Tanggal:</strong>
-                        {{ \Carbon\Carbon::parse($pembelian->tanggal_pembelian)->translatedFormat('d F Y') }}</p>
-                    <p style="margin: 2px 0;"><strong>Status Barang:</strong> {{ $pembelian->status_barang }}</p>
-                    <p style="margin: 2px 0;"><strong>Status Bayar:</strong> {{ $pembelian->status_pembayaran }}</p>
-                    <p style="margin: 2px 0;"><strong>Dibuat Oleh:</strong>
-                        {{ $pembelian->user->name ?? 'User Dihapus' }}</p>
-                </td>
-            </tr>
-        </table>
-
-        <table>
+        {{-- ── TABEL PRODUK ───────────────────────────────────────── --}}
+        <div class="section-title">Rincian Produk</div>
+        <table class="items-table">
             <thead>
                 <tr>
-                    <th class="text-center">No.</th>
-                    <th>Product</th>
-                    <th class="text-center">Qty</th>
-                    <th class="text-end">Harga Beli</th>
-                    <th class="text-end">Diskon</th>
-                    <th class="text-end">Subtotal</th>
+                    <th class="text-center" width="4%">No.</th>
+                    <th>Produk</th>
+                    <th class="text-center" width="8%">Qty</th>
+                    <th class="text-right" width="17%">Harga Jual</th>
+                    <th class="text-right" width="13%">Diskon</th>
+                    <th class="text-right" width="18%">Subtotal</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($pembelian->details as $detail)
+                @foreach ($pembelian->details as $item)
                     <tr>
-                        <td class="text-center">{{ $loop->iteration }}</td>
+                        <td class="text-center">{{ $loop->iteration }}.</td>
                         <td>
-                            {{ $detail->produk->name_product ?? 'Product Dihapus' }}
+                            <span class="product-name">
+                                {{ $item->produk->name_product ?? 'Produk Dihapus' }}
+                                @if ($item->product_variant_id && $item->varian && $item->varian->label)
+                                    &mdash; {{ $item->varian->label }}
+                                @endif
+                            </span>
                         </td>
-                        <td class="text-center">{{ $detail->qty }}</td>
-                        <td class="text-end">@money($detail->harga_beli)</td>
-                        <td class="text-end">@money($detail->diskon)</td>
-                        <td class="text-end">@money($detail->subtotal)</td>
+                        <td class="text-center">{{ $item->jumlah }}</td>
+                        <td class="text-right">@money($item->harga_jual)</td>
+                        <td class="text-right">@money($item->diskon_item)</td>
+                        <td class="text-right fw-bold">@money($item->subtotal)</td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
 
-        <table class="summary">
-            <tr>
-                <td style="font-weight: bold;">Subtotal Keseluruhan:</td>
-                <td class="text-end" style="font-weight: bold;">@money($pembelian->subtotal)</td>
-            </tr>
-            <tr>
-                <td>Diskon Tambahan:</td>
-                <td class="text-end">@money($pembelian->diskon)</td>
-            </tr>
-            <tr>
-                <td>PPN:</td>
-                <td class="text-end">@money($pembelian->pajak)</td>
-            </tr>
-            <tr>
-                <td>Ongkos Kirim:</td>
-                <td class="text-end">@money($pembelian->ongkir)</td>
-            </tr>
-            <tr class="total-akhir">
-                <td>TOTAL AKHIR</td>
-                <td class="text-end">@money($pembelian->total_akhir)</td>
-            </tr>
-            <tr>
-                <td>Jumlah Dibayar:</td>
-                <td class="text-end">@money($pembelian->jumlah_dibayar)</td>
-            </tr>
-            <tr>
-                <td style="font-weight: bold;">Sisa Hutang:</td>
-                <td class="text-end" style="font-weight: bold;">@money($pembelian->sisa_hutang)</td>
-            </tr>
-        </table>
+        {{-- ── CATATAN + SUMMARY ──────────────────────────────────── --}}
+        <div class="bottom-grid">
+            <div class="bottom-grid-row">
 
-        @if ($pembelian->catatan)
-            <div class="notes">
-                <strong>Catatan:</strong><br>
-                {!! $pembelian->catatan !!}
+                {{-- Catatan (kiri) --}}
+                <div class="bottom-left">
+                    <div class="section-title">Catatan</div>
+                    @if ($pembelian->catatan)
+                        <div class="notes-box">
+                            <span class="notes-title">Catatan Transaksi</span>
+                            <p>{!! $pembelian->catatan !!}</p>
+                        </div>
+                    @else
+                        <p style="font-size:9px; color:#ccc; font-style:italic;">Tidak ada catatan.</p>
+                    @endif
+                </div>
+
+                {{-- Summary (kanan) --}}
+                <div class="bottom-right">
+                    <div class="section-title">Ringkasan Pembayaran</div>
+                    <div class="summary-box">
+
+                        {{-- Baris subtotal, pajak, diskon, ongkir, service --}}
+                        <div class="summary-line">
+                            <table style="width:100%;border:none;margin:0;border-collapse:collapse;">
+                                <tr>
+                                    <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Subtotal Produk</td>
+                                    <td
+                                        style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                        @money($pembelian->subtotal)</td>
+                                </tr>
+                                @if ($pembelian->pajak > 0)
+                                    <tr>
+                                        <td style="border:none;padding:2px 0;font-size:9px;color:#666;">PPN / Pajak</td>
+                                        <td
+                                            style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                            @money($pembelian->pajak)</td>
+                                    </tr>
+                                @endif
+                                @if ($pembelian->diskon > 0)
+                                    <tr>
+                                        <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Diskon Tambahan
+                                        </td>
+                                        <td
+                                            style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#991b1b;">
+                                            &#8722;&nbsp;@money($pembelian->diskon)</td>
+                                    </tr>
+                                @endif
+                                @if ($pembelian->ongkir > 0)
+                                    <tr>
+                                        <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Ongkos Kirim
+                                        </td>
+                                        <td
+                                            style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                            @money($pembelian->ongkir)</td>
+                                    </tr>
+                                @endif
+                                @if ($pembelian->service > 0)
+                                    <tr>
+                                        <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Biaya Servis
+                                        </td>
+                                        <td
+                                            style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                            @money($pembelian->service)</td>
+                                    </tr>
+                                @endif
+                            </table>
+                        </div>
+
+                        <hr class="summary-divider">
+
+                        {{-- Total Akhir --}}
+                        <div class="summary-total-line">
+                            <table style="width:100%;border:none;margin:0;border-collapse:collapse;">
+                                <tr>
+                                    <td style="border:none;padding:0;" class="stl-label">Total Akhir</td>
+                                    <td style="border:none;padding:0;" class="stl-value text-right">@money($pembelian->total_akhir)
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <hr class="summary-divider">
+
+                        {{-- Dibayar & sisa/kembalian --}}
+                        <table style="width:100%;border:none;margin:0;border-collapse:collapse;">
+                            @if ($pembelian->status_pembayaran === 'Hutang')
+                                <tr>
+                                    <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Jumlah Dibayar</td>
+                                    <td
+                                        style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                        @money($pembelian->jumlah_dibayar)</td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none;padding:2px 0;font-size:9px;font-weight:bold;color:#1a1a2e;">
+                                        Sisa Hutang</td>
+                                    <td
+                                        style="border:none;padding:2px 0;font-size:9.5px;font-weight:bold;text-align:right;color:#991b1b;">
+                                        @money($pembelian->sisa_hutang)</td>
+                                </tr>
+                            @elseif ($pembelian->status_pembayaran === 'Lunas')
+                                <tr>
+                                    <td style="border:none;padding:2px 0;font-size:9px;color:#666;">Dibayar</td>
+                                    <td
+                                        style="border:none;padding:2px 0;font-size:9px;font-weight:600;text-align:right;color:#2d2d2d;">
+                                        @money($pembelian->jumlah_dibayar)</td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none;padding:2px 0;font-size:9px;font-weight:bold;color:#1a1a2e;">
+                                        Kembalian</td>
+                                    <td
+                                        style="border:none;padding:2px 0;font-size:9.5px;font-weight:bold;text-align:right;color:#166534;">
+                                        @money(abs($pembelian->kembalian))</td>
+                                </tr>
+                            @endif
+                        </table>
+
+                    </div>{{-- end summary-box --}}
+                </div>
+
             </div>
+        </div>
+
+        {{-- ── RIWAYAT PEMBAYARAN ──────────────────────────────────── --}}
+        @if ($pembelian->payments && $pembelian->payments->isNotEmpty())
+            <div class="section-title" style="margin-top: 22px;">Riwayat Pembayaran</div>
+            <table class="payment-table">
+                <thead>
+                    <tr>
+                        <th class="text-center" width="4%">No.</th>
+                        <th class="text-left" width="18%">Tanggal Bayar</th>
+                        <th class="text-left" width="14%">Kasir</th>
+                        <th class="text-center" width="12%">Metode</th>
+                        <th class="text-left">Referensi / Catatan</th>
+                        <th class="text-right" width="18%">Jumlah Bayar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($pembelian->payments as $key => $payment)
+                        <tr>
+                            <td class="text-center">{{ $key + 1 }}.</td>
+                            <td>
+                                <div class="pay-date-main">
+                                    {{ Carbon::parse($payment->tanggal_bayar)->translatedFormat('d F Y') }}</div>
+                                <div class="pay-date-time">{{ Carbon::parse($payment->tanggal_bayar)->format('H:i') }}
+                                    WIB</div>
+                            </td>
+                            <td>{{ $payment->user->name ?? '-' }}</td>
+                            <td class="text-center">
+                                <span
+                                    class="badge badge-{{ $payment->metode_pembayaran === 'TRANSFER' ? 'success' : 'warning' }}">
+                                    {{ $payment->metode_pembayaran ?? '-' }}
+                                </span>
+                            </td>
+                            <td>
+                                @if ($payment->referensi_pembayaran)
+                                    <div class="pay-ref">Ref: {{ $payment->referensi_pembayaran }}</div>
+                                @endif
+                                <div class="pay-note">{!! $payment->catatan ?? '-' !!}</div>
+                            </td>
+                            <td class="text-right text-green">@money($payment->jumlah_bayar)</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td class="text-left" colspan="5">Total Pembayaran</td>
+                        <td class="text-right text-blue">@money($pembelian->payments->sum('jumlah_bayar'))</td>
+                    </tr>
+                </tfoot>
+            </table>
         @endif
 
     </div>
+
 </body>
 
 </html>

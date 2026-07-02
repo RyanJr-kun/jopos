@@ -80,7 +80,7 @@
                                     <div id="avatar-upload-container" class="w-100"
                                         style="display: {{ $hasAvatar ? 'none' : 'block' }};">
                                         <label for="avatar" class="form-label">Unggah Foto Profil</label>
-                                        <input type="file" id="avatar" class="filepond" name="avatar_file"
+                                        <input type="file" id="avatar" class="filepond" name="avatar"
                                             accept="image/png, image/jpeg, image/jpg" />
                                     </div>
 
