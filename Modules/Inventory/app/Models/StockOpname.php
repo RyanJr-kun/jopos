@@ -2,6 +2,7 @@
 
 namespace Modules\Inventory\Models;
 
+use App\Models\Store;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -23,6 +24,11 @@ class StockOpname extends Model
     {
         return $this->hasMany(StockOpnameItem::class);
     }
+
+    public function store()
+  {
+    return $this->belongsTo(Store::class, 'store_id');
+  }
 
     /**
      * Mendapatkan user yang melakukan StockOpname.

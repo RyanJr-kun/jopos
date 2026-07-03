@@ -3,6 +3,7 @@
 namespace Modules\Inventory\Http\Controllers\stok;
 
 use App\Http\Controllers\Controller;
+use App\Models\ProductStock;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,23 +16,38 @@ class StockOpnameController extends Controller
 {
     public function index(Request $request)
     {
-        $kategoris = Category::where('status', 1)->whereHas('products')->orderBy('name')->get();
-        
-        // Ambil data semua toko/cabang untuk pilihan dropdown di form
-        $tokos = Store::all(); // <-- Sesuaikan dengan Model Toko Anda
-        
-        $products = collect(); 
-        $selectedKategori = $request->input('kategori');
-        $selectedToko = $request->input('store_id'); // <-- Input Toko
+       $kategoris = Category::whereNull('parent_id')->with('children')->get();
 
-        // WAJIB: Form lembar kerja hanya muncul jika Kategori DAN Toko sudah dipilih
+        $tokos = Store::all();
+
+        $products = collect();
+        $selectedKategori = $request->input('kategori');       // ID kategori utama
+        $selectedSubKategori = $request->input('subkategori');  // ID subkategori
+        $selectedToko = $request->input('store_id');
+
+        // WAJIB: Form lembar kerja hanya muncul jika Kategori Utama DAN Toko sudah dipilih
         if ($request->filled('kategori') && $request->filled('store_id')) {
-            
-            // Eager loading relasi 'stocks' tapi di-filter HANYA untuk toko yang dipilih
-            $query = Product::where('category_id', $selectedKategori)
-                ->with(['category', 'stocks' => function($q) use ($selectedToko) {
-                    $q->where('store_id', $selectedToko); 
-                }]);
+
+            $query = Product::with(['category','primaryImage', 
+            'stocks' => function ($q) use ($selectedToko) { // Stok produk tunggal
+                $q->where('store_id', $selectedToko);
+            },
+            'variants.stocks' => function ($q) use ($selectedToko) { // Stok per varian
+                $q->where('store_id', $selectedToko);
+            }]);
+
+            if ($request->filled('subkategori')) {
+                // Subkategori dipilih -> hanya produk milik subkategori itu
+                $query->where('category_id', $selectedSubKategori);
+            } else {
+                // Hanya kategori utama dipilih -> semua produk di subkategori-subkategorinya
+                // (+ produk yang langsung menempel di kategori utama, kalau ada)
+                $childIds = Category::where('parent_id', $selectedKategori)
+                    ->pluck('id')
+                    ->push($selectedKategori);
+
+                $query->whereIn('category_id', $childIds);
+            }
 
             if ($request->filled('search')) {
                 $search = $request->input('search');
@@ -40,8 +56,8 @@ class StockOpnameController extends Controller
                         ->orWhere('sku', 'like', "%{$search}%");
                 });
             }
-            
-            $products = $query->get(); 
+
+            $products = $query->get();
         }
 
         return view('inventory::inventaris.opname.stok-opname', [
@@ -50,7 +66,8 @@ class StockOpnameController extends Controller
             'kategoris' => $kategoris,
             'tokos' => $tokos,
             'selectedKategori' => $selectedKategori,
-            'selectedToko' => $selectedToko
+            'selectedSubKategori' => $selectedSubKategori,
+            'selectedToko' => $selectedToko,
         ]);
     }
 
@@ -60,9 +77,11 @@ class StockOpnameController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'store_id' => 'required|integer', // Wajib tahu lokasi tokonya
+            'store_id' => 'required|integer',
             'catatan_opname' => 'nullable|string|max:1000',
             'items' => 'required|array',
+            'items.*.product_id' => 'required|integer',
+            'items.*.product_variant_id' => 'nullable|integer', // Izinkan kosong jika produk tunggal
             'items.*.stok_fisik' => 'required|integer|min:0',
             'items.*.stok_sistem_awal' => 'required|integer|min:0',
             'items.*.keterangan' => 'nullable|string|max:255',
@@ -70,37 +89,39 @@ class StockOpnameController extends Controller
 
         $tokoId = $validatedData['store_id'];
         $itemsToProcess = [];
-        $productIds = array_keys($validatedData['items']);
-        
-        // Muat produk berserta stok khusus toko ini saja
-        $products = Product::with(['stocks' => function($q) use ($tokoId) {
-            $q->where('store_id', $tokoId);
-        }])->findMany($productIds)->keyBy('id');
 
-        foreach ($validatedData['items'] as $produkId => $item) {
-            $produk = $products->get($produkId);
-            if ($produk) {
-                // Karena query di atas sudah di-filter per store_id, isi collection 'stocks' maksimal hanya 1 row
-                $stockRow = $produk->stocks->first();
-                $stokSistem = $stockRow ? $stockRow->qty : 0; 
+        // Loop data dari form dan cek perlindungan concurrency langsung ke database
+        foreach ($validatedData['items'] as $item) {
+            // Query untuk mencari stok saat ini berdasarkan toko, produk, dan varian (jika ada)
+            $stockQuery = ProductStock::where('store_id', $tokoId)
+                ->where('product_id', $item['product_id']);
+            
+            if (!empty($item['product_variant_id'])) {
+                $stockQuery->where('product_variant_id', $item['product_variant_id']);
+            } else {
+                $stockQuery->whereNull('product_variant_id'); // Pastikan produk tunggal tidak tertukar dengan varian
+            }
+            
+            $stockRow = $stockQuery->first();
+            $stokSistem = $stockRow ? $stockRow->qty : 0; 
 
-                // Proteksi Concurrency
-                if ($stokSistem != $item['stok_sistem_awal']) {
-                    return back()->withInput()->with('error', "Opname Gagal! Stok sistem untuk '{$produk->name_product}' di toko ini telah berubah. Seseorang melakukan transaksi saat Anda menghitung.");
-                }
+            // Proteksi Concurrency
+            if ($stokSistem != $item['stok_sistem_awal']) {
+                return back()->withInput()->with('error', "Opname Gagal! Ada perubahan stok sistem pada salah satu barang saat Anda menghitung. Seseorang baru saja melakukan transaksi.");
+            }
 
-                $stokFisik = (int)$item['stok_fisik'];
-                $selisih = $stokFisik - $stokSistem;
+            $stokFisik = (int)$item['stok_fisik'];
+            $selisih = $stokFisik - $stokSistem;
 
-                if ($selisih != 0) {
-                    $itemsToProcess[$produkId] = [
-                        'produk' => $produk,
-                        'stok_sistem' => $stokSistem,
-                        'stok_fisik' => $stokFisik,
-                        'selisih' => $selisih,
-                        'keterangan' => $item['keterangan'],
-                    ];
-                }
+            if ($selisih != 0) {
+                $itemsToProcess[] = [
+                    'product_id' => $item['product_id'],
+                    'product_variant_id' => $item['product_variant_id'] ?? null,
+                    'stok_sistem' => $stokSistem,
+                    'stok_fisik' => $stokFisik,
+                    'selisih' => $selisih,
+                    'keterangan' => $item['keterangan'],
+                ];
             }
         }
 
@@ -116,21 +137,27 @@ class StockOpnameController extends Controller
                     'user_id' => Auth::id(),
                     'catatan' => $request->input('catatan_opname'),
                     'status' => 'Selesai',
-                    // 'store_id' => $tokoId // Bagus jika tabel master opname Anda punya kolom lokasi toko
+                    'store_id' => $tokoId,
                 ]);
 
-                foreach ($itemsToProcess as $produkId => $data) {
+                foreach ($itemsToProcess as $data) {
+                    // 1. Catat ke history (tabel detail opname)
                     $stokOpname->details()->create([
-                        'product_id' => $produkId,
+                        'product_id' => $data['product_id'],
+                        'product_variant_id' => $data['product_variant_id'], // Tambahkan ini di DB Anda
                         'stok_sistem' => $data['stok_sistem'],
                         'stok_fisik' => $data['stok_fisik'],
                         'selisih' => $data['selisih'],
                         'keterangan' => $data['keterangan'],
                     ]);
 
-                    // UPDATE ATAU BUAT DATA STOK BARU KHUSUS DI TOKO INI
-                    \Modules\Inventory\Models\ProductStock::updateOrCreate(
-                        ['product_id' => $produkId, 'store_id' => $tokoId],
+                    // 2. Sesuaikan Stok Fisik
+                    ProductStock::updateOrCreate(
+                        [
+                            'product_id' => $data['product_id'], 
+                            'store_id' => $tokoId,
+                            'product_variant_id' => $data['product_variant_id']
+                        ],
                         ['qty' => $data['stok_fisik']]
                     );
                 }
@@ -194,19 +221,20 @@ class StockOpnameController extends Controller
      * @return \Illuminate\View\View
      */
     public function show($kode_opname)
-    {
-        // Cari stok opname berdasarkan kode unik, bukan ID.
-        $stok_opname = StockOpname::where('kode_opname', $kode_opname)->firstOrFail();
+{
+    $stok_opname = StockOpname::where('kode_opname', $kode_opname)->firstOrFail();
 
-        // Eager load relasi yang dibutuhkan untuk efisiensi query
-        $stok_opname->load([
-            'user', // Muat relasi user
-            'details.produk.unit'
-        ]);
+    $stok_opname->load([
+        'user',
+        'store', 
+        'details.produk.unit',
+        'details.produk.primaryImage',
+        'details.produk.variants',
+    ]);
 
-        return view('inventory::inventaris.opname.stok-opname-show', [
-            'title' => 'Detail Stock Opname ' . $stok_opname->kode_opname,
-            'stokOpname' => $stok_opname,
-        ]);
-    }
+    return view('inventory::inventaris.opname.stok-opname-show', [
+        'title' => 'Detail Stock Opname ' . $stok_opname->kode_opname,
+        'stokOpname' => $stok_opname,
+    ]);
+}
 }

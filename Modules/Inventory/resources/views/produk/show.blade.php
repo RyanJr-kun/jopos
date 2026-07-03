@@ -29,13 +29,18 @@
 
         <div class="row">
             {{-- Bagian Kiri: Gambar & Galeri (Dengan Swiper) --}}
-            <div class="col-xl-4 col-lg-5 col-md-5 mb-4">
+            <div class="col-xl-5 col-lg-5 col-md-5 mb-4">
                 <div class="card h-100">
                     <div class="card-body p-3">
 
                         @php
-                            // Urutkan gambar agar is_primary selalu tampil pertama di Slider
                             $sortedImages = $produk->images->sortByDesc('is_primary')->values();
+
+                            $variantImages = $produk->variants
+                                ->filter(fn($v) => !empty($v->img_variant))
+                                ->map(fn($v) => (object) ['path' => $v->img_variant]);
+
+                            $sortedImages = $sortedImages->concat($variantImages)->unique('path')->values();
                         @endphp
 
                         {{-- 1. Main Slider (Gambar Besar) --}}
@@ -45,7 +50,7 @@
                                     @foreach ($sortedImages as $img)
                                         <div class="swiper-slide text-center">
                                             <img src="{{ Storage::url($img->path) }}" class="img-fluid rounded shadow-sm"
-                                                style="height: 400px; width: 400px; object-fit: contain; background-color: #f8f9fa;"
+                                                style="height: 500px; width: 500px; object-fit: contain; background-color: #f8f9fa;"
                                                 alt="{{ $produk->name_product }}">
                                         </div>
                                     @endforeach
@@ -71,8 +76,8 @@
                                 <div class="swiper-wrapper">
                                     @foreach ($sortedImages as $img)
                                         <div class="swiper-slide">
-                                            <img src="{{ Storage::url($img->path) }}" class="rounded border"
-                                                style="width: 50px; height: 50px; object-fit: cover;" alt="Thumbnail">
+                                            <img src="{{ Storage::url($img->path) }}" class="rounded border mx-0"
+                                                style="width: 80px; height: 80px; object-fit: cover;" alt="Thumbnail">
                                         </div>
                                     @endforeach
                                 </div>
@@ -84,7 +89,7 @@
             </div>
 
             {{-- Bagian Kanan: Informasi Utama --}}
-            <div class="col-xl-8 col-lg-7 col-md-7 mb-4">
+            <div class="col-xl-7 col-lg-7 col-md-7 mb-4">
                 <div class="card h-100">
                     <div class="card-header border-bottom">
                         <h5 class="card-title mb-0">{{ $produk->name_product }}</h5>
@@ -202,42 +207,50 @@
                     </div>
                     <div class="card-body pt-3 p-0">
                         @if ($produk->variants->count() > 0)
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover m-0 align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Varian</th>
-                                            <th>SKU</th>
-                                            <th>Harga Jual</th>
-                                            <th class="text-center">Stok</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($produk->variants as $variant)
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        @if ($variant->img_variant && Storage::disk('r2')->exists($variant->img_variant))
-                                                            <img src="{{ Storage::url($variant->img_variant) }}"
-                                                                class="rounded me-2"
-                                                                style="width: 32px; height: 32px; object-fit: cover;">
-                                                        @endif
-                                                        <span class="badge bg-label-info">
-                                                            {{ $variant->options->pluck('value')->join(' / ') }}
+                            <div class="row g-3">
+                                @foreach ($produk->variants as $variant)
+                                    @php $varStok = $produk->stocks->where('product_variant_id', $variant->id)->sum('qty') ?? 0; @endphp
+                                    <div class="col-12">
+                                        <div class="card mx-3 border h-100 variant-card">
+                                            <div class="card-body d-flex gap-3">
+                                                <div class="flex-shrink-0">
+                                                    @if ($variant->img_variant && Storage::disk('r2')->exists($variant->img_variant))
+                                                        <img src="{{ Storage::url($variant->img_variant) }}"
+                                                            class="rounded"
+                                                            style="width: 106px; height: 106px; object-fit: cover;">
+                                                    @else
+                                                        <div class="rounded bg-label-secondary d-flex align-items-center justify-content-center"
+                                                            style="width: 106px; height: 106px;">
+                                                            <i class="bx bx-image text-muted"
+                                                                style="font-size: 1.5rem;"></i>
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                                <div class="flex-grow-1 overflow-hidden">
+                                                    <span class="badge bg-label-info mb-2">
+                                                        {{ $variant->options->pluck('value')->join(' / ') }}
+                                                    </span>
+
+                                                    <div class="d-flex justify-content-between align-items-start mt-1">
+                                                        <small class="text-muted d-block text-truncate"
+                                                            style="max-width: 60%;">
+                                                            {{ $variant->sku }}
+                                                        </small>
+                                                        <span
+                                                            class="badge {{ $varStok > 0 ? 'bg-secondary' : 'bg-label-danger' }}">
+                                                            Stok: {{ $varStok }}
                                                         </span>
                                                     </div>
-                                                </td>
-                                                <td><small class="text-dark fw-bold">{{ $variant->sku }}</small></td>
-                                                <td><small class="text-success fw-bold">Rp
-                                                        {{ number_format($variant->harga_jual, 0, ',', '.') }}</small></td>
-                                                <td class="text-center">
-                                                    @php $varStok = $produk->stocks->where('product_variant_id', $variant->id)->sum('qty') ?? 0; @endphp
-                                                    <span class="badge bg-secondary">{{ $varStok }}</span>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+
+                                                    <p class="text-success fw-bold mb-0 mt-2">
+                                                        Rp {{ number_format($variant->harga_jual, 0, ',', '.') }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         @else
                             <div class="text-center py-5">

@@ -47,7 +47,6 @@ class Product extends Model
       'total_stock' => ProductStock::selectRaw('COALESCE(SUM(qty), 0)')
         ->whereColumn('product_id', 'products.id')
         ->when($storeId, fn($q) => $q->where('store_id', $storeId))
-        ->whereNull('product_variant_id'), // Produk utama
     ]);
   }
 

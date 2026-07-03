@@ -3,6 +3,7 @@
 namespace Modules\Inventory\Models;
 
 use App\Models\ProductStock;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -37,19 +38,19 @@ class ProductVariant extends Model
         return $this->options->pluck('value')->join(' / ');
     }
 
-    public function getImgUrlAttribute(): string
-    {
-        if ($this->img_variant) {
-            return asset('storage/' . $this->img_variant);
+    protected function imgVariantUrl(): Attribute
+{
+    return Attribute::make(
+        get: function () {
+            if ($this->img_variant) {
+                // Sesuaikan path storage Anda
+                return asset('storage/img/variants/' . $this->img_variant); 
+            }
+            // Gambar default jika varian tidak punya gambar
+            return asset('assets/img/produk.png');
         }
-        // Fallback ke gambar utama produk
-        $primary = $this->product->images()->where('is_primary', true)->first()
-            ?? $this->product->images()->first();
-
-        return $primary
-            ? asset('storage/' . $primary->path)
-            : asset('assets/img/produk.png');
-    }
+    );
+}
 
     public function stocks()
     {

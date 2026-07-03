@@ -1123,3 +1123,12 @@ $blue-g: #000f94;
         }
     }
 }
+
+.variant-card {
+    transition: box-shadow .15s ease, transform .15s ease;
+}
+
+.variant-card:hover {
+    box-shadow: 0 0.25rem 1rem rgba(161, 172, 184, .35);
+    transform: translateY(-2px);
+}

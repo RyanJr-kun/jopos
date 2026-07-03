@@ -41,7 +41,11 @@ class ProductController extends Controller implements HasMiddleware
   {
     $request = request();
 
-    $query = Product::with(['category', 'brand', 'unit', 'user', 'primaryImage'])->latest();
+    $storeId = $request->filled('store') ? $request->input('store') : null; // null = semua toko
+
+    $query = Product::with(['category', 'brand', 'unit', 'user', 'primaryImage'])
+      ->withTotalStock($storeId) // <-- filter stock per store, null = total semua store
+      ->latest();
 
     if ($request->filled('search')) {
       $search = $request->input('search');
@@ -74,6 +78,8 @@ class ProductController extends Controller implements HasMiddleware
         ->whereHas('products')
         ->orderBy('name')
         ->get(),
+
+      'stores' => Store::where('is_active', 1)->orderBy('name_toko')->get(),
     ]);
   }
 

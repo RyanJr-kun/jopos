@@ -63,7 +63,7 @@
                         </td>
                         {{-- Kolom 4: Total Stok --}}
                         <td class="text-center">
-                            @php $totalStok = $products->stocks->sum('qty') ?? 0; @endphp
+                            @php $totalStok = $products->total_stock ?? 0; @endphp
                             <span
                                 class="badge {{ $totalStok <= $products->stok_minimum ? 'bg-danger' : 'bg-success' }}">{{ $totalStok }}</span>
                         </td>

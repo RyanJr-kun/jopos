@@ -51,7 +51,7 @@ return new class extends Migration
                 $table->string('barcode', 100)->nullable()->unique();
                 $table->decimal('harga_jual', 15, 0);
                 $table->decimal('harga_beli', 15, 0);
-                $table->string('img_variant', 255)->nullable(); // Tetap dipertahankan untuk thumbnail cepat
+                $table->string('img_variant', 255)->nullable(); 
                 $table->boolean('is_active')->default(true);
                 $table->timestamps();
 

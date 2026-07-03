@@ -76,17 +76,33 @@
                     </thead>
                     <tbody>
                         @forelse ($stokOpname->details as $detail)
+                            @php
+                                $itemProduk = $detail->produk;
+                                $itemVariant = $detail->variant ?? null;
+
+                                $imgUrl =
+                                    $itemVariant && $itemVariant->img_variant
+                                        ? Storage::url($itemVariant->img_variant)
+                                        : ($itemProduk && $itemProduk->primaryImage && $itemProduk->primaryImage->path
+                                            ? Storage::url($itemProduk->primaryImage->path)
+                                            : asset('assets/img/produk.png'));
+                            @endphp
                             <tr>
                                 <td>
                                     <div class="d-flex px-2 py-1">
                                         <div>
-                                            <img src="{{ $detail->produk->img_produk ? Storage::url($detail->produk->img_produk) : asset('assets/img/produk.png') }}"
-                                                class="avatar avatar-sm me-3" alt="product image">
+                                            <img src="{{ $imgUrl }}" class="avatar avatar-sm me-3"
+                                                alt="product image">
                                         </div>
                                         <div class="d-flex flex-column justify-content-center">
                                             <h6 class="mb-0 text-sm">
-                                                {{ $detail->produk->name_product ?? 'Product Dihapus' }}</h6>
-                                            <p class="text-xs text-secondary mb-0">{{ $detail->produk->sku ?? 'N/A' }}
+                                                {{ $itemProduk->name_product ?? 'Product Dihapus' }}
+                                            </h6>
+                                            <p class="text-xs text-secondary mb-0">
+                                                @if ($itemVariant)
+                                                    <span class="badge bg-label-info">{{ $itemVariant->label }}</span>
+                                                @endif
+                                                {{ $itemVariant->sku ?? ($itemProduk->sku ?? 'N/A') }}
                                             </p>
                                         </div>
                                     </div>

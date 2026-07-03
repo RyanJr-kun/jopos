@@ -27,17 +27,28 @@
             <div class="card h-100 shadow-sm">
                 <div class="card-body d-flex align-items-center">
                     <div class="row g-3 align-items-center justify-content-start w-100 m-0">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <input type="text" name="search" id="searchInput" class="form-control"
                                 placeholder="Cari Nama Produk..." value="{{ request('search') }}">
                         </div>
-                        <div class="col-md-4 me-3">
+                        <div class="col-md-3">
                             <select id="kategoriFilter" name="kategori" class="form-select select2"
                                 data-placeholder="Semua Kategori">
                                 <option value="">Semua Kategori</option>
                                 @foreach ($kategoris as $kategori)
                                     <option value="{{ $kategori->id }}" @selected(request('kategori') == $kategori->id)>
                                         {{ $kategori->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3 me-3">
+                            <select id="storeFilter" name="store" class="form-select select2"
+                                data-placeholder="Semua Toko">
+                                <option value="">Semua Toko</option>
+                                @foreach ($stores as $store)
+                                    <option value="{{ $store->id }}" @selected(request('store') == $store->id)>
+                                        {{ $store->name_toko }}
                                     </option>
                                 @endforeach
                             </select>
@@ -203,9 +214,10 @@
                     function fetchData(page = 1) {
                         let search = $('#searchInput').val();
                         let kategori = $('#kategoriFilter').val();
+                        let store = $('#storeFilter').val(); // BARU
                         let url = '{{ route('produk.index') }}';
 
-                        $('#produk-table-container').css('opacity', 0.5); // Efek loading
+                        $('#produk-table-container').css('opacity', 0.5);
 
                         $.ajax({
                             url: url,
@@ -213,16 +225,17 @@
                             data: {
                                 search: search,
                                 kategori: kategori,
+                                store: store,
                                 page: page
-                            },
+                            }, // BARU
                             success: function(data) {
                                 $('#produk-table-container').html(data).css('opacity', 1);
 
-                                // Update URL browser agar rapi (tanpa parameter kosong)
                                 let newParams = new URLSearchParams();
                                 if (page > 1) newParams.append('page', page);
                                 if (search) newParams.append('search', search);
                                 if (kategori) newParams.append('kategori', kategori);
+                                if (store) newParams.append('store', store); // BARU
 
                                 let newUrl = url + (newParams.toString() ? '?' + newParams
                                     .toString() : '');
@@ -244,6 +257,10 @@
 
                     // Event Listener Filter Kategori (Select2)
                     $('#kategoriFilter').on('change', function() {
+                        fetchData(1);
+                    });
+
+                    $('#storeFilter').on('change', function() {
                         fetchData(1);
                     });
 
