@@ -47,23 +47,34 @@
                     @endforeach
                 </select>
             </div>
-            <!-- Tombol Tambah -->
-            <div class="col-md-auto ms-md-auto">
-                <a href="{{ route('penjualan.create') }}" class="btn btn-outline-info mb-0">
-                    <i class="bx bx-plus me-2"></i>Transaksi
-                </a>
-            </div>
+            @if ($canViewAllStores)
+                <div class="col-md-3">
+                    <select name="store" id="statusStore" class="form-select select2"
+                        data-placeholder="Semua Toko ...">
+                        <option value=""></option>
+                        @foreach ($stores as $store)
+                            <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>
+                                {{ $store->name_toko }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
         </div>
     </div>
 </div>
 
 <div class="card">
     <div class="card-header pb-0 px-3 pt-2 mb-3">
-        <div class="d-flex justify-content-start align-items-center">
+        <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h5 class="mb-n1 fw-bolder">Invoice Sale</h5>
                 <p class="text-sm mb-0"> riwayat transaksi penjualan.</p>
             </div>
+            <a href="{{ route('penjualan.create') }}" class="btn btn-outline-info px-2" title="Tambah Penjualan"
+                data-bs-toggle="tooltip" data-bs-placement="top">
+                <i class="bx bx-plus-circle"></i>
+            </a>
         </div>
     </div>
     <div class="card-body px-0 pt-0 pb-2">
@@ -179,6 +190,7 @@
                 window.fetchData = function(page = 1) {
                     let search = $('#searchInput').val();
                     let status = $('#statusFilter').val();
+                    let storeId = $('#statusStore').val();
                     let dateRange = $('#flatpickr-date').val();
 
                     let date_from = '';
@@ -203,6 +215,7 @@
                             page: page,
                             search: search,
                             status: status,
+                            store_id: storeId,
                             date_from: date_from,
                             date_to: date_to
                         },
@@ -221,7 +234,8 @@
                             }
 
                             // Update URL browser
-                            updateBrowserURL(page, search, status, date_from, date_to);
+                            updateBrowserURL(page, search, status, storeId, date_from,
+                                date_to);
                         },
                         error: function(xhr) {
                             $('#penjualan-table-container').css('opacity', 1);
@@ -230,13 +244,14 @@
                     });
                 };
 
-                function updateBrowserURL(page, search, status, from, to) {
+                function updateBrowserURL(page, search, status, storeId, date_from, date_to) {
                     let params = new URLSearchParams();
                     if (page > 1) params.set('page', page);
                     if (search) params.set('search', search);
                     if (status) params.set('status', status);
-                    if (from) params.set('date_from', from);
-                    if (to) params.set('date_to', to);
+                    if (storeId) params.set('store_id', storeId);
+                    if (date_from) params.set('date_from', date_from);
+                    if (date_to) params.set('date_to', date_to);
 
                     let newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() :
                         '');
@@ -258,6 +273,10 @@
 
                 // 2. Filter Status Select2 (Ditambahkan event select2 spesifik)
                 $('#statusFilter').on('select2:select select2:clear change', function() {
+                    window.fetchData(1);
+                });
+
+                $('#statusStore').on('select2:select select2:clear change', function() {
                     window.fetchData(1);
                 });
 

@@ -16,32 +16,48 @@ class StockOpnameController extends Controller
 {
     public function index(Request $request)
     {
-       $kategoris = Category::whereNull('parent_id')->with('children')->get();
-
-        $tokos = Store::all();
-
+        $kategoris = Category::whereNull('parent_id')->with('children')->get();
         $products = collect();
+        
+        // 1. Cek User & Permission
+        $user = Auth::user();
+        $canViewAllStores = $user->can('view-toko-gudang');
+        $employeeStoreId = $user->employee?->store_id;
+
+        // 2. Tentukan Data Dropdown Toko & Toko yang Sedang Dipilih
+        if ($canViewAllStores) {
+            // Admin: Bebas melihat dan memfilter semua toko
+            $tokos = Store::orderBy('name_toko')->get();
+            $selectedToko = $request->input('store_id'); 
+        } else {
+            // Kasir Gudang: Hanya load 1 toko dan PAKSA selectedToko ke tokonya sendiri
+            $tokos = Store::where('id', $employeeStoreId)->get();
+            $selectedToko = $employeeStoreId; 
+        }
+
         $selectedKategori = $request->input('kategori');       // ID kategori utama
-        $selectedSubKategori = $request->input('subkategori');  // ID subkategori
-        $selectedToko = $request->input('store_id');
+        $selectedSubKategori = $request->input('subkategori'); // ID subkategori
 
-        // WAJIB: Form lembar kerja hanya muncul jika Kategori Utama DAN Toko sudah dipilih
-        if ($request->filled('kategori') && $request->filled('store_id')) {
+        // 3. WAJIB: Form lembar kerja muncul jika Kategori & Toko sudah ada nilainya
+        // (Gunakan $selectedToko, bukan $request->filled('store_id') karena kasir tidak mengirim request store_id)
+        if ($request->filled('kategori') && $selectedToko) {
 
-            $query = Product::with(['category','primaryImage', 
-            'stocks' => function ($q) use ($selectedToko) { // Stok produk tunggal
-                $q->where('store_id', $selectedToko);
-            },
-            'variants.stocks' => function ($q) use ($selectedToko) { // Stok per varian
-                $q->where('store_id', $selectedToko);
-            }]);
+            $query = Product::with(['category', 'primaryImage', 
+                'stocks' => function ($q) use ($selectedToko) { 
+                    // Stok produk tunggal
+                    $q->where('store_id', $selectedToko);
+                },
+                'variants.stocks' => function ($q) use ($selectedToko) { 
+                    // Stok per varian
+                    $q->where('store_id', $selectedToko);
+                }
+            ]);
 
             if ($request->filled('subkategori')) {
                 // Subkategori dipilih -> hanya produk milik subkategori itu
                 $query->where('category_id', $selectedSubKategori);
             } else {
-                // Hanya kategori utama dipilih -> semua produk di subkategori-subkategorinya
-                // (+ produk yang langsung menempel di kategori utama, kalau ada)
+                // Hanya kategori utama dipilih -> ambil semua turunannya
                 $childIds = Category::where('parent_id', $selectedKategori)
                     ->pluck('id')
                     ->push($selectedKategori);
@@ -68,6 +84,7 @@ class StockOpnameController extends Controller
             'selectedKategori' => $selectedKategori,
             'selectedSubKategori' => $selectedSubKategori,
             'selectedToko' => $selectedToko,
+            'canViewAllStores' => $canViewAllStores,
         ]);
     }
 
@@ -193,25 +210,42 @@ class StockOpnameController extends Controller
      */
     public function history(Request $request)
     {
+        $statuses = StockOpname::getStatus();
         $query = StockOpname::with('user')->latest();
 
-        // Fitur pencarian berdasarkan kode opname atau username
+        $user = Auth::user();
+        $canViewAllStores = $user->can('view-toko-gudang');
+        $employeeStoreId  = $user->employee?->store_id;
+
+        if ($canViewAllStores) {
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->input('store_id'));
+        }
+        } else {
+        $query->where('store_id', $employeeStoreId);
+        }
+
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('kode_opname', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('username', 'like', "%{$search}%");
-                    });
+                ->orWhereHas('user', fn($q_s) => $q_s->where('username', 'like', "%{$search}%"));
             });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
         }
 
         $stokOpnames = $query->paginate(15)->withQueryString();
 
-        return view('inventory::inventaris.opname.stok-opname-history', [
-            'title' => 'Riwayat Stock Opname',
-            'stokOpnames' => $stokOpnames,
-        ]);
+        if ($request->ajax()) {
+            return view('inventory::inventaris.opname._stok_opname_table', compact('stokOpnames', 'canViewAllStores'))->render();
+        }
+
+        $stores = $canViewAllStores ? Store::orderBy('name_toko')->get() : collect();
+
+        return view('inventory::inventaris.opname.stok-opname-history', compact('stokOpnames', 'statuses', 'stores', 'canViewAllStores'));
     }
 
     /**

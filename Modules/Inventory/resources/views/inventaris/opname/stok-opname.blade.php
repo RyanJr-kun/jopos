@@ -33,26 +33,28 @@
 
 @section('content')
     <div class="card rounded-2 mb-4">
-        <div class="card-header pb-0">
-            <h6 class="mb-0">Pilih Lokasi dan Kategori</h6>
-            <p class="text-sm">Tentukan lokasi toko dan kategori produk yang akan dihitung.</p>
+        <div class="card-header pb-0 px-3">
+            <h6 class="mb-0 fw-bold">Scope Produk</h6>
+            <p class="text-sm">Tentukan produk yang akan dihitung.</p>
         </div>
         <div class="card-body p-3">
             <form method="GET" action="{{ route('stok-opname.index') }}">
                 <div class="row g-3 align-items-end">
                     {{-- TOKO --}}
-                    <div class="col-md-3">
-                        <label class="form-label">Lokasi Toko / Cabang <span class="text-danger">*</span></label>
-                        <select name="store_id" id="storeFilter" class="form-select select2" required
-                            data-placeholder="-- Pilih Toko --">
-                            <option value="">-- Pilih Toko --</option>
-                            @foreach ($tokos as $toko)
-                                <option value="{{ $toko->id }}" @selected(request('store_id') == $toko->id)>
-                                    {{ $toko->name_toko ?? '-' }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    @if ($canViewAllStores)
+                        <div class="col-md-3">
+                            <label class="form-label">Lokasi Toko / Cabang <span class="text-danger">*</span></label>
+                            <select name="store_id" id="storeFilter" class="form-select select2" required
+                                data-placeholder="-- Pilih Toko --">
+                                <option value="">-- Pilih Toko --</option>
+                                @foreach ($tokos as $toko)
+                                    <option value="{{ $toko->id }}" @selected(request('store_id') == $toko->id)>
+                                        {{ $toko->name_toko ?? '-' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
                     {{-- KATEGORI UTAMA --}}
                     <div class="col-md-3">
@@ -110,11 +112,10 @@
     {{-- TAHAP 2: LEMBAR KERJA (WORKSHEET) OPNAME --}}
     @if ($selectedKategori && $selectedToko)
         <div class="card rounded-2">
-            <div class="card-header pb-0 mb-3 d-flex justify-content-between align-items-center">
+            <div class="card-header pb-0 px-3 mb-3 d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="mb-0">Cek Stok fisik Sesuai Produk</h6>
-                    <p class="text-sm text-warning mb-0"><i class="bx bx-info-circle"></i> Selesaikan perhitungan
-                        sebelum menutup halaman ini.</p>
+                    <h6 class="mb-0 fw-bold">Cek Stok fisik Sesuai Produk</h6>
+                    <p class="text-sm text-warning mb-0"><i class="bx bx-info-circle"></i> Selesaikan atau Buat Draft.</p>
                 </div>
                 <a href="{{ route('stok-opname.history') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bx bx-history me-2"></i>Riwayat

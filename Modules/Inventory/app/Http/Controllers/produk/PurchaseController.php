@@ -39,7 +39,7 @@ class PurchaseController extends Controller implements HasMiddleware
     $barangs  = Purchase::getStatusBarangs();
 
     $user = Auth::user();
-    $canViewAllStores = $user->can('view-toko-gudang'); // buat permission ini via Spatie
+    $canViewAllStores = $user->can('view-toko-gudang');
     $employeeStoreId  = $user->employee?->store_id;
 
     $query = Purchase::with(['supplier', 'user', 'store'])->latest();
@@ -51,7 +51,6 @@ class PurchaseController extends Controller implements HasMiddleware
         $query->where('store_id', $request->input('store_id'));
       }
     } else {
-      // employee biasa: paksa hanya toko sendiri, abaikan input dari luar
       $query->where('store_id', $employeeStoreId);
     }
 
@@ -72,7 +71,8 @@ class PurchaseController extends Controller implements HasMiddleware
     }
 
     if ($request->filled('date_from') && $request->filled('date_to')) {
-      $query->whereBetween('tanggal_pembelian', [$request->input('date_from'), $request->input('date_to')]);
+    $query->whereDate('tanggal_pembelian', '>=', $request->input('date_from'))
+          ->whereDate('tanggal_pembelian', '<=', $request->input('date_to'));
     }
 
     $pembelian = $query->paginate(15)->withQueryString();
@@ -300,7 +300,7 @@ class PurchaseController extends Controller implements HasMiddleware
   public function show(Purchase $pembelian)
   {
     $pembelian->load(['supplier', 'user', 'details.produk', 'payments.user', 'payments.bank']);
-    $profilToko = Store::query()->first();
+    $profilToko = $pembelian->store;
     $banks = Bank::all(); // Diperlukan untuk pilihan bank di dalam modal cicilan
 
     return view('inventory::pembelian.show', [
@@ -413,7 +413,7 @@ class PurchaseController extends Controller implements HasMiddleware
       'tanggal' => 'required|date',
       'tanggal_jatuh_tempo' => 'nullable|date|after:tanggal',
       'status_pembayaran' => 'required|in:Lunas,Hutang,Batal',
-      'status_barang' => 'required|in:Diterima,Belum Diterima,Batal',
+      'status_barang' => 'required|in:Diterima, Pre Order, Retur, Batal',
       'jumlah_dibayar' => 'nullable|numeric|min:0',
       'ongkir' => 'nullable|numeric|min:0',
       'diskon_tambahan' => 'nullable|numeric|min:0',

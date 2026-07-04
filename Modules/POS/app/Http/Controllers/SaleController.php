@@ -36,39 +36,57 @@ class SaleController extends Controller implements HasMiddleware
    * Display a listing of the resource.
    */
   public function index(Request $request)
-  {
+{
     $statuses = Sale::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
 
-    $storeId = Auth::user()->employee?->store_id;
+    $user = Auth::user();
+    $canViewAllStores = $user->can('view-toko-gudang');
+    $employeeStoreId  = $user->employee?->store_id;
+
     $query = Sale::with(['customer', 'user'])->latest();
 
-    // Filter berdasarkan store_id jika user terikat dengan toko tertentu
-    if ($storeId) {
-      $query->where('store_id', $storeId);
+    // --- LOGIKA FILTER TOKO YANG KONSISTEN & AMAN ---
+    if ($canViewAllStores) {
+        // Jika Admin/Manager, bisa lihat semua. Kalau dia filter via dropdown, terapkan:
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->input('store_id'));
+        }
+    } else {
+        // Jika kasir biasa, PAKSA hanya lihat tokonya sendiri.
+        // Meski nilainya null, biarkan saja agar dia tidak bisa lihat toko lain
+        $query->where('store_id', $employeeStoreId);
     }
 
+    // --- Filter Pencarian ---
     if ($request->filled('search')) {
-      $search = $request->input('search');
-      $query->where(function ($q) use ($search) {
-        $q->where('referensi', 'like', "%{$search}%")->orWhereHas('customer', fn($qc) => $qc->where('name', 'like', "%{$search}%"));
-      });
+        $search = $request->input('search');
+        $query->where(function ($q) use ($search) {
+            $q->where('referensi', 'like', "%{$search}%")
+              ->orWhereHas('customer', fn($qc) => $qc->where('name', 'like', "%{$search}%"));
+        });
     }
 
+    // --- Filter Status ---
     if ($request->filled('status')) {
-      $query->where('status_pembayaran', $request->input('status'));
+        $query->where('status_pembayaran', $request->input('status'));
     }
 
+    // --- Filter Tanggal (Sudah Benar & Aman) ---
     if ($request->filled('date_from') && $request->filled('date_to')) {
-      $query->whereBetween('created_at', [$request->date_from . ' 00:00:00', $request->date_to . ' 23:59:59']);
+        $query->whereBetween('created_at', [$request->date_from . ' 00:00:00', $request->date_to . ' 23:59:59']);
     }
 
     $penjualan = $query->paginate(15)->withQueryString();
+    
     if ($request->ajax()) {
-      return view('pos::penjualan.partials._penjualan_table', compact('penjualan'))->render();
+        return view('pos::penjualan.partials._penjualan_table', compact('penjualan', 'canViewAllStores'))->render();
     }
 
-    return view('pos::penjualan.index', compact('penjualan', 'statuses'));
-  }
+    // Ambil data toko untuk dropdown admin (opsional, sesuaikan nama Model-mu)
+    $stores = $canViewAllStores ? Store::orderBy('name_toko')->get() : collect();
+
+    return view('pos::penjualan.index', compact('penjualan', 'statuses', 'canViewAllStores', 'stores'));
+}
 
   /**
    * Show the form for creating a new resource.
@@ -108,7 +126,11 @@ class SaleController extends Controller implements HasMiddleware
         if ($storeId) $q->where('store_id', $storeId);
       },
     ])
-      ->withSum('stocks', 'qty')
+      ->withSum(['stocks' => function ($q) use ($storeId) {
+          if ($storeId) {
+              $q->where('store_id', $storeId);
+          }
+      }], 'qty')
       ->where(function ($q) use ($storeId) {
         $q->whereHas('stocks', fn($sq) => $sq->where('qty', '>', 0)
           ->when($storeId, fn($sq2) => $sq2->where('store_id', $storeId)))

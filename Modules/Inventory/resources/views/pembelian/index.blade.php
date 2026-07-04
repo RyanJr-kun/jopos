@@ -272,6 +272,10 @@
                         window.fetchData(1);
                     });
 
+                    $('#statusStore').on('select2:select select2:clear change', function() {
+                        window.fetchData(1);
+                    });
+
                     // 3. Pagination Link Click
                     $(document).on('click', '.pagination a', function(e) {
                         e.preventDefault();

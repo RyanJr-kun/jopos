@@ -39,4 +39,13 @@ class StockOpname extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public static function getStatus()
+    {
+        return [
+            'Selesai',
+            'Draft',
+            'Batal'
+        ];
+    }
 }
