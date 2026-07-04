@@ -42,10 +42,10 @@
                                     $persentase = 100;
                                 } elseif ($isJatuhTempo) {
                                     $barColor = 'bg-danger';
-                                } 
+                                }
 
                                 $statusClass =
-                                        $item->status_pembayaran == 'Lunas'
+                                    $item->status_pembayaran == 'Lunas'
                                         ? 'bg-label-success'
                                         : ($item->status_pembayaran == 'Hutang'
                                             ? 'bg-label-warning'
@@ -58,7 +58,7 @@
                                 <div class="d-flex justify-content-between text-xs mb-1">
                                     <span class="fw-bold text-dark" title="Total Tagihan">Rp
                                         {{ number_format($item->total_akhir, 0, ',', '.') }}</span>
-                                     @if ($item->status_pembayaran === 'Batal')
+                                    @if ($item->status_pembayaran === 'Batal')
                                         {{-- Jika statusnya Batal, tampilkan label Batal --}}
                                         <span class="text-danger fw-semibold" title="Dibatalkan">Batal</span>
                                     @elseif ($item->sisa_hutang > 0)
@@ -93,11 +93,14 @@
                             <div class="d-flex flex-column gap-2 align-items-center">
                                 <span
                                     class="badge {{ $item->status_barang == 'Diterima' ? 'bg-label-success' : ($item->status_barang == 'Batal' ? 'bg-label-danger' : 'bg-label-warning') }}"
-                                     title="Status Barang" data-bs-toggle="tooltip" data-bs-target="up" style="font-size: 0.7rem; width: 110px;">
+                                    title="Status Barang" data-bs-toggle="tooltip" data-bs-target="up"
+                                    style="font-size: 0.7rem; width: 110px;">
                                     <i class="bx bx-box text-xs me-1"></i> {{ $item->status_barang }}
                                 </span>
 
-                                <span class="badge {{ $statusClass }}"  title="Status Pembayaran" data-bs-toggle="tooltip" data-bs-target="up" style="font-size: 0.7rem; width: 110px;">
+                                <span class="badge {{ $statusClass }}" title="Status Pembayaran"
+                                    data-bs-toggle="tooltip" data-bs-target="up"
+                                    style="font-size: 0.7rem; width: 110px;">
                                     <i class="bx bx-wallet text-xs me-1"></i> {{ $item->status_pembayaran }}
                                 </span>
                             </div>
@@ -129,8 +132,9 @@
                                     <a class="dropdown-item" href="{{ route('pembelian.show', $item->referensi) }}"><i
                                             class="bx bx-show-alt me-2 text-info"></i> Lihat Detail</a>
                                     @if ($item->status_pembayaran != 'Batal')
-                                        <a class="dropdown-item" href="{{ route('pembelian.edit', $item->referensi) }}"><i
-                                            class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
+                                        <a class="dropdown-item"
+                                            href="{{ route('pembelian.edit', $item->referensi) }}"><i
+                                                class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
                                         <div class="dropdown-divider"></div>
                                         <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
                                             data-bs-target="#cancelConfirmationModal"
@@ -143,7 +147,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-5">
+                        <td colspan="6" class="text-center py-5">
                             <div class="d-flex flex-column align-items-center">
                                 <i class="bx bx-folder-open display-4 text-muted mb-3"></i>
                                 <h6 class="text-dark fw-bold mb-0">Belum ada data pembelian.</h6>
@@ -173,7 +177,7 @@
                     $persentase = 100;
                 } elseif ($isJatuhTempo) {
                     $barColor = 'bg-danger';
-                } 
+                }
 
                 $statusBarangClass =
                     $item->status_barang == 'Diterima'
@@ -207,8 +211,9 @@
                                 <a class="dropdown-item" href="{{ route('pembelian.show', $item->referensi) }}"><i
                                         class="bx bx-show-alt me-2 text-info"></i> Lihat Detail</a>
                                 @if ($item->status_pembayaran != 'Batal')
-                                    <a class="dropdown-item" href="{{ route('pembelian.edit', $item->referensi) }}"><i
-                                        class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
+                                    <a class="dropdown-item"
+                                        href="{{ route('pembelian.edit', $item->referensi) }}"><i
+                                            class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
                                         data-bs-target="#cancelConfirmationModal"

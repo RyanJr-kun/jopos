@@ -36,21 +36,33 @@ class PurchaseController extends Controller implements HasMiddleware
   public function index(Request $request)
   {
     $statuses = Purchase::getPaymentStatus();
-    $barangs = Purchase::getStatusBarangs();
-    // Mulai query builder
-    $query = Purchase::with(['supplier', 'user'])->latest();
+    $barangs  = Purchase::getStatusBarangs();
 
-    // Terapkan filter pencarian jika ada input 'search'
+    $user = Auth::user();
+    $canViewAllStores = $user->can('view-toko-gudang'); // buat permission ini via Spatie
+    $employeeStoreId  = $user->employee?->store_id;
+
+    $query = Purchase::with(['supplier', 'user', 'store'])->latest();
+
+    // --- Scoping store: inti dari fiturnya ---
+    if ($canViewAllStores) {
+      // admin/manager: filter opsional lewat dropdown
+      if ($request->filled('store_id')) {
+        $query->where('store_id', $request->input('store_id'));
+      }
+    } else {
+      // employee biasa: paksa hanya toko sendiri, abaikan input dari luar
+      $query->where('store_id', $employeeStoreId);
+    }
+
     if ($request->filled('search')) {
       $search = $request->input('search');
       $query->where(function ($q) use ($search) {
-        $q->where('referensi', 'like', "%{$search}%")->orWhereHas('supplier', function ($q_supplier) use ($search) {
-          $q_supplier->where('name', 'like', "%{$search}%");
-        });
+        $q->where('referensi', 'like', "%{$search}%")
+          ->orWhereHas('supplier', fn($q_s) => $q_s->where('name', 'like', "%{$search}%"));
       });
     }
 
-    // Terapkan filter status jika ada input 'status'
     if ($request->filled('payment')) {
       $query->where('status_pembayaran', $request->input('payment'));
     }
@@ -61,18 +73,17 @@ class PurchaseController extends Controller implements HasMiddleware
 
     if ($request->filled('date_from') && $request->filled('date_to')) {
       $query->whereBetween('tanggal_pembelian', [$request->input('date_from'), $request->input('date_to')]);
-      // Sesuaikan 'tanggal_pembelian' dengan nama kolom tanggal di tabel purchases Anda
     }
 
     $pembelian = $query->paginate(15)->withQueryString();
 
-    // Jika ini adalah request AJAX, kembalikan hanya bagian tabelnya
     if ($request->ajax()) {
-      return view('inventory::pembelian.partials._pembelian_table', compact('pembelian'))->render();
+      return view('inventory::pembelian.partials._pembelian_table', compact('pembelian', 'canViewAllStores'))->render();
     }
 
-    // Jika request biasa, kembalikan view lengkap
-    return view('inventory::pembelian.index', compact('pembelian', 'statuses', 'barangs'));
+    $stores = $canViewAllStores ? Store::orderBy('name_toko')->get() : collect();
+
+    return view('inventory::pembelian.index', compact('pembelian', 'statuses', 'barangs', 'stores', 'canViewAllStores'));
   }
 
   /**

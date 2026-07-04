@@ -601,7 +601,7 @@
                         $hargaDiskon = $produk->harga_diskon;
                         $stokQty = $produk->stocks_sum_qty ?? 0;
                         $imgUrl =
-                            $produk->variants->path && $produk->primaryImage->path
+                            $produk->primaryImage && $produk->primaryImage->path
                                 ? Storage::url($produk->primaryImage->path)
                                 : asset('assets/img/produk.png');
                     @endphp

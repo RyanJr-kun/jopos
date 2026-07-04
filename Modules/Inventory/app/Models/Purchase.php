@@ -3,6 +3,7 @@
 namespace Modules\Inventory\Models;
 
 use App\Models\PurchasePayment;
+use App\Models\Store;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +25,10 @@ class Purchase extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+    public function store()
+    {
+        return $this->belongsTo(Store::class, 'store_id');
     }
     public function details(): HasMany
     {

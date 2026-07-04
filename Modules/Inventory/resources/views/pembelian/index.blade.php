@@ -33,7 +33,7 @@
                     </div>
                 </div>
                 <!-- Filter Dropdown Status -->
-                <div class="col-md-3 col-6">
+                <div class="col-md-2 col-6">
                     <select name="payment" id="statusPayment" class="form-select select2"
                         data-placeholder="Status Pembayaran ...">
                         <option value=""></option>
@@ -42,7 +42,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3 col-6">
+                <div class="col-md-2 col-6">
                     <select name="barang" id="statusBarang" class="form-select select2"
                         data-placeholder="Status Barang ...">
                         <option value=""></option>
@@ -51,7 +51,19 @@
                         @endforeach
                     </select>
                 </div>
-                <!-- Tombol Tambah -->
+                @if ($canViewAllStores)
+                    <div class="col-md-2">
+                        <select name="store" id="statusStore" class="form-select select2"
+                            data-placeholder="Semua Toko ...">
+                            <option value=""></option>
+                            @foreach ($stores as $store)
+                                <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>
+                                    {{ $store->name_toko }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -166,6 +178,7 @@
                         let search = $('#searchInput').val();
                         let statusPayment = $('#statusPayment').val();
                         let statusBarang = $('#statusBarang').val();
+                        let storeId = $('#statusStore').val();
                         let dateRange = $('#flatpickr-date').val();
 
                         let date_from = '';
@@ -190,6 +203,7 @@
                                 search: search,
                                 payment: statusPayment,
                                 barang: statusBarang,
+                                store_id: storeId,
                                 date_from: date_from,
                                 date_to: date_to
                             },
@@ -208,7 +222,8 @@
                                 }
 
                                 // Update URL browser
-                                updateBrowserURL(page, search, statusPayment, statusBarang,
+                                updateBrowserURL(page, search, statusPayment, storeId,
+                                    statusBarang,
                                     date_from,
                                     date_to);
                             },
@@ -225,6 +240,7 @@
                         if (search) params.set('search', search);
                         if (payment) params.set('payment', payment);
                         if (barang) params.set('barang', barang);
+                        if (storeId) params.set('store_id', storeId);
                         if (from) params.set('date_from', from);
                         if (to) params.set('date_to', to);
 
