@@ -3,9 +3,9 @@
 @section('title', 'Cards basic - UI elements')
 @section('content')
     <div class="row g-3">
-        <div class="col-12 col-md-8 col-xl-9">
+        <div class="col-12">
             <div class="card h-100 shadow-sm">
-                <div class="card-body d-flex align-items-center">
+                <div class="card-body d-flex align-items-center pt-3">
                     <div class="row g-3 align-items-center justify-content-start w-100 m-0">
                         <div class="col-md-5">
                             <input type="text" name="search" id="searchInput" class="form-control"
