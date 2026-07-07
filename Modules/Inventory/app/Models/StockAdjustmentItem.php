@@ -8,54 +8,41 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class StockAdjustmentItem extends Model
 {
-    /**
-     * Nama tabel di database, sesuai dengan file migrasi.
-     */
-    protected $table = 'stock_adjustment_items';
+  protected $table = 'stock_adjustment_items';
 
-    protected $guarded = ['id'];
+  protected $guarded = ['id'];
 
-    /**
-     * Relasi ke data master penyesuaian stok.
-     */
-    public function stokPenyesuaian(): BelongsTo
-    {
-        return $this->belongsTo(StockAdjustment::class);
-    }
+  protected $casts = [
+    'jumlah' => 'integer',
+    'stok_sebelum' => 'integer',
+    'stok_setelah' => 'integer',
+  ];
 
-    /**
-     * Relasi ke produk yang disesuaikan.
-     */
-    public function produk(): BelongsTo
-    {
-        return $this->belongsTo(Product::class);
-    }
+  public function stokPenyesuaian(): BelongsTo
+  {
+    return $this->belongsTo(StockAdjustment::class, 'stock_adjustment_id');
+  }
 
-    /**
-     * Accessor untuk memformat tipe penyesuaian dengan badge HTML.
-     *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
-     */
-    protected function tipeFormatted(): Attribute
-    {
-        return Attribute::make(
-            get: fn() => $this->tipe === 'IN'
-                ? '<span class="badge badge-sm bg-label-success">Masuk</span>'
-                : '<span class="badge badge-sm bg-label-danger">Keluar</span>',
-        );
-    }
+  public function produk(): BelongsTo
+  {
+    return $this->belongsTo(Product::class, 'product_id');
+  }
 
-    /**
-     * Accessor untuk memformat jumlah dengan tanda + atau - dan warna.
-     *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
-     */
-    protected function jumlahFormatted(): Attribute
-    {
-        return Attribute::make(
-            get: fn() => $this->tipe === 'IN'
-                ? '<span class="text-success fw-bold">+' . $this->jumlah . '</span>'
-                : '<span class="text-danger fw-bold">-' . $this->jumlah . '</span>',
-        );
-    }
+  public function variant(): BelongsTo
+  {
+    return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+  }
+
+  /**
+   * Badge arah pergerakan, ditentukan dari tanda `jumlah` (bukan kolom terpisah lagi).
+   */
+  protected function arahFormatted(): Attribute
+  {
+    return Attribute::make(get: fn() => $this->jumlah >= 0 ? '<span class="badge badge-sm bg-label-success">Masuk</span>' : '<span class="badge badge-sm bg-label-danger">Keluar</span>');
+  }
+
+  protected function jumlahFormatted(): Attribute
+  {
+    return Attribute::make(get: fn() => $this->jumlah >= 0 ? '<span class="text-success fw-bold">+' . $this->jumlah . '</span>' : '<span class="text-danger fw-bold">' . $this->jumlah . '</span>');
+  }
 }
