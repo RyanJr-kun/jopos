@@ -118,7 +118,7 @@ class StockAdjustmentController extends Controller implements HasMiddleware
   {
     $stores = [];
 
-    // Sesuaikan dengan nama permission yang Anda gunakan (view-all-store atau view-toko-gudang)
+    // Sesuaikan dengan nama permission yang Anda gunakan (view-toko-gudang atau view-toko-gudang)
     if (Auth::user()->can('view-toko-gudang')) {
       $stores = Store::all(); // Ambil semua data toko. Bisa ditambah ->where('is_active', true) jika ada status aktif
     }

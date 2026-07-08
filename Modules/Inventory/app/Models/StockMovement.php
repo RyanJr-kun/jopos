@@ -60,7 +60,7 @@ class StockMovement extends Model
 
   /**
    * Scope untuk membatasi movement ke store tertentu.
-   * Dipakai bareng permission 'view-all-store'.
+   * Dipakai bareng permission 'view-toko-gudang'.
    */
   public function scopeForStore($query, $storeId)
   {

@@ -24,7 +24,7 @@
                             </select>
                         </div>
                     @endcan
-                    <div class="col-md-{{ auth()->user()->can('view-all-store') ? 8 : 12 }}">
+                    <div class="col-md-{{ auth()->user()->can('view-toko-gudang') ? 8 : 12 }}">
                         <label for="catatan" class="form-label fw-semibold">Catatan Umum (Opsional)</label>
                         <textarea class="form-control" id="catatan" name="catatan" rows="1"
                             placeholder="Contoh: Penyesuaian stok akhir bulan">{{ old('catatan') }}</textarea>

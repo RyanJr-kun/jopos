@@ -157,6 +157,12 @@
                                     'delete' => ['label' => 'Delete', 'icon' => 'bx-trash', 'color' => 'danger'],
                                     'print' => ['label' => 'Print', 'icon' => 'bx-printer', 'color' => 'secondary'],
                                     'export' => ['label' => 'Export', 'icon' => 'bx-export', 'color' => 'primary'],
+                                    'approve' => [
+                                        'label' => 'Approve',
+                                        'icon' => 'bx-check-circle',
+                                        'color' => 'success',
+                                    ],
+                                    'reject' => ['label' => 'Reject', 'icon' => 'bx-x-circle', 'color' => 'danger'],
                                     'HPP' => ['label' => 'HPP', 'icon' => 'bx-show', 'color' => 'info'],
                                     'claim' => ['label' => 'claim', 'icon' => 'bx-edit', 'color' => 'info'],
                                 ];

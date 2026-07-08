@@ -125,15 +125,23 @@
       "permission": "view-serialnumber"
     },
     {
+      "url": "stok-transfer",
+      "name": "Transfer Stok",
+      "icon": "menu-icon icon-base bx bx-transfer-truck",
+      "slug": "stok-transfer.index",
+      "permission": "view-stok-transfer"
+
+    },
+    {
       "url": "stok-penyesuaian",
-      "name": "Stock",
+      "name": "Sesuaikan Stok",
       "icon": "menu-icon icon-base bx bx-stock-change",
       "slug": "stok-penyesuaian.index",
       "permission": "view-stok-penyesuaian"
     },
     {
       "url": "#",
-      "name": "Stock Opname",
+      "name": "Stok Opname",
       "icon": "menu-icon icon-base bx bx-opname-2",
       "slug": "stok-opname",
       "permission": "view-stok-opname",
