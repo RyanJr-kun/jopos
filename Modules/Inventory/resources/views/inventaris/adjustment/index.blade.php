@@ -4,10 +4,10 @@
 
 @section('content')
 
-    <div class="row g-3 align-items-stretch mb-1">
+    <div class="row g-3 align-items-stretch mb-1 swipeable-row">
 
         {{-- STAT CARD: Total Penyesuaian --}}
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl-3 swipeable-card">
             <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4d50eb 0%, #8592ff 100%);">
                 <div class="card-body d-flex align-items-center">
                     <div class="avatar avatar-md me-3">
@@ -24,7 +24,7 @@
         </div>
 
         {{-- STAT CARD: Bulan Ini --}}
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl-3 swipeable-card">
             <div class="card h-100 border-0 shadow-sm"
                 style="background: linear-gradient(135deg, #17a2b8 0%, #5fd4e6 100%);">
                 <div class="card-body d-flex align-items-center">
@@ -42,7 +42,7 @@
         </div>
 
         {{-- STAT CARD: Barang Masuk --}}
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl-3 swipeable-card">
             <div class="card h-100 border-0 shadow-sm"
                 style="background: linear-gradient(135deg, #28c76f 0%, #6ee7a0 100%);">
                 <div class="card-body d-flex align-items-center">
@@ -60,7 +60,7 @@
         </div>
 
         {{-- STAT CARD: Barang Keluar --}}
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl-3 swipeable-card">
             <div class="card h-100 border-0 shadow-sm"
                 style="background: linear-gradient(135deg, #ea5455 0%, #f28f8f 100%);">
                 <div class="card-body d-flex align-items-center">
@@ -84,8 +84,23 @@
                 <div class="card-body">
                     <form action="{{ route('stok-penyesuaian.index') }}" method="GET">
                         <div class="row g-3 align-items-end">
+
+                            <div class="col-12 col-md-4">
+                                <label for="search" class="form-label fw-semibold">Pencarian</label>
+                                <div class="input-group">
+                                    <input type="text" id="search" name="search" class="form-control"
+                                        placeholder="Cari kode atau user..." value="{{ request('search') }}">
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label for="filter-date-range" class="form-label fw-semibold">Rentang Tanggal</label>
+                                <div class="input-group">
+                                    <input type="text" id="filter-date-range" class="form-control"
+                                        placeholder="YYYY-MM-DD to YYYY-MM-DD">
+                                </div>
+                            </div>
                             @can('view-toko-gudang')
-                                <div class="col-12 col-md-6 col-lg-3">
+                                <div class="col-12 col-md-3">
                                     <label for="store_id" class="form-label fw-semibold">Toko</label>
                                     <select name="store_id" id="store_id" class="form-select select2"
                                         data-placeholder="Semua Toko">
@@ -98,34 +113,12 @@
                                     </select>
                                 </div>
                             @endcan
-                            <div class="col-12 col-md-6 col-lg-3">
-                                <label for="search" class="form-label fw-semibold">Pencarian</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-transparent"><i class="bx bx-search"></i></span>
-                                    <input type="text" id="search" name="search" class="form-control"
-                                        placeholder="Cari kode atau user..." value="{{ request('search') }}">
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3 col-lg-2">
-                                <label for="start_date" class="form-label fw-semibold">Dari Tanggal</label>
-                                <input type="date" id="start_date" name="start_date" class="form-control"
-                                    value="{{ request('start_date') }}">
-                            </div>
-                            <div class="col-6 col-md-3 col-lg-2">
-                                <label for="end_date" class="form-label fw-semibold">Sampai Tanggal</label>
-                                <input type="date" id="end_date" name="end_date" class="form-control"
-                                    value="{{ request('end_date') }}">
-                            </div>
-                            <div class="col-12 col-lg-2">
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-dark w-100">
-                                        <i class="bx bx-filter-alt"></i> Filter
-                                    </button>
-                                    <a href="{{ route('stok-penyesuaian.index') }}"
-                                        class="btn btn-outline-secondary w-100">
-                                        Reset
-                                    </a>
-                                </div>
+
+                            <div class="col-2 justify-content-end d-flex">
+                                <button type="button" id="btn-reset-filter" class="btn btn-outline-secondary px-2"
+                                    title="Reset Filter" data-bs-toggle="tooltip" data-bs-placement="top">
+                                    <i class="bx bx-reset fs-5"></i>
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -283,6 +276,10 @@
 
 @section('page-script')
     <script type="module">
+        flatpickr("#filter-date-range", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+        });
         const initSelect2 = () => {
             if (typeof $ !== 'undefined' && $.fn.select2) {
                 $('.select2').each(function() {
@@ -303,7 +300,11 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const filterDateRange = document.getElementById('filter-date-range');
             const cancelModal = document.getElementById('cancelConfirmationModal');
+
+            let debounceTimer = null;
+
             if (cancelModal) {
                 cancelModal.addEventListener('show.bs.modal', function(event) {
                     const button = event.relatedTarget;

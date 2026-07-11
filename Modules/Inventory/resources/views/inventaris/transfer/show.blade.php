@@ -22,7 +22,7 @@
 
         {{-- HEADER --}}
         <div class="card rounded-3 shadow-sm border-0 mb-4">
-            <div class="card-header border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="d-flex align-items-center">
                     <span class="avatar avatar-md me-3">
                         <span class="avatar-initial rounded bg-label-primary">
@@ -36,10 +36,12 @@
                         </span>
                     </div>
                 </div>
-                <a href="{{ route('stok-transfer.index') }}" class="btn btn-outline-secondary">
-                    <i class="bx bx-arrow-back me-1"></i> Kembali ke Riwayat
+                <a href="{{ route('stok-transfer.index') }}" class="btn btn-outline-secondary px-2" title="Kembali"
+                    data-bs-toggle="tooltip" data-bs-placement="top">
+                    <i class="bx bx-arrow-back"></i>
                 </a>
             </div>
+            <hr class="mx-5 my-0 pb-0">
 
             <div class="card-body">
                 <div class="row g-4">

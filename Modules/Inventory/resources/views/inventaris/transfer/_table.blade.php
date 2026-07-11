@@ -67,8 +67,7 @@
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-1">
                             <a href="{{ route('stok-transfer.show', $transfer->kode_transfer) }}"
-                                class="btn btn-icon btn-sm btn-outline-info" data-bs-toggle="tooltip"
-                                title="Lihat Detail">
+                                class="action-btn text-blue" data-bs-toggle="tooltip" title="Lihat Detail">
                                 <i class="bx bx-show"></i>
                             </a>
                             @can('approve-stok-transfer')
@@ -85,9 +84,11 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="text-center py-5">
-                        <i class="bx bx-transfer-alt fs-1 text-muted d-block mb-2"></i>
-                        <p class="text-sm fw-bold mb-0">Tidak ada riwayat transfer stok ditemukan.</p>
+                    <td colspan="8">
+                        <div class="d-flex flex-column justify-content-center align-items-center">
+                            <i class="bx bx-transfer-alt fs-1 text-muted d-block mb-2"></i>
+                            <p class="text-sm fw-bold mb-0">Tidak ada riwayat transfer stok ditemukan.</p>
+                        </div>
                     </td>
                 </tr>
             @endforelse

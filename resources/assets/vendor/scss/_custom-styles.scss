@@ -1132,3 +1132,45 @@ $blue-g: #000f94;
     box-shadow: 0 0.25rem 1rem rgba(161, 172, 184, .35);
     transform: translateY(-2px);
 }
+
+.swipeable-row {
+            overflow-x: auto;
+            flex-wrap: nowrap !important;
+            /* Memaksa elemen tidak turun ke baris baru */
+            -webkit-overflow-scrolling: touch;
+            /* Efek smooth scroll di HP */
+            scrollbar-width: none;
+            /* Sembunyikan scrollbar di Firefox */
+            -ms-overflow-style: none;
+            /* Sembunyikan scrollbar di IE/Edge */
+            padding-bottom: 0.5rem;
+            /* Memberi sedikit ruang agar shadow tidak terpotong */
+            scroll-snap-type: x mandatory;
+            /* Bikin card berhenti nge-pas di tengah */
+        }
+
+        /* Sembunyikan scrollbar di Chrome, Safari, Opera */
+        .swipeable-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Mengatur ukuran card di dalam slider */
+        .swipeable-card {
+            min-width: 280px;
+            /* Lebar minimum card saat di-scroll */
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+            /* Titik henti saat di-swipe */
+        }
+
+        /* Kembalikan ke mode grid biasa kalau layarnya besar (PC/Laptop) */
+        @media (min-width: 1200px) {
+            .swipeable-row {
+                overflow-x: visible;
+            }
+
+            .swipeable-card {
+                min-width: auto;
+                flex: 1 1 auto;
+            }
+        }

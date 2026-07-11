@@ -3,11 +3,9 @@
 @section('title', 'Transfer Stok Antar Toko - Inventory')
 
 @section('content')
-
-    <div class="row g-3 align-items-stretch mb-1">
-
-        {{-- STAT CARD: Total Transfer --}}
-        <div class="col-12 col-sm-6 col-xl-3">
+    <!-- Terapkan class swipeable-row di sini -->
+    <div class="row g-3 align-items-stretch mb-3 swipeable-row">
+        <div class="col-12 col-sm-6 col-xl-3 swipeable-card">
             <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4d50eb 0%, #8592ff 100%);">
                 <div class="card-body d-flex align-items-center">
                     <div class="avatar avatar-md me-3">
@@ -24,7 +22,7 @@
         </div>
 
         {{-- STAT CARD: Menunggu Diterima --}}
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl-3 swipeable-card">
             <div class="card h-100 border-0 shadow-sm"
                 style="background: linear-gradient(135deg, #ff9f43 0%, #ffc98a 100%);">
                 <div class="card-body d-flex align-items-center">
@@ -44,7 +42,7 @@
         </div>
 
         {{-- STAT CARD: Diterima --}}
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl-3 swipeable-card">
             <div class="card h-100 border-0 shadow-sm"
                 style="background: linear-gradient(135deg, #28c76f 0%, #6ee7a0 100%);">
                 <div class="card-body d-flex align-items-center">
@@ -56,7 +54,7 @@
                     <div>
                         <p class="text-white mb-0 text-sm opacity-75">Diterima</p>
                         <h3 class="text-white mb-0 fw-bold">
-                            {{ $transfers->whereIn('status', ['diterima', 'diterima_sebagian'])->count() }}
+                            {{ $transfers->where('status', 'diterima')->count() }}
                         </h3>
                     </div>
                 </div>
@@ -64,7 +62,7 @@
         </div>
 
         {{-- STAT CARD: Ditolak/Dibatalkan --}}
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl-3 swipeable-card">
             <div class="card h-100 border-0 shadow-sm"
                 style="background: linear-gradient(135deg, #ea5455 0%, #f28f8f 100%);">
                 <div class="card-body d-flex align-items-center">
@@ -76,7 +74,7 @@
                     <div>
                         <p class="text-white mb-0 text-sm opacity-75">Ditolak/Dibatalkan</p>
                         <h3 class="text-white mb-0 fw-bold">
-                            {{ $transfers->whereIn('status', ['ditolak', 'dibatalkan'])->count() }}
+                            {{ $transfers->where('status', 'ditolak')->count() }}
                         </h3>
                     </div>
                 </div>
@@ -86,33 +84,25 @@
 
     <div class="row g-3 mt-1">
         <div class="col-12">
-            <div class="card rounded-3 shadow-sm border-0">
-                <div
-                    class="card-header border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <div>
-                        <h5 class="mb-0 fw-bold">Transfer Stok Antar Toko</h5>
-                        <p class="text-sm text-muted mb-0">Riwayat pengiriman & penerimaan stok antar cabang</p>
-                    </div>
-                    @can('create-stok-transfer')
-                        <a href="{{ route('stok-transfer.create') }}" class="btn btn-info">
-                            <i class="bx bx-plus me-1"></i> Buat Transfer
-                        </a>
-                    @endcan
-                </div>
-
+            <div class="card">
                 {{-- FILTER PANEL (AJAX) --}}
-                <div class="card-body border-bottom bg-light-subtle">
+                <div class="card-body">
                     <div class="row g-3 align-items-end" id="filterPanel">
-                        <div class="col-12 col-md-6 col-lg-3">
+                        <div class="col-12 col-md-6">
                             <label for="filter-search" class="form-label fw-semibold">Pencarian</label>
                             <div class="input-group">
-                                <span class="input-group-text bg-transparent"><i class="bx bx-search"></i></span>
                                 <input type="text" id="filter-search" class="form-control"
                                     placeholder="Cari kode atau user...">
                             </div>
                         </div>
-
-                        <div class="col-6 col-md-3 col-lg-2">
+                        <div class="col-12 col-md-4">
+                            <label for="filter-date-range" class="form-label fw-semibold">Rentang Tanggal</label>
+                            <div class="input-group">
+                                <input type="text" id="filter-date-range" class="form-control"
+                                    placeholder="YYYY-MM-DD to YYYY-MM-DD">
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-2">
                             <label for="filter-status" class="form-label fw-semibold">Status</label>
                             <select id="filter-status" class="form-select select2" data-placeholder="Semua Status">
                                 <option value="">Semua Status</option>
@@ -124,8 +114,7 @@
                                 <option value="dibatalkan">Dibatalkan</option>
                             </select>
                         </div>
-
-                        <div class="col-6 col-md-3 col-lg-2">
+                        <div class="col-6 col-md-3">
                             <label for="filter-store-asal" class="form-label fw-semibold">Toko Asal</label>
                             <select id="filter-store-asal" class="form-select select2" data-placeholder="Semua Toko">
                                 <option value="">Semua Toko</option>
@@ -135,7 +124,7 @@
                             </select>
                         </div>
 
-                        <div class="col-6 col-md-3 col-lg-2">
+                        <div class="col-6 col-md-3">
                             <label for="filter-store-tujuan" class="form-label fw-semibold">Toko Tujuan</label>
                             <select id="filter-store-tujuan" class="form-select select2" data-placeholder="Semua Toko">
                                 <option value="">Semua Toko</option>
@@ -144,25 +133,33 @@
                                 @endforeach
                             </select>
                         </div>
-
-                        <div class="col-6 col-md-3 col-lg-1">
-                            <label for="filter-start-date" class="form-label fw-semibold">Dari</label>
-                            <input type="date" id="filter-start-date" class="form-control">
-                        </div>
-
-                        <div class="col-6 col-md-3 col-lg-1">
-                            <label for="filter-end-date" class="form-label fw-semibold">Sampai</label>
-                            <input type="date" id="filter-end-date" class="form-control">
-                        </div>
-
-                        <div class="col-12 col-lg-1">
-                            <button type="button" id="btn-reset-filter" class="btn btn-outline-secondary w-100"
-                                title="Reset Filter">
-                                <i class="bx bx-reset"></i>
+                        <div class="col-2">
+                            <button type="button" id="btn-reset-filter" class="btn btn-outline-secondary px-2"
+                                title="Reset Filter" data-bs-toggle="tooltip" data-bs-placement="top">
+                                <i class="bx bx-reset fs-5"></i>
                             </button>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card rounded-3 shadow-sm border-0">
+                <div
+                    class="card-header border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h5 class="mb-0 fw-bold">Transfer Stok</h5>
+                        <p class="text-sm text-muted mb-0">Riwayat pengiriman & penerimaan stok antar cabang</p>
+                    </div>
+                    @can('create-stok-transfer')
+                        <a href="{{ route('stok-transfer.create') }}" class="btn btn-info px-2"
+                            title="Buat Transfer Stok Baru" data-bs-toggle="tooltip" data-bs-placement="top">
+                            <i class="bx bx-plus-circle fs-5"></i>
+                        </a>
+                    @endcan
+                </div>
+
+
 
                 {{-- TABLE CONTAINER --}}
                 <div class="card-body p-0 position-relative">
@@ -186,6 +183,10 @@
 
 @section('page-script')
     <script type="module">
+        flatpickr("#filter-date-range", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+        });
         const initSelect2 = () => {
             if (typeof $ !== 'undefined' && $.fn.select2) {
                 $('.select2').each(function() {
@@ -214,8 +215,10 @@
             const filterStatus = document.getElementById('filter-status');
             const filterStoreAsal = document.getElementById('filter-store-asal');
             const filterStoreTujuan = document.getElementById('filter-store-tujuan');
-            const filterStartDate = document.getElementById('filter-start-date');
-            const filterEndDate = document.getElementById('filter-end-date');
+
+            // KOREKSI 1: Hapus .value di sini. Simpan elemennya saja.
+            const filterDateRange = document.getElementById('filter-date-range');
+
             const btnResetFilter = document.getElementById('btn-reset-filter');
 
             let debounceTimer = null;
@@ -227,14 +230,27 @@
                 if (filterStatus.value) params.set('status', filterStatus.value);
                 if (filterStoreAsal.value) params.set('store_asal_id', filterStoreAsal.value);
                 if (filterStoreTujuan.value) params.set('store_tujuan_id', filterStoreTujuan.value);
-                if (filterStartDate.value) params.set('start_date', filterStartDate.value);
-                if (filterEndDate.value) params.set('end_date', filterEndDate.value);
+
+                // KOREKSI 2: Ambil nilainya (.value) di dalam fungsi ini secara dinamis
+                const dateRangeValue = filterDateRange.value;
+
+                if (dateRangeValue.includes(' to ')) {
+                    // Memecah rentang tanggal menjadi dua parameter terpisah
+                    const dates = dateRangeValue.split(' to ');
+                    params.set('start_date', dates[0]);
+                    params.set('end_date', dates[1]);
+                } else if (dateRangeValue) {
+                    // Jika user baru memilih 1 tanggal (klik pertama)
+                    params.set('start_date', dateRangeValue);
+                    params.set('end_date', dateRangeValue);
+                }
+
                 params.set('page', page);
                 return params;
             }
 
             async function fetchTable(page = 1) {
-                // Batalkan request sebelumnya kalau masih jalan (hindari race condition hasil out-of-order)
+                // Batalkan request sebelumnya kalau masih jalan (hindari race condition)
                 if (abortController) {
                     abortController.abort();
                 }
@@ -288,8 +304,9 @@
             }
 
             filterSearch.addEventListener('input', debouncedFetch);
-            filterStartDate.addEventListener('change', () => fetchTable(1));
-            filterEndDate.addEventListener('change', () => fetchTable(1));
+
+            // KOREKSI 3: Pasang event listener ke elemen 'filterDateRange'
+            filterDateRange.addEventListener('change', () => fetchTable(1));
 
             // select2 pakai event jQuery, bukan native 'change' DOM biasa
             $('#filter-status, #filter-store-asal, #filter-store-tujuan').on('select2:select select2:clear', () =>
@@ -297,8 +314,10 @@
 
             btnResetFilter.addEventListener('click', function() {
                 filterSearch.value = '';
-                filterStartDate.value = '';
-                filterEndDate.value = '';
+
+                // KOREKSI 4: Kosongkan value dari elemennya
+                filterDateRange.value = '';
+
                 $('#filter-status, #filter-store-asal, #filter-store-tujuan').val('').trigger('change');
                 fetchTable(1);
             });
