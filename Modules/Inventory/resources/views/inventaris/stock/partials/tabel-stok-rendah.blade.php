@@ -330,10 +330,12 @@
                                 @endif
                             </td>
                             <td class="align-middle">
-                                <a href="{{ route('pembelian.create') }}" class="mb-0 me-3" data-bs-toggle="tooltip"
-                                    data-bs-placement="top" title="Beli Product Ini">
-                                    <i class="bx bx-cart-plus-fill bi-sm"></i>
-                                </a>
+                                @can('create-pembelian')
+                                    <a href="{{ route('pembelian.create') }}" class="mb-0 me-3" data-bs-toggle="tooltip"
+                                        data-bs-placement="top" title="Beli Product Ini">
+                                        <i class="bx bx-cart-plus-fill bi-sm"></i>
+                                    </a>
+                                @endcan
                             </td>
                         </tr>
                     @endif

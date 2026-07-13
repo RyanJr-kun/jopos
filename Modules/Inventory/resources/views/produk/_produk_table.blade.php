@@ -88,14 +88,18 @@
                                     <a class="dropdown-item text-info"
                                         href="{{ route('produk.show', $products->slug) }}"><i
                                             class="bx bx-show me-2"></i> Detail</a>
-                                    <a class="dropdown-item text-secondary"
-                                        href="{{ route('produk.edit', $products->slug) }}"><i
-                                            class="bx bx-edit-alt me-2"></i>
-                                        Edit</a>
-                                    <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal"
-                                        data-bs-target="#deleteConfirmationModal"
-                                        data-product-slug="{{ $products->slug }}"><i class="bx bx-trash me-2"></i>
-                                        Hapus</button>
+                                    @can('edit-produk')
+                                        <a class="dropdown-item text-secondary"
+                                            href="{{ route('produk.edit', $products->slug) }}"><i
+                                                class="bx bx-edit-alt me-2"></i>
+                                            Edit</a>
+                                    @endcan
+                                    @can('delete-produk')
+                                        <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal"
+                                            data-bs-target="#deleteConfirmationModal"
+                                            data-product-slug="{{ $products->slug }}"><i class="bx bx-trash me-2"></i>
+                                            Hapus</button>
+                                    @endcan
                                 </div>
                             </div>
                         </td>
@@ -130,13 +134,17 @@
                         <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt{{ $products->id }}">
                             <a class="dropdown-item text-info" href="{{ route('produk.show', $products->slug) }}"><i
                                     class="bx bx-show me-2"></i> Detail</a>
-                            <a class="dropdown-item text-secondary"
-                                href="{{ route('produk.edit', $products->slug) }}"><i class="bx bx-edit-alt me-2"></i>
-                                Edit</a>
-                            <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal"
-                                data-bs-target="#deleteConfirmationModal"
-                                data-product-slug="{{ $products->slug }}"><i class="bx bx-trash me-2"></i>
-                                Hapus</button>
+                            @can('edit-produk')
+                                <a class="dropdown-item text-secondary"
+                                    href="{{ route('produk.edit', $products->slug) }}"><i class="bx bx-edit-alt me-2"></i>
+                                    Edit</a>
+                            @endcan
+                            @can('delete-produk')
+                                <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal"
+                                    data-bs-target="#deleteConfirmationModal"
+                                    data-product-slug="{{ $products->slug }}"><i class="bx bx-trash me-2"></i>
+                                    Hapus</button>
+                            @endcan
                         </div>
                     </div>
                 </div>

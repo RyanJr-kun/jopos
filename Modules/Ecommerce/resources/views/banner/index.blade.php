@@ -138,11 +138,13 @@
             <div class="">
                 <h6><i class="bx bx-list-ul me-1"></i> Daftar Banner</h6>
             </div>
-            <div class="">
-                <button class="btn btn-primary px-2" data-bs-toggle="modal" data-bs-target="#createModal">
-                    <i class="bx bx-plus-circle"></i>
-                </button>
-            </div>
+            @can('create-banner')
+                <div class="">
+                    <button class="btn btn-primary px-2" data-bs-toggle="modal" data-bs-target="#createModal">
+                        <i class="bx bx-plus-circle"></i>
+                    </button>
+                </div>
+            @endcan
         </div>
 
         {{-- Banner Mobile List --}}
@@ -304,16 +306,20 @@
                                 <small class="text-muted">{{ $banner->created_at->translatedFormat('d M Y') }}</small>
                             </td>
                             <td class="text-center">
-                                <a href="javascript:;" class="action-btn text-secondary" data-bs-toggle="modal"
-                                    data-bs-target="#editModal" data-id="{{ $banner->id }}" title="Edit banner">
-                                    <i class="bx bx-edit"></i>
-                                </a>
-                                <a href="javascript:;" class="action-btn del text-danger btn-delete"
-                                    data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="{{ $banner->id }}"
-                                    data-title="{{ $banner->judul ?? 'Tanpa Judul' }}"
-                                    data-url="{{ route('banner.destroy', $banner->id) }}" title="Hapus banner">
-                                    <i class="bx bx-trash"></i>
-                                </a>
+                                @can('edit-banner')
+                                    <a href="javascript:;" class="action-btn text-secondary" data-bs-toggle="modal"
+                                        data-bs-target="#editModal" data-id="{{ $banner->id }}" title="Edit banner">
+                                        <i class="bx bx-edit"></i>
+                                    </a>
+                                @endcan
+                                @can('delete-banner')
+                                    <a href="javascript:;" class="action-btn del text-danger btn-delete"
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="{{ $banner->id }}"
+                                        data-title="{{ $banner->judul ?? 'Tanpa Judul' }}"
+                                        data-url="{{ route('banner.destroy', $banner->id) }}" title="Hapus banner">
+                                        <i class="bx bx-trash"></i>
+                                    </a>
+                                @endcan
                             </td>
                         </tr>
                     @empty
@@ -337,234 +343,240 @@
     {{-- ================================================================
          MODAL: CREATE
     ================================================================ --}}
-    <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    @can('create-banner')
+        <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
 
-            <form id="createBannerForm" class="modal-content" enctype="multipart/form-data">
+                <form id="createBannerForm" class="modal-content" enctype="multipart/form-data">
 
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createModalLabel">
-                        <i class="bx bx-image-add me-2 text-primary"></i>Tambah Banner Baru
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body" id="create-modal-body" style="position: relative;">
-
-                    {{-- Posisi (di atas, agar hint muncul sebelum upload) --}}
-                    <div class="row g-3 mb-3">
-                        <div class="col-8">
-                            <label for="create_posisi" class="form-label">Posisi <span
-                                    class="text-danger">*</span></label>
-                            <select class="form-select" id="create_posisi" name="posisi" required>
-                                <option value="" disabled selected>Pilih posisi banner...</option>
-                                @foreach ($positions as $position)
-                                    <option value="{{ $position->value }}">{{ $position->getLabel() }}</option>
-                                @endforeach
-                            </select>
-                            <div class="invalid-feedback" id="posisi-error"></div>
-                        </div>
-                        <div class="col-4">
-                            <label for="create_urutan" class="form-label">Urutan</label>
-                            <input type="number" class="form-control" id="create_urutan" name="urutan" value="0"
-                                min="0" required>
-                            <div class="invalid-feedback" id="urutan-error"></div>
-                        </div>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createModalLabel">
+                            <i class="bx bx-image-add me-2 text-primary"></i>Tambah Banner Baru
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
-                    {{-- Hint box (muncul setelah posisi dipilih) --}}
-                    <div class="position-hint-box" id="create-hint-box">
-                        <i class="bx bx-ruler hint-icon"></i>
-                        <div class="hint-text" id="create-hint-text"></div>
-                    </div>
+                    <div class="modal-body" id="create-modal-body" style="position: relative;">
 
-                    {{-- Upload Gambar --}}
-                    <div class="mb-3 mt-3">
-                        <label class="form-label">Gambar Banner <span class="text-danger">*</span></label>
-                        <input type="file" class="filepond" name="img_banner" id="create_img_banner" required>
-                        <div class="invalid-feedback" id="img_banner-error"></div>
-                    </div>
-
-                    {{-- Judul --}}
-                    <div class="mb-3">
-                        <label for="create_title" class="form-label">
-                            Judul
-                            <span class="badge bg-label-secondary ms-1" style="font-size:0.65rem;">Opsional</span>
-                        </label>
-                        <input type="text" class="form-control" id="create_title" name="judul"
-                            placeholder="cth: Promo Kemerdekaan 17 Agustus">
-                        <div class="invalid-feedback" id="judul-error"></div>
-                    </div>
-
-                    {{-- Link Tujuan --}}
-                    <div class="mb-3">
-                        <label for="create_url_tujuan" class="form-label">
-                            Link Tujuan
-                            <span class="badge bg-label-secondary ms-1" style="font-size:0.65rem;">Opsional</span>
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bx bx-link"></i></span>
-                            <input type="url" class="form-control" id="create_url_tujuan" name="url_tujuan"
-                                placeholder="https://tokoanda.com/promo">
-                        </div>
-                        <div class="invalid-feedback" id="create-url_tujuan-error"></div>
-                    </div>
-
-                    {{-- Status --}}
-                    <div class="d-flex align-items-center gap-3 p-3 rounded-2"
-                        style="background:#f8f9fa;border:1px solid #e7e7e8;">
-                        <div class="flex-grow-1">
-                            <div style="font-size:.8125rem;font-weight:600;color:#566a7f;">Aktifkan Banner</div>
-                            <div style="font-size:.75rem;color:#a1acb8;">Banner akan langsung tampil di toko</div>
-                        </div>
-                        <div class="form-check form-switch mb-0">
-                            <input class="form-check-input" type="checkbox" id="create_is_active" name="is_active"
-                                value="1" checked>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" id="cancel-create-button" class="btn btn-outline-secondary"
-                        data-bs-dismiss="modal">
-                        <i class="bx bx-x me-1"></i> Batal
-                    </button>
-                    <button type="button" id="submitCreateBtn" class="btn btn-primary">
-                        <i class="bx bx-save me-1"></i> Simpan Banner
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- ================================================================
-         MODAL: EDIT
-    ================================================================ --}}
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <form id="editBannerForm" class="modal-content" enctype="multipart/form-data">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">
-                        <i class="bx bx-edit me-2 text-warning"></i>Edit Banner
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body" id="edit-modal-body" style="position: relative;">
-
-                    {{-- Loading skeleton --}}
-                    <div id="edit-loading" class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="text-muted mt-2 mb-0 small">Memuat data banner...</p>
-                    </div>
-
-                    {{-- Form fields (hidden while loading) --}}
-                    <div id="edit-form-content" style="display:none;">
-
+                        {{-- Posisi (di atas, agar hint muncul sebelum upload) --}}
                         <div class="row g-3 mb-3">
                             <div class="col-8">
-                                <label for="edit_posisi" class="form-label">Posisi <span
+                                <label for="create_posisi" class="form-label">Posisi <span
                                         class="text-danger">*</span></label>
-                                <select class="form-select" id="edit_posisi" name="posisi" required>
+                                <select class="form-select" id="create_posisi" name="posisi" required>
+                                    <option value="" disabled selected>Pilih posisi banner...</option>
                                     @foreach ($positions as $position)
                                         <option value="{{ $position->value }}">{{ $position->getLabel() }}</option>
                                     @endforeach
                                 </select>
-                                <div class="invalid-feedback" id="edit-posisi-error"></div>
+                                <div class="invalid-feedback" id="posisi-error"></div>
                             </div>
                             <div class="col-4">
-                                <label for="edit_urutan" class="form-label">Urutan</label>
-                                <input type="number" class="form-control" id="edit_urutan" name="urutan"
+                                <label for="create_urutan" class="form-label">Urutan</label>
+                                <input type="number" class="form-control" id="create_urutan" name="urutan" value="0"
                                     min="0" required>
-                                <div class="invalid-feedback" id="edit-urutan-error"></div>
+                                <div class="invalid-feedback" id="urutan-error"></div>
                             </div>
                         </div>
 
-                        {{-- Hint box edit --}}
-                        <div class="position-hint-box" id="edit-hint-box">
+                        {{-- Hint box (muncul setelah posisi dipilih) --}}
+                        <div class="position-hint-box" id="create-hint-box">
                             <i class="bx bx-ruler hint-icon"></i>
-                            <div class="hint-text" id="edit-hint-text"></div>
+                            <div class="hint-text" id="create-hint-text"></div>
                         </div>
 
+                        {{-- Upload Gambar --}}
                         <div class="mb-3 mt-3">
-                            <label class="form-label">Gambar Banner</label>
-                            {{-- Input hidden penanda hapus gambar --}}
-                            <input type="hidden" name="remove_banner" id="edit_remove_banner" value="0">
-
-                            {{-- Container untuk gambar lama --}}
-                            <div id="edit-existing-banner-container" class="position-relative mb-3 d-none">
-                                <img id="edit-existing-banner-img" src="" alt="Banner"
-                                    class="img-thumbnail rounded" style="max-height: 150px; object-fit: cover;">
-                                <button type="button" id="btn-remove-edit-banner"
-                                    class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle p-0 d-flex align-items-center justify-content-center"
-                                    style="width: 25px; height: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                                    <span aria-hidden="true" style="font-weight: bold; line-height: 1;">&times;</span>
-                                </button>
-                            </div>
-
-                            {{-- Container FilePond --}}
-                            <div id="edit-filepond-container">
-                                <input type="file" class="filepond" name="img_banner" id="edit_img_banner">
-                            </div>
+                            <label class="form-label">Gambar Banner <span class="text-danger">*</span></label>
+                            <input type="file" class="filepond" name="img_banner" id="create_img_banner" required>
+                            <div class="invalid-feedback" id="img_banner-error"></div>
                         </div>
 
+                        {{-- Judul --}}
                         <div class="mb-3">
-                            <label for="edit_title" class="form-label">
+                            <label for="create_title" class="form-label">
                                 Judul
-                                <span class="badge bg-label-secondary ms-1" style="font-size:.65rem;">Opsional</span>
+                                <span class="badge bg-label-secondary ms-1" style="font-size:0.65rem;">Opsional</span>
                             </label>
-                            <input type="text" class="form-control" id="edit_title" name="judul">
-                            <div class="invalid-feedback" id="edit-judul-error"></div>
+                            <input type="text" class="form-control" id="create_title" name="judul"
+                                placeholder="cth: Promo Kemerdekaan 17 Agustus">
+                            <div class="invalid-feedback" id="judul-error"></div>
                         </div>
 
+                        {{-- Link Tujuan --}}
                         <div class="mb-3">
-                            <label for="edit_url_tujuan" class="form-label">
+                            <label for="create_url_tujuan" class="form-label">
                                 Link Tujuan
-                                <span class="badge bg-label-secondary ms-1" style="font-size:.65rem;">Opsional</span>
+                                <span class="badge bg-label-secondary ms-1" style="font-size:0.65rem;">Opsional</span>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bx bx-link"></i></span>
-                                <input type="url" class="form-control" id="edit_url_tujuan" name="url_tujuan">
+                                <input type="url" class="form-control" id="create_url_tujuan" name="url_tujuan"
+                                    placeholder="https://tokoanda.com/promo">
                             </div>
-                            <div class="invalid-feedback" id="edit-url_tujuan-error"></div>
+                            <div class="invalid-feedback" id="create-url_tujuan-error"></div>
                         </div>
 
+                        {{-- Status --}}
                         <div class="d-flex align-items-center gap-3 p-3 rounded-2"
                             style="background:#f8f9fa;border:1px solid #e7e7e8;">
                             <div class="flex-grow-1">
                                 <div style="font-size:.8125rem;font-weight:600;color:#566a7f;">Aktifkan Banner</div>
-                                <div style="font-size:.75rem;color:#a1acb8;">Nonaktifkan untuk menyembunyikan sementara
-                                </div>
+                                <div style="font-size:.75rem;color:#a1acb8;">Banner akan langsung tampil di toko</div>
                             </div>
                             <div class="form-check form-switch mb-0">
-                                <input class="form-check-input" type="checkbox" id="edit_is_active" name="is_active"
-                                    value="1">
+                                <input class="form-check-input" type="checkbox" id="create_is_active" name="is_active"
+                                    value="1" checked>
                             </div>
                         </div>
 
                     </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="bx bx-x me-1"></i> Batal
-                    </button>
-                    <button type="submit" id="submitEditBtn" class="btn btn-primary">
-                        <i class="bx bx-save me-1"></i> Simpan
-                    </button>
-                </div>
-
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" id="cancel-create-button" class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                            <i class="bx bx-x me-1"></i> Batal
+                        </button>
+                        <button type="button" id="submitCreateBtn" class="btn btn-primary">
+                            <i class="bx bx-save me-1"></i> Simpan Banner
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
+    @endcan
+
+    {{-- ================================================================
+         MODAL: EDIT
+    ================================================================ --}}
+    @can('edit-banner')
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <form id="editBannerForm" class="modal-content" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">
+                            <i class="bx bx-edit me-2 text-warning"></i>Edit Banner
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body" id="edit-modal-body" style="position: relative;">
+
+                        {{-- Loading skeleton --}}
+                        <div id="edit-loading" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="text-muted mt-2 mb-0 small">Memuat data banner...</p>
+                        </div>
+
+                        {{-- Form fields (hidden while loading) --}}
+                        <div id="edit-form-content" style="display:none;">
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-8">
+                                    <label for="edit_posisi" class="form-label">Posisi <span
+                                            class="text-danger">*</span></label>
+                                    <select class="form-select" id="edit_posisi" name="posisi" required>
+                                        @foreach ($positions as $position)
+                                            <option value="{{ $position->value }}">{{ $position->getLabel() }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="invalid-feedback" id="edit-posisi-error"></div>
+                                </div>
+                                <div class="col-4">
+                                    <label for="edit_urutan" class="form-label">Urutan</label>
+                                    <input type="number" class="form-control" id="edit_urutan" name="urutan"
+                                        min="0" required>
+                                    <div class="invalid-feedback" id="edit-urutan-error"></div>
+                                </div>
+                            </div>
+
+                            {{-- Hint box edit --}}
+                            <div class="position-hint-box" id="edit-hint-box">
+                                <i class="bx bx-ruler hint-icon"></i>
+                                <div class="hint-text" id="edit-hint-text"></div>
+                            </div>
+
+                            <div class="mb-3 mt-3">
+                                <label class="form-label">Gambar Banner</label>
+                                {{-- Input hidden penanda hapus gambar --}}
+                                <input type="hidden" name="remove_banner" id="edit_remove_banner" value="0">
+
+                                {{-- Container untuk gambar lama --}}
+                                <div id="edit-existing-banner-container" class="position-relative mb-3 d-none">
+                                    <img id="edit-existing-banner-img" src="" alt="Banner"
+                                        class="img-thumbnail rounded" style="max-height: 150px; object-fit: cover;">
+                                    <button type="button" id="btn-remove-edit-banner"
+                                        class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle p-0 d-flex align-items-center justify-content-center"
+                                        style="width: 25px; height: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                        <span aria-hidden="true" style="font-weight: bold; line-height: 1;">&times;</span>
+                                    </button>
+                                </div>
+
+                                {{-- Container FilePond --}}
+                                <div id="edit-filepond-container">
+                                    <input type="file" class="filepond" name="img_banner" id="edit_img_banner">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="edit_title" class="form-label">
+                                    Judul
+                                    <span class="badge bg-label-secondary ms-1" style="font-size:.65rem;">Opsional</span>
+                                </label>
+                                <input type="text" class="form-control" id="edit_title" name="judul">
+                                <div class="invalid-feedback" id="edit-judul-error"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="edit_url_tujuan" class="form-label">
+                                    Link Tujuan
+                                    <span class="badge bg-label-secondary ms-1" style="font-size:.65rem;">Opsional</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bx bx-link"></i></span>
+                                    <input type="url" class="form-control" id="edit_url_tujuan" name="url_tujuan">
+                                </div>
+                                <div class="invalid-feedback" id="edit-url_tujuan-error"></div>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-2"
+                                style="background:#f8f9fa;border:1px solid #e7e7e8;">
+                                <div class="flex-grow-1">
+                                    <div style="font-size:.8125rem;font-weight:600;color:#566a7f;">Aktifkan Banner</div>
+                                    <div style="font-size:.75rem;color:#a1acb8;">Nonaktifkan untuk menyembunyikan sementara
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="edit_is_active" name="is_active"
+                                        value="1">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="bx bx-x me-1"></i> Batal
+                        </button>
+                        <button type="submit" id="submitEditBtn" class="btn btn-primary">
+                            <i class="bx bx-save me-1"></i> Simpan
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    @endcan
 
     {{-- ================================================================
          MODAL: DELETE
     ================================================================ --}}
-    <x-delete-modal message="Apakah Anda yakin ingin menghapus banner ini?" item-title-id="delete-banner-title"
-        modal-id="deleteModal" />
+    @can('delete-banner')
+        <x-delete-modal message="Apakah Anda yakin ingin menghapus banner ini?" item-title-id="delete-banner-title"
+            modal-id="deleteModal" />
+    @endcan
 
 @endsection
 

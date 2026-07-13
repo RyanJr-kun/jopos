@@ -126,34 +126,36 @@
     </div>
 
     {{-- Modal Delete Confirmation --}}
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-body text-center py-4 px-3">
-                    <div class="mb-3">
-                        <span class="avatar avatar-lg bg-label-danger rounded-circle">
-                            <i class="bx bx-trash fs-3 text-danger"></i>
-                        </span>
-                    </div>
-                    <h6 class="fw-bold mb-1">Hapus Promo?</h6>
-                    <p class="text-muted text-sm mb-1">Tindakan ini tidak dapat dibatalkan.</p>
-                    <p class="fw-semibold text-dark mb-3" id="promoNameToDelete"></p>
-                    <form id="deletePromotionForm" method="POST" action="#">
-                        @method('delete')
-                        @csrf
-                        <div class="d-flex gap-2 justify-content-center">
-                            <button type="button" class="btn btn-outline-secondary btn-sm px-3"
-                                data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-danger btn-sm px-3">
-                                <i class="bx bx-trash me-1"></i>Ya, Hapus
-                            </button>
+    @can('delete-promo')
+        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-body text-center py-4 px-3">
+                        <div class="mb-3">
+                            <span class="avatar avatar-lg bg-label-danger rounded-circle">
+                                <i class="bx bx-trash fs-3 text-danger"></i>
+                            </span>
                         </div>
-                    </form>
+                        <h6 class="fw-bold mb-1">Hapus Promo?</h6>
+                        <p class="text-muted text-sm mb-1">Tindakan ini tidak dapat dibatalkan.</p>
+                        <p class="fw-semibold text-dark mb-3" id="promoNameToDelete"></p>
+                        <form id="deletePromotionForm" method="POST" action="#">
+                            @method('delete')
+                            @csrf
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button type="button" class="btn btn-outline-secondary btn-sm px-3"
+                                    data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-danger btn-sm px-3">
+                                    <i class="bx bx-trash me-1"></i>Ya, Hapus
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endcan
 
 @endsection
 

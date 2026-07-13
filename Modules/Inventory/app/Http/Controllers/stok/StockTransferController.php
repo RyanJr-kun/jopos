@@ -188,7 +188,7 @@ class StockTransferController extends Controller implements HasMiddleware
     return view('inventory::inventaris.transfer.show', [
       'transfer' => $stock_transfer,
       'canApprove' =>
-        $user->can('approve-stok-transfer') &&
+        $user->can('create-stok-transfer') &&
         $stock_transfer->status === StockTransfer::STATUS_DIKIRIM &&
         (!$user->can('view-toko-gudang') ? (int) $stock_transfer->store_tujuan_id === (int) $user->store_id : true),
     ]);

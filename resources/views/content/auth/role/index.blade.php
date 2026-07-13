@@ -215,24 +215,27 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-sm btn-outline-primary me-1"
-                                    title="Edit Role">
-                                    <i class="bx bx-edit-alt me-1"></i>Edit
-                                </a>
-
-                                @if (strtolower($role->name) !== 'admin')
-                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete-role"
-                                        data-role-id="{{ $role->id }}" data-role-name="{{ $role->name }}"
-                                        data-users-count="{{ $role->users_count }}"
-                                        data-delete-url="{{ route('roles.destroy', $role->id) }}" title="Hapus Role">
-                                        <i class="bx bx-trash"></i>
-                                    </button>
-                                @else
-                                    <button type="button" class="btn btn-sm btn-secondary" disabled
-                                        title="Role sistem tidak dapat dihapus">
-                                        <i class="bx bx-lock-alt"></i>
-                                    </button>
-                                @endif
+                                @can('edit-roles')
+                                    <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-sm btn-outline-primary me-1"
+                                        title="Edit Role">
+                                        <i class="bx bx-edit-alt me-1"></i>Edit
+                                    </a>
+                                @endcan
+                                @can('delete-roles')
+                                    @if (strtolower($role->name) !== 'admin')
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-delete-role"
+                                            data-role-id="{{ $role->id }}" data-role-name="{{ $role->name }}"
+                                            data-users-count="{{ $role->users_count }}"
+                                            data-delete-url="{{ route('roles.destroy', $role->id) }}" title="Hapus Role">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    @else
+                                        <button type="button" class="btn btn-sm btn-secondary" disabled
+                                            title="Role sistem tidak dapat dihapus">
+                                            <i class="bx bx-lock-alt"></i>
+                                        </button>
+                                    @endif
+                                @endcan
                             </td>
                         </tr>
                     @empty

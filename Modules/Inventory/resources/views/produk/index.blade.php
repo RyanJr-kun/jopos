@@ -53,11 +53,13 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-auto ms-md-auto">
-                            <a href="{{ route('produk.create') }}" class="btn btn-outline-info mb-0">
-                                <i class="bx bx-plus me- cursor-pointer"></i> Product
-                            </a>
-                        </div>
+                        @can('create-produk')
+                            <div class="col-md-auto ms-md-auto">
+                                <a href="{{ route('produk.create') }}" class="btn btn-outline-info mb-0">
+                                    <i class="bx bx-plus me- cursor-pointer"></i> Product
+                                </a>
+                            </div>
+                        @endcan
                     </div>
                 </div>
             </div>

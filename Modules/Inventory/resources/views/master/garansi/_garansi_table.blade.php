@@ -31,16 +31,20 @@
                         @endif
                     </td>
                     <td class="align-middle">
-                        <a href="#" class="text-dark fw-bold px-3 text-xs" data-bs-toggle="modal"
-                            data-bs-target="#editModal" data-url="{{ route('garansi.getjson', $garansi->slug) }}"
-                            data-update-url="{{ route('garansi.update', $garansi->slug) }}" title="Edit garansi">
-                            <i class="bx bx-edit text-dark text-sm opacity-10"></i>
-                        </a>
-                        <a href="#" class="text-dark delete-user-btn" data-bs-toggle="modal"
-                            data-bs-target="#deleteConfirmationModal" data-garansi-slug="{{ $garansi->slug }}"
-                            data-garansi-name="{{ $garansi->name }}" title="Hapus garansi">
-                            <i class="bx bx-trash"></i>
-                        </a>
+                        @can('edit-garansi')
+                            <a href="#" class="text-dark fw-bold px-3 text-xs" data-bs-toggle="modal"
+                                data-bs-target="#editModal" data-url="{{ route('garansi.getjson', $garansi->slug) }}"
+                                data-update-url="{{ route('garansi.update', $garansi->slug) }}" title="Edit garansi">
+                                <i class="bx bx-edit text-dark text-sm opacity-10"></i>
+                            </a>
+                        @endcan
+                        @can('delete-garansi')
+                            <a href="#" class="text-dark delete-user-btn" data-bs-toggle="modal"
+                                data-bs-target="#deleteConfirmationModal" data-garansi-slug="{{ $garansi->slug }}"
+                                data-garansi-name="{{ $garansi->name }}" title="Hapus garansi">
+                                <i class="bx bx-trash"></i>
+                            </a>
+                        @endcan
                     </td>
                 </tr>
             @empty

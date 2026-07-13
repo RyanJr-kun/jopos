@@ -75,10 +75,12 @@
                     <p class="text-sm mb-0"> riwayat transaksi pembelian.</p>
                 </div>
                 <div class="">
-                    <a href="{{ route('pembelian.create') }}" class="btn btn-outline-info px-2 mb-0">
-                        <i class="bx bx-plus-circle"></i>
-                        <span class="d-none ms-2 d-md-block">Transaksi</span>
-                    </a>
+                    @can('create-pembelian')
+                        <a href="{{ route('pembelian.create') }}" class="btn btn-outline-info px-2 mb-0">
+                            <i class="bx bx-plus-circle"></i>
+                            <span class="d-none ms-2 d-md-block">Transaksi</span>
+                        </a>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -90,29 +92,32 @@
     </div>
 
     {{-- Modal Batalkan Transaksi --}}
-    <div class="modal fade" id="cancelConfirmationModal" tabindex="-1" aria-labelledby="cancelConfirmationModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center mt-3 mx-n5">
-                    <i class="bx bx-exclamation-triangle fa-2x text-warning mb-3"></i>
-                    <p class="mb-0">Anda yakin ingin membatalkan transaksi ini?</p>
-                    <h6 class="mt-2" id="invoiceNumberToCancel"></h6>
-                    <small class="text-warning">Tindakan ini akan mengembalikan stok produk yang telah ditambahkan.</small>
-                    <div class="mt-4">
-                        <form id="cancelInvoiceForm" method="POST" action="#">
-                            @method('PUT')
-                            @csrf
-                            <input type="hidden" name="status_pembayaran" value="Batal">
-                            <button type="submit" class="btn btn-warning btn-sm">Ya, Batalkan</button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
-                                data-bs-dismiss="modal">Batal</button>
-                        </form>
+    @can('delete-pembelian')
+        <div class="modal fade" id="cancelConfirmationModal" tabindex="-1" aria-labelledby="cancelConfirmationModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center mt-3 mx-n5">
+                        <i class="bx bx-exclamation-triangle fa-2x text-warning mb-3"></i>
+                        <p class="mb-0">Anda yakin ingin membatalkan transaksi ini?</p>
+                        <h6 class="mt-2" id="invoiceNumberToCancel"></h6>
+                        <small class="text-warning">Tindakan ini akan mengembalikan stok produk yang telah ditambahkan.</small>
+                        <div class="mt-4">
+                            <form id="cancelInvoiceForm" method="POST" action="#">
+                                @method('PUT')
+                                @csrf
+                                <input type="hidden" name="status_pembayaran" value="Batal">
+                                <button type="submit" class="btn btn-warning btn-sm">Ya, Batalkan</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
+                                    data-bs-dismiss="modal">Batal</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endcan
+
 @endsection
 @section('page-script')
     <script type="module">

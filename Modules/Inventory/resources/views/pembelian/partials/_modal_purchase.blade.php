@@ -180,86 +180,6 @@
     </div>
 </div>
 
-{{-- Modal Create Supplier --}}
-<div class="modal fade" id="createSupplierModal" tabindex="-1" aria-labelledby="createSupplierModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0 mb-n3">
-                <h6 class="modal-title" id="createSupplierModalLabel">Tambah Supplier Baru</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-            </div>
-            <div class="modal-body">
-                <form id="createSupplierForm" action="{{ route('pemasok.store') }}" method="post">
-                    @csrf
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="name" class="form-label">Nama</label>
-                            <input id="name" name="name" type="text"
-                                class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
-                                required>
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6">
-                            <label for="perusahaan" class="form-label">Perusahaan</label>
-                            <input id="perusahaan" name="perusahaan" type="text"
-                                class="form-control @error('perusahaan') is-invalid @enderror"
-                                value="{{ old('perusahaan') }}" required>
-                            @error('perusahaan')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6">
-                            <label for="kontak" class="form-label">Kontak</label>
-                            <input id="kontak" name="kontak" type="text"
-                                class="form-control @error('kontak') is-invalid @enderror"
-                                value="{{ old('kontak') }}" required>
-                            @error('kontak')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                id="email" name="email" placeholder="example@gmail.com"
-                                value="{{ old('email') }}">
-                            @error('email')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-12">
-                            <label for="alamat" class="form-label">Alamat</label>
-                            <textarea id="alamat" name="alamat" class="form-control @error('alamat') is-invalid @enderror" rows="2">{{ old('alamat') }}</textarea>
-                            @error('alamat')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-12">
-                            <label for="note" class="form-label">Catatan (Opsional)</label>
-                            <textarea id="note" name="note" class="form-control @error('note') is-invalid @enderror" rows="2">{{ old('note') }}</textarea>
-                            @error('note')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="justify-content-end form-check form-switch form-check-reverse my-2">
-                        <label class="me-auto fw-bold form-check-label" for="status">Status</label>
-                        <input id="status" class="form-check-input" type="checkbox" name="status"
-                            value="1" checked>
-                    </div>
-                    <div class="modal-footer border-0 pb-0">
-                        <button type="submit" class="btn btn-info btn-sm">Buat Supplier</button>
-                        <button type="button" class="btn btn-danger btn-sm"
-                            data-bs-dismiss="modal">Batalkan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 {{-- Modal Edit Item --}}
 <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -310,3 +230,85 @@
         </div>
     </div>
 </div>
+
+{{-- Modal Create Supplier --}}
+@can('create-pemasok')
+    <div class="modal fade" id="createSupplierModal" tabindex="-1" aria-labelledby="createSupplierModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 mb-n3">
+                    <h6 class="modal-title" id="createSupplierModalLabel">Tambah Supplier Baru</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createSupplierForm" action="{{ route('pemasok.store') }}" method="post">
+                        @csrf
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Nama</label>
+                                <input id="name" name="name" type="text"
+                                    class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
+                                    required>
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label for="perusahaan" class="form-label">Perusahaan</label>
+                                <input id="perusahaan" name="perusahaan" type="text"
+                                    class="form-control @error('perusahaan') is-invalid @enderror"
+                                    value="{{ old('perusahaan') }}" required>
+                                @error('perusahaan')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label for="kontak" class="form-label">Kontak</label>
+                                <input id="kontak" name="kontak" type="text"
+                                    class="form-control @error('kontak') is-invalid @enderror"
+                                    value="{{ old('kontak') }}" required>
+                                @error('kontak')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                    id="email" name="email" placeholder="example@gmail.com"
+                                    value="{{ old('email') }}">
+                                @error('email')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-12">
+                                <label for="alamat" class="form-label">Alamat</label>
+                                <textarea id="alamat" name="alamat" class="form-control @error('alamat') is-invalid @enderror" rows="2">{{ old('alamat') }}</textarea>
+                                @error('alamat')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-12">
+                                <label for="note" class="form-label">Catatan (Opsional)</label>
+                                <textarea id="note" name="note" class="form-control @error('note') is-invalid @enderror" rows="2">{{ old('note') }}</textarea>
+                                @error('note')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="justify-content-end form-check form-switch form-check-reverse my-2">
+                            <label class="me-auto fw-bold form-check-label" for="status">Status</label>
+                            <input id="status" class="form-check-input" type="checkbox" name="status"
+                                value="1" checked>
+                        </div>
+                        <div class="modal-footer border-0 pb-0">
+                            <button type="submit" class="btn btn-info btn-sm">Buat Supplier</button>
+                            <button type="button" class="btn btn-danger btn-sm"
+                                data-bs-dismiss="modal">Batalkan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@endcan

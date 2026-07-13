@@ -54,12 +54,14 @@
                                 <option value="Tidak Aktif" @selected(request('status') == 'Tidak Aktif')>Tidak Aktif</option>
                             </select>
                         </div>
-                        <div class="col-12 col-lg-auto ms-lg-auto">
-                            <button class="btn btn-outline-info w-100 mb-0 d-flex justify-content-center align-items-center"
-                                data-bs-toggle="modal" data-bs-target="#createModal">
-                                <i class="bx bx-plus icon-md me-2"></i>Kategori
-                            </button>
-                        </div>
+                        @can('create-kategoriproduk')
+                            <div class="col-12 col-lg-auto ms-lg-auto">
+                                <button class="btn btn-outline-info w-100 mb-0 d-flex justify-content-center align-items-center"
+                                    data-bs-toggle="modal" data-bs-target="#createModal">
+                                    <i class="bx bx-plus icon-md me-2"></i>Kategori
+                                </button>
+                            </div>
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -88,198 +90,204 @@
     {{-- ============================================================ --}}
     {{-- MODAL CREATE                                                  --}}
     {{-- ============================================================ --}}
-    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n3">
-                    <h6 class="modal-title">Buat Kategori Baru</h6>
-                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="createKategoriForm" enctype="multipart/form-data">
-                        @csrf
-
-                        {{-- Toggle: Jenis Kategori --}}
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-dark d-block mb-2">Jenis Kategori</label>
-                            <div class="btn-group w-100" role="group" id="create-type-toggle">
-                                <input type="radio" class="btn-check" name="category_type_create" id="create_type_utama"
-                                    value="utama" checked>
-                                <label class="btn btn-outline-info" for="create_type_utama">
-                                    <i class="bx bx-badge-2 me-1"></i> Kategori Utama
-                                </label>
-
-                                <input type="radio" class="btn-check" name="category_type_create" id="create_type_sub"
-                                    value="sub">
-                                <label class="btn btn-outline-warning" for="create_type_sub">
-                                    <i class="bx bx-category me-1"></i> Sub Kategori
-                                </label>
-                            </div>
-                        </div>
-
-                        {{-- Dropdown Parent — hanya muncul jika Sub Kategori --}}
-                        <div class="mb-3 d-none" id="create-parent-wrapper">
-                            <label for="create_parent_id" class="form-label">
-                                Parent Kategori <span class="text-danger">*</span>
-                            </label>
-                            <select id="create_parent_id" name="parent_id" class="form-select select2-create"
-                                data-placeholder="Pilih kategori induk...">
-                                <option value=""></option>
-                                @foreach ($parentKategoris as $parent)
-                                    <option value="{{ $parent->id }}">{{ $parent->name }}</option>
-                                @endforeach
-                            </select>
-                            <div class="invalid-feedback" id="parent_id-error"></div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3 mb-md-0">
-                                <p class="text-dark fw-bold">Gambar Kategori:</p>
-                                <input type="file" class="filepond" name="img_kategori" id="img_kategori_create">
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mt-md-0">
-                                    <label for="create_name" class="form-label">Nama Kategori</label>
-                                    <input id="create_name" name="name" type="text" class="form-control" required>
-                                    <div class="invalid-feedback" id="name-error"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="create_slug" class="form-label">Slug</label>
-                                    <input id="create_slug" name="slug" type="text" class="form-control" required>
-                                    <div class="invalid-feedback" id="slug-error"></div>
-                                </div>
-                                <div class="justify-content-end form-check form-switch form-check-reverse">
-                                    <label class="me-auto form-check-label" for="create_status">Status</label>
-                                    <input id="create_status" class="form-check-input" type="checkbox" name="status"
-                                        value="1" checked>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer border-0 pb-0 mt-3">
-                            <button type="button" id="submit-create-button" class="btn btn-outline-info btn-sm">
-                                Buat Kategori
-                            </button>
-                            <button type="button" id="cancel-create-button" class="btn btn-danger btn-sm">
-                                Batalkan
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- ============================================================ --}}
-    {{-- MODAL EDIT                                                    --}}
-    {{-- ============================================================ --}}
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n3">
-                    <h6 class="modal-title" id="editModalLabel">Edit Kategori Product</h6>
-                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editKategoriForm" method="post" enctype="multipart/form-data">
-                        @method('put')
-                        @csrf
-
-                        {{-- Toggle: Jenis Kategori --}}
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-dark d-block mb-2">Jenis Kategori</label>
-                            <div class="btn-group w-100" role="group" id="edit-type-toggle">
-                                <input type="radio" class="btn-check" name="category_type_edit" id="edit_type_utama"
-                                    value="utama">
-                                <label class="btn btn-outline-info" for="edit_type_utama">
-                                    <i class="bx bx-badge-2 me-1"></i> Kategori Utama
-                                </label>
-
-                                <input type="radio" class="btn-check" name="category_type_edit" id="edit_type_sub"
-                                    value="sub">
-                                <label class="btn btn-outline-warning" for="edit_type_sub">
-                                    <i class="bx bx-category me-1"></i> Sub Kategori
-                                </label>
-                            </div>
-                        </div>
-
-                        {{-- Dropdown Parent — hanya muncul jika Sub Kategori --}}
-                        <div class="mb-3 d-none" id="edit-parent-wrapper">
-                            <label for="edit_parent_id" class="form-label">
-                                Parent Kategori <span class="text-danger">*</span>
-                            </label>
-                            <select id="edit_parent_id" name="parent_id" class="form-select select2-edit"
-                                data-placeholder="Pilih kategori induk...">
-                                <option value=""></option>
-                                @foreach ($parentKategoris as $parent)
-                                    <option value="{{ $parent->id }}">{{ $parent->name }}</option>
-                                @endforeach
-                            </select>
-                            <div class="invalid-feedback" id="edit-parent_id-error"></div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p class="text-dark fw-bold">Gambar Kategori:</p>
-                                <input type="file" class="filepond" name="img_kategori" id="img_kategori_edit">
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mt-0">
-                                    <label for="edit_name" class="form-label">Nama</label>
-                                    <input id="edit_name" name="name" type="text" class="form-control" required>
-                                    <div class="invalid-feedback" id="edit-name-error"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="edit_slug" class="form-label">Slug</label>
-                                    <input id="edit_slug" name="slug" type="text" class="form-control" required>
-                                    <div class="invalid-feedback" id="edit-slug-error"></div>
-                                </div>
-                                <div class="justify-content-end form-check form-switch form-check-reverse mt-2">
-                                    <label class="me-auto form-check-label" for="edit_status">Status</label>
-                                    <input id="edit_status" class="form-check-input" type="checkbox" name="status"
-                                        value="1">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer border-0 pb-0 mt-3">
-                            <button type="submit" class="btn btn-outline-info btn-sm" id="submit-edit-button">
-                                Simpan Perubahan
-                            </button>
-                            <button type="button" id="cancel-edit-button" class="btn btn-danger btn-sm"
-                                data-bs-dismiss="modal">Batalkan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- ============================================================ --}}
-    {{-- MODAL DELETE                                                  --}}
-    {{-- ============================================================ --}}
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center mt-3 mx-n5">
-                    <i class="bx bx-trash fa-2x text-danger mb-3"></i>
-                    <p class="mb-0">Apakah Anda yakin ingin menghapus kategori ini?</p>
-                    <h6 class="mt-2" id="kategoriNameToDelete"></h6>
-                    <div class="mt-4">
-                        <form id="deleteKategoriForm" method="POST" action="#">
-                            @method('delete')
+    @can('create-kategoriproduk')
+        <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 mb-n3">
+                        <h6 class="modal-title">Buat Kategori Baru</h6>
+                        <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createKategoriForm" enctype="multipart/form-data">
                             @csrf
-                            <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
-                                data-bs-dismiss="modal">Batal</button>
+
+                            {{-- Toggle: Jenis Kategori --}}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-dark d-block mb-2">Jenis Kategori</label>
+                                <div class="btn-group w-100" role="group" id="create-type-toggle">
+                                    <input type="radio" class="btn-check" name="category_type_create" id="create_type_utama"
+                                        value="utama" checked>
+                                    <label class="btn btn-outline-info" for="create_type_utama">
+                                        <i class="bx bx-badge-2 me-1"></i> Kategori Utama
+                                    </label>
+
+                                    <input type="radio" class="btn-check" name="category_type_create" id="create_type_sub"
+                                        value="sub">
+                                    <label class="btn btn-outline-warning" for="create_type_sub">
+                                        <i class="bx bx-category me-1"></i> Sub Kategori
+                                    </label>
+                                </div>
+                            </div>
+
+                            {{-- Dropdown Parent — hanya muncul jika Sub Kategori --}}
+                            <div class="mb-3 d-none" id="create-parent-wrapper">
+                                <label for="create_parent_id" class="form-label">
+                                    Parent Kategori <span class="text-danger">*</span>
+                                </label>
+                                <select id="create_parent_id" name="parent_id" class="form-select select2-create"
+                                    data-placeholder="Pilih kategori induk...">
+                                    <option value=""></option>
+                                    @foreach ($parentKategoris as $parent)
+                                        <option value="{{ $parent->id }}">{{ $parent->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="invalid-feedback" id="parent_id-error"></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <p class="text-dark fw-bold">Gambar Kategori:</p>
+                                    <input type="file" class="filepond" name="img_kategori" id="img_kategori_create">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mt-md-0">
+                                        <label for="create_name" class="form-label">Nama Kategori</label>
+                                        <input id="create_name" name="name" type="text" class="form-control" required>
+                                        <div class="invalid-feedback" id="name-error"></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="create_slug" class="form-label">Slug</label>
+                                        <input id="create_slug" name="slug" type="text" class="form-control" required>
+                                        <div class="invalid-feedback" id="slug-error"></div>
+                                    </div>
+                                    <div class="justify-content-end form-check form-switch form-check-reverse">
+                                        <label class="me-auto form-check-label" for="create_status">Status</label>
+                                        <input id="create_status" class="form-check-input" type="checkbox" name="status"
+                                            value="1" checked>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer border-0 pb-0 mt-3">
+                                <button type="button" id="submit-create-button" class="btn btn-outline-info btn-sm">
+                                    Buat Kategori
+                                </button>
+                                <button type="button" id="cancel-create-button" class="btn btn-danger btn-sm">
+                                    Batalkan
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endcan
+
+    {{-- ============================================================ --}}
+    {{-- MODAL EDIT                                                    --}}
+    {{-- ============================================================ --}}
+    @can('edit-kategoriproduk')
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 mb-n3">
+                        <h6 class="modal-title" id="editModalLabel">Edit Kategori Product</h6>
+                        <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editKategoriForm" method="post" enctype="multipart/form-data">
+                            @method('put')
+                            @csrf
+
+                            {{-- Toggle: Jenis Kategori --}}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-dark d-block mb-2">Jenis Kategori</label>
+                                <div class="btn-group w-100" role="group" id="edit-type-toggle">
+                                    <input type="radio" class="btn-check" name="category_type_edit" id="edit_type_utama"
+                                        value="utama">
+                                    <label class="btn btn-outline-info" for="edit_type_utama">
+                                        <i class="bx bx-badge-2 me-1"></i> Kategori Utama
+                                    </label>
+
+                                    <input type="radio" class="btn-check" name="category_type_edit" id="edit_type_sub"
+                                        value="sub">
+                                    <label class="btn btn-outline-warning" for="edit_type_sub">
+                                        <i class="bx bx-category me-1"></i> Sub Kategori
+                                    </label>
+                                </div>
+                            </div>
+
+                            {{-- Dropdown Parent — hanya muncul jika Sub Kategori --}}
+                            <div class="mb-3 d-none" id="edit-parent-wrapper">
+                                <label for="edit_parent_id" class="form-label">
+                                    Parent Kategori <span class="text-danger">*</span>
+                                </label>
+                                <select id="edit_parent_id" name="parent_id" class="form-select select2-edit"
+                                    data-placeholder="Pilih kategori induk...">
+                                    <option value=""></option>
+                                    @foreach ($parentKategoris as $parent)
+                                        <option value="{{ $parent->id }}">{{ $parent->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="invalid-feedback" id="edit-parent_id-error"></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="text-dark fw-bold">Gambar Kategori:</p>
+                                    <input type="file" class="filepond" name="img_kategori" id="img_kategori_edit">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mt-0">
+                                        <label for="edit_name" class="form-label">Nama</label>
+                                        <input id="edit_name" name="name" type="text" class="form-control" required>
+                                        <div class="invalid-feedback" id="edit-name-error"></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="edit_slug" class="form-label">Slug</label>
+                                        <input id="edit_slug" name="slug" type="text" class="form-control" required>
+                                        <div class="invalid-feedback" id="edit-slug-error"></div>
+                                    </div>
+                                    <div class="justify-content-end form-check form-switch form-check-reverse mt-2">
+                                        <label class="me-auto form-check-label" for="edit_status">Status</label>
+                                        <input id="edit_status" class="form-check-input" type="checkbox" name="status"
+                                            value="1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer border-0 pb-0 mt-3">
+                                <button type="submit" class="btn btn-outline-info btn-sm" id="submit-edit-button">
+                                    Simpan Perubahan
+                                </button>
+                                <button type="button" id="cancel-edit-button" class="btn btn-danger btn-sm"
+                                    data-bs-dismiss="modal">Batalkan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endcan
+
+    {{-- ============================================================ --}}
+    {{-- MODAL DELETE                                                  --}}
+    {{-- ============================================================ --}}
+    @can('delete-kategoriproduk')
+        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center mt-3 mx-n5">
+                        <i class="bx bx-trash fa-2x text-danger mb-3"></i>
+                        <p class="mb-0">Apakah Anda yakin ingin menghapus kategori ini?</p>
+                        <h6 class="mt-2" id="kategoriNameToDelete"></h6>
+                        <div class="mt-4">
+                            <form id="deleteKategoriForm" method="POST" action="#">
+                                @method('delete')
+                                @csrf
+                                <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
+                                    data-bs-dismiss="modal">Batal</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endcan
 @endsection
 
 @section('page-script')

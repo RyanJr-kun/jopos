@@ -132,14 +132,18 @@
                                     <a class="dropdown-item" href="{{ route('pembelian.show', $item->referensi) }}"><i
                                             class="bx bx-show-alt me-2 text-info"></i> Lihat Detail</a>
                                     @if ($item->status_pembayaran != 'Batal')
-                                        <a class="dropdown-item"
-                                            href="{{ route('pembelian.edit', $item->referensi) }}"><i
-                                                class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
-                                            data-bs-target="#cancelConfirmationModal"
-                                            data-pembelian-referensi="{{ $item->referensi }}"><i
-                                                class="bx bx-ban me-2"></i> Batalkan</a>
+                                        @can('edit-pembelian')
+                                            <a class="dropdown-item"
+                                                href="{{ route('pembelian.edit', $item->referensi) }}"><i
+                                                    class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
+                                        @endcan
+                                        @can('delete-pembelian')
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
+                                                data-bs-target="#cancelConfirmationModal"
+                                                data-pembelian-referensi="{{ $item->referensi }}"><i
+                                                    class="bx bx-ban me-2"></i> Batalkan</a>
+                                        @endcan
                                     @endif
                                 </div>
                             </div>
@@ -211,14 +215,18 @@
                                 <a class="dropdown-item" href="{{ route('pembelian.show', $item->referensi) }}"><i
                                         class="bx bx-show-alt me-2 text-info"></i> Lihat Detail</a>
                                 @if ($item->status_pembayaran != 'Batal')
-                                    <a class="dropdown-item"
-                                        href="{{ route('pembelian.edit', $item->referensi) }}"><i
-                                            class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
-                                    <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
-                                        data-bs-target="#cancelConfirmationModal"
-                                        data-pembelian-referensi="{{ $item->referensi }}"><i
-                                            class="bx bx-ban me-2"></i> Batalkan</a>
+                                    @can('edit-pembelian')
+                                        <a class="dropdown-item"
+                                            href="{{ route('pembelian.edit', $item->referensi) }}"><i
+                                                class="bx bx-edit-alt me-2 text-warning"></i> Edit Pembelian</a>
+                                    @endcan
+                                    @can('delete-pembelian')
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
+                                            data-bs-target="#cancelConfirmationModal"
+                                            data-pembelian-referensi="{{ $item->referensi }}"><i
+                                                class="bx bx-ban me-2"></i> Batalkan</a>
+                                    @endcan
                                 @endif
                             </div>
                         </div>

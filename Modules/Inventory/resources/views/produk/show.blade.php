@@ -20,11 +20,13 @@
                 <i class="bx bx-arrow-back"></i>
                 <span class="text-muted ms-2 d-none d-md-block">Kembali</span>
             </a>
-            <a href="{{ route('produk.edit', $produk->slug) }}" class="btn btn-primary px-2" title="Edit Produk"
-                data-bs-toggle="tooltip" data-bs-target="up">
-                <i class="bx bx-edit-alt"></i>
-                <span class="text-muted ms-2 d-none d-md-block">Edit Produk</span>
-            </a>
+            @can('edit-produk')
+                <a href="{{ route('produk.edit', $produk->slug) }}" class="btn btn-primary px-2" title="Edit Produk"
+                    data-bs-toggle="tooltip" data-bs-target="up">
+                    <i class="bx bx-edit-alt"></i>
+                    <span class="text-muted ms-2 d-none d-md-block">Edit Produk</span>
+                </a>
+            @endcan
         </div>
 
         <div class="row">

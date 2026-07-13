@@ -81,7 +81,10 @@ class StockAdjustmentController extends Controller implements HasMiddleware
 
     $stocks = $query->paginate(15)->withQueryString();
 
-    // Ringkasan stat cards — scoped sama filter store yang sama
+    if ($request->ajax()) {
+      return view('inventory::inventaris.adjustment._table', compact('stocks'));
+    }
+
     $statsQuery = StockAdjustment::query();
     if (Auth::user()->can('view-toko-gudang')) {
       if ($request->filled('store_id')) {

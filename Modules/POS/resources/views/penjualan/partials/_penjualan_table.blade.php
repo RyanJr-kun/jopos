@@ -38,7 +38,7 @@
                                     $persentase = 100;
                                 } elseif ($isJatuhTempo) {
                                     $barColor = 'bg-danger';
-                                } 
+                                }
 
                                 $statusClass =
                                     $item->status_pembayaran == 'Lunas'
@@ -54,7 +54,7 @@
                                 <div class="d-flex justify-content-between text-xs mb-1">
                                     <span class="fw-bold text-dark" title="Total Tagihan">Rp
                                         {{ number_format($item->total_akhir, 0, ',', '.') }}</span>
-                                    
+
                                     @if ($item->status_pembayaran === 'Batal')
                                         {{-- Jika statusnya Batal, tampilkan label Batal --}}
                                         <span class="text-danger fw-semibold" title="Dibatalkan">Batal</span>
@@ -86,7 +86,8 @@
                             </div>
                         </td>
                         <td class="text-center">
-                            <span class="badge {{ $statusClass }}" title="Status Pembayaran" data-bs-toggle="tooltip" data-bs-target="up" style="font-size: 0.7rem; width: 110px;">
+                            <span class="badge {{ $statusClass }}" title="Status Pembayaran" data-bs-toggle="tooltip"
+                                data-bs-target="up" style="font-size: 0.7rem; width: 110px;">
                                 <i class="bx bx-wallet text-xs me-1"></i> {{ $item->status_pembayaran }}
                             </span>
                         </td>
@@ -117,20 +118,22 @@
                                         title="Lihat Detail">
                                         <i class="bx bx-show-alt me-2 text-info"></i> Lihat Detail
                                     </a>
-                                    @if ($item->status_pembayaran != 'Batal')
-                                    <a href="{{ route('penjualan.edit', $item->referensi) }}"
-                                        class="dropdown-item text-secondary"data-bs-toggle="tooltip"
-                                        data-bs-placement="top" title="Edit Transaksi">
-                                        <i class="bx bx-edit-alt me-2 text-warning"></i> Edit penjualan</a>
-                                    </a>
-                                    <a href="javascript:void(0);" class="dropdown-item text-danger"
-                                        data-bs-toggle="modal" data-bs-target="#cancelConfirmationModal"
-                                        data-invoice-number="{{ $item->referensi }}"
-                                        data-url="{{ route('penjualan.update', $item->referensi) }}"
-                                        title="Batalkan Transaksi">
-                                        <i class="bx bx-ban me-2"></i> Batalkan
-                                    </a>
-                                    @endif
+                                    @can('edit-penjualan')
+                                        @if ($item->status_pembayaran != 'Batal')
+                                            <a href="{{ route('penjualan.edit', $item->referensi) }}"
+                                                class="dropdown-item text-secondary"data-bs-toggle="tooltip"
+                                                data-bs-placement="top" title="Edit Transaksi">
+                                                <i class="bx bx-edit-alt me-2 text-warning"></i> Edit penjualan</a>
+                                            </a>
+                                            <a href="javascript:void(0);" class="dropdown-item text-danger"
+                                                data-bs-toggle="modal" data-bs-target="#cancelConfirmationModal"
+                                                data-invoice-number="{{ $item->referensi }}"
+                                                data-url="{{ route('penjualan.update', $item->referensi) }}"
+                                                title="Batalkan Transaksi">
+                                                <i class="bx bx-ban me-2"></i> Batalkan
+                                            </a>
+                                        @endif
+                                    @endcan
                                 </div>
                             </div>
                         </td>
@@ -161,7 +164,7 @@
                     $persentase = 100;
                 } elseif ($isJatuhTempo) {
                     $barColor = 'bg-danger';
-                } 
+                }
 
                 $statusPembayaranClass =
                     $item->status_pembayaran == 'Lunas'
@@ -190,7 +193,7 @@
                                         class="bx bx-show-alt me-2 text-info"></i> Lihat Detail</a>
                                 @if ($item->status_pembayaran != 'Batal')
                                     <a class="dropdown-item" href="{{ route('penjualan.edit', $item->referensi) }}"><i
-                                        class="bx bx-edit-alt me-2 text-warning"></i> Edit penjualan</a>
+                                            class="bx bx-edit-alt me-2 text-warning"></i> Edit penjualan</a>
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
                                         data-bs-target="#cancelConfirmationModal"

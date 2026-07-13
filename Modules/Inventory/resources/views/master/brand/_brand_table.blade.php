@@ -39,16 +39,20 @@
                     </td>
 
                     <td class="text-center">
-                        <a href="#" class="action-btn text-secondary" data-bs-toggle="modal"
-                            data-bs-target="#editModal" data-url="{{ route('brand.getjson', $brand->slug) }}"
-                            data-update-url="{{ route('brand.update', $brand->slug) }}" title="Edit brand">
-                            <i class="bx bx-edit"></i>
-                        </a>
-                        <a href="#" class="action-btn text-danger" data-bs-toggle="modal"
-                            data-bs-target="#deleteConfirmationModal" data-brand-slug="{{ $brand->slug }}"
-                            data-brand-name="{{ $brand->name }}" title="Hapus Brand">
-                            <i class="bx bx-trash"></i>
-                        </a>
+                        @can('edit-brand')
+                            <a href="#" class="action-btn text-secondary" data-bs-toggle="modal"
+                                data-bs-target="#editModal" data-url="{{ route('brand.getjson', $brand->slug) }}"
+                                data-update-url="{{ route('brand.update', $brand->slug) }}" title="Edit brand">
+                                <i class="bx bx-edit"></i>
+                            </a>
+                        @endcan
+                        @can('delete-brand')
+                            <a href="#" class="action-btn text-danger" data-bs-toggle="modal"
+                                data-bs-target="#deleteConfirmationModal" data-brand-slug="{{ $brand->slug }}"
+                                data-brand-name="{{ $brand->name }}" title="Hapus Brand">
+                                <i class="bx bx-trash"></i>
+                            </a>
+                        @endcan
                     </td>
                 </tr>
             @endforeach
@@ -93,22 +97,26 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-end mt-2">
-                        <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#editModal"
-                            data-url="{{ route('brand.getjson', $brand->slug) }}"
-                            data-update-url="{{ route('brand.update', $brand->slug) }}" title="Edit brand">
-                            <div
-                                class="avatar avatar-xs d-flex align-items-center justify-content-center bg-label-primary rounded">
-                                <i class="bx bx-edit fs-6"></i>
-                            </div>
-                        </a>
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal"
-                            data-brand-slug="{{ $brand->slug }}" data-brand-name="{{ $brand->name }}"
-                            title="Hapus Brand">
-                            <div
-                                class="avatar avatar-xs d-flex align-items-center justify-content-center bg-label-danger rounded">
-                                <i class="bx bx-trash fs-6"></i>
-                            </div>
-                        </a>
+                        @can('edit-brand')
+                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#editModal"
+                                data-url="{{ route('brand.getjson', $brand->slug) }}"
+                                data-update-url="{{ route('brand.update', $brand->slug) }}" title="Edit brand">
+                                <div
+                                    class="avatar avatar-xs d-flex align-items-center justify-content-center bg-label-primary rounded">
+                                    <i class="bx bx-edit fs-6"></i>
+                                </div>
+                            </a>
+                        @endcan
+                        @can('delete-brand')
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal"
+                                data-brand-slug="{{ $brand->slug }}" data-brand-name="{{ $brand->name }}"
+                                title="Hapus Brand">
+                                <div
+                                    class="avatar avatar-xs d-flex align-items-center justify-content-center bg-label-danger rounded">
+                                    <i class="bx bx-trash fs-6"></i>
+                                </div>
+                            </a>
+                        @endcan
                     </div>
 
                 </div>

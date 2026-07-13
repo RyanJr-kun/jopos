@@ -28,24 +28,24 @@ class SpatieRoleSeeder extends Seeder
       'dashboard' => ['view'],
 
       // Master & Produk
-      'produk' => ['view', 'create', 'edit', 'delete', 'HPP'],
+      'produk' => ['view', 'create', 'edit', 'delete'],
       'kategoriproduk' => ['view', 'create', 'edit', 'delete'],
       'brand' => ['view', 'create', 'edit', 'delete'],
       'unit' => ['view', 'create', 'edit', 'delete'],
-      'garansi' => ['view', 'create', 'edit', 'delete', 'claim'],
+      'garansi' => ['view', 'create', 'edit', 'delete'],
       'serialnumber' => ['view', 'create', 'edit', 'delete'],
       'pemasok' => ['view', 'create', 'edit', 'delete'],
       'pelanggan' => ['view', 'create', 'edit', 'delete'],
 
       // Transaksi
-      'penjualan' => ['view', 'create', 'edit', 'print'],
-      'pembelian' => ['view', 'create', 'edit', 'delete', 'print'],
+      'penjualan' => ['view', 'create', 'edit'],
+      'pembelian' => ['view', 'create', 'edit', 'delete'],
 
       // Inventaris
       'stok-penyesuaian' => ['view', 'create', 'delete'],
       'stok-opname' => ['view', 'create', 'delete'],
       'stok-rendah' => ['view'],
-      'stok-transfer' => ['view', 'create', 'delete', 'approve', 'reject'],
+      'stok-transfer' => ['view', 'create', 'delete'],
 
       // Marketing
       'promo' => ['view', 'create', 'edit', 'delete'],
@@ -58,10 +58,10 @@ class SpatieRoleSeeder extends Seeder
       'expense' => ['view', 'create', 'edit', 'delete'],
 
       // Laporan
-      'laporan-inventaris' => ['view', 'export'],
-      'laporan-penjualan' => ['view', 'export'],
-      'laporan-pembelian' => ['view', 'export'],
-      'laporan-laba-rugi' => ['view', 'export'],
+      'laporan-inventaris' => ['view'],
+      'laporan-penjualan' => ['view'],
+      'laporan-pembelian' => ['view'],
+      'laporan-laba-rugi' => ['view'],
 
       // Konten
       'artikel' => ['view', 'create', 'edit', 'delete'],
@@ -147,7 +147,7 @@ class SpatieRoleSeeder extends Seeder
     $manager->syncPermissions(Permission::whereNotIn('name', ['create-users', 'edit-users', 'delete-users', 'create-roles', 'edit-roles', 'delete-roles', 'edit-pengaturan'])->get());
 
     // Kasir → operasi penjualan dan pelanggan
-    $kasir->syncPermissions(['view-dashboard', 'view-penjualan', 'create-penjualan', 'print-penjualan', 'view-pelanggan', 'create-pelanggan', 'view-produk', 'view-stok-rendah', 'view-keuangan']);
+    $kasir->syncPermissions(['view-dashboard', 'view-penjualan', 'create-penjualan', 'view-pelanggan', 'create-pelanggan', 'view-produk', 'view-stok-rendah', 'view-keuangan']);
 
     // Gudang → inventaris dan pembelian
     $gudang->syncPermissions([

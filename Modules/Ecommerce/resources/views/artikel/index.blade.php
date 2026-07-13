@@ -63,13 +63,15 @@
                         <h5 class="mb-n1 fw-bolder text-poppings">Daftar Artikel</h5>
                         <small class="text-sm mb-0">Kelola semua artikel Anda di sini.</small>
                     </div>
-                    <div>
-                        <a href="{{ route('artikel.create') }}"
-                            class="btn btn-primary px-2 d-flex align-items-center gap-2 shadow-sm" title="Tambah Artikel"
-                            data-bs-toggle="tooltip" data-bs-placement="top">
-                            <i class="bx bx-plus-circle"></i>
-                        </a>
-                    </div>
+                    @can('create-artikel')
+                        <div>
+                            <a href="{{ route('artikel.create') }}"
+                                class="btn btn-primary px-2 d-flex align-items-center gap-2 shadow-sm" title="Tambah Artikel"
+                                data-bs-toggle="tooltip" data-bs-placement="top">
+                                <i class="bx bx-plus-circle"></i>
+                            </a>
+                        </div>
+                    @endcan
                 </div>
                 <div class="card-body px-0 pt-0 pb-2">
                     @if (session('success'))
@@ -150,21 +152,16 @@
                                         </td>
                                         <td class="px-3 text-center">
                                             <div class="d-flex justify-content-center gap-1">
-
-                                                @can('view-artikel')
-                                                    <a href="{{ route('artikel.show', $artikel) }}"
-                                                        class="action-btn text-info" title="Detail">
-                                                        <i class="bx bx-show"></i>
-                                                    </a>
-                                                @endcan
-
+                                                <a href="{{ route('artikel.show', $artikel) }}"
+                                                    class="action-btn text-info" title="Detail">
+                                                    <i class="bx bx-show"></i>
+                                                </a>
                                                 @can('edit-artikel')
                                                     <a href="{{ route('artikel.edit', $artikel) }}"
                                                         class="action-btn text-secondary" title="Edit">
                                                         <i class="bx bx-edit"></i>
                                                     </a>
                                                 @endcan
-
                                                 @can('delete-artikel')
                                                     <button type="button" class="action-btn text-danger"
                                                         data-artikel-id="{{ $artikel->id }}"

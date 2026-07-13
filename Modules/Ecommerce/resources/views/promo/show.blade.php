@@ -67,14 +67,18 @@
                 </div>
 
                 <div class="d-flex justify-content-end mt-4">
-                    <a href="{{ route('promo.edit', $promo->id) }}" class="btn btn-info me-2">
-                        <i class="bx bx-edit me-1"></i> Edit Promotion
-                    </a>
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                        data-bs-target="#deleteConfirmationModal" data-promo-id="{{ $promo->id }}"
-                        data-promo-name="{{ $promo->name }}">
-                        <i class="bx bx-trash me-1"></i> Hapus Promotion
-                    </button>
+                    @can('edit-promo')
+                        <a href="{{ route('promo.edit', $promo->id) }}" class="btn btn-info me-2">
+                            <i class="bx bx-edit me-1"></i> Edit Promotion
+                        </a>
+                    @endcan
+                    @can('delete-promo')
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                            data-bs-target="#deleteConfirmationModal" data-promo-id="{{ $promo->id }}"
+                            data-promo-name="{{ $promo->name }}">
+                            <i class="bx bx-trash me-1"></i> Hapus Promotion
+                        </button>
+                    @endcan
                 </div>
             </div>
         </div>

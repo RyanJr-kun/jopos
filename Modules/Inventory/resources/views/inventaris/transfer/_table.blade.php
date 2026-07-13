@@ -70,7 +70,7 @@
                                 class="action-btn text-blue" data-bs-toggle="tooltip" title="Lihat Detail">
                                 <i class="bx bx-show"></i>
                             </a>
-                            @can('approve-stok-transfer')
+                            @can('create-stok-transfer')
                                 @if ($transfer->status === 'dikirim')
                                     <a href="{{ route('stok-transfer.show', $transfer->kode_transfer) }}#approval"
                                         class="btn btn-icon btn-sm btn-outline-success" data-bs-toggle="tooltip"

@@ -184,7 +184,15 @@
                     </div>
 
                     @foreach ($saldoPerBank as $item)
-                        <div class="fin-bank-card">
+                        <div class="fin-bank-card" style="cursor:pointer"
+                            onclick="openEditBank(
+                                {{ $item['bank']->id }},
+                                '{{ addslashes($item['bank']->nama_bank) }}',
+                                '{{ addslashes($item['bank']->nomor_rekening) }}',
+                                '{{ addslashes($item['bank']->nama_pemilik) }}',
+                                {{ $item['bank']->is_active ? 1 : 0 }},
+                                '{{ $item['bank']->logo_bank ? $item['bank']->logo_url : '' }}'
+                            )">
                             @if ($item['bank']->logo_bank)
                                 <img src="{{ $item['bank']->logo_url }}" alt="{{ $item['bank']->nama_bank }}"
                                     class="fin-bank-logo">
@@ -417,8 +425,8 @@
 
                     {{-- Preview Logo --}}
                     <div class="d-flex align-items-center gap-3 mb-3">
-                        <img id="logoPreview" src="{{ asset('assets/img/banks/default-bank.png') }}"
-                            class="fin-logo-preview" alt="Logo Bank">
+                        <img id="logoPreview" src="{{ asset('assets/img/logo.png') }}" class="fin-logo-preview"
+                            alt="Logo Bank">
                         <div class="flex-grow-1">
                             <label class="fin-upload-area" for="logoInput">
                                 <i class="bx bx-cloud-upload"></i>
@@ -467,69 +475,69 @@
     {{-- ========================================================= --}}
     {{-- MODAL BANK (Edit) — di-trigger dari tabel saldo bank       --}}
     {{-- ========================================================= --}}
-    <div class="modal fade fin-modal" id="modalEditBank" tabindex="-1" aria-labelledby="labelEditBank"
-        aria-hidden="true">
+    <div class="modal fade fin-modal" id="modalEditBank" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <form id="formEditBank" method="POST" enctype="multipart/form-data" class="modal-content">
-                @csrf
-                @method('PUT')
-                <div class="modal-header">
-                    <h5 class="modal-title" id="labelEditBank">Edit Bank</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <img id="editLogoPreview" src="{{ asset('assets/img/banks/default-bank.png') }}"
-                            class="fin-logo-preview" alt="Logo">
-                        <div class="flex-grow-1">
-                            <label class="fin-upload-area" for="editLogoInput">
-                                <i class="bx bx-cloud-upload"></i>
-                                Ganti logo (kosongkan = tetap pakai yang lama)
-                            </label>
-                            <input type="file" name="logo_bank" id="editLogoInput" accept="image/*" class="d-none"
-                                onchange="previewEditLogo(this)">
-                        </div>
+            <div class="modal-content">
+                <form id="formEditBank" method="POST" enctype="multipart/form-data">
+                    @csrf @method('PUT')
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Bank</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label" style="font-size:12.5px">Nama Bank</label>
-                            <input type="text" name="nama_bank" id="editNamaBank"
-                                class="form-control form-control-sm" required>
+                    <div class="modal-body">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <img id="editLogoPreview" src="{{ asset('assets/img/logo.png') }}" class="fin-logo-preview"
+                                alt="Logo">
+                            <div class="flex-grow-1">
+                                <label class="fin-upload-area" for="editLogoInput">
+                                    <i class="bx bx-cloud-upload"></i>
+                                    Ganti logo (kosongkan = tetap pakai yang lama)
+                                </label>
+                                <input type="file" name="logo_bank" id="editLogoInput" accept="image/*"
+                                    class="d-none" onchange="previewEditLogo(this)">
+                            </div>
                         </div>
-                        <div class="col-12">
-                            <label class="form-label" style="font-size:12.5px">Nomor Rekening</label>
-                            <input type="text" name="nomor_rekening" id="editNomorRekening"
-                                class="form-control form-control-sm" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label" style="font-size:12.5px">Nama Pemilik</label>
-                            <input type="text" name="nama_pemilik" id="editNamaPemilik"
-                                class="form-control form-control-sm" required>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="is_active" value="1"
-                                    id="editBankAktif">
-                                <label class="form-check-label" for="editBankAktif" style="font-size:13px">Bank
-                                    aktif</label>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" style="font-size:12.5px">Nama Bank</label>
+                                <input type="text" name="nama_bank" id="editNamaBank"
+                                    class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" style="font-size:12.5px">Nomor Rekening</label>
+                                <input type="text" name="nomor_rekening" id="editNomorRekening"
+                                    class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" style="font-size:12.5px">Nama Pemilik</label>
+                                <input type="text" name="nama_pemilik" id="editNamaPemilik"
+                                    class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="is_active" value="1"
+                                        id="editBankAktif">
+                                    <label class="form-check-label" for="editBankAktif" style="font-size:13px">Bank
+                                        aktif</label>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer d-flex justify-content-between">
-                    <form id="formDeleteBank" method="POST" onsubmit="return confirm('Hapus bank ini?')">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                            <i class="bx bx-trash me-1"></i> Hapus
-                        </button>
-                    </form>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                            data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-sm btn-primary px-4">Perbarui</button>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <form id="formDeleteBank" method="POST" onsubmit="return confirm('Hapus bank ini?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bx bx-trash me-1"></i> Hapus
+                            </button>
+                        </form>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-sm btn-primary px-4">Perbarui</button>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 

@@ -44,11 +44,13 @@
                                 <option value="Tidak Aktif" @selected(request('status') == 'Tidak Aktif')>Tidak Aktif</option>
                             </select>
                         </div>
-                        <div class="col-md-auto ms-md-auto">
-                            {{-- triger-modal-create --}}
-                            <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#import"><i
-                                    class="bx bx-plus fixed-plugin-button-nav cursor-pointer pe-2"></i>Garansi</button>
-                        </div>
+                        @can('create-garansi')
+                            <div class="col-md-auto ms-md-auto">
+                                {{-- triger-modal-create --}}
+                                <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#import"><i
+                                        class="bx bx-plus fixed-plugin-button-nav cursor-pointer pe-2"></i>Garansi</button>
+                            </div>
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -72,171 +74,177 @@
     </div>
 
     {{-- modal-create --}}
-    <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n2">
-                    <h6 class="modal-title" id="ModalLabel">Buat Warrantie Baru</h6>
-                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="createWarrantieForm" action="{{ route('garansi.store') }}" method="post">
-                        @csrf
-                        <div class="mb-3">
-                            <label for="name" class="form-label ">Nama</label>
-                            <input id="name" name="name" type="string"
-                                class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
-                                required>
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="slug" class="form-label">Slug</label>
-                            <input id="slug" name="slug" type="string"
-                                class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug') }}"
-                                required>
-                            @error('slug')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="row">
-                            <div class="col-md-7">
-                                <div class="form-group">
-                                    <label for="duration" class="form-label">Durasi</label>
-                                    <input type="number" class="form-control @error('duration') is-invalid @enderror"
-                                        id="duration" name="duration" value="{{ old('duration') }}" min="0">
-                                    @error('duration')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-5">
-                                <div class="form-group">
-                                    <label for="period" class="form-label"> Periode </label>
-                                    <select class="form-select select2" id="period" name="period" required>
-                                        <option value="Day">Hari</option>
-                                        <option value="Week">Minggu</option>
-                                        <option value="Month">Bulan</option>
-                                        <option value="Year">Tahun</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description <span
-                                    class="text-danger">*</span></label>
-                            <div id="quill-editor-create" style="min-height: 100px;">{!! old('description') !!}</div>
-                            <div class="text-end text-muted small" id="counter-create">0/60</div>
-                            <input type="hidden" name="description" id="description-create"
-                                value="{{ old('description') }}">
-                            @error('description')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="mt-2 justify-content-end form-check form-switch form-check-reverse">
-                            <label class="me-auto form-check-label" for="status">Status</label>
-                            <input id="status" class="form-check-input" type="checkbox" name="status"
-                                value="1" checked>
-                        </div>
-                        <div class="modal-footer border-0 pb-0">
-                            <button type="submit" id="submit-create-button" class="btn btn-outline-info btn-sm">Buat
-                                Warrantie</button>
-                            <button type="button" class="btn btn-danger btn-sm"
-                                data-bs-dismiss="modal">Batalkan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- modal edit --}}
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n3">
-                    <h6 class="modal-title" id="editModalLabel">Edit Warrantie </h6>
-                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editWarrantieForm" method="post" action="">
-                        @method('put')
-                        @csrf
-                        <div class="mb-3">
-                            <label for="edit_name" class="form-label">Nama</label>
-                            <input id="edit_name" name="name" type="text" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_slug" class="form-label">Slug</label>
-                            <input id="edit_slug" name="slug" type="text" class="form-control" required readonly>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-7">
-                                <div class="mb-3">
-                                    <label for="edit_duration" class="form-label">Durasi</label>
-                                    <input type="number" class="form-control" id="edit_duration" name="duration"
-                                        min="0">
-                                </div>
-                            </div>
-                            <div class="col-md-5">
-                                <div class="mb-3">
-                                    <label for="edit_period" class="form-label">Periode</label>
-                                    <select class="form-select select2" id="edit_period" name="period" required>
-                                        <option value="Day">Hari</option>
-                                        <option value="Week">Minggu</option>
-                                        <option value="Month">Bulan</option>
-                                        <option value="Year">Tahun</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <div id="quill-editor-edit" style="min-height: 100px;"></div>
-                            <div class="text-end text-muted small" id="counter-edit">0/60</div>
-                            <input type="hidden" name="description" id="description-edit">
-                        </div>
-                        <div class="justify-content-end form-check form-switch form-check-reverse mt-3">
-                            <label class="me-auto form-check-label" for="edit_status">Status</label>
-                            <input id="edit_status" class="form-check-input" type="checkbox" name="status"
-                                value="1">
-                        </div>
-                        <div class="modal-footer border-0 pb-0 mt-2">
-                            <button type="submit" class="btn btn-outline-info btn-sm">Simpan Perubahan</button>
-                            <button type="button" class="btn btn-danger btn-sm"
-                                data-bs-dismiss="modal">Batalkan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- modal delete --}}
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center mt-3 mx-n5">
-                    <i class="bx bx-trash fa-2x text-danger mb-3"></i>
-                    <p class="mb-0">Apakah Anda yakin ingin menghapus garansi ini?</p>
-                    <h6 class="mt-2" id="garansiNameToDelete"></h6>
-                    <div class="mt-4">
-                        <form id="deleteWarrantieForm" method="POST" action="#">
-                            @method('delete')
+    @can('create-garansi')
+        <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 mb-n2">
+                        <h6 class="modal-title" id="ModalLabel">Buat Warrantie Baru</h6>
+                        <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createWarrantieForm" action="{{ route('garansi.store') }}" method="post">
                             @csrf
-                            <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
-                                data-bs-dismiss="modal">Batal</button>
+                            <div class="mb-3">
+                                <label for="name" class="form-label ">Nama</label>
+                                <input id="name" name="name" type="string"
+                                    class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
+                                    required>
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-3">
+                                <label for="slug" class="form-label">Slug</label>
+                                <input id="slug" name="slug" type="string"
+                                    class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug') }}"
+                                    required>
+                                @error('slug')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <div class="form-group">
+                                        <label for="duration" class="form-label">Durasi</label>
+                                        <input type="number" class="form-control @error('duration') is-invalid @enderror"
+                                            id="duration" name="duration" value="{{ old('duration') }}" min="0">
+                                        @error('duration')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <label for="period" class="form-label"> Periode </label>
+                                        <select class="form-select select2" id="period" name="period" required>
+                                            <option value="Day">Hari</option>
+                                            <option value="Week">Minggu</option>
+                                            <option value="Month">Bulan</option>
+                                            <option value="Year">Tahun</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description <span
+                                        class="text-danger">*</span></label>
+                                <div id="quill-editor-create" style="min-height: 100px;">{!! old('description') !!}</div>
+                                <div class="text-end text-muted small" id="counter-create">0/60</div>
+                                <input type="hidden" name="description" id="description-create"
+                                    value="{{ old('description') }}">
+                                @error('description')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mt-2 justify-content-end form-check form-switch form-check-reverse">
+                                <label class="me-auto form-check-label" for="status">Status</label>
+                                <input id="status" class="form-check-input" type="checkbox" name="status"
+                                    value="1" checked>
+                            </div>
+                            <div class="modal-footer border-0 pb-0">
+                                <button type="submit" id="submit-create-button" class="btn btn-outline-info btn-sm">Buat
+                                    Warrantie</button>
+                                <button type="button" class="btn btn-danger btn-sm"
+                                    data-bs-dismiss="modal">Batalkan</button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endcan
+
+    {{-- modal edit --}}
+    @can('edit-garansi')
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 mb-n3">
+                        <h6 class="modal-title" id="editModalLabel">Edit Warrantie </h6>
+                        <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editWarrantieForm" method="post" action="">
+                            @method('put')
+                            @csrf
+                            <div class="mb-3">
+                                <label for="edit_name" class="form-label">Nama</label>
+                                <input id="edit_name" name="name" type="text" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_slug" class="form-label">Slug</label>
+                                <input id="edit_slug" name="slug" type="text" class="form-control" required readonly>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <div class="mb-3">
+                                        <label for="edit_duration" class="form-label">Durasi</label>
+                                        <input type="number" class="form-control" id="edit_duration" name="duration"
+                                            min="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="mb-3">
+                                        <label for="edit_period" class="form-label">Periode</label>
+                                        <select class="form-select select2" id="edit_period" name="period" required>
+                                            <option value="Day">Hari</option>
+                                            <option value="Week">Minggu</option>
+                                            <option value="Month">Bulan</option>
+                                            <option value="Year">Tahun</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <div id="quill-editor-edit" style="min-height: 100px;"></div>
+                                <div class="text-end text-muted small" id="counter-edit">0/60</div>
+                                <input type="hidden" name="description" id="description-edit">
+                            </div>
+                            <div class="justify-content-end form-check form-switch form-check-reverse mt-3">
+                                <label class="me-auto form-check-label" for="edit_status">Status</label>
+                                <input id="edit_status" class="form-check-input" type="checkbox" name="status"
+                                    value="1">
+                            </div>
+                            <div class="modal-footer border-0 pb-0 mt-2">
+                                <button type="submit" class="btn btn-outline-info btn-sm">Simpan Perubahan</button>
+                                <button type="button" class="btn btn-danger btn-sm"
+                                    data-bs-dismiss="modal">Batalkan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endcan
+
+    {{-- modal delete --}}
+    @can('delete-garansi')
+        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center mt-3 mx-n5">
+                        <i class="bx bx-trash fa-2x text-danger mb-3"></i>
+                        <p class="mb-0">Apakah Anda yakin ingin menghapus garansi ini?</p>
+                        <h6 class="mt-2" id="garansiNameToDelete"></h6>
+                        <div class="mt-4">
+                            <form id="deleteWarrantieForm" method="POST" action="#">
+                                @method('delete')
+                                @csrf
+                                <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
+                                    data-bs-dismiss="modal">Batal</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endcan
 
 @endsection
 

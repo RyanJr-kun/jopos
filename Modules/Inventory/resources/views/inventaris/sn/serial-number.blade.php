@@ -154,13 +154,12 @@
                                 <div class="d-flex align-items-center gap-3">
                                     @php
                                         // Prioritaskan gambar varian, fallback ke gambar produk
-                                        $imgPath = $sn->variant?->img_variant
-                                            ?? $sn->produk->primaryImage?->path
-                                            ?? null;
+                                        $imgPath =
+                                            $sn->variant?->img_variant ?? ($sn->produk->primaryImage?->path ?? null);
                                     @endphp
                                     @if ($imgPath)
-                                        <img src="{{ Storage::url($imgPath) }}" class="rounded-2"
-                                            width="36" height="36" style="object-fit:cover;"
+                                        <img src="{{ Storage::url($imgPath) }}" class="rounded-2" width="36"
+                                            height="36" style="object-fit:cover;"
                                             alt="{{ $sn->produk->name_product }}">
                                     @else
                                         <img src="{{ asset('assets/img/produk.png') }}" class="rounded-2" width="36"
@@ -207,16 +206,20 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                <button type="button" class="action-btn text-secondary btn-edit me-1"
-                                    data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
-                                    data-status="{{ $sn->status }}" title="Edit SN" data-bs-toggle="tooltip">
-                                    <i class="bx bx-edit-alt"></i>
-                                </button>
-                                <button type="button" class="action-btn text-danger btn-delete"
-                                    data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}" title="Hapus SN"
-                                    data-bs-toggle="tooltip">
-                                    <i class="bx bx-trash"></i>
-                                </button>
+                                @can('edit-stok-opname')
+                                    <button type="button" class="action-btn text-secondary btn-edit me-1"
+                                        data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
+                                        data-status="{{ $sn->status }}" title="Edit SN" data-bs-toggle="tooltip">
+                                        <i class="bx bx-edit-alt"></i>
+                                    </button>
+                                @endcan
+                                @can('delete-stok-opname')
+                                    <button type="button" class="action-btn text-danger btn-delete"
+                                        data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}" title="Hapus SN"
+                                        data-bs-toggle="tooltip">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
+                                @endcan
                             </td>
                         </tr>
                     @empty
@@ -236,77 +239,81 @@
     </div>
 
     {{-- Modal Edit --}}
-    <div class="modal fade" id="editSerialModal" tabindex="-1" aria-labelledby="editSerialModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-3">
-                <div class="modal-header border-bottom pb-3">
-                    <h6 class="modal-title fw-semibold" id="editSerialModalLabel">
-                        <i class="bx bx-edit me-2 text-primary"></i>Edit Nomor Seri
-                    </h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body pt-3">
-                    <form id="editSerialForm" method="post">
-                        @method('put')
-                        @csrf
-                        <div class="mb-3">
-                            <label for="edit_serial_number" class="form-label fw-medium">Nomor Seri</label>
-                            <input id="edit_serial_number" name="serial_number" type="text" class="form-control"
-                                required>
-                            <div class="invalid-feedback" id="edit_serial_number-error"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_status" class="form-label fw-medium">Status</label>
-                            <select id="edit_status" name="status" class="form-select select2"
-                                data-placeholder="pilih status ..." required>
-                                <option value="" class=""></option>
-                                @foreach ($status as $s)
-                                    <option value="{{ $s }}" @selected(old('status_barang') == $s)>
-                                        {{ $s }}</option>
-                                @endforeach
-                            </select>
-                            <div class="form-text text-warning"><i class="bx bx-info-circle me-1"></i>Status "Terjual"
-                                diatur otomatis oleh sistem.</div>
-                        </div>
-                        <div class="d-flex justify-content-end gap-2 mt-4">
-                            <button type="button" class="btn btn-outline-secondary"
-                                data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                        </div>
-                    </form>
+    @can('edit-stok-opname')
+        <div class="modal fade" id="editSerialModal" tabindex="-1" aria-labelledby="editSerialModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-3">
+                    <div class="modal-header border-bottom pb-3">
+                        <h6 class="modal-title fw-semibold" id="editSerialModalLabel">
+                            <i class="bx bx-edit me-2 text-primary"></i>Edit Nomor Seri
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body pt-3">
+                        <form id="editSerialForm" method="post">
+                            @method('put')
+                            @csrf
+                            <div class="mb-3">
+                                <label for="edit_serial_number" class="form-label fw-medium">Nomor Seri</label>
+                                <input id="edit_serial_number" name="serial_number" type="text" class="form-control"
+                                    required>
+                                <div class="invalid-feedback" id="edit_serial_number-error"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_status" class="form-label fw-medium">Status</label>
+                                <select id="edit_status" name="status" class="form-select select2"
+                                    data-placeholder="pilih status ..." required>
+                                    <option value="" class=""></option>
+                                    @foreach ($status as $s)
+                                        <option value="{{ $s }}" @selected(old('status_barang') == $s)>
+                                            {{ $s }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="form-text text-warning"><i class="bx bx-info-circle me-1"></i>Status "Terjual"
+                                    diatur otomatis oleh sistem.</div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button type="button" class="btn btn-outline-secondary"
+                                    data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endcan
 
     {{-- Modal Delete --}}
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content rounded-3 text-center">
-                <div class="modal-body py-4 px-4">
-                    <div class="mb-3">
-                        <span class="avatar avatar-lg rounded-circle bg-label-danger">
-                            <i class="bx bx-trash fs-4"></i>
-                        </span>
-                    </div>
-                    <h6 class="fw-semibold mb-1">Hapus Nomor Seri?</h6>
-                    <p class="text-muted small mb-3">Tindakan ini tidak dapat dibatalkan.</p>
-                    <p class="fw-bold text-dark mb-4" id="serialNumberToDelete"></p>
-                    <form id="deleteSerialForm" method="POST" action="#">
-                        @method('delete')
-                        @csrf
-                        <div class="d-flex gap-2 justify-content-center">
-                            <button type="button" class="btn btn-outline-secondary btn-sm"
-                                data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
+    @can('delete-stok-opname')
+        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content rounded-3 text-center">
+                    <div class="modal-body py-4 px-4">
+                        <div class="mb-3">
+                            <span class="avatar avatar-lg rounded-circle bg-label-danger">
+                                <i class="bx bx-trash fs-4"></i>
+                            </span>
                         </div>
-                    </form>
+                        <h6 class="fw-semibold mb-1">Hapus Nomor Seri?</h6>
+                        <p class="text-muted small mb-3">Tindakan ini tidak dapat dibatalkan.</p>
+                        <p class="fw-bold text-dark mb-4" id="serialNumberToDelete"></p>
+                        <form id="deleteSerialForm" method="POST" action="#">
+                            @method('delete')
+                            @csrf
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                    data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endcan
 @endsection
 
 @section('page-script')
@@ -394,7 +401,9 @@
                     $.ajax({
                         url: url,
                         method: 'GET',
-                        data: variantId ? { variant_id: variantId } : {},
+                        data: variantId ? {
+                            variant_id: variantId
+                        } : {},
                         success: function(data) {
                             selectedProductData = {
                                 id: productId,
@@ -431,14 +440,14 @@
                 // --- SELECT2: Pilih Produk (AJAX) ---
                 function formatProduct(produk) {
                     if (!produk.id) return produk.text;
-                    
+
                     // JS tinggal pakai img_produk karena URL-nya sudah matang dari server
-                    const imageUrl = produk.img_produk; 
-                    
+                    const imageUrl = produk.img_produk;
+
                     const variantBadge = produk.variant_id ?
                         `<span class="badge bg-label-info ms-1" style="font-size:0.65rem;">${produk.variant_name}</span>` :
                         '';
-                        
+
                     return $(
                         `<div class="d-flex align-items-center gap-2 py-1">
                             <img src="${imageUrl}" class="rounded-2" width="32" height="32" style="object-fit:cover;" />
@@ -458,9 +467,9 @@
                     templateSelection: function(p) {
                         if (!p.id) return p.text || 'Pilih Produk';
                         // Tampilkan "Nama Produk — Varian" di field setelah dipilih
-                        return p.variant_name
-                            ? `${p.name_product} — ${p.variant_name}`
-                            : p.name_product || p.text;
+                        return p.variant_name ?
+                            `${p.name_product} — ${p.variant_name}` :
+                            p.name_product || p.text;
                     },
                     ajax: {
                         url: "{{ route('get-data.produk') }}",
@@ -476,13 +485,13 @@
                             return {
                                 results: data.data.map(item => {
                                     // Buat ID unik: "productId-variantId" untuk varian, atau "productId" untuk simple
-                                    const combinedId = item.variant_id
-                                        ? `${item.id}-${item.variant_id}`
-                                        : String(item.id);
+                                    const combinedId = item.variant_id ?
+                                        `${item.id}-${item.variant_id}` :
+                                        String(item.id);
                                     // Teks tampilan: "Nama Produk - Warna / Ukuran" atau hanya "Nama Produk"
-                                    const displayName = item.variant_name
-                                        ? `${item.name_product} - ${item.variant_name}`
-                                        : item.name_product;
+                                    const displayName = item.variant_name ?
+                                        `${item.name_product} - ${item.variant_name}` :
+                                        item.name_product;
                                     return {
                                         id: combinedId,
                                         product_id: item.id,
@@ -605,18 +614,22 @@
 
                     @if ($produkDipilih->has_variants)
                         {{-- Mengecek apakah ada data varian spesifik yang dikirim dari controller --}}
-                        @if(isset($varianDipilih) && $varianDipilih)
+                        @if (isset($varianDipilih) && $varianDipilih)
                             var combinedId = "{{ $produkDipilih->id }}-{{ $varianDipilih->id }}";
-                            
-                            var variantName = "{{ $varianDipilih->options->pluck('value')->implode(' / ') ?: $varianDipilih->sku }}";
+
+                            var variantName =
+                                "{{ $varianDipilih->options->pluck('value')->implode(' / ') ?: $varianDipilih->sku }}";
                             var displayName = "{{ $produkDipilih->name_product }} — " + variantName;
 
                             var produkOption = new Option(displayName, combinedId, true, true);
                             $('#select-produk').append(produkOption).trigger('change');
-                            
-                            updateProductInfo("{{ $produkDipilih->id }}", "{{ $varianDipilih->id }}", "{{ $produkDipilih->slug }}");
+
+                            updateProductInfo("{{ $produkDipilih->id }}", "{{ $varianDipilih->id }}",
+                                "{{ $produkDipilih->slug }}");
                         @else
-                            window.showToast('info', 'Silakan pilih varian produk secara spesifik di form pendaftaran untuk menambah SN baru.');
+                            window.showToast('info',
+                                'Silakan pilih varian produk secara spesifik di form pendaftaran untuk menambah SN baru.'
+                            );
                         @endif
                     @else
                         var produkOption = new Option(

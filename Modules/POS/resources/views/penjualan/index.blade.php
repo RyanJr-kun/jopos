@@ -71,10 +71,12 @@
                 <h5 class="mb-n1 fw-bolder">Invoice Sale</h5>
                 <p class="text-sm mb-0"> riwayat transaksi penjualan.</p>
             </div>
-            <a href="{{ route('penjualan.create') }}" class="btn btn-outline-info px-2" title="Tambah Penjualan"
-                data-bs-toggle="tooltip" data-bs-placement="top">
-                <i class="bx bx-plus-circle"></i>
-            </a>
+            @can('create-penjualan')
+                <a href="{{ route('penjualan.create') }}" class="btn btn-outline-info px-2" title="Tambah Penjualan"
+                    data-bs-toggle="tooltip" data-bs-placement="top">
+                    <i class="bx bx-plus-circle"></i>
+                </a>
+            @endcan
         </div>
     </div>
     <div class="card-body px-0 pt-0 pb-2">

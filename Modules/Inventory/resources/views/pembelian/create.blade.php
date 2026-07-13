@@ -20,10 +20,12 @@
         <div class="card rounded-3 shadow-sm border-0">
             <div class="card-header border-bottom py-3 justify-content-between align-items-center d-flex">
                 <h5 class="mb-0 fw-bold">Informasi Purchase</h5>
+
                 <a href="{{ route('pembelian.index') }}" class="btn btn-icon btn-outline-secondary btn-sm"
                     data-bs-toggle="tooltip" aria-label="Kembali" data-bs-original-title="Kembali">
                     <i class="bx bx-arrow-back"></i>
                 </a>
+
             </div>
 
             <div class="card-body p-4">
@@ -448,7 +450,8 @@
                     const variantId = selectedData.variant_id;
                     const produkNama = selectedData.text;
                     const produkNama2 = selectedData.text2;
-                    const imageUrl = selectedData.img_produk ? selectedData.img_produk : defaultImage;
+                    const imageUrl = selectedData.img_produk ? selectedData.img_produk :
+                        defaultImage;
                     const hargaBeli = selectedData.harga_beli || 0;
                     const pajakId = selectedData.taxe_id || null;
                     const pajakRate = selectedData.pajak_rate || 0;
@@ -465,7 +468,7 @@
                         const subtotalAwal = (hargaBeli * qtyToAdd);
                         const pajakAwal = subtotalAwal * (pajakRate / 100);
                         const subtotalDenganTaxe = subtotalAwal + pajakAwal;
-                        const variantHtml = produkNama2 ? 
+                        const variantHtml = produkNama2 ?
                             `<small class="text-muted d-block">
                                 <i class="bx bx-list-ul text-xs me-1"></i>${produkNama2}
                             </small>` : '';

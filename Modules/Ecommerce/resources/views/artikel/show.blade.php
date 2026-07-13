@@ -17,9 +17,11 @@
                             </small>
                         </div>
                         <div class="d-flex gap-2 flex-shrink-0">
-                            <a href="{{ route('artikel.edit', $artikel) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bx bx-edit me-1"></i>Edit
-                            </a>
+                            @can('edit-artikel')
+                                <a href="{{ route('artikel.edit', $artikel) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bx bx-edit me-1"></i>Edit
+                                </a>
+                            @endcan
                             <a href="{{ route('artikel.index') }}" class="btn btn-sm btn-outline-secondary">
                                 <i class="bx bx-arrow-back me-1"></i>Kembali
                             </a>
@@ -116,26 +118,28 @@
                 </div>
 
                 {{-- Aksi --}}
-                <div class="card rounded-2 shadow-sm border-danger">
-                    <div class="card-header pb-0 pt-3 px-3">
-                        <h6 class="mb-0 fw-bolder text-danger">
-                            <i class="bx bx-trash me-2"></i>Zona Berbahaya
-                        </h6>
+                @can('delete-artikel')
+                    <div class="card rounded-2 shadow-sm border-danger">
+                        <div class="card-header pb-0 pt-3 px-3">
+                            <h6 class="mb-0 fw-bolder text-danger">
+                                <i class="bx bx-trash me-2"></i>Zona Berbahaya
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">
+                                Menghapus artikel ini akan menghapus seluruh konten dan thumbnail secara permanen.
+                            </p>
+                            <form action="{{ route('artikel.destroy', $artikel) }}" method="POST"
+                                onsubmit="return confirm('Yakin ingin menghapus artikel ini? Tindakan ini tidak bisa dibatalkan.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm w-100">
+                                    <i class="bx bx-trash me-1"></i>Hapus Artikel Ini
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <p class="text-muted small mb-3">
-                            Menghapus artikel ini akan menghapus seluruh konten dan thumbnail secara permanen.
-                        </p>
-                        <form action="{{ route('artikel.destroy', $artikel) }}" method="POST"
-                            onsubmit="return confirm('Yakin ingin menghapus artikel ini? Tindakan ini tidak bisa dibatalkan.')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm w-100">
-                                <i class="bx bx-trash me-1"></i>Hapus Artikel Ini
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                @endcan
 
             </div>
         </div>

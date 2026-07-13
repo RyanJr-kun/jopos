@@ -46,11 +46,13 @@
                                 <option value="Tidak Aktif" @selected(request('status') == 'Tidak Aktif')>Tidak Aktif</option>
                             </select>
                         </div>
-                        <div class="col-md-auto ms-md-auto">
-                            <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#import">
-                                <i class="bx bx-plus cursor-pointer pe-2"></i>Brand
-                            </button>
-                        </div>
+                        @can('create-brand')
+                            <div class="col-md-auto ms-md-auto">
+                                <button class="btn btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#import">
+                                    <i class="bx bx-plus cursor-pointer pe-2"></i>Brand
+                                </button>
+                            </div>
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -72,129 +74,135 @@
     </div>
 
     {{-- modal-create --}}
-    <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n3">
-                    <h6 class="modal-title" id="ModalLabel">Buat Data Brand Baru</h6>
-                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="createBrandForm" method="POST" action="{{ route('brand.store') }}"
-                        enctype="multipart/form-data">
-                        @csrf
-                        <div class="row">
-                            <div class="col-md-6 mb-3 mb-md-0">
-                                <p class="text-dark fw-bold ">Gambar Brand:</p>
-                                <input type="file" class="filepond" name="img_brand" id="img_brand_create">
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mt-md-4">
-                                    <label for="name" class="form-label">Brand</label>
-                                    <input id="name" name="name" type="text"
-                                        class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
-                                        required>
-                                    <div class="invalid-feedback" id="name-error"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="slug" class="form-label">Slug</label>
-                                    <input id="slug" name="slug" type="text"
-                                        class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug') }}"
-                                        required>
-                                    <div class="invalid-feedback" id="slug-error"></div>
-                                </div>
-
-                                <div class="justify-content-end form-check form-switch form-check-reverse">
-                                    <label class="me-auto form-check-label" for="status">Status</label>
-                                    <input id="status" class="form-check-input" type="checkbox" name="status"
-                                        value="1" checked>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer border-0 pb-0 mt-3">
-                            <button type="submit" id="submit-create-button" class="btn btn-outline-info btn-sm">Buat
-                                Brand</button>
-                            <button type="button" id="cancel-create-button"
-                                class="btn btn-danger btn-sm">Batalkan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- modal edit --}}
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 mb-n3">
-                    <h6 class="modal-title" id="editModalLabel">Edit Data Brand</h6>
-                    <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editBrandForm" method="POST" action="" enctype="multipart/form-data">
-                        @method('put')
-                        @csrf
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p class="text-dark fw-bold ">Gambar Brand:</p>
-                                <input type="file" class="filepond" name="img_brand" id="img_brand_edit">
-                            </div>
-
-                            <!-- Kolom Kanan untuk Input Teks -->
-                            <div class="col-md-6">
-                                <div class="mt-4">
-                                    <label for="edit_name" class="form-label">Nama</label>
-                                    <input id="edit_name" name="name" type="text" class="form-control" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="edit_slug" class="form-label">Slug</label>
-                                    <input id="edit_slug" name="slug" type="text" class="form-control" required>
-                                </div>
-                                <div class="justify-content-end form-check form-switch form-check-reverse mt-4">
-                                    <label class="me-auto form-check-label" for="edit_status">Status</label>
-                                    <input id="edit_status" class="form-check-input" type="checkbox" name="status"
-                                        value="1">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer border-0 pb-0 mt-3">
-                            <button type="submit" class="btn btn-outline-info btn-sm" id="submit-edit-button">Simpan
-                                Perubahan</button>
-                            <button type="button" id="cancel-edit-button" class="btn btn-danger btn-sm"
-                                data-bs-dismiss="modal">Batalkan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- modal delete --}}
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center mt-3 mx-n5">
-                    <i class="bx bx-trash fa-2x text-danger mb-3"></i>
-                    <p class="mb-0">Apakah Anda yakin ingin menghapus Brand ini?</p>
-                    <h6 class="mt-2" id="brandNameToDelete"></h6>
-                    <div class="mt-4">
-                        <form id="deleteBrandForm" method="POST" action="#">
-                            @method('delete')
+    @can('create-brand')
+        <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 mb-n3">
+                        <h6 class="modal-title" id="ModalLabel">Buat Data Brand Baru</h6>
+                        <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createBrandForm" method="POST" action="{{ route('brand.store') }}"
+                            enctype="multipart/form-data">
                             @csrf
-                            <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
-                                data-bs-dismiss="modal">Batal</button>
+                            <div class="row">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <p class="text-dark fw-bold ">Gambar Brand:</p>
+                                    <input type="file" class="filepond" name="img_brand" id="img_brand_create">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mt-md-4">
+                                        <label for="name" class="form-label">Brand</label>
+                                        <input id="name" name="name" type="text"
+                                            class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
+                                            required>
+                                        <div class="invalid-feedback" id="name-error"></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="slug" class="form-label">Slug</label>
+                                        <input id="slug" name="slug" type="text"
+                                            class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug') }}"
+                                            required>
+                                        <div class="invalid-feedback" id="slug-error"></div>
+                                    </div>
+
+                                    <div class="justify-content-end form-check form-switch form-check-reverse">
+                                        <label class="me-auto form-check-label" for="status">Status</label>
+                                        <input id="status" class="form-check-input" type="checkbox" name="status"
+                                            value="1" checked>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer border-0 pb-0 mt-3">
+                                <button type="submit" id="submit-create-button" class="btn btn-outline-info btn-sm">Buat
+                                    Brand</button>
+                                <button type="button" id="cancel-create-button"
+                                    class="btn btn-danger btn-sm">Batalkan</button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endcan
+
+    {{-- modal edit --}}
+    @can('edit-brand')
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 mb-n3">
+                        <h6 class="modal-title" id="editModalLabel">Edit Data Brand</h6>
+                        <button type="button" class="btn btn-close rounded-3 me-1" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editBrandForm" method="POST" action="" enctype="multipart/form-data">
+                            @method('put')
+                            @csrf
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="text-dark fw-bold ">Gambar Brand:</p>
+                                    <input type="file" class="filepond" name="img_brand" id="img_brand_edit">
+                                </div>
+
+                                <!-- Kolom Kanan untuk Input Teks -->
+                                <div class="col-md-6">
+                                    <div class="mt-4">
+                                        <label for="edit_name" class="form-label">Nama</label>
+                                        <input id="edit_name" name="name" type="text" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="edit_slug" class="form-label">Slug</label>
+                                        <input id="edit_slug" name="slug" type="text" class="form-control" required>
+                                    </div>
+                                    <div class="justify-content-end form-check form-switch form-check-reverse mt-4">
+                                        <label class="me-auto form-check-label" for="edit_status">Status</label>
+                                        <input id="edit_status" class="form-check-input" type="checkbox" name="status"
+                                            value="1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 pb-0 mt-3">
+                                <button type="submit" class="btn btn-outline-info btn-sm" id="submit-edit-button">Simpan
+                                    Perubahan</button>
+                                <button type="button" id="cancel-edit-button" class="btn btn-danger btn-sm"
+                                    data-bs-dismiss="modal">Batalkan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endcan
+
+    {{-- modal delete --}}
+    @can('delete-brand')
+        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center mt-3 mx-n5">
+                        <i class="bx bx-trash fa-2x text-danger mb-3"></i>
+                        <p class="mb-0">Apakah Anda yakin ingin menghapus Brand ini?</p>
+                        <h6 class="mt-2" id="brandNameToDelete"></h6>
+                        <div class="mt-4">
+                            <form id="deleteBrandForm" method="POST" action="#">
+                                @method('delete')
+                                @csrf
+                                <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
+                                    data-bs-dismiss="modal">Batal</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endcan
 
 @endsection
 @section('page-script')

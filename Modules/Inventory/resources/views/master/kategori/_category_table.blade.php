@@ -79,18 +79,22 @@
                         @endif
                     </td>
                     <td class="text-center d-flex align-items-center justify-content-center gap-2">
-                        <a href="#" class="action-btn text-secondary" data-bs-toggle="modal"
-                            data-bs-target="#editModal"
-                            data-url="{{ route('kategoriproduk.getjson', $kategori->slug) }}"
-                            data-update-url="{{ route('kategoriproduk.update', $kategori->slug) }}"
-                            title="Edit kategori">
-                            <i class="bx bx-edit"></i>
-                        </a>
-                        <a href="#" class="action-btn text-danger" data-bs-toggle="modal"
-                            data-bs-target="#deleteConfirmationModal" data-kategori-slug="{{ $kategori->slug }}"
-                            data-kategori-name="{{ $kategori->name }}" title="Hapus kategori">
-                            <i class="bx bx-trash"></i>
-                        </a>
+                        @can('edit-kategoriproduk')
+                            <a href="#" class="action-btn text-secondary" data-bs-toggle="modal"
+                                data-bs-target="#editModal"
+                                data-url="{{ route('kategoriproduk.getjson', $kategori->slug) }}"
+                                data-update-url="{{ route('kategoriproduk.update', $kategori->slug) }}"
+                                title="Edit kategori">
+                                <i class="bx bx-edit"></i>
+                            </a>
+                        @endcan
+                        @can('delete-kategoriproduk')
+                            <a href="#" class="action-btn text-danger" data-bs-toggle="modal"
+                                data-bs-target="#deleteConfirmationModal" data-kategori-slug="{{ $kategori->slug }}"
+                                data-kategori-name="{{ $kategori->name }}" title="Hapus kategori">
+                                <i class="bx bx-trash"></i>
+                            </a>
+                        @endcan
                     </td>
                 </tr>
             @empty
@@ -187,24 +191,28 @@
                 </div>
 
                 <div class="d-flex justify-content-end gap-3">
-                    <a href="#" class="text-dark fw-bold text-xs d-flex align-items-center gap-1"
-                        data-bs-toggle="modal" data-bs-target="#editModal"
-                        data-url="{{ route('kategoriproduk.getjson', $kategori->slug) }}"
-                        data-update-url="{{ route('kategoriproduk.update', $kategori->slug) }}" title="Edit kategori">
-                        <div
-                            class="avatar avatar-xs d-flex align-items-center justify-content-center bg-label-primary rounded">
-                            <i class="bx bx-edit fs-6"></i>
-                        </div>
-                    </a>
-                    <a href="#" class="text-danger fw-bold text-xs d-flex align-items-center gap-1 delete-btn"
-                        data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal"
-                        data-kategori-slug="{{ $kategori->slug }}" data-kategori-name="{{ $kategori->name }}"
-                        title="Hapus kategori">
-                        <div
-                            class="avatar avatar-xs d-flex align-items-center justify-content-center bg-label-danger rounded">
-                            <i class="bx bx-trash fs-6"></i>
-                        </div>
-                    </a>
+                    @can('edit-kategoriproduk')
+                        <a href="#" class="text-dark fw-bold text-xs d-flex align-items-center gap-1"
+                            data-bs-toggle="modal" data-bs-target="#editModal"
+                            data-url="{{ route('kategoriproduk.getjson', $kategori->slug) }}"
+                            data-update-url="{{ route('kategoriproduk.update', $kategori->slug) }}" title="Edit kategori">
+                            <div
+                                class="avatar avatar-xs d-flex align-items-center justify-content-center bg-label-primary rounded">
+                                <i class="bx bx-edit fs-6"></i>
+                            </div>
+                        </a>
+                    @endcan
+                    @can('delete-kategoriproduk')
+                        <a href="#" class="text-danger fw-bold text-xs d-flex align-items-center gap-1 delete-btn"
+                            data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal"
+                            data-kategori-slug="{{ $kategori->slug }}" data-kategori-name="{{ $kategori->name }}"
+                            title="Hapus kategori">
+                            <div
+                                class="avatar avatar-xs d-flex align-items-center justify-content-center bg-label-danger rounded">
+                                <i class="bx bx-trash fs-6"></i>
+                            </div>
+                        </a>
+                    @endcan
                 </div>
 
             </div>

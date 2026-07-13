@@ -86,10 +86,10 @@
                         <div class="row g-3 align-items-end">
 
                             <div class="col-12 col-md-4">
-                                <label for="search" class="form-label fw-semibold">Pencarian</label>
+                                <label for="filter-search" class="form-label fw-semibold">Pencarian</label>
                                 <div class="input-group">
-                                    <input type="text" id="search" name="search" class="form-control"
-                                        placeholder="Cari kode atau user..." value="{{ request('search') }}">
+                                    <input type="text" id="filter-search" class="form-control"
+                                        placeholder="Cari kode atau user...">
                                 </div>
                             </div>
                             <div class="col-12 col-md-3">
@@ -101,8 +101,8 @@
                             </div>
                             @can('view-toko-gudang')
                                 <div class="col-12 col-md-3">
-                                    <label for="store_id" class="form-label fw-semibold">Toko</label>
-                                    <select name="store_id" id="store_id" class="form-select select2"
+                                    <label for="filter-store" class="form-label fw-semibold">Toko</label>
+                                    <select name="store_id" id="filter-store" class="form-select select2"
                                         data-placeholder="Semua Toko">
                                         <option value="">Semua Toko</option>
                                         @foreach ($stores ?? [] as $store)
@@ -139,103 +139,16 @@
                     </a>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive text-nowrap">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-secondary text-dark">
-                                <tr>
-                                    <th class="">No.</th>
-                                    <th class="text-xs font-weight-bolder py-3 ps-4">Kode Penyesuaian</th>
-                                    <th class="text-xs font-weight-bolder py-3">Tanggal</th>
-                                    <th class="text-xs font-weight-bolder py-3">User</th>
-                                    <th class="text-xs font-weight-bolder text-center py-3">Item</th>
-                                    <th class="text-xs font-weight-bolder text-center py-3" width="10%">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($stocks as $key => $penyesuaian)
-                                    <tr>
-                                        <td class="">{{ ++$key }}</td>
-                                        <td class="ps-4">
-                                            <div class="d-flex flex-column">
-                                                @can('view-toko-gudang')
-                                                    <div class="">
-                                                        <span class="badge bg-label-secondary fs-6">
-                                                            {{ $penyesuaian->store->name_toko ?? 'N/A' }}
-                                                        </span>
-                                                    </div>
-                                                @endcan
-                                                <span
-                                                    class="fw-semibold text-sm">{{ $penyesuaian->kode_penyesuaian }}</span>
-                                            </div>
-                                        </td>
-
-                                        <td>
-                                            <p class="text-sm mb-0">
-                                                {{ $penyesuaian->tanggal_penyesuaian->translatedFormat('d M Y') }},&nbsp;
-                                                {{ $penyesuaian->tanggal_penyesuaian->format('H:i') }} WIB</p>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <span class="avatar avatar-xs me-2">
-                                                    <span class="avatar-initial rounded-circle bg-label-primary">
-                                                        {{ strtoupper(substr($penyesuaian->user->username ?? '?', 0, 1)) }}
-                                                    </span>
-                                                </span>
-                                                <span class="text-sm">{{ $penyesuaian->user->username ?? 'N/A' }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-label-dark rounded-pill">
-                                                {{ $penyesuaian->details_count ?? $penyesuaian->details->count() }} item
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="dropdown">
-                                                <button class="btn p-0" type="button"
-                                                    id="cardOpt{{ $penyesuaian->id }}" data-bs-toggle="dropdown"
-                                                    aria-haspopup="true" aria-expanded="false">
-                                                    <i class="bx bx-dots-vertical-rounded fs-4"></i>
-                                                </button>
-                                                <div class="dropdown-menu dropdown-menu-end"
-                                                    aria-labelledby="cardOpt{{ $penyesuaian->id }}">
-                                                    <a class="dropdown-item text-info"
-                                                        href="{{ route('stok-penyesuaian.show', $penyesuaian->kode_penyesuaian) }}""><i
-                                                            class="bx bx-show me-2"></i> Detail</a>
-
-                                                    @can('delete-stok-penyesuaian')
-                                                        <button type="button" class="dropdown-item text-danger"
-                                                            data-bs-toggle="modal" data-bs-target="#cancelConfirmationModal"
-                                                            data-kode-penyesuaian="{{ $penyesuaian->kode_penyesuaian }}"
-                                                            title="Batalkan">
-                                                            <i class="bx bx-trash"></i> Delete
-                                                        </button>
-                                                    @endcan
-                                                </div>
-                                            </div>
-
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6">
-                                            <div class="d-flex flex-column align-items-center justify-content-center py-4">
-                                                <i class="bx bx-package fs-1 text-muted d-block mb-2"></i>
-                                                <p class="text-sm fw-bold mb-0">Tidak ada riwayat penyesuaian stok
-                                                    ditemukan.
-                                                </p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                    <div id="tableLoadingOverlay"
+                        class="position-absolute top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center"
+                        style="background: rgba(255,255,255,0.6); z-index: 10;">
+                        <div class="spinner-border text-info" role="status">
+                            <span class="visually-hidden">Memuat...</span>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center px-4 py-3">
-                        <p class="text-sm text-muted mb-0">
-                            Menampilkan {{ $stocks->firstItem() ?? 0 }}-{{ $stocks->lastItem() ?? 0 }}
-                            dari {{ $stocks->total() }} data
-                        </p>
-                        {{ $stocks->links() }}
+
+                    <div id="tableContainer">
+                        @include('inventory::inventaris.adjustment._table', ['stocks' => $stocks])
                     </div>
                 </div>
             </div>
@@ -300,10 +213,119 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const dataUrl = "{{ route('stok-penyesuaian.index') }}";
+            const tableContainer = document.getElementById('tableContainer');
+            const loadingOverlay = document.getElementById('tableLoadingOverlay');
+            const filterSearch = document.getElementById('filter-search');
             const filterDateRange = document.getElementById('filter-date-range');
-            const cancelModal = document.getElementById('cancelConfirmationModal');
+            const filterStore = document.getElementById('filter-store');
+            const btnResetFilter = document.getElementById('btn-reset-filter');
 
             let debounceTimer = null;
+            let abortController = null;
+
+            function buildParams(page = 1) {
+                const params = new URLSearchParams();
+                if (filterSearch.value.trim()) params.set('search', filterSearch.value.trim());
+                if (filterStore.value) params.set('store_id', filterStore.value);
+
+                const dateRangeValue = filterDateRange.value;
+
+                if (dateRangeValue.includes(' to ')) {
+                    // Memecah rentang tanggal menjadi dua parameter terpisah
+                    const dates = dateRangeValue.split(' to ');
+                    params.set('start_date', dates[0]);
+                    params.set('end_date', dates[1]);
+                } else if (dateRangeValue) {
+                    // Jika user baru memilih 1 tanggal (klik pertama)
+                    params.set('start_date', dateRangeValue);
+                    params.set('end_date', dateRangeValue);
+                }
+
+                params.set('page', page);
+                return params;
+            }
+
+            async function fetchTable(page = 1) {
+                // Batalkan request sebelumnya kalau masih jalan (hindari race condition)
+                if (abortController) {
+                    abortController.abort();
+                }
+                abortController = new AbortController();
+
+                loadingOverlay.classList.remove('d-none');
+                loadingOverlay.classList.add('d-flex');
+
+                try {
+                    const response = await fetch(`${dataUrl}?${buildParams(page).toString()}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        signal: abortController.signal
+                    });
+
+                    if (!response.ok) throw new Error('Gagal memuat data');
+
+                    const html = await response.text();
+                    tableContainer.innerHTML = html;
+                    attachPaginationHandlers();
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        console.error(error);
+                        window.showToast?.('error', 'Gagal memuat data transfer.');
+                    }
+                } finally {
+                    loadingOverlay.classList.remove('d-flex');
+                    loadingOverlay.classList.add('d-none');
+                }
+            }
+
+            function attachPaginationHandlers() {
+                tableContainer.querySelectorAll('.pagination a[href]').forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const url = new URL(this.href);
+                        const page = url.searchParams.get('page') || 1;
+                        fetchTable(page);
+                        window.scrollTo({
+                            top: tableContainer.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    });
+                });
+            }
+
+            function debouncedFetch() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => fetchTable(1), 400);
+            }
+
+            filterSearch.addEventListener('input', debouncedFetch);
+
+            // KOREKSI 3: Pasang event listener ke elemen 'filterDateRange'
+            filterDateRange.addEventListener('change', () => fetchTable(1));
+
+            // select2 pakai event jQuery, bukan native 'change' DOM biasa
+            $('#filter-store').on('select2:select select2:clear', () =>
+                fetchTable(1));
+
+            btnResetFilter.addEventListener('click', function() {
+                filterSearch.value = '';
+
+                filterDateRange.value = '';
+
+                $('#filter-store').val('').trigger('change');
+                fetchTable(1);
+            });
+
+            attachPaginationHandlers();
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const cancelModal = document.getElementById('cancelConfirmationModal');
 
             if (cancelModal) {
                 cancelModal.addEventListener('show.bs.modal', function(event) {

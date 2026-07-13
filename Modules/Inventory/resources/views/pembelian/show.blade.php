@@ -200,12 +200,14 @@
             <div class="mb-4 mt-5">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold mb-0"><i class="bx bx-history me-1 text-primary"></i> Riwayat Pembayaran</h6>
-                    @if ($pembelian->sisa_hutang > 0 && $pembelian->status_pembayaran !== 'Batal')
-                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#addCicilanModal">
-                            <i class="bx bx-plus me-1"></i> Bayar Cicilan
-                        </button>
-                    @endif
+                    @can('edit-pembelian')
+                        @if ($pembelian->sisa_hutang > 0 && $pembelian->status_pembayaran !== 'Batal')
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#addCicilanModal">
+                                <i class="bx bx-plus me-1"></i> Bayar Cicilan
+                            </button>
+                        @endif
+                    @endcan
                 </div>
 
                 <div class="table-responsive border rounded-3 bg-white">
@@ -317,129 +319,132 @@
 
 
     {{-- Modal: Input Cicilan Baru --}}
-    <div class="modal fade" id="addCicilanModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bx bx-wallet text-success me-2"></i>Form Pembayaran Cicilan
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    @can('edit-pembelian')
+        <div class="modal fade" id="addCicilanModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-bottom">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bx bx-wallet text-success me-2"></i>Form Pembayaran Cicilan
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('pembelian.payment.store', $pembelian->referensi) }}" method="POST"
+                        id="formCicilan">
+                        @csrf
+                        <div class="modal-body">
+                            <div class="row g-2 text-center mb-4">
+                                <div class="col-6">
+                                    <div class="bg-label-secondary rounded p-2">
+                                        <small class="text-muted d-block mb-1">Total Tagihan</small>
+                                        <span class="fw-bold text-dark">Rp
+                                            {{ number_format($pembelian->total_akhir, 0, ',', '.') }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="bg-label-danger rounded p-2">
+                                        <small class="text-danger d-block mb-1">Sisa Hutang</small>
+                                        <span class="fw-bold text-danger">Rp
+                                            {{ number_format($pembelian->sisa_hutang, 0, ',', '.') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label for="tanggal_bayar" class="form-label fw-semibold">Tanggal Bayar <span
+                                            class="text-danger">*</span></label>
+                                    <input type="date" name="tanggal_bayar" id="tanggal_bayar" class="form-control"
+                                        value="{{ date('Y-m-d') }}" required>
+                                </div>
+                                <div class="col-6">
+                                    <label for="tanggal_jatuh_tempo" class="form-label fw-semibold">Tanggal Jatuh Tempo <span
+                                            class="text-danger">*</span></label>
+                                    <input type="date" id="tanggal_jatuh_tempo" class="form-control"
+                                        value="{{ \Carbon\Carbon::parse($pembelian->tanggal_jatuh_tempo)->format('Y-m-d') }}"
+                                        disabled>
+                                </div>
+
+                                {{-- Metode Pembayaran (Radio Button bergaya Card) --}}
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">Metode Pembayaran <span
+                                            class="text-danger">*</span></label>
+                                    <div class="row gx-2">
+                                        <div class="col-6">
+                                            <input type="radio" class="btn-check" name="metode_pembayaran" id="pay-tunai"
+                                                value="TUNAI" checked required>
+                                            <label class="btn btn-outline-primary d-flex w-100 p-2 align-items-center"
+                                                for="pay-tunai">
+                                                <i class="bx bx-money fs-4 me-2"></i>
+                                                <span class="d-block text-sm">Tunai</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="radio" class="btn-check" name="metode_pembayaran"
+                                                id="pay-transfer" value="TRANSFER">
+                                            <label class="btn btn-outline-primary d-flex w-100 p-2 align-items-center"
+                                                for="pay-transfer">
+                                                <i class="bx bx-transfer fs-4 me-2"></i>
+                                                <span class="d-block text-sm">Transfer</span>
+                                            </label>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                {{-- Pilihan Bank (Hanya Muncul Jika Transfer) --}}
+                                <div class="col-12 d-none animate__animated animate__fadeIn" id="modal-bank-container">
+                                    <label for="modal_bank_id" class="form-label fw-semibold">Rekening Tujuan <span
+                                            class="text-danger">*</span></label>
+                                    <select name="bank_id" id="modal_bank_id" class="form-select select2-bank-modal">
+                                        <option value="" disabled selected>Pilih Rekening Bank...</option>
+                                        @foreach ($banks as $bank)
+                                            <option value="{{ $bank->id }}" data-logo="{{ $bank->logo_url }}">
+                                                {{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label for="jumlah_bayar_input" class="form-label fw-semibold">Nominal Jumlah Bayar <span
+                                            class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text fw-bold">Rp</span>
+                                        <input type="text" id="jumlah_bayar_input"
+                                            class="form-control text-end fw-bold fs-5" placeholder="0" required
+                                            autocomplete="off">
+                                        <button type="button" class="btn btn-primary" id="btn-set-lunas"
+                                            title="Bayar Semua Sisa Hutang">Uang Pas</button>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="referensi_pembayaran" class="form-label fw-semibold">Referensi Pembayaran
+                                        (Opsional)</label>
+                                    <input type="text" name="referensi_pembayaran" id="referensi_pembayaran"
+                                        class="form-control" placeholder="Nomor struk, id transaksi transfer, dsb.">
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="modal_catatan" class="form-label fw-semibold">Catatan Tambahan
+                                        (Opsional)</label>
+                                    <textarea name="catatan" id="modal_catatan" class="form-control" rows="2"
+                                        placeholder="Tulis keterangan cicilan di sini..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top pt-3">
+                            <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Tutup</button>
+                            <button type="submit" class="btn btn-success px-4" id="btnSaveCicilan">
+                                <i class="bx bx-check-circle me-1"></i> Simpan Pembayaran
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <form action="{{ route('pembelian.payment.store', $pembelian->referensi) }}" method="POST"
-                    id="formCicilan">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="row g-2 text-center mb-4">
-                            <div class="col-6">
-                                <div class="bg-label-secondary rounded p-2">
-                                    <small class="text-muted d-block mb-1">Total Tagihan</small>
-                                    <span class="fw-bold text-dark">Rp
-                                        {{ number_format($pembelian->total_akhir, 0, ',', '.') }}</span>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="bg-label-danger rounded p-2">
-                                    <small class="text-danger d-block mb-1">Sisa Hutang</small>
-                                    <span class="fw-bold text-danger">Rp
-                                        {{ number_format($pembelian->sisa_hutang, 0, ',', '.') }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <label for="tanggal_bayar" class="form-label fw-semibold">Tanggal Bayar <span
-                                        class="text-danger">*</span></label>
-                                <input type="date" name="tanggal_bayar" id="tanggal_bayar" class="form-control"
-                                    value="{{ date('Y-m-d') }}" required>
-                            </div>
-                            <div class="col-6">
-                                <label for="tanggal_jatuh_tempo" class="form-label fw-semibold">Tanggal Jatuh Tempo <span
-                                        class="text-danger">*</span></label>
-                                <input type="date" id="tanggal_jatuh_tempo" class="form-control"
-                                    value="{{ \Carbon\Carbon::parse($pembelian->tanggal_jatuh_tempo)->format('Y-m-d') }}"
-                                    disabled>
-                            </div>
-
-                            {{-- Metode Pembayaran (Radio Button bergaya Card) --}}
-                            <div class="col-12">
-                                <label class="form-label fw-semibold">Metode Pembayaran <span
-                                        class="text-danger">*</span></label>
-                                <div class="row gx-2">
-                                    <div class="col-6">
-                                        <input type="radio" class="btn-check" name="metode_pembayaran" id="pay-tunai"
-                                            value="TUNAI" checked required>
-                                        <label class="btn btn-outline-primary d-flex w-100 p-2 align-items-center"
-                                            for="pay-tunai">
-                                            <i class="bx bx-money fs-4 me-2"></i>
-                                            <span class="d-block text-sm">Tunai</span>
-                                        </label>
-                                    </div>
-                                    <div class="col-6">
-                                        <input type="radio" class="btn-check" name="metode_pembayaran"
-                                            id="pay-transfer" value="TRANSFER">
-                                        <label class="btn btn-outline-primary d-flex w-100 p-2 align-items-center"
-                                            for="pay-transfer">
-                                            <i class="bx bx-transfer fs-4 me-2"></i>
-                                            <span class="d-block text-sm">Transfer</span>
-                                        </label>
-                                    </div>
-
-                                </div>
-                            </div>
-
-                            {{-- Pilihan Bank (Hanya Muncul Jika Transfer) --}}
-                            <div class="col-12 d-none animate__animated animate__fadeIn" id="modal-bank-container">
-                                <label for="modal_bank_id" class="form-label fw-semibold">Rekening Tujuan <span
-                                        class="text-danger">*</span></label>
-                                <select name="bank_id" id="modal_bank_id" class="form-select select2-bank-modal">
-                                    <option value="" disabled selected>Pilih Rekening Bank...</option>
-                                    @foreach ($banks as $bank)
-                                        <option value="{{ $bank->id }}" data-logo="{{ $bank->logo_url }}">
-                                            {{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label for="jumlah_bayar_input" class="form-label fw-semibold">Nominal Jumlah Bayar <span
-                                        class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text fw-bold">Rp</span>
-                                    <input type="text" id="jumlah_bayar_input"
-                                        class="form-control text-end fw-bold fs-5" placeholder="0" required
-                                        autocomplete="off">
-                                    <button type="button" class="btn btn-primary" id="btn-set-lunas"
-                                        title="Bayar Semua Sisa Hutang">Uang Pas</button>
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <label for="referensi_pembayaran" class="form-label fw-semibold">Referensi Pembayaran
-                                    (Opsional)</label>
-                                <input type="text" name="referensi_pembayaran" id="referensi_pembayaran"
-                                    class="form-control" placeholder="Nomor struk, id transaksi transfer, dsb.">
-                            </div>
-
-                            <div class="col-12">
-                                <label for="modal_catatan" class="form-label fw-semibold">Catatan Tambahan
-                                    (Opsional)</label>
-                                <textarea name="catatan" id="modal_catatan" class="form-control" rows="2"
-                                    placeholder="Tulis keterangan cicilan di sini..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-top pt-3">
-                        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Tutup</button>
-                        <button type="submit" class="btn btn-success px-4" id="btnSaveCicilan">
-                            <i class="bx bx-check-circle me-1"></i> Simpan Pembayaran
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
-    </div>
+    @endcan
+
 @endsection
 @section('page-script')
     <script type="module">

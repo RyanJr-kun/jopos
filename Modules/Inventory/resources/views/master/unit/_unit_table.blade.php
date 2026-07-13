@@ -17,7 +17,7 @@
                         {{ ++$key }}
                     <td>
                         <p>{{ $unit->name }}</p>
-                        
+
                     </td>
                     <td>
                         <p>{{ $unit->singkat }}</p>
@@ -34,16 +34,20 @@
                     </td>
 
                     <td class="align-middle">
-                        <a href="#" class="text-dark fw-bold px-3 text-xs" data-bs-toggle="modal"
-                            data-bs-target="#editModal" data-url="{{ route('unit.getjson', $unit->slug) }}"
-                            data-update-url="{{ route('unit.update', $unit->slug) }}" title="Edit Satuan">
-                            <i class="bx bx-edit text-dark text-sm opacity-10"></i>
-                        </a>
-                        <a href="#" class="text-dark delete-btn" data-bs-toggle="modal"
-                            data-bs-target="#deleteConfirmationModal" data-unit-slug="{{ $unit->slug }}"
-                            data-unit-name="{{ $unit->name }}" title="Hapus Satuan">
-                            <i class="bx bx-trash"></i>
-                        </a>
+                        @can('edit-unit')
+                            <a href="#" class="text-dark fw-bold px-3 text-xs" data-bs-toggle="modal"
+                                data-bs-target="#editModal" data-url="{{ route('unit.getjson', $unit->slug) }}"
+                                data-update-url="{{ route('unit.update', $unit->slug) }}" title="Edit Satuan">
+                                <i class="bx bx-edit text-dark text-sm opacity-10"></i>
+                            </a>
+                        @endcan
+                        @can('delete-unit')
+                            <a href="#" class="text-dark delete-btn" data-bs-toggle="modal"
+                                data-bs-target="#deleteConfirmationModal" data-unit-slug="{{ $unit->slug }}"
+                                data-unit-name="{{ $unit->name }}" title="Hapus Satuan">
+                                <i class="bx bx-trash"></i>
+                            </a>
+                        @endcan
                     </td>
                 </tr>
             @empty

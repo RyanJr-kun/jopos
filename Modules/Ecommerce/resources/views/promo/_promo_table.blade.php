@@ -106,13 +106,11 @@
                                 <i class="bx bx-dots-vertical-rounded"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                @can('view-promo')
-                                    <li>
-                                        <a class="dropdown-item text-sm py-2" href="{{ route('promo.show', $promo->id) }}">
-                                            <i class="bx bx-show me-2 text-info"></i>Lihat Detail
-                                        </a>
-                                    </li>
-                                @endcan
+                                <li>
+                                    <a class="dropdown-item text-sm py-2" href="{{ route('promo.show', $promo->id) }}">
+                                        <i class="bx bx-show me-2 text-info"></i>Lihat Detail
+                                    </a>
+                                </li>
                                 @can('edit-promo')
                                     <li>
                                         <a class="dropdown-item text-sm py-2" href="{{ route('promo.edit', $promo->id) }}">

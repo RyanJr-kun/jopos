@@ -52,7 +52,7 @@
                         </div>
                         <div class="col-4 col-md-3 col-lg-2">
                             <label for="adjustment-category" class="form-label fw-semibold">Kategori</label>
-                            <select id="adjustment-category" class="form-select">
+                            <select id="adjustment-category" class="form-select select2" data-placeholder="Pilih Kategori">
                                 @foreach ($types as $key => $label)
                                     <option value="{{ $key }}">{{ $label }}</option>
                                 @endforeach
@@ -60,7 +60,7 @@
                         </div>
                         <div class="col-4 col-md-3 col-lg-2">
                             <label for="adjustment-arah" class="form-label fw-semibold">Arah</label>
-                            <select id="adjustment-arah" class="form-select">
+                            <select id="adjustment-arah" class="form-select select2" data-placeholder="Pilih Arah">
                                 <option value="in">Masuk</option>
                                 <option value="out">Keluar</option>
                             </select>

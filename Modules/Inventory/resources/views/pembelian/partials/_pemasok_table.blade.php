@@ -54,17 +54,20 @@
             ">
                                 <i class="bx bx-show"></i>
                             </button>
-
-                            <a href="#" class="action-btn text-secondary" data-bs-toggle="modal"
-                                data-bs-target="#editModal" data-url="{{ route('pemasok.getjson', $pemasok->id) }}"
-                                data-update-url="{{ route('pemasok.update', $pemasok->id) }}" title="Edit Supplier">
-                                <i class="bx bx-edit"></i>
-                            </a>
-                            <a href="#" class="action-btn text-danger" data-bs-toggle="modal"
-                                data-bs-target="#deleteConfirmationModal" data-pemasok-id="{{ $pemasok->id }}"
-                                data-pemasok-name="{{ $pemasok->name }}" title="Hapus Supplier">
-                                <i class="bx bx-trash"></i>
-                            </a>
+                            @can('edit-pemasok')
+                                <a href="#" class="action-btn text-secondary" data-bs-toggle="modal"
+                                    data-bs-target="#editModal" data-url="{{ route('pemasok.getjson', $pemasok->id) }}"
+                                    data-update-url="{{ route('pemasok.update', $pemasok->id) }}" title="Edit Supplier">
+                                    <i class="bx bx-edit"></i>
+                                </a>
+                            @endcan
+                            @can('delete-pemasok')
+                                <a href="#" class="action-btn text-danger" data-bs-toggle="modal"
+                                    data-bs-target="#deleteConfirmationModal" data-pemasok-id="{{ $pemasok->id }}"
+                                    data-pemasok-name="{{ $pemasok->name }}" title="Hapus Supplier">
+                                    <i class="bx bx-trash"></i>
+                                </a>
+                            @endcan
                         </td>
                     </tr>
                 @empty
@@ -127,16 +130,20 @@
                                 ">
                                 <i class="bx bx-show"></i>
                             </button>
-                            <a href="#" class="action-btn text-secondary" data-bs-toggle="modal"
-                                data-bs-target="#editModal" data-url="{{ route('pemasok.getjson', $pemasok->id) }}"
-                                data-update-url="{{ route('pemasok.update', $pemasok->id) }}" title="Edit Supplier">
-                                <i class="bx bx-edit"></i>
-                            </a>
-                            <a href="#" class="action-btn text-danger" data-bs-toggle="modal"
-                                data-bs-target="#deleteConfirmationModal" data-pemasok-id="{{ $pemasok->id }}"
-                                data-pemasok-name="{{ $pemasok->name }}" title="Hapus Supplier">
-                                <i class="bx bx-trash"></i>
-                            </a>
+                            @can('edit-pemasok')
+                                <a href="#" class="action-btn text-secondary" data-bs-toggle="modal"
+                                    data-bs-target="#editModal" data-url="{{ route('pemasok.getjson', $pemasok->id) }}"
+                                    data-update-url="{{ route('pemasok.update', $pemasok->id) }}" title="Edit Supplier">
+                                    <i class="bx bx-edit"></i>
+                                </a>
+                            @endcan
+                            @can('delete-pemasok')
+                                <a href="#" class="action-btn text-danger" data-bs-toggle="modal"
+                                    data-bs-target="#deleteConfirmationModal" data-pemasok-id="{{ $pemasok->id }}"
+                                    data-pemasok-name="{{ $pemasok->name }}" title="Hapus Supplier">
+                                    <i class="bx bx-trash"></i>
+                                </a>
+                            @endcan
                         </div>
                     </div>
                 </div>
