@@ -112,6 +112,7 @@
                                 <th class="text-end text-xs fw-bold py-3" width="15%">Harga Beli</th>
                                 <th class="text-end text-xs fw-bold py-3" width="15%">Diskon</th>
                                 <th class="text-end text-xs fw-bold py-3" width="15%">Subtotal</th>
+                                <th class=""></th>
                             </tr>
                         </thead>
                         <tbody class="table-border-bottom-0">
@@ -138,6 +139,15 @@
                                     </td>
                                     <td class="text-end text-sm fw-semibold">Rp
                                         {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
+                                    <td class="text-center text-sm">
+                                        @if ($detail->produk->wajib_seri ?? false)
+                                            <a href="{{ route('serial-number.index', $detail->produk->slug) }}?purchase_id={{ $pembelian->id }}@if ($detail->product_variant_id) &variant_id={{ $detail->product_variant_id }} @endif"
+                                                class="btn btn-xs btn-outline-primary" data-bs-toggle="tooltip"
+                                                title="Daftarkan Nomor Seri">
+                                                <i class="bx bx-barcode"></i>
+                                            </a>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

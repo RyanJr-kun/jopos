@@ -15,6 +15,7 @@
         <div class="card-body p-4">
             <form id="addMultipleSerialsForm" onsubmit="return false;">
                 @csrf
+                <input type="hidden" name="purchase_id" id="selected_purchase_id" value="{{ $purchaseId }}">
                 <input type="hidden" name="product_id" id="selected_product_id">
                 <input type="hidden" name="product_variant_id" id="selected_variant_id">
                 <div class="row g-3 align-items-end">
@@ -105,8 +106,8 @@
                     </div>
                     <div class="col-md-3">
                         <label for="product_id_filter" class="form-label fw-medium">Filter Produk</label>
-                        <select id="product_id_filter" name="product_id" class="form-select form-select-sm"
-                            style="width:100%;">
+                        <select id="product_id_filter" name="product_id" class="form-select select2 "
+                            data-placeholder="pilih produk" style="width:100%;">
                             <option value="">Semua Produk</option>
                             @foreach ($products as $produk)
                                 <option value="{{ $produk->id }}" @selected(request('product_id') == $produk->id)>
@@ -117,7 +118,8 @@
                     </div>
                     <div class="col-md-2">
                         <label for="status_filter" class="form-label fw-medium">Filter Status</label>
-                        <select id="status_filter" name="status" class="form-select select2">
+                        <select id="status_filter" name="status" class="form-select select2"
+                            data-placeholder="pilih status">
                             <option value="">Semua Status</option>
                             <option value="Tersedia" @selected(request('status') == 'Tersedia')>Tersedia</option>
                             <option value="Terjual" @selected(request('status') == 'Terjual')>Terjual</option>
@@ -173,7 +175,8 @@
                                     @php
                                         $variantLabel = $sn->variant->options->pluck('value')->implode(' / ');
                                     @endphp
-                                    <span class="badge bg-label-info small">{{ $variantLabel ?: $sn->variant->sku }}</span>
+                                    <span
+                                        class="badge bg-label-info small">{{ $variantLabel ?: $sn->variant->sku }}</span>
                                 @else
                                     <span class="text-muted small">-</span>
                                 @endif
@@ -206,20 +209,16 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                @can('edit-stok-opname')
-                                    <button type="button" class="action-btn text-secondary btn-edit me-1"
-                                        data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
-                                        data-status="{{ $sn->status }}" title="Edit SN" data-bs-toggle="tooltip">
-                                        <i class="bx bx-edit-alt"></i>
-                                    </button>
-                                @endcan
-                                @can('delete-stok-opname')
-                                    <button type="button" class="action-btn text-danger btn-delete"
-                                        data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}" title="Hapus SN"
-                                        data-bs-toggle="tooltip">
-                                        <i class="bx bx-trash"></i>
-                                    </button>
-                                @endcan
+                                <button type="button" class="action-btn text-secondary btn-edit me-1"
+                                    data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
+                                    data-status="{{ $sn->status }}" title="Edit SN" data-bs-toggle="tooltip">
+                                    <i class="bx bx-edit-alt"></i>
+                                </button>
+                                <button type="button" class="action-btn text-danger btn-delete"
+                                    data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}" title="Hapus SN"
+                                    data-bs-toggle="tooltip">
+                                    <i class="bx bx-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     @empty
@@ -239,81 +238,77 @@
     </div>
 
     {{-- Modal Edit --}}
-    @can('edit-stok-opname')
-        <div class="modal fade" id="editSerialModal" tabindex="-1" aria-labelledby="editSerialModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content rounded-3">
-                    <div class="modal-header border-bottom pb-3">
-                        <h6 class="modal-title fw-semibold" id="editSerialModalLabel">
-                            <i class="bx bx-edit me-2 text-primary"></i>Edit Nomor Seri
-                        </h6>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body pt-3">
-                        <form id="editSerialForm" method="post">
-                            @method('put')
-                            @csrf
-                            <div class="mb-3">
-                                <label for="edit_serial_number" class="form-label fw-medium">Nomor Seri</label>
-                                <input id="edit_serial_number" name="serial_number" type="text" class="form-control"
-                                    required>
-                                <div class="invalid-feedback" id="edit_serial_number-error"></div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="edit_status" class="form-label fw-medium">Status</label>
-                                <select id="edit_status" name="status" class="form-select select2"
-                                    data-placeholder="pilih status ..." required>
-                                    <option value="" class=""></option>
-                                    @foreach ($status as $s)
-                                        <option value="{{ $s }}" @selected(old('status_barang') == $s)>
-                                            {{ $s }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="form-text text-warning"><i class="bx bx-info-circle me-1"></i>Status "Terjual"
-                                    diatur otomatis oleh sistem.</div>
-                            </div>
-                            <div class="d-flex justify-content-end gap-2 mt-4">
-                                <button type="button" class="btn btn-outline-secondary"
-                                    data-bs-dismiss="modal">Batal</button>
-                                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                            </div>
-                        </form>
-                    </div>
+    <div class="modal fade" id="editSerialModal" tabindex="-1" aria-labelledby="editSerialModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-3">
+                <div class="modal-header border-bottom pb-3">
+                    <h6 class="modal-title fw-semibold" id="editSerialModalLabel">
+                        <i class="bx bx-edit me-2 text-primary"></i>Edit Nomor Seri
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <form id="editSerialForm" method="post">
+                        @method('put')
+                        @csrf
+                        <div class="mb-3">
+                            <label for="edit_serial_number" class="form-label fw-medium">Nomor Seri</label>
+                            <input id="edit_serial_number" name="serial_number" type="text" class="form-control"
+                                required>
+                            <div class="invalid-feedback" id="edit_serial_number-error"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_status" class="form-label fw-medium">Status</label>
+                            <select id="edit_status" name="status" class="form-select select2"
+                                data-placeholder="pilih status ..." required>
+                                <option value="" class=""></option>
+                                @foreach ($status as $s)
+                                    <option value="{{ $s }}" @selected(old('status_barang') == $s)>
+                                        {{ $s }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text text-warning"><i class="bx bx-info-circle me-1"></i>Status "Terjual"
+                                diatur otomatis oleh sistem.</div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-outline-secondary"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    @endcan
+    </div>
 
     {{-- Modal Delete --}}
-    @can('delete-stok-opname')
-        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-sm">
-                <div class="modal-content rounded-3 text-center">
-                    <div class="modal-body py-4 px-4">
-                        <div class="mb-3">
-                            <span class="avatar avatar-lg rounded-circle bg-label-danger">
-                                <i class="bx bx-trash fs-4"></i>
-                            </span>
-                        </div>
-                        <h6 class="fw-semibold mb-1">Hapus Nomor Seri?</h6>
-                        <p class="text-muted small mb-3">Tindakan ini tidak dapat dibatalkan.</p>
-                        <p class="fw-bold text-dark mb-4" id="serialNumberToDelete"></p>
-                        <form id="deleteSerialForm" method="POST" action="#">
-                            @method('delete')
-                            @csrf
-                            <div class="d-flex gap-2 justify-content-center">
-                                <button type="button" class="btn btn-outline-secondary btn-sm"
-                                    data-bs-dismiss="modal">Batal</button>
-                                <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
-                            </div>
-                        </form>
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-3 text-center">
+                <div class="modal-body py-4 px-4">
+                    <div class="mb-3">
+                        <span class="avatar avatar-lg rounded-circle bg-label-danger">
+                            <i class="bx bx-trash fs-4"></i>
+                        </span>
                     </div>
+                    <h6 class="fw-semibold mb-1">Hapus Nomor Seri?</h6>
+                    <p class="text-muted small mb-3">Tindakan ini tidak dapat dibatalkan.</p>
+                    <p class="fw-bold text-dark mb-4" id="serialNumberToDelete"></p>
+                    <form id="deleteSerialForm" method="POST" action="#">
+                        @method('delete')
+                        @csrf
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    @endcan
+    </div>
 @endsection
 
 @section('page-script')
@@ -334,6 +329,7 @@
             }
         };
         initSelect2();
+
         $(document).ready(function() {
             setTimeout(function() {
                 // --- INISIALISASI GLOBAL ---
@@ -593,6 +589,7 @@
                         method: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',
+                            purchase_id: $('#selected_purchase_id').val() || null,
                             product_id: $('#selected_product_id').val(),
                             product_variant_id: $('#selected_variant_id').val() || null,
                             serial_numbers: Array.from(tempSerials)
