@@ -146,8 +146,17 @@
                                                         <span
                                                             class="text-xs text-muted">{{ $detail->variant->name ?? '' }}</span>
                                                     @endif
-                                                    <p class="text-xs text-secondary mb-0">
-                                                        {{ $detail->produk->sku ?? 'N/A' }}</p>
+
+                                                    {{-- TAMPILAN NOMOR SERI --}}
+                                                    @if ($detail->serialNumbers->isNotEmpty())
+                                                        <div class="mt-1">
+                                                            <small class="text-info fw-medium">
+                                                                <i class="bx bx-barcode text-xs me-1"></i>
+                                                                SN:
+                                                                {{ $detail->serialNumbers->pluck('nomor_seri')->implode(', ') }}
+                                                            </small>
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </td>

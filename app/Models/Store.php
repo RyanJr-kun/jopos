@@ -10,126 +10,110 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Store extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    /**
-     * Nama tabel yang dikaitkan dengan model.
-     *
-     * @var string
-     */
-    protected $table = 'stores';
+  /**
+   * Nama tabel yang dikaitkan dengan model.
+   *
+   * @var string
+   */
+  protected $table = 'stores';
 
-    /**
-     * Atribut yang dapat diisi (mass assignable).
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'name_toko',
-        'type',
-        'provinsi',
-        'kabupaten_kota',
-        'kecamatan',
-        'desa',
-        'alamat',
-        'map_url',
-        'latitude',
-        'longitude',
-        'telepon',
-        'email',
-        'logo',
-        'pic_id',
-        'is_active',
-    ];
+  /**
+   * Atribut yang dapat diisi (mass assignable).
+   *
+   * @var array
+   */
+  protected $fillable = ['name_toko', 'type', 'provinsi', 'kabupaten_kota', 'kecamatan', 'desa', 'alamat', 'map_url', 'latitude', 'longitude', 'telepon', 'email', 'logo', 'pic_id', 'is_active'];
 
-    /**
-     * Casting atribut ke tipe data tertentu.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'is_active' => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
+  /**
+   * Casting atribut ke tipe data tertentu.
+   *
+   * @var array
+   */
+  protected $casts = [
+    'is_active' => 'boolean',
+    'created_at' => 'datetime',
+    'updated_at' => 'datetime',
+  ];
 
-    // =========================================================================
-    // RELASI (RELATIONSHIPS)
-    // =========================================================================
+  // =========================================================================
+  // RELASI (RELATIONSHIPS)
+  // =========================================================================
 
-    /**
-     * Relasi ke Kepala Toko / PIC (One-to-One / BelongsTo).
-     * Mengambil data user yang bertanggung jawab atas lokasi ini.
-     */
-    public function pic(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'pic_id');
-    }
+  /**
+   * Relasi ke Kepala Toko / PIC (One-to-One / BelongsTo).
+   * Mengambil data user yang bertanggung jawab atas lokasi ini.
+   */
+  public function pic(): BelongsTo
+  {
+    return $this->belongsTo(User::class, 'pic_id');
+  }
 
-    /**
-     * Relasi ke Staff / Karyawan (One-to-Many).
-     * Mengambil semua user yang ditempatkan di lokasi ini.
-     */
-    public function employees()
-    {
-        return $this->hasMany(EmployeeProfile::class, 'store_id');
-    }
+  /**
+   * Relasi ke Staff / Karyawan (One-to-Many).
+   * Mengambil semua user yang ditempatkan di lokasi ini.
+   */
+  public function employees()
+  {
+    return $this->hasMany(EmployeeProfile::class, 'store_id');
+  }
 
-    // =========================================================================
-    // SCOPES (QUERY FILTERS)
-    // =========================================================================
+  public function user()
+  {
+    return $this->hasMany(User::class, 'user_id');
+  }
 
-    /**
-     * Filter hanya lokasi tipe 'toko'.
-     */
-    public function scopeToko($query)
-    {
-        return $query->where('type', 'toko');
-    }
+  // =========================================================================
+  // SCOPES (QUERY FILTERS)
+  // =========================================================================
 
-    /**
-     * Filter hanya lokasi tipe 'gudang'.
-     */
-    public function scopeGudang($query)
-    {
-        return $query->where('type', 'gudang');
-    }
+  /**
+   * Filter hanya lokasi tipe 'toko'.
+   */
+  public function scopeToko($query)
+  {
+    return $query->where('type', 'toko');
+  }
 
-    /**
-     * Filter hanya lokasi yang berstatus aktif.
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
+  /**
+   * Filter hanya lokasi tipe 'gudang'.
+   */
+  public function scopeGudang($query)
+  {
+    return $query->where('type', 'gudang');
+  }
 
-    // =========================================================================
-    // ACCESSORS (VIRTUAL ATTRIBUTES)
-    // =========================================================================
+  /**
+   * Filter hanya lokasi yang berstatus aktif.
+   */
+  public function scopeActive($query)
+  {
+    return $query->where('is_active', true);
+  }
 
-    /**
-     * Mendapatkan alamat lengkap dalam satu string (kecuali alamat detail).
-     */
-    public function getFullRegionAttribute(): string
-    {
-        return "{$this->desa}, {$this->kecamatan}, {$this->kabupaten_kota}, {$this->provinsi}";
-    }
+  // =========================================================================
+  // ACCESSORS (VIRTUAL ATTRIBUTES)
+  // =========================================================================
 
-    /**
-     * Cek apakah lokasi memiliki logo, jika tidak gunakan placeholder.
-     */
-    public function getLogoPathAttribute(): string
-    {
-        return $this->logo
-            ? asset('storage/' . $this->logo)
-            : asset('assets/img/produk.png');
-    } 
+  /**
+   * Mendapatkan alamat lengkap dalam satu string (kecuali alamat detail).
+   */
+  public function getFullRegionAttribute(): string
+  {
+    return "{$this->desa}, {$this->kecamatan}, {$this->kabupaten_kota}, {$this->provinsi}";
+  }
 
-    public static function getTypes()
-    {
-        return [
-            'toko',
-            'gudang'
-        ];
-    }
+  /**
+   * Cek apakah lokasi memiliki logo, jika tidak gunakan placeholder.
+   */
+  public function getLogoPathAttribute(): string
+  {
+    return $this->logo ? asset('storage/' . $this->logo) : asset('assets/img/produk.png');
+  }
+
+  public static function getTypes()
+  {
+    return ['toko', 'gudang'];
+  }
 }

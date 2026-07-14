@@ -16,7 +16,7 @@ class SaleItem extends Model
 
   public function penjualan(): BelongsTo
   {
-    return $this->belongsTo(Sale::class);
+    return $this->belongsTo(Sale::class, 'sale_id');
   }
 
   public function product(): BelongsTo
@@ -25,9 +25,9 @@ class SaleItem extends Model
   }
 
   public function pajak(): BelongsTo
-    {
-        return $this->belongsTo(Taxe::class, 'taxe_id');
-    }
+  {
+    return $this->belongsTo(Taxe::class, 'taxe_id');
+  }
 
   public function serialNumbers(): HasMany
   {

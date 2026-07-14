@@ -11,6 +11,7 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Models\Product;
+use Modules\Inventory\Models\SerialNumber;
 use Modules\Inventory\Models\StockAdjustment;
 use Modules\Inventory\Models\StockMovement;
 use Modules\Inventory\Models\StockTransfer;
@@ -60,14 +61,14 @@ class StockTransferController extends Controller implements HasMiddleware
     $user = Auth::user();
 
     // Toko asal: kalau bukan view-toko-gudang, terkunci ke toko sendiri
-    $storesAsal = $user->can('view-toko-gudang') ? Store::orderBy('name_toko')->get() : Store::where('id', $user->store_id)->get();
+    $storesAsal = $user->can('view-toko-gudang') ? Store::orderBy('name_toko')->get() : Store::where('id', $user->employee->store_id)->get();
 
     $storesTujuan = Store::orderBy('name_toko')->get();
 
     return view('inventory::inventaris.transfer.create', [
       'storesAsal' => $storesAsal,
       'storesTujuan' => $storesTujuan,
-      'defaultStoreAsalId' => $user->can('view-toko-gudang') ? null : $user->store_id,
+      'defaultStoreAsalId' => $user->can('view-toko-gudang') ? null : $user->employee->store_id,
     ]);
   }
 
@@ -84,11 +85,13 @@ class StockTransferController extends Controller implements HasMiddleware
       'items.*.product_id' => 'required|exists:products,id',
       'items.*.product_variant_id' => 'nullable|exists:product_variants,id',
       'items.*.qty_kirim' => 'required|integer|min:1',
+      'items.*.serial_numbers' => 'nullable|array',
+      'items.*.serial_numbers.*' => 'exists:serial_numbers,nomor_seri',
     ]);
 
     $user = Auth::user();
 
-    if (!$user->can('view-toko-gudang') && (int) $validated['store_asal_id'] !== (int) $user->store_id) {
+    if (!$user->can('view-toko-gudang') && (int) $validated['store_asal_id'] !== (int) $user->employee->store_id) {
       return back()->withInput()->with('error', 'Anda hanya dapat mengirim transfer dari toko Anda sendiri.');
     }
 
@@ -144,11 +147,29 @@ class StockTransferController extends Controller implements HasMiddleware
     $stokSetelah = $stokSebelum - $qtyKirim;
     $stock->update(['qty' => $stokSetelah]);
 
-    $transfer->details()->create([
+    $transferDetail = $transfer->details()->create([
       'product_id' => $itemData['product_id'],
       'product_variant_id' => $itemData['product_variant_id'] ?? null,
       'qty_kirim' => $qtyKirim,
     ]);
+
+    // ==== TAMBAHAN UNTUK NOMOR SERI ====
+    if (!empty($itemData['serial_numbers'])) {
+      // Ambil ID dari nomor seri yang valid
+      $snIds = SerialNumber::where('product_id', $itemData['product_id'])->where('store_id', $transfer->store_asal_id)->whereIn('nomor_seri', $itemData['serial_numbers'])->pluck('id')->toArray();
+
+      if (count($snIds) !== count($itemData['serial_numbers'])) {
+        throw new \Exception('Ada nomor seri yang tidak valid atau tidak tersedia di toko asal.');
+      }
+
+      // Simpan ke tabel pivot
+      $transferDetail->serialNumbers()->attach($snIds);
+
+      // Ubah status SN menjadi Dalam Perjalanan
+      SerialNumber::whereIn('id', $snIds)->update([
+        'status' => 'Dalam Perjalanan', // Atau status khusus lain seperti 'Transfer Out'
+      ]);
+    }
 
     StockMovement::create([
       'store_id' => $transfer->store_asal_id,
@@ -175,22 +196,23 @@ class StockTransferController extends Controller implements HasMiddleware
     // IDOR guard: staff non 'view-toko-gudang' cuma boleh liat transfer yang
     // melibatkan toko dia sendiri, baik sebagai asal maupun tujuan.
     if (!$user->can('view-toko-gudang')) {
-      $isAsal = (int) $stock_transfer->store_asal_id === (int) $user->store_id;
-      $isTujuan = (int) $stock_transfer->store_tujuan_id === (int) $user->store_id;
+      $isAsal = (int) $stock_transfer->store_asal_id === (int) $user->employee->store_id;
+      $isTujuan = (int) $stock_transfer->store_tujuan_id === (int) $user->employee->store_id;
 
       if (!$isAsal && !$isTujuan) {
         abort(403, 'Anda tidak memiliki akses ke transfer stok ini.');
       }
     }
 
-    $stock_transfer->load(['storeAsal', 'storeTujuan', 'userKirim', 'userTerima', 'details.produk.unit', 'details.variant']);
+    $stock_transfer->load(['storeAsal', 'storeTujuan', 'userKirim', 'userTerima', 'details.produk.unit', 'details.variant', 'details.serialNumbers']);
 
     return view('inventory::inventaris.transfer.show', [
       'transfer' => $stock_transfer,
       'canApprove' =>
         $user->can('create-stok-transfer') &&
         $stock_transfer->status === StockTransfer::STATUS_DIKIRIM &&
-        (!$user->can('view-toko-gudang') ? (int) $stock_transfer->store_tujuan_id === (int) $user->store_id : true),
+        // Ubah baris di bawah ini agar wajib mengecek store_id tujuan
+        (int) $stock_transfer->store_tujuan_id === (int) optional($user->employee)->store_id,
     ]);
   }
 
@@ -203,7 +225,7 @@ class StockTransferController extends Controller implements HasMiddleware
   {
     $user = Auth::user();
 
-    if (!$user->can('view-toko-gudang') && (int) $stock_transfer->store_tujuan_id !== (int) $user->store_id) {
+    if (!$user->can('view-toko-gudang') && (int) $stock_transfer->store_tujuan_id !== (int) $user->employee->store_id) {
       abort(403, 'Hanya toko tujuan yang dapat mengonfirmasi penerimaan transfer ini.');
     }
 
@@ -297,6 +319,14 @@ class StockTransferController extends Controller implements HasMiddleware
           }
         }
 
+        $snIdsToTransfer = $detail->serialNumbers()->pluck('serial_numbers.id')->toArray();
+
+        if (!empty($snIdsToTransfer)) {
+          SerialNumber::whereIn('id', $snIdsToTransfer)->update([
+            'store_id' => $storeTujuanId,
+            'status' => 'Tersedia',
+          ]);
+        }
         // 3. Eksekusi Batch Insert StockMovement (1 query untuk banyak baris)
         if (!empty($movements)) {
           StockMovement::insert($movements);
@@ -368,7 +398,7 @@ class StockTransferController extends Controller implements HasMiddleware
   {
     $user = Auth::user();
 
-    if (!$user->can('view-toko-gudang') && (int) $stock_transfer->store_tujuan_id !== (int) $user->store_id) {
+    if (!$user->can('view-toko-gudang') && (int) $stock_transfer->store_tujuan_id !== (int) $user->employee->store_id) {
       abort(403, 'Hanya toko tujuan yang dapat menolak transfer ini.');
     }
 
@@ -431,6 +461,14 @@ class StockTransferController extends Controller implements HasMiddleware
           ];
         }
 
+        $snIdsToRevert = $detail->serialNumbers()->pluck('serial_numbers.id')->toArray();
+
+        if (!empty($snIdsToRevert)) {
+          SerialNumber::whereIn('id', $snIdsToRevert)->update([
+            'status' => 'Tersedia',
+          ]);
+        }
+
         // Batch Insert pergerakan stok
         if (!empty($movements)) {
           StockMovement::insert($movements);
@@ -466,7 +504,7 @@ class StockTransferController extends Controller implements HasMiddleware
     // IDOR guard: staff non 'view-toko-gudang' cuma boleh liat transfer
     // yang melibatkan store dia sendiri (baik sebagai asal maupun tujuan).
     if (!$user->can('view-toko-gudang')) {
-      $query->forStore($user->store_id);
+      $query->forStore($user->employee->store_id);
     } elseif ($request->filled('store_id')) {
       $query->forStore($request->store_id);
     }

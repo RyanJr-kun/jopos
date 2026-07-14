@@ -622,7 +622,13 @@ class ProductController extends Controller implements HasMiddleware
   public function getData(Request $request)
   {
     $search = $request->query('search');
-    $storeId = Auth::user()->employee->store_id ?? null;
+    $user = Auth::user();
+
+    $storeId = $user->employee->store_id ?? null;
+
+    if ($request->filled('store_id') && $user->can('view-toko-gudang')) {
+      $storeId = $request->query('store_id');
+    }
 
     $query = Product::with([
       'pajak',
@@ -741,6 +747,7 @@ class ProductController extends Controller implements HasMiddleware
             'img_produk' => $finalImageUrl,
             'taxe_id' => $product->taxe_id,
             'pajak' => $product->pajak ? ['rate' => $product->pajak->rate] : null,
+            'wajib_seri' => $product->wajib_seri,
           ];
         }
       }
@@ -769,6 +776,7 @@ class ProductController extends Controller implements HasMiddleware
           'img_produk' => $finalImageUrl,
           'taxe_id' => $product->taxe_id,
           'pajak' => $product->pajak ? ['rate' => $product->pajak->rate] : null,
+          'wajib_seri' => $product->wajib_seri,
         ];
       }
     }
@@ -884,7 +892,7 @@ class ProductController extends Controller implements HasMiddleware
           'name_product' => \Illuminate\Support\Str::limit($produk->name_product, 30),
           'needed' => $produk->qty - $produk->sn_tercatat_count,
           'img_url' => $produk->image_url ? asset('storage/' . $produk->image_url) : asset('assets/img/produk.png'),
-          'url' => route('serialNumber.index', [
+          'url' => route('serial-number.index', [
             'produk_slug' => $produk->slug,
           ]),
         ];

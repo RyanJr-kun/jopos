@@ -20,6 +20,16 @@ class StockTransferItem extends Model
     return $this->belongsTo(Product::class, 'product_id');
   }
 
+  public function serialNumbers()
+  {
+    return $this->belongsToMany(
+      SerialNumber::class,
+      'stock_transfer_item_serial_number', // Nama tabel pivot
+      'stock_transfer_item_id',
+      'serial_number_id',
+    );
+  }
+
   public function variant(): BelongsTo
   {
     return $this->belongsTo(ProductVariant::class, 'product_variant_id');

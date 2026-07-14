@@ -19,6 +19,8 @@ class Sale extends Model
     'diskon' => 'float',
     'pajak' => 'float',
     'total_akhir' => 'float',
+    'tanggal_penjualan' => 'datetime', // 👈 Tambahkan baris ini
+    'tanggal_jatuh_tempo' => 'datetime',
     'created_at' => 'datetime',
     'updated_at' => 'datetime',
   ];

@@ -4,6 +4,7 @@ namespace Modules\Inventory\Http\Controllers\master;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductStock;
+use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -33,9 +34,23 @@ class SerialNumberController extends Controller implements HasMiddleware
   {
     $purchaseId = $request->query('purchase_id');
     // Terima parameter slug
-    $query = SerialNumber::with(['produk.primaryImage', 'variant.options', 'penjualan'])->latest();
+    $query = SerialNumber::with(['produk.primaryImage', 'variant.options', 'saleItem.penjualan', 'purchase.supplier', 'stockTransfers'])->latest();
     $produkDipilih = null;
     $varianDipilih = null;
+    $stores = collect();
+
+    // --- MULAI PENAMBAHAN LOGIKA FILTER STORE ---
+    $user = Auth::user();
+
+    if ($user->can('view-toko-gudang')) {
+      $stores = Store::all();
+
+      if ($request->filled('store_id')) {
+        $query->where('store_id', $request->store_id);
+      }
+    } else {
+      $query->where('store_id', $user->employee?->store_id);
+    }
 
     if ($slug) {
       $produkDipilih = Product::where('slug', $slug)->firstOrFail();
@@ -63,7 +78,7 @@ class SerialNumberController extends Controller implements HasMiddleware
     $products = Product::where('wajib_seri', true)->orderBy('name_product')->get();
     $status = SerialNumber::getStatus();
 
-    return view('inventory::inventaris.sn.serial-number', compact('produkDipilih', 'purchaseId', 'varianDipilih', 'serialNumbers', 'products', 'status'));
+    return view('inventory::inventaris.sn.serial-number', compact('produkDipilih', 'purchaseId', 'varianDipilih', 'serialNumbers', 'products', 'status', 'stores'));
   }
 
   /**

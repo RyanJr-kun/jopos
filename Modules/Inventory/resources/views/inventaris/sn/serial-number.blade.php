@@ -96,17 +96,18 @@
         <div class="card-body p-4 pb-2">
             <form method="GET" action="{{ route('serial-number.index') }}">
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-4">
+
+                    <div class="col-md-3">
                         <label for="search" class="form-label fw-medium">Cari Nomor Seri</label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="bx bx-search"></i></span>
                             <input type="text" id="search" name="search" class="form-control"
                                 placeholder="Ketik nomor seri..." value="{{ request('search') }}">
                         </div>
                     </div>
-                    <div class="col-md-3">
+
+                    <div class="col-6 col-md-3">
                         <label for="product_id_filter" class="form-label fw-medium">Filter Produk</label>
-                        <select id="product_id_filter" name="product_id" class="form-select select2 "
+                        <select id="product_id_filter" name="product_id" class="form-select select2"
                             data-placeholder="pilih produk" style="width:100%;">
                             <option value="">Semua Produk</option>
                             @foreach ($products as $produk)
@@ -116,7 +117,26 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
+
+                    {{-- AWAL: Filter Toko (Hanya muncul jika punya permission view-toko-gudang) --}}
+                    @can('view-toko-gudang')
+                        <div class="col-6 col-md-3">
+                            <label for="store_filter" class="form-label fw-medium">Filter Toko</label>
+                            <select id="store_filter" name="store_id" class="form-select select2"
+                                data-placeholder="Semua Toko">
+                                <option value="">Semua Toko</option>
+                                @foreach ($stores as $store)
+                                    {{-- Asumsikan kolom nama toko di tabel Anda bernama 'name' --}}
+                                    <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>
+                                        {{ $store->name_toko }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endcan
+                    {{-- AKHIR: Filter Toko --}}
+
+                    <div class="col-6 col-md-2">
                         <label for="status_filter" class="form-label fw-medium">Filter Status</label>
                         <select id="status_filter" name="status" class="form-select select2"
                             data-placeholder="pilih status">
@@ -127,11 +147,16 @@
                             <option value="Hilang" @selected(request('status') == 'Hilang')>Hilang</option>
                         </select>
                     </div>
-                    <div class="col-md-3 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary px-4"><i
-                                class="bx bx-filter me-1"></i>Filter</button>
-                        <a href="{{ route('serial-number.index') }}" class="btn btn-outline-secondary px-3"><i
-                                class="bx bx-reset me-1"></i>Reset</a>
+
+                    <div class="col-md-1 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-2" title="Filter Data"
+                            data-bs-toggle="tooltip">
+                            <i class="bx bx-filter fs-5"></i>
+                        </button>
+                        <a href="{{ route('serial-number.index') }}" class="btn btn-outline-secondary px-2"
+                            title="Reset Filter" data-bs-toggle="tooltip">
+                            <i class="bx bx-reset fs-5"></i>
+                        </a>
                     </div>
                 </div>
             </form>
@@ -198,27 +223,60 @@
                             </td>
                             <td class="small text-muted">{{ $sn->created_at->translatedFormat('d M Y') }}</td>
                             <td>
-                                @if ($sn->penjualan)
-                                    <a href="{{ route('penjualan.show', $sn->penjualan->referensi) }}"
+                                @if ($sn->saleItem?->penjualan)
+                                    <a href="{{ route('penjualan.show', $sn->saleItem->penjualan->referensi) }}"
                                         class="text-primary fw-medium small" data-bs-toggle="tooltip"
                                         title="Lihat Invoice Sale">
-                                        {{ $sn->penjualan->referensi }}
+                                        {{ $sn->saleItem->penjualan->referensi }}
                                     </a>
                                 @else
                                     <span class="text-muted small">-</span>
                                 @endif
                             </td>
                             <td class="text-center">
-                                <button type="button" class="action-btn text-secondary btn-edit me-1"
-                                    data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
-                                    data-status="{{ $sn->status }}" title="Edit SN" data-bs-toggle="tooltip">
-                                    <i class="bx bx-edit-alt"></i>
-                                </button>
-                                <button type="button" class="action-btn text-danger btn-delete"
-                                    data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}" title="Hapus SN"
-                                    data-bs-toggle="tooltip">
-                                    <i class="bx bx-trash"></i>
-                                </button>
+                                <div class="dropdown">
+                                    <!-- Menggunakan $sn->id agar ID dropdown bersifat unik di setiap baris tabel -->
+                                    <button class="btn p-0" type="button" id="cardOpt{{ $sn->id }}"
+                                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="bx bx-dots-vertical-rounded fs-4"></i>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-end"
+                                        aria-labelledby="cardOpt{{ $sn->id }}">
+
+                                        <!-- Aksi: Lihat Riwayat -->
+                                        <button type="button" class="dropdown-item btn-riwayat text-info"
+                                            data-serial="{{ $sn->nomor_seri }}" data-status="{{ $sn->status }}"
+                                            data-tgl-masuk="{{ $sn->created_at->translatedFormat('d M Y') }}"
+                                            data-supplier="{{ $sn->purchase?->supplier?->name ?? '' }}"
+                                            data-purchase-ref="{{ $sn->purchase?->referensi ?? '' }}"
+                                            data-sale-ref="{{ $sn->saleItem?->penjualan?->referensi ?? '' }}"
+                                            data-sale-tgl="{{ $sn->saleItem?->penjualan?->tanggal_penjualan?->translatedFormat('d M Y') ?? '' }}"
+                                            data-transfers="{{ json_encode(
+                                                $sn->stockTransfers->map(function ($trf) {
+                                                    return [
+                                                        'ref' => $trf->kode_transfer ?? 'Unknown Ref', // Sesuaikan dengan nama kolom referensi di tabel stock_transfers
+                                                        'tgl' => $trf->created_at->translatedFormat('d M Y'), // Sesuaikan tanggal
+                                                    ];
+                                                }),
+                                            ) }}">
+                                            <i class="bx bx-history me-2"></i> Riwayat
+                                        </button>
+
+                                        <!-- Aksi: Edit SN -->
+                                        <button type="button" class="dropdown-item btn-edit text-secondary"
+                                            data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}"
+                                            data-status="{{ $sn->status }}">
+                                            <i class="bx bx-edit-alt me-2"></i> Edit
+                                        </button>
+
+                                        <!-- Aksi: Hapus SN -->
+                                        <button type="button" class="dropdown-item btn-delete text-danger"
+                                            data-id="{{ $sn->id }}" data-serial="{{ $sn->nomor_seri }}">
+                                            <i class="bx bx-trash me-2"></i> Hapus
+                                        </button>
+
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -309,6 +367,34 @@
             </div>
         </div>
     </div>
+
+    {{-- modal Riwayat --}}
+    <div class="modal fade" id="riwayatSerialModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold"><i class="bx bx-history me-2 text-info"></i>Riwayat Nomor Seri</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4 pt-3 pb-4">
+                    {{-- Info Header SN --}}
+                    <div
+                        class="d-flex align-items-center justify-content-between bg-label-light rounded-3 p-3 mb-4 border">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bx bx-barcode-reader fs-3 text-secondary"></i>
+                            <span class="fw-bold text-dark fs-5 tracking-wide" id="riwayat-sn"></span>
+                        </div>
+                        <span class="badge px-3 py-2" id="riwayat-status" style="font-size: 0.8rem;"></span>
+                    </div>
+
+                    {{-- Timeline Container --}}
+                    <div class="px-2" id="riwayat-timeline">
+                        {{-- Diisi oleh JS --}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('page-script')
@@ -329,6 +415,127 @@
             }
         };
         initSelect2();
+
+        const riwayatSerialModal = new bootstrap.Modal(document.getElementById('riwayatSerialModal'));
+
+        $('#tableData').on('click', '.btn-riwayat', function() {
+            const d = $(this).data();
+            $('#riwayat-sn').text(d.serial);
+
+            // 1. Dinamisasi Warna Badge Status
+            const statusColors = {
+                'Tersedia': 'bg-label-success',
+                'Terjual': 'bg-label-info',
+                'Rusak': 'bg-label-danger',
+                'Hilang': 'bg-label-warning'
+            };
+            const badgeColor = statusColors[d.status] || 'bg-label-secondary';
+            $('#riwayat-status').removeClass().addClass(`badge ${badgeColor}`).text(d.status.toUpperCase());
+
+            // Ambil data transfer stok (parse dari string JSON bawaan data attribute)
+            const transfers = d.transfers ? d.transfers : [];
+
+            // 2. Build Timeline Items
+            let items = [];
+            const hasSale = !!d.saleRef;
+            const hasTransfers = transfers.length > 0;
+
+            // --- NODE 1: TANGGAL MASUK ---
+            // Apakah perlu garis sambungan ke bawah? (Ya, jika ada mutasi ATAU ada penjualan)
+            const node1HasLine = hasTransfers || hasSale;
+
+            if (d.purchaseRef) {
+                items.push(`
+                <div class="d-flex mb-1">
+                    <div class="flex-shrink-0 d-flex flex-column align-items-center me-3">
+                        <div class="bg-label-success rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                            <i class="bx bx-download fs-4"></i>
+                        </div>
+                        ${node1HasLine ? '<div class="bg-secondary mt-2 mb-2" style="width: 2px; height: 60px; opacity: 0.2;"></div>' : ''}
+                    </div>
+                    <div class="flex-grow-1 pb-3">
+                        <h6 class="mb-1 fw-bold">Stok Masuk</h6>
+                        <p class="mb-1 text-muted small">
+                            Masuk dari pembelian <span class="fw-bold text-dark">${d.purchaseRef}</span>.
+                        </p>
+                        ${d.supplier ? `<p class="mb-2 text-muted small"><i class="bx bx-buildings me-1"></i>Supplier: <span class="fw-medium">${d.supplier}</span></p>` : ''}
+                        <span class="text-muted fw-medium" style="font-size: 0.75rem;">
+                            <i class="bx bx-calendar me-1"></i>${d.tglMasuk}
+                        </span>
+                    </div>
+                </div>`);
+            } else {
+                items.push(`
+                <div class="d-flex mb-1">
+                    <div class="flex-shrink-0 d-flex flex-column align-items-center me-3">
+                        <div class="bg-label-secondary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                            <i class="bx bx-log-in-circle fs-4"></i>
+                        </div>
+                        ${node1HasLine ? '<div class="bg-secondary mt-2 mb-2" style="width: 2px; height: 60px; opacity: 0.2;"></div>' : ''}
+                    </div>
+                    <div class="flex-grow-1 pb-3">
+                        <h6 class="mb-1 fw-bold">Tercatat Masuk</h6>
+                        <p class="mb-2 text-muted small">Dimasukkan secara manual (tanpa referensi pembelian).</p>
+                        <span class="text-muted fw-medium" style="font-size: 0.75rem;">
+                            <i class="bx bx-calendar me-1"></i>${d.tglMasuk}
+                        </span>
+                    </div>
+                </div>`);
+            }
+
+            // --- NODE 2: MUTASI / STOCK TRANSFERS (Bisa lebih dari 1) ---
+            if (hasTransfers) {
+                transfers.forEach((trf, index) => {
+                    // Apakah ini transfer terakhir di dalam array?
+                    const isLastTransfer = index === (transfers.length - 1);
+                    // Garis sambung ada jika bukan transfer terakhir, ATAU jika ada penjualan setelah ini
+                    const trfHasLine = !isLastTransfer || hasSale;
+
+                    items.push(`
+                    <div class="d-flex mb-1">
+                        <div class="flex-shrink-0 d-flex flex-column align-items-center me-3">
+                            <div class="bg-label-warning rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                                <i class="bx bx-transfer fs-4"></i>
+                            </div>
+                            ${trfHasLine ? '<div class="bg-secondary mt-2 mb-2" style="width: 2px; height: 60px; opacity: 0.2;"></div>' : ''}
+                        </div>
+                        <div class="flex-grow-1 pb-3">
+                            <h6 class="mb-1 fw-bold">Transfer Stok</h6>
+                            <p class="mb-2 text-muted small">
+                                Dipindahkan melalui referensi <span class="fw-bold text-dark">${trf.ref}</span>.
+                            </p>
+                            <span class="text-muted fw-medium" style="font-size: 0.75rem;">
+                                <i class="bx bx-calendar me-1"></i>${trf.tgl}
+                            </span>
+                        </div>
+                    </div>`);
+                });
+            }
+
+            // --- NODE 3: PENJUALAN ---
+            if (hasSale) {
+                items.push(`
+                    <div class="d-flex">
+                        <div class="flex-shrink-0 d-flex flex-column align-items-center me-3">
+                            <div class="bg-label-info rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                                <i class="bx bx-cart-alt fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold">Barang Terjual</h6>
+                            <p class="mb-2 text-muted small">
+                                Terjual melalui invoice <span class="fw-bold text-primary">${d.saleRef}</span>.
+                            </p>
+                            <span class="text-muted fw-medium" style="font-size: 0.75rem;">
+                                <i class="bx bx-calendar me-1"></i>${d.saleTgl}
+                            </span>
+                        </div>
+                    </div>`);
+            }
+
+            $('#riwayat-timeline').html(items.join(''));
+            riwayatSerialModal.show();
+        });
 
         $(document).ready(function() {
             setTimeout(function() {
