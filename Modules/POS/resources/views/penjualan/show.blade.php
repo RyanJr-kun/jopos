@@ -73,7 +73,7 @@
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-sm text-muted">Tanggal:</span>
                             <span
-                                class="text-sm fw-semibold">{{ \Carbon\Carbon::parse($penjualan->tanggal_pembelian)->translatedFormat('d F Y, H:i') }}</span>
+                                class="text-sm fw-semibold">{{ \Carbon\Carbon::parse($penjualan->tanggal_penjualan)->translatedFormat('d F Y, H:i') }}</span>
                         </div>
 
                         @if ($penjualan->status_pembayaran !== 'Lunas' && $penjualan->tanggal_jatuh_tempo)

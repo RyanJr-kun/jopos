@@ -36,57 +36,56 @@ class SaleController extends Controller implements HasMiddleware
    * Display a listing of the resource.
    */
   public function index(Request $request)
-{
+  {
     $statuses = Sale::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
 
     $user = Auth::user();
     $canViewAllStores = $user->can('view-toko-gudang');
-    $employeeStoreId  = $user->employee?->store_id;
+    $employeeStoreId = $user->employee?->store_id;
 
     $query = Sale::with(['customer', 'user'])->latest();
 
     // --- LOGIKA FILTER TOKO YANG KONSISTEN & AMAN ---
     if ($canViewAllStores) {
-        // Jika Admin/Manager, bisa lihat semua. Kalau dia filter via dropdown, terapkan:
-        if ($request->filled('store_id')) {
-            $query->where('store_id', $request->input('store_id'));
-        }
+      // Jika Admin/Manager, bisa lihat semua. Kalau dia filter via dropdown, terapkan:
+      if ($request->filled('store_id')) {
+        $query->where('store_id', $request->input('store_id'));
+      }
     } else {
-        // Jika kasir biasa, PAKSA hanya lihat tokonya sendiri.
-        // Meski nilainya null, biarkan saja agar dia tidak bisa lihat toko lain
-        $query->where('store_id', $employeeStoreId);
+      // Jika kasir biasa, PAKSA hanya lihat tokonya sendiri.
+      // Meski nilainya null, biarkan saja agar dia tidak bisa lihat toko lain
+      $query->where('store_id', $employeeStoreId);
     }
 
     // --- Filter Pencarian ---
     if ($request->filled('search')) {
-        $search = $request->input('search');
-        $query->where(function ($q) use ($search) {
-            $q->where('referensi', 'like', "%{$search}%")
-              ->orWhereHas('customer', fn($qc) => $qc->where('name', 'like', "%{$search}%"));
-        });
+      $search = $request->input('search');
+      $query->where(function ($q) use ($search) {
+        $q->where('referensi', 'like', "%{$search}%")->orWhereHas('customer', fn($qc) => $qc->where('name', 'like', "%{$search}%"));
+      });
     }
 
     // --- Filter Status ---
     if ($request->filled('status')) {
-        $query->where('status_pembayaran', $request->input('status'));
+      $query->where('status_pembayaran', $request->input('status'));
     }
 
     // --- Filter Tanggal (Sudah Benar & Aman) ---
     if ($request->filled('date_from') && $request->filled('date_to')) {
-        $query->whereBetween('created_at', [$request->date_from . ' 00:00:00', $request->date_to . ' 23:59:59']);
+      $query->whereBetween('created_at', [$request->date_from . ' 00:00:00', $request->date_to . ' 23:59:59']);
     }
 
     $penjualan = $query->paginate(15)->withQueryString();
-    
+
     if ($request->ajax()) {
-        return view('pos::penjualan.partials._penjualan_table', compact('penjualan', 'canViewAllStores'))->render();
+      return view('pos::penjualan.partials._penjualan_table', compact('penjualan', 'canViewAllStores'))->render();
     }
 
     // Ambil data toko untuk dropdown admin (opsional, sesuaikan nama Model-mu)
     $stores = $canViewAllStores ? Store::orderBy('name_toko')->get() : collect();
 
     return view('pos::penjualan.index', compact('penjualan', 'statuses', 'canViewAllStores', 'stores'));
-}
+  }
 
   /**
    * Show the form for creating a new resource.
@@ -101,15 +100,7 @@ class SaleController extends Controller implements HasMiddleware
       'pajak',
       'primaryImage',
       'promotions' => function ($q) {
-        $q->select(
-          'promotions.id',
-          'promotions.type',
-          'promotions.nilai_diskon',
-          'promotions.max_diskon',
-          'promotions.status',
-          'promotions.tanggal_mulai',
-          'promotions.tanggal_berakhir'
-        )
+        $q->select('promotions.id', 'promotions.type', 'promotions.nilai_diskon', 'promotions.max_diskon', 'promotions.status', 'promotions.tanggal_mulai', 'promotions.tanggal_berakhir')
           ->where('promotions.status', true)
           ->where('promotions.tanggal_mulai', '<=', now())
           ->where('promotions.tanggal_berakhir', '>=', now());
@@ -117,32 +108,39 @@ class SaleController extends Controller implements HasMiddleware
       'variants' => function ($q) use ($storeId) {
         $q->with([
           'stocks' => function ($sq) use ($storeId) {
-            if ($storeId) $sq->where('store_id', $storeId);
+            if ($storeId) {
+              $sq->where('store_id', $storeId);
+            }
           },
-          'options.variantType',     // ← TAMBAH: eager-load ProductVariantType sekaligus
+          'options.variantType', // ← TAMBAH: eager-load ProductVariantType sekaligus
         ]);
       },
       'stocks' => function ($q) use ($storeId) {
-        if ($storeId) $q->where('store_id', $storeId);
+        if ($storeId) {
+          $q->where('store_id', $storeId);
+        }
       },
     ])
-      ->withSum(['stocks' => function ($q) use ($storeId) {
-          if ($storeId) {
+      ->withSum(
+        [
+          'stocks' => function ($q) use ($storeId) {
+            if ($storeId) {
               $q->where('store_id', $storeId);
-          }
-      }], 'qty')
+            }
+          },
+        ],
+        'qty',
+      )
       ->where(function ($q) use ($storeId) {
-        $q->whereHas('stocks', fn($sq) => $sq->where('qty', '>', 0)
-          ->when($storeId, fn($sq2) => $sq2->where('store_id', $storeId)))
-          ->orWhereHas('variants.stocks', fn($vq) => $vq->where('qty', '>', 0)
-            ->when($storeId, fn($vq2) => $vq2->where('store_id', $storeId)));
+        $q->whereHas('stocks', fn($sq) => $sq->where('qty', '>', 0)->when($storeId, fn($sq2) => $sq2->where('store_id', $storeId)))->orWhereHas(
+          'variants.stocks',
+          fn($vq) => $vq->where('qty', '>', 0)->when($storeId, fn($vq2) => $vq2->where('store_id', $storeId)),
+        );
       });
 
     if ($request->filled('kategori')) {
       $categoryId = $request->kategori;
-      $categoryIds = Category::where('id', $categoryId)
-        ->orWhere('parent_id', $categoryId)
-        ->pluck('id');
+      $categoryIds = Category::where('id', $categoryId)->orWhere('parent_id', $categoryId)->pluck('id');
       $query->whereIn('category_id', $categoryIds);
     }
 
@@ -150,18 +148,11 @@ class SaleController extends Controller implements HasMiddleware
 
     $customers = Customer::where('status', 1)->orderBy('name', 'asc')->get();
     $kategoris = Category::whereNull('parent_id')->with('children')->get();
-    $taxes     = Taxe::all();
+    $taxes = Taxe::all();
     $referensi = $this->generateInvoiceNumber();
-    $banks     = Bank::where('is_active', true)->orderBy('nama_bank', 'asc')->get();
+    $banks = Bank::where('is_active', true)->orderBy('nama_bank', 'asc')->get();
 
-    return view('pos::penjualan.create', compact(
-      'products',
-      'customers',
-      'kategoris',
-      'taxes',
-      'referensi',
-      'banks'
-    ));
+    return view('pos::penjualan.create', compact('products', 'customers', 'kategoris', 'taxes', 'referensi', 'banks'));
   }
 
   private function generateInvoiceNumber()
@@ -267,16 +258,13 @@ class SaleController extends Controller implements HasMiddleware
               throw new \Exception("Jumlah nomor seri untuk '{$produk->name_product}' tidak sesuai. " . "Dibutuhkan: {$itemData['jumlah']}, dikirim: " . count($snKirim) . '.');
             }
 
-            $snQuery = SerialNumber::where('product_id', $produk->id)
-                ->whereIn('nomor_seri', $snKirim)
-                ->where('status', 'Tersedia')
-                ->where('store_id', $storeId);
+            $snQuery = SerialNumber::where('product_id', $produk->id)->whereIn('nomor_seri', $snKirim)->where('status', 'Tersedia')->where('store_id', $storeId);
 
             // Filter variant jika ada
             if ($variantId) {
-                $snQuery->where('product_variant_id', $variantId);
+              $snQuery->where('product_variant_id', $variantId);
             } else {
-                $snQuery->whereNull('product_variant_id');
+              $snQuery->whereNull('product_variant_id');
             }
 
             $snValid = $snQuery->count();
@@ -589,16 +577,13 @@ class SaleController extends Controller implements HasMiddleware
               throw new \Exception("Jumlah SN untuk '{$produk->name_product}' tidak sesuai.");
             }
 
-            $snQuery = SerialNumber::where('product_id', $produk->id)
-                ->whereIn('nomor_seri', $snKirim)
-                ->where('status', 'Tersedia')
-                ->where('store_id', $storeId);
+            $snQuery = SerialNumber::where('product_id', $produk->id)->whereIn('nomor_seri', $snKirim)->where('status', 'Tersedia')->where('store_id', $storeId);
 
             // Filter variant jika ada
             if ($variantId) {
-                $snQuery->where('product_variant_id', $variantId);
+              $snQuery->where('product_variant_id', $variantId);
             } else {
-                $snQuery->whereNull('product_variant_id');
+              $snQuery->whereNull('product_variant_id');
             }
 
             $validSnCount = $snQuery->count();
@@ -736,12 +721,12 @@ class SaleController extends Controller implements HasMiddleware
     return $pdf->stream('faktur-penjualan-' . $penjualan->referensi . '.pdf');
   }
 
-    public function downloadFaktur($id)
+  public function downloadFaktur($id)
   {
-      $penjualan = Penjualan::findOrFail($id);
-      $pdf = Pdf::loadView('faktur-penjualan-pdf', compact('penjualan'));
-      
-      return $pdf->stream('faktur.pdf');
+    $penjualan = Penjualan::findOrFail($id);
+    $pdf = Pdf::loadView('faktur-penjualan-pdf', compact('penjualan'));
+
+    return $pdf->stream('faktur.pdf');
   }
 
   public function getTodayHistory(Request $request)
@@ -894,32 +879,46 @@ class SaleController extends Controller implements HasMiddleware
         $q->where('is_active', 1)
           ->with('options')
           // HITUNG STOK VARIAN LANGSUNG DI DATABASE
-          ->withSum(['stocks as stok_varian' => function ($sq) use ($storeId) {
+          ->withSum(
+            [
+              'stocks as stok_varian' => function ($sq) use ($storeId) {
+                if ($storeId) {
+                  $sq->where('store_id', $storeId);
+                }
+              },
+            ],
+            'qty',
+          )
+          // HITUNG SN VARIAN LANGSUNG DI DATABASE
+          ->withCount([
+            'serialNumbers as sn_count' => function ($sq) {
+              $sq->where('status', 'Tersedia');
+            },
+          ]);
+      },
+    ])
+      // HITUNG STOK PRODUK SIMPLE (Tanpa Varian) DI DATABASE
+      ->withSum(
+        [
+          'stocks as stok_produk_simple' => function ($sq) use ($storeId) {
+            $sq->whereNull('product_variant_id');
             if ($storeId) {
               $sq->where('store_id', $storeId);
             }
-          }], 'qty')
-          // HITUNG SN VARIAN LANGSUNG DI DATABASE
-          ->withCount(['serialNumbers as sn_count' => function ($sq) {
-            $sq->where('status', 'Tersedia');
-          }]);
-      }
-    ])
-      // HITUNG STOK PRODUK SIMPLE (Tanpa Varian) DI DATABASE
-      ->withSum(['stocks as stok_produk_simple' => function ($sq) use ($storeId) {
-        $sq->whereNull('product_variant_id');
-        if ($storeId) {
-          $sq->where('store_id', $storeId);
-        }
-      }], 'qty')
+          },
+        ],
+        'qty',
+      )
       // HITUNG SN PRODUK SIMPLE DI DATABASE
-      ->withCount(['serialNumbers as sn_count_simple' => function ($sq) {
-        $sq->whereNull('product_variant_id')
-          ->where('status', 'Tersedia');
-      }])
+      ->withCount([
+        'serialNumbers as sn_count_simple' => function ($sq) {
+          $sq->whereNull('product_variant_id')->where('status', 'Tersedia');
+        },
+      ])
       ->when($search, function ($q, $search) {
         $q->where(function ($subQ) use ($search) {
-          $subQ->where('name_product', 'like', "%{$search}%")
+          $subQ
+            ->where('name_product', 'like', "%{$search}%")
             ->orWhere('sku', 'like', "%{$search}%")
             ->orWhere('barcode', 'like', "%{$search}%")
             ->orWhereHas('variants', function ($qv) use ($search) {
@@ -957,7 +956,7 @@ class SaleController extends Controller implements HasMiddleware
 
           $stokVarian = $variant->stok_varian ?? 0;
 
-          $imagePath = $variant->img_variant ?? $product->primaryImage->path ?? null;
+          $imagePath = $variant->img_variant ?? ($product->primaryImage->path ?? null);
           $finalImageUrl = $imagePath ? Storage::url($imagePath) : asset('assets/img/produk.png');
 
           if ($stokVarian > 0) {
@@ -984,7 +983,7 @@ class SaleController extends Controller implements HasMiddleware
         // Hitung stok produk induk (dimana product_variant_id adalah null)
         $stokProduk = $product->stok_produk_simple ?? 0;
 
-        $imagePath = $variant->img_variant ?? $product->primaryImage->path ?? null;
+        $imagePath = $variant->img_variant ?? ($product->primaryImage->path ?? null);
         $finalImageUrl = $imagePath ? Storage::url($imagePath) : asset('assets/img/produk.png');
 
         if ($stokProduk > 0) {

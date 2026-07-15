@@ -53,9 +53,7 @@ class SpatieRoleSeeder extends Seeder
 
       // Keuangan
       'keuangan' => ['view'],
-      'bank' => ['view', 'create', 'edit', 'delete'],
-      'income' => ['view', 'create', 'edit', 'delete'],
-      'expense' => ['view', 'create', 'edit', 'delete'],
+      'cash-flow' => ['view', 'create', 'edit', 'delete'],
 
       // Laporan
       'laporan-inventaris' => ['view'],

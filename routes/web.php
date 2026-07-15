@@ -1,10 +1,11 @@
 <?php
 
-use App\Http\Controllers\auth\AuthController; 
+use App\Http\Controllers\auth\AuthController;
 use App\Http\Controllers\auth\RoleController;
 use App\Http\Controllers\dashboard\DashboardController;
 use App\Http\Controllers\dashboard\LaporanController;
 use App\Http\Controllers\dashboard\StoreController;
+use App\Http\Controllers\finance\CashFlowController;
 use App\Http\Controllers\finance\ExpenseController;
 use App\Http\Controllers\finance\IncomeController;
 use App\Http\Controllers\finance\KeuanganController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\finance\TransactionCategoryController;
 use App\Http\Controllers\hrd\CustomerController;
 use App\Http\Controllers\hrd\UserController;
 use App\Http\Controllers\SettingController;
+use App\Models\CashFlow;
 use Illuminate\Support\Facades\Route;
 
 // Mengambil variabel domain dari .env
@@ -21,97 +23,112 @@ $domain = env('APP_DOMAIN', 'jocomputer.com');
 // 1. ROUTING SUBDOMAIN (JOPOS - Khusus Karyawan/Admin)
 // =========================================================
 Route::domain('jopos.' . $domain)->group(function () {
+  // Akses Tamu (Belum Login)
+  Route::middleware('guest')->group(function () {
+    // Path URL diubah sesuai target Anda
+    Route::get('/', [AuthController::class, 'showLoginForm'])->name('employee.login');
+    Route::post('/auth/employees/login', [AuthController::class, 'login'])->name('employee.login.post');
 
-    // Akses Tamu (Belum Login)
-    Route::middleware('guest')->group(function () {
-        // Path URL diubah sesuai target Anda
-        Route::get('/', [AuthController::class, 'showLoginForm'])->name('employee.login');
-        Route::post('/auth/employees/login', [AuthController::class, 'login'])->name('employee.login.post');
+    // Tambahkan ini untuk fitur Lupa Password
+    Route::get('/auth/forgot-password', [AuthController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('/auth/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
 
-        // Tambahkan ini untuk fitur Lupa Password
-        Route::get('/auth/forgot-password', [AuthController::class, 'showLinkRequestForm'])->name('password.request');
-        Route::post('/auth/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('/auth/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/auth/reset-password', [AuthController::class, 'reset'])->name('password.update');
+  });
 
-        Route::get('/auth/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
-        Route::post('/auth/reset-password', [AuthController::class, 'reset'])->name('password.update');
-    });
+  // Akses Karyawan (Sudah Login)
+  Route::middleware(['auth', 'verified', 'employee'])->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('employee.logout');
 
-    // Akses Karyawan (Sudah Login)
-    Route::middleware(['auth', 'verified', 'employee'])->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout'])->name('employee.logout');
-        
-        // Dashboard & Fitur Admin
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:view-dashboard');
-       
-        Route::get('keuangan', [KeuanganController::class, 'index'])->name('keuangan')->middleware('permission:view-keuangan');
+    // Dashboard & Fitur Admin
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+      ->name('dashboard')
+      ->middleware('permission:view-dashboard');
 
-        Route::prefix('keuangan')->name('keuangan.')->group(function () {
-            // Mutasi Bank
-            Route::post('/mutasi', [KeuanganController::class, 'storeMutasi'])->name('mutasi.store');
-     
-            // Bank CRUD
-            Route::post('/bank', [KeuanganController::class, 'storeBank'])->name('bank.store');
-            Route::put('/bank/{bank}', [KeuanganController::class, 'updateBank'])->name('bank.update');
-            Route::delete('/bank/{bank}', [KeuanganController::class, 'destroyBank'])->name('bank.destroy');
-        });
+    Route::get('keuangan', [KeuanganController::class, 'index'])
+      ->name('keuangan')
+      ->middleware('permission:view-keuangan');
 
-        // Expense
-        Route::get('/expense/{expense:referensi}/json', [ExpenseController::class, 'getjson'])->name('expense.getjson');
-        Route::resource('expense', ExpenseController::class)->except('show', 'create', 'edit')->parameter('expense', 'expense:referensi');
+    Route::prefix('keuangan')
+      ->name('keuangan.')
+      ->group(function () {
+        // Mutasi Bank
+        Route::post('/mutasi', [KeuanganController::class, 'storeMutasi'])->name('mutasi.store');
 
-        // Income
-        Route::get('/income/{income:referensi}/json', [IncomeController::class, 'getjson'])->name('income.getjson');
-        Route::resource('income', IncomeController::class)->except('show', 'create', 'edit')->parameter('income', 'income:referensi');
+        // Bank CRUD
+        Route::post('/bank', [KeuanganController::class, 'storeBank'])->name('bank.store');
+        Route::put('/bank/{bank}', [KeuanganController::class, 'updateBank'])->name('bank.update');
+        Route::delete('/bank/{bank}', [KeuanganController::class, 'destroyBank'])->name('bank.destroy');
+      });
 
-        // Kategori transaksi
-        Route::get('/kategoritransaksi/{kategoritransaksi}/json', [TransactionCategoryController::class, 'getKategoriJson'])->name('kategoritransaksi.getjson');
-        Route::resource('kategoritransaksi', TransactionCategoryController::class)->except('show', 'create', 'edit');
-        Route::get('/dashboard/kategoritransaksi/chekSlug', [TransactionCategoryController::class, 'chekSlug']);
+    Route::prefix('financial/cash-flows/{type}')
+      ->name('financial.cash-flows.')
+      ->group(function () {
+        Route::get('/', [CashFlowController::class, 'index'])->name('index');
+        Route::get('/create', [CashFlowController::class, 'create'])->name('create');
+        Route::post('/', [CashFlowController::class, 'store'])->name('store');
+        Route::get('/{cash_flow:referensi}/json', [CashFlowController::class, 'getjson'])->name('getjson');
+        Route::get('/{cash_flow:referensi}/edit', [CashFlowController::class, 'edit'])->name('edit');
+        Route::put('/{cash_flow:referensi}', [CashFlowController::class, 'update'])->name('update');
+        Route::delete('/{cash_flow:referensi}', [CashFlowController::class, 'destroy'])->name('destroy');
+      });
 
-        // Laporan
-        Route::prefix('laporan')->name('laporan.')->group(function () {
-            Route::get('inventaris', [LaporanController::class, 'inventaris'])->name('inventaris');
-            Route::get('inventaris/export', [LaporanController::class, 'exportInventaris'])->name('inventaris.export');
-            Route::get('pembelian', [LaporanController::class, 'pembelian'])->name('pembelian');
-            Route::get('pembelian/export', [LaporanController::class, 'exportPurchase'])->name('pembelian.export');
-            Route::get('penjualan', [LaporanController::class, 'penjualan'])->name('penjualan');
-            Route::get('penjualan/export', [LaporanController::class, 'exportSale'])->name('penjualan.export');
-            Route::get('laba-rugi', [LaporanController::class, 'labaRugi'])->name('laba-rugi');
-            Route::get('laba-rugi/export', [LaporanController::class, 'exportLabaRugi'])->name('laba-rugi.export');
-        });
+    // Kategori transaksi
+    Route::get('/kategoritransaksi/{kategoritransaksi}/json', [TransactionCategoryController::class, 'getKategoriJson'])->name('kategoritransaksi.getjson');
+    Route::resource('kategoritransaksi', TransactionCategoryController::class)->except('show', 'create', 'edit');
+    Route::get('/dashboard/kategoritransaksi/chekSlug', [TransactionCategoryController::class, 'chekSlug']);
 
-        // Toko
-        Route::resource('toko', StoreController::class)->except('show', 'create', 'edit');
-        Route::prefix('toko')->name('toko.')->group(function () {
-            Route::post('upload', [StoreController::class, 'upload'])->name('upload');
-            Route::delete('revert', [StoreController::class, 'revert'])->name('revert');
-            Route::get('{toko}/members', [StoreController::class, 'getMembers'])->name('members');
-            Route::post('{toko}/members/update', [StoreController::class, 'updateMembers'])->name('members-update');
-        });
+    // Laporan
+    Route::prefix('laporan')
+      ->name('laporan.')
+      ->group(function () {
+        Route::get('inventaris', [LaporanController::class, 'inventaris'])->name('inventaris');
+        Route::get('inventaris/export', [LaporanController::class, 'exportInventaris'])->name('inventaris.export');
+        Route::get('pembelian', [LaporanController::class, 'pembelian'])->name('pembelian');
+        Route::get('pembelian/export', [LaporanController::class, 'exportPurchase'])->name('pembelian.export');
+        Route::get('penjualan', [LaporanController::class, 'penjualan'])->name('penjualan');
+        Route::get('penjualan/export', [LaporanController::class, 'exportSale'])->name('penjualan.export');
+        Route::get('laba-rugi', [LaporanController::class, 'labaRugi'])->name('laba-rugi');
+        Route::get('laba-rugi/export', [LaporanController::class, 'exportLabaRugi'])->name('laba-rugi.export');
+      });
 
-        // Pelanggan
-        Route::get('/pelanggan/{pelanggan}/json', [CustomerController::class, 'getjson'])->name('pelanggan.getjson');
-        Route::resource('pelanggan', CustomerController::class)->except('show', 'create', 'edit');
+    // Toko
+    Route::resource('toko', StoreController::class)->except('show', 'create', 'edit');
+    Route::prefix('toko')
+      ->name('toko.')
+      ->group(function () {
+        Route::post('upload', [StoreController::class, 'upload'])->name('upload');
+        Route::delete('revert', [StoreController::class, 'revert'])->name('revert');
+        Route::get('{toko}/members', [StoreController::class, 'getMembers'])->name('members');
+        Route::post('{toko}/members/update', [StoreController::class, 'updateMembers'])->name('members-update');
+      });
 
-        // Users
-        Route::resource('users', UserController::class)->except('show')->parameter('user', 'user:username');
-        Route::post('/dashboard/users/upload', [UserController::class, 'upload'])->name('users.upload');
-        Route::delete('/dashboard/users/revert', [UserController::class, 'revert'])->name('users.revert');
+    // Pelanggan
+    Route::get('/pelanggan/{pelanggan}/json', [CustomerController::class, 'getjson'])->name('pelanggan.getjson');
+    Route::resource('pelanggan', CustomerController::class)->except('show', 'create', 'edit');
 
-        // Roles
-        Route::resource('roles', RoleController::class)->except('show');
+    // Users
+    Route::resource('users', UserController::class)->except('show')->parameter('user', 'user:username');
+    Route::post('/dashboard/users/upload', [UserController::class, 'upload'])->name('users.upload');
+    Route::delete('/dashboard/users/revert', [UserController::class, 'revert'])->name('users.revert');
 
-        Route::get('/setting', function () {
-            return redirect()->route('setting.index', auth()->user()->username);
-        })->name('setting.redirect');
+    // Roles
+    Route::resource('roles', RoleController::class)->except('show');
 
-        Route::prefix('setting')->name('setting.')->group(function () {
-            Route::get('/{username}', [SettingController::class, 'index'])->name('index');
-            Route::put('/{username}/profile', [SettingController::class, 'updateProfile'])->name('profile.update');
-            Route::put('/{username}/password', [SettingController::class, 'updatePassword'])->name('password.update');
-            Route::put('/{username}/notifications', [SettingController::class, 'updateNotifications'])->name('notifications.update');
-        });
+    Route::get('/setting', function () {
+      return redirect()->route('setting.index', auth()->user()->username);
+    })->name('setting.redirect');
 
-        Route::get('/notifications/all', [SettingController::class, 'allNotifications'])->name('notifications.all');
-    });
+    Route::prefix('setting')
+      ->name('setting.')
+      ->group(function () {
+        Route::get('/{username}', [SettingController::class, 'index'])->name('index');
+        Route::put('/{username}/profile', [SettingController::class, 'updateProfile'])->name('profile.update');
+        Route::put('/{username}/password', [SettingController::class, 'updatePassword'])->name('password.update');
+        Route::put('/{username}/notifications', [SettingController::class, 'updateNotifications'])->name('notifications.update');
+      });
+
+    Route::get('/notifications/all', [SettingController::class, 'allNotifications'])->name('notifications.all');
+  });
 });

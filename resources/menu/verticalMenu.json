@@ -203,31 +203,25 @@
         "expense",
         "kategori"
       ],
-      "permission": "view-keuangan|view-income|view-expense|view-kategoritransaksi|view-laporan-inventaris|view-laporan-penjualan|view-laporan-pembelian|view-laporan-laba-rugi",
+      "permission": "view-keuangan|view-income|view-expense|view-laporan-inventaris|view-laporan-penjualan|view-laporan-pembelian|view-laporan-laba-rugi",
       "submenu": [
         {
           "url": "keuangan",
-          "name": "Bank & Kas",
+          "name": "Akuntan",
           "slug": "keuangan",
           "permission": "view-keuangan"
         },
         {
-          "url": "income",
-          "name": "Pemasukan",
-          "slug": "income.index",
-          "permission": "view-income"
-        },
-        {
-          "url": "expense",
-          "name": "Pengeluaran",
-          "slug": "expense.index",
-          "permission": "view-expense"
+          "url": "financial/cash-flows",
+          "name": "Cash Flow",
+          "slug": "financial.cash-flows.index",
+          "permission": "view-cash-flow"
         },
         {
           "url": "kategoritransaksi",
           "name": "Kategori Transaksi",
           "slug": "kategoritransaksi.index",
-          "permission": "view-kategoritransaksi"
+          "permission": "view-keuangan"
         }
       ]
     },

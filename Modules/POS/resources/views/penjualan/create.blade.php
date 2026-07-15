@@ -154,18 +154,6 @@
                     </div>
                 </div>
 
-                {{-- Error Validasi --}}
-                @if ($errors->any())
-                    <div class="alert alert-danger text-white mx-3 mt-2 mb-0 py-2" role="alert">
-                        <strong class="fw-bold d-block mb-1">Terjadi kesalahan:</strong>
-                        <ul class="mb-0 ps-3 small">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
                 {{-- Customer Select --}}
                 <div class="pos-customer-section">
                     <label for="Customer">

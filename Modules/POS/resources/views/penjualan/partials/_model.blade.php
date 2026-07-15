@@ -213,7 +213,7 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="sn-produk-id">
-                <input type="hidden" id="sn-variant-id"> 
+                <input type="hidden" id="sn-variant-id">
                 <div class="d-flex align-items-center bg-label-secondary border rounded p-2 mb-3 shadow-none">
                     <div class="flex-shrink-0 me-3">
                         <img id="sn-image-produk" src="" alt="Gambar Produk" class="rounded border"
@@ -304,7 +304,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            
+
                         </div>
                     </div>
                 </div>
@@ -379,11 +379,11 @@
 </div>
 
 {{-- modal: Pembayaran Edit --}}
-<div class="modal fade" id="paymentModalEdit" tabindex="-1" aria-labelledby="paymentModalEditLabel" aria-hidden="true"
-    data-bs-backdrop="static">
+<div class="modal fade" id="paymentModalEdit" tabindex="-1" aria-labelledby="paymentModalEditLabel"
+    aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content">
- 
+
             {{-- Header --}}
             <div class="modal-header border-bottom pb-3">
                 <h5 class="modal-title fw-bold" id="paymentModalEditLabel">
@@ -391,7 +391,7 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
- 
+
             <div class="modal-body pb-0">
                 {{-- Total Tagihan Highlight --}}
                 <div class="text-center bg-label-primary rounded p-3 mb-4">
@@ -399,7 +399,7 @@
                     {{-- ✅ FIX: ID unik -edit --}}
                     <h2 class="fw-bolder text-primary mb-0" id="payment-modal-total-edit">Rp 0</h2>
                 </div>
- 
+
                 {{-- Metode Pembayaran (Radio Button bergaya Card) --}}
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Metode Pembayaran</label>
@@ -426,7 +426,7 @@
                                 <i class="bx bx-qr-scan fs-4 d-block me-2"></i> QRIS
                             </label>
                         </div>
- 
+
                         {{-- ✅ FIX: id="transfer-details-edit" dan id="bank_id-edit" --}}
                         <div id="transfer-details-edit" class="d-none mt-3 animate__animated animate__fadeIn">
                             <label for="bank_id_edit" class="form-label fw-semibold">Rekening Tujuan <span
@@ -443,7 +443,7 @@
                         </div>
                     </div>
                 </div>
- 
+
                 {{-- Input Jumlah Bayar --}}
                 <div class="mb-3">
                     <label for="jumlah-dibayar-input-edit" class="form-label fw-semibold">Jumlah Uang Diterima</label>
@@ -454,17 +454,18 @@
                             class="form-control text-end fw-bold" inputmode="numeric" form="editSaleForm" required>
                     </div>
                 </div>
- 
+
                 {{-- Tombol Uang Pas / Quick Pay --}}
                 <div class="row gx-2 mb-4">
                     <div class="col-4">
                         {{-- ✅ FIX: id unik -edit --}}
-                        <button class="btn bg-label-secondary w-100" id="btn-pay-exact-edit"
-                            type="button">Uang Pas</button>
+                        <button class="btn bg-label-secondary w-100" id="btn-pay-exact-edit" type="button">Uang
+                            Pas</button>
                     </div>
                     <div class="col-4">
                         {{-- ✅ FIX: class unik quick-pay-btn-edit --}}
-                        <button class="btn bg-label-secondary w-100 quick-pay-btn-edit" type="button" data-amount="50000">50
+                        <button class="btn bg-label-secondary w-100 quick-pay-btn-edit" type="button"
+                            data-amount="50000">50
                             Rb</button>
                     </div>
                     <div class="col-4">
@@ -472,7 +473,7 @@
                             data-amount="100000">100 Rb</button>
                     </div>
                 </div>
- 
+
                 {{-- Kembalian & Catatan --}}
                 <div class="row g-3 mb-3">
                     <div class="col-12">
@@ -483,7 +484,7 @@
                         </div>
                     </div>
                     <div class="col-12">
-                        <label for="catatan-edit-quill" class="form-label fw-semibold">Catatan</label>
+                        <label for="quill-editor-catatan-edit" class="form-label fw-semibold">Catatan</label>
                         <div class="border rounded-3 bg-white">
                             {{-- ✅ FIX: id Quill unik -edit --}}
                             <div id="quill-editor-catatan-edit" style="min-height: 80px; border: none;">
@@ -501,8 +502,7 @@
                 <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 my-4 pt-3 border-top">
                     <button type="button" class="btn btn-outline-danger w-100 w-sm-auto order-2 order-sm-1"
                         data-bs-dismiss="modal">Batal</button>
-                    <button type="submit"
-                        class="btn btn-success w-100 w-sm-auto order-1 order-sm-2 px-4"
+                    <button type="submit" class="btn btn-success w-100 w-sm-auto order-1 order-sm-2 px-4"
                         id="saveBtn" form="editSaleForm">
                         <i class="bx bx-check-circle me-1"></i> Simpan Perubahan
                     </button>
@@ -511,7 +511,7 @@
         </div>
     </div>
 </div>
- 
+
 {{-- Modal Edit Item Detail --}}
 <div class="modal fade" id="editItemDetailModal" tabindex="-1" aria-labelledby="editItemDetailModalLabel"
     aria-hidden="true">
@@ -561,5 +561,3 @@
         </div>
     </div>
 </div>
- 
- 
