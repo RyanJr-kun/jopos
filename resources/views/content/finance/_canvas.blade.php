@@ -1,118 +1,203 @@
-{{-- resources/views/content/finance/partials/cash-flow-offcanvas.blade.php --}}
-{{-- Include sekali saja di layout/index pemasukan, pengeluaran, dan transfer --}}
+{{-- resources/views/content/finance/_canvas.blade.php --}}
+{{-- Include sekali saja di halaman pemasukan, pengeluaran, dan transfer --}}
 
-<div class="offcanvas offcanvas-end" tabindex="-1" id="cashFlowOffcanvas" aria-labelledby="cashFlowOffcanvasLabel">
-    <div class="offcanvas-header">
-        <h5 id="cashFlowOffcanvasLabel">Cash Flow</h5>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="cashFlowOffcanvas" aria-labelledby="cashFlowOffcanvasLabel"
+    style="width:420px">
+    <div class="offcanvas-header border-bottom">
+        <div class="d-flex align-items-center gap-2">
+            <div id="cashFlowOffcanvasIcon" class="cf-canvas-type-dot"></div>
+            <h5 id="cashFlowOffcanvasLabel" class="mb-0 fw-semibold fs-6">Cash Flow</h5>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body" id="cashFlowOffcanvasBody">
-        <div class="text-center text-muted py-5">Memuat...</div>
+        <div class="cf-canvas-loading">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <span class="ms-2 text-muted">Memuat formulir...</span>
+        </div>
     </div>
 </div>
 
-<script>
-    (function() {
-        const offcanvasEl = document.getElementById('cashFlowOffcanvas');
-        const bsOffcanvas = new bootstrap.Offcanvas(offcanvasEl);
-        const body = document.getElementById('cashFlowOffcanvasBody');
-        const title = document.getElementById('cashFlowOffcanvasLabel');
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+{{-- Toast Container --}}
+<div class="position-fixed top-0 end-0 p-3" style="z-index:9999" id="cfToastContainer">
+    <div id="cfToast" class="toast align-items-center border-0" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2" id="cfToastBody"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+        </div>
+    </div>
+</div>
 
-        async function loadForm(url, label) {
-            title.textContent = label;
-            body.innerHTML = '<div class="text-center text-muted py-5">Memuat...</div>';
-            bsOffcanvas.show();
+@push('page-script')
+    {{--
+    type="module" → otomatis defer (jalan setelah semua script dimuat).
+    Kita ambil $ dan bootstrap dari window yang sudah di-set oleh vendor scripts Vite.
+--}}
+    <script type="module">
+        /* global $, bootstrap */
+        const $ = window.jQuery;
+        const {
+            Offcanvas,
+            Toast
+        } = window.bootstrap;
 
-            const res = await fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    Accept: 'application/json'
-                },
-            });
-            const data = await res.json();
-            body.innerHTML = data.html;
-            bindFormSubmit();
-        }
+        $(function() {
 
-        function bindFormSubmit() {
-            const form = document.getElementById('cashFlowForm');
-            if (!form) return;
+            /* ── Inisialisasi Offcanvas ─────────────────────────────────── */
+            const $offcanvasEl = $('#cashFlowOffcanvas');
+            if (!$offcanvasEl.length) return;
 
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const errorsBox = document.getElementById('cashFlowFormErrors');
-                errorsBox.innerHTML = '';
+            const bsOffcanvas = new Offcanvas($offcanvasEl[0]);
+            const $body = $('#cashFlowOffcanvasBody');
+            const $title = $('#cashFlowOffcanvasLabel');
+            const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-                const formData = new FormData(form);
-                const submitBtn = form.querySelector('button[type="submit"]');
-                submitBtn.disabled = true;
+            /* ── Toast helper ───────────────────────────────────────────── */
+            function showToast(message, type = 'success') {
+                const $toast = $('#cfToast');
+                const icon = type === 'success' ? 'bx-check-circle' : 'bx-x-circle';
+                const bg = type === 'success' ? 'bg-success' : 'bg-danger';
 
-                try {
-                    const res = await fetch(form.action, {
-                        method: 'POST', // Laravel baca _method=PUT dari form data, fetch tetap kirim POST untuk file upload
+                $toast
+                    .attr('class', `toast align-items-center border-0 text-white ${bg}`)
+                    .find('#cfToastBody')
+                    .html(`<i class="bx ${icon} fs-5 me-2"></i>${message}`);
+
+                Toast.getOrCreateInstance($toast[0], {
+                    delay: 4000
+                }).show();
+            }
+
+            /* ── Loading state ──────────────────────────────────────────── */
+            function setBodyLoading() {
+                $body.html(`
+            <div class="cf-canvas-loading">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                <span class="ms-2 text-muted">Memuat formulir...</span>
+            </div>`);
+            }
+
+            /* ── Load form via $.ajax ───────────────────────────────────── */
+            function loadForm(url, label) {
+                $title.text(label);
+                setBodyLoading();
+                bsOffcanvas.show();
+
+                $.ajax({
+                    url,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        Accept: 'application/json'
+                    },
+                    success(data) {
+                        $body.html(data.html).addClass('cf-form-fade-in');
+                        setTimeout(() => $body.removeClass('cf-form-fade-in'), 400);
+                        bindFormSubmit();
+                    },
+                    error() {
+                        $body.html(`
+                    <div class="text-center py-5 text-danger">
+                        <i class="bx bx-wifi-off d-block fs-1 mb-2"></i>
+                        <p class="mb-0">Gagal memuat formulir. Coba lagi.</p>
+                    </div>`);
+                    },
+                });
+            }
+
+            /* ── Bind form submit ───────────────────────────────────────── */
+            function bindFormSubmit() {
+                const $form = $('#cashFlowForm');
+                if (!$form.length) return;
+
+                $form.on('submit', function(e) {
+                    e.preventDefault();
+
+                    const $errors = $('#cashFlowFormErrors').empty();
+                    const $submitBtn = $form.find('button[type="submit"]');
+                    const origHTML = $submitBtn.html();
+
+                    $submitBtn.prop('disabled', true).html(
+                        `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Menyimpan...`
+                    );
+
+                    $.ajax({
+                        url: $form.attr('action'),
+                        method: 'POST',
+                        data: new FormData(this),
+                        processData: false,
+                        contentType: false,
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
                             Accept: 'application/json',
                             'X-CSRF-TOKEN': csrfToken,
                         },
-                        body: formData,
+                        success(data) {
+                            bsOffcanvas.hide();
+                            showToast(data.message, 'success');
+                            refreshTable();
+                        },
+                        error(xhr) {
+                            $submitBtn.prop('disabled', false).html(origHTML);
+
+                            if (xhr.status === 422) {
+                                const msgs = Object.values(xhr.responseJSON?.errors ?? {}).flat();
+                                $errors.html(
+                                    msgs.map(m =>
+                                        `<div class="cf-error-item"><i class="bx bx-error-circle"></i>${m}</div>`
+                                    ).join('')
+                                );
+                            } else {
+                                $errors.html(`
+                            <div class="cf-error-item">
+                                <i class="bx bx-error-circle"></i>
+                                ${xhr.responseJSON?.message ?? 'Terjadi kesalahan.'}
+                            </div>`);
+                            }
+                        },
                     });
-
-                    const data = await res.json();
-
-                    if (res.status === 422) {
-                        errorsBox.innerHTML = Object.values(data.errors).flat().join('<br>');
-                        submitBtn.disabled = false;
-                        return;
-                    }
-
-                    if (!res.ok) {
-                        errorsBox.innerHTML = data.message ?? 'Terjadi kesalahan.';
-                        submitBtn.disabled = false;
-                        return;
-                    }
-
-                    bsOffcanvas.hide();
-                    refreshTable();
-                    // Ganti dengan toast kalau JOPOS sudah punya komponen notifikasi
-                    alert(data.message);
-                } catch (err) {
-                    errorsBox.innerHTML = 'Gagal terhubung ke server.';
-                    submitBtn.disabled = false;
-                }
-            });
-        }
-
-        async function refreshTable() {
-            const tableArea = document.getElementById('cash-flow-table-area');
-            if (!tableArea) return;
-
-            const url = new URL(window.location.href);
-            url.searchParams.set('fragment', 'table');
-
-            const res = await fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    Accept: 'application/json'
-                },
-            });
-            const data = await res.json();
-            tableArea.outerHTML = data.html;
-        }
-
-        // Tombol "+ Tambah" — kasih atribut data-create-url berisi route create untuk type ini
-        document.addEventListener('click', function(e) {
-            const createBtn = e.target.closest('[data-cash-flow-create]');
-            if (createBtn) {
-                loadForm(createBtn.dataset.cashFlowCreate, createBtn.dataset.label ?? 'Tambah Transaksi');
+                });
             }
 
-            // Tombol edit per baris — kasih atribut data-edit-url berisi route edit + referensi record
-            const editBtn = e.target.closest('[data-cash-flow-edit]');
-            if (editBtn) {
-                loadForm(editBtn.dataset.cashFlowEdit, editBtn.dataset.label ?? 'Edit Transaksi');
+            /* ── Refresh tabel via AJAX ─────────────────────────────────── */
+            function refreshTable() {
+                const $tableArea = $('#cash-flow-table-area');
+                if (!$tableArea.length) return;
+
+                const url = new URL(window.location.href);
+                url.searchParams.set('fragment', 'table');
+
+                $.ajax({
+                    url: url.toString(),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        Accept: 'application/json'
+                    },
+                    success(data) {
+                        $tableArea.replaceWith(data.html);
+                    },
+                    error() {
+                        window.location.reload();
+                    },
+                });
             }
-        });
-    })();
-</script>
+
+            /* ── Event delegation ───────────────────────────────────────── */
+            $(document).on('click', '[data-cash-flow-create]', function() {
+                loadForm(
+                    $(this).data('cash-flow-create'),
+                    $(this).data('label') || 'Tambah Transaksi'
+                );
+            });
+
+            $(document).on('click', '[data-cash-flow-edit]', function() {
+                loadForm(
+                    $(this).data('cash-flow-edit'),
+                    $(this).data('label') || 'Edit Transaksi'
+                );
+            });
+
+        }); // end $(function)
+    </script>
+@endpush

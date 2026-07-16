@@ -15,7 +15,6 @@ class CashFlow extends Model
   const TYPE_TRANSFER = 'transfer';
 
   protected $fillable = [
-    'type',
     'store_id',
     'transaction_category_id',
     'tanggal',
@@ -29,6 +28,9 @@ class CashFlow extends Model
     'keterangan',
     'description',
     'user_id',
+    'source_type',
+    'source_id',
+    'dibatalkan_at',
   ];
 
   protected $with = ['transaction_category', 'user'];
@@ -36,7 +38,18 @@ class CashFlow extends Model
   protected $casts = [
     'tanggal' => 'datetime',
     'nominal' => 'decimal:0',
+    'dibatalkan_at' => 'datetime',
   ];
+
+  public function scopeAktif(Builder $query): Builder
+  {
+    return $query->whereNull('dibatalkan_at');
+  }
+
+  protected function isOtomatis(): Attribute
+  {
+    return Attribute::make(get: fn() => !is_null($this->source_type));
+  }
 
   protected function nominalFormatted(): Attribute
   {

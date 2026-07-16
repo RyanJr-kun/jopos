@@ -10,22 +10,22 @@ class TransactionCategory extends Model
 {
   use Sluggable;
   protected $guarded = ['id'];
-  public function incomes(): HasMany
+
+  public function cashFlows(): HasMany
   {
-    return $this->hasMany(Income::class);
+    return $this->hasMany(CashFlow::class);
   }
-  public function expenses(): HasMany
-  {
-    return $this->hasMany(Expense::class);
-  }
+
   public function getRouteKeyName(): string
   {
     return 'slug';
   }
+
   public function sluggable(): array
   {
     return ['slug' => ['source' => 'name']];
   }
+
   public static function getTypes()
   {
     return ['income', 'expense'];

@@ -556,3 +556,315 @@ $fin-store : #20c997;
         background: var(--bs-border-color);
     }
 }
+
+// =============================================================================
+// CASH FLOW LIST — TABEL ENHANCEMENTS
+// =============================================================================
+
+// Baris yang dibatalkan
+.cf-row-cancelled td {
+    opacity: .45;
+}
+
+// Tanggal
+.cf-date {
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--bs-secondary-color);
+}
+
+// Nomor referensi
+.cf-ref {
+    font-size: 11.5px;
+    font-family: 'Courier New', monospace;
+    background: rgba(var(--bs-primary-rgb), .06);
+    color: var(--bs-primary);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+// Keterangan
+.cf-keterangan {
+    font-size: 13px;
+}
+
+// Badge "Otomatis"
+.cf-badge-auto {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: rgba($fin-qris, .1);
+    color: $fin-qris;
+    font-weight: 500;
+    margin-top: 2px;
+
+    i { font-size: 11px; }
+}
+
+// Kategori pill
+.cf-kategori-pill {
+    display: inline-block;
+    font-size: 11.5px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    background: rgba(var(--bs-primary-rgb), .08);
+    color: var(--bs-primary);
+    font-weight: 500;
+}
+
+// Nama bank
+.cf-bank {
+    font-size: 12px;
+    color: var(--bs-secondary-color);
+    font-weight: 500;
+}
+
+// User / penanggung jawab
+.cf-user {
+    white-space: nowrap;
+}
+
+.cf-user-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba($fin-neutral, .14);
+    color: $fin-neutral;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cf-user-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--bs-body-color);
+}
+
+// Lock icon
+.cf-lock-icon {
+    color: var(--bs-secondary-color);
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    opacity: .55;
+}
+
+// Action buttons
+.cf-btn-edit,
+.cf-btn-delete {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// =============================================================================
+// EMPTY STATE
+// =============================================================================
+.cf-empty-state {
+    text-align: center;
+    padding: 3.5rem 1rem;
+
+    .cf-empty-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(var(--bs-primary-rgb), .07);
+        color: rgba(var(--bs-primary-rgb), .5);
+        font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+
+    .cf-empty-title {
+        font-weight: 600;
+        margin-bottom: .35rem;
+        color: var(--bs-body-color);
+    }
+
+    .cf-empty-desc {
+        font-size: 13px;
+        color: var(--bs-secondary-color);
+        margin-bottom: 1.25rem;
+        line-height: 1.6;
+    }
+}
+
+// =============================================================================
+// OFFCANVAS CASHFLOW
+// =============================================================================
+.cf-canvas-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1rem;
+    color: var(--bs-secondary-color);
+    font-size: 14px;
+}
+
+.cf-canvas-type-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $fin-neutral;
+    flex-shrink: 0;
+}
+
+// Form fade-in saat di-load ke offcanvas
+@keyframes cfFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.cf-form-fade-in {
+    animation: cfFadeIn .3s ease;
+}
+
+// =============================================================================
+// UPLOAD AREA & PREVIEW BUKTI
+// =============================================================================
+.cf-upload-area {
+    position: relative;
+    border: 1.5px dashed var(--bs-border-color);
+    border-radius: 10px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .18s, background .18s;
+    font-size: 13px;
+    color: var(--bs-secondary-color);
+
+    i {
+        font-size: 1.8rem;
+        display: block;
+        margin-bottom: 4px;
+        color: rgba(var(--bs-primary-rgb), .4);
+    }
+
+    &:hover, &.dragover {
+        border-color: $fin-neutral;
+        background: rgba($fin-neutral, .04);
+        color: $fin-neutral;
+
+        i { color: $fin-neutral; }
+    }
+}
+
+.cf-upload-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    cursor: pointer;
+}
+
+.cf-bukti-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--bs-border-color);
+    flex-shrink: 0;
+}
+
+// =============================================================================
+// FORM ERRORS
+// =============================================================================
+.cf-error-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 12.5px;
+    color: $fin-expense;
+    padding: 4px 0;
+
+    i {
+        font-size: 15px;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    & + .cf-error-item {
+        border-top: 1px solid rgba($fin-expense, .1);
+    }
+}
+
+// =============================================================================
+// FILTER BAR — DATE RANGE INPUTS
+// =============================================================================
+.cf-datepicker {
+    font-size: 13px;
+}
+
+// =============================================================================
+// TYPE SWITCHER NAV (Pemasukan / Pengeluaran / Transfer)
+// =============================================================================
+.cf-type-nav {
+    display: flex;
+    gap: 6px;
+    background: var(--bs-card-bg, #fff);
+    border: 1px solid var(--bs-border-color);
+    border-radius: $fin-radius-lg;
+    padding: 6px;
+    width: fit-content;
+    flex-wrap: wrap;
+
+    .cf-type-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 18px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--bs-secondary-color);
+        text-decoration: none;
+        transition: all .18s ease;
+        white-space: nowrap;
+        border: 1.5px solid transparent;
+
+        i {
+            font-size: 16px;
+        }
+
+        &:hover {
+            background: rgba(var(--bs-primary-rgb), .06);
+            color: var(--bs-primary);
+        }
+
+        // Active states per type
+        &.active {
+            font-weight: 600;
+
+            &.income {
+                background: rgba($fin-income, .1);
+                color: $fin-income;
+                border-color: rgba($fin-income, .25);
+            }
+
+            &.expense {
+                background: rgba($fin-expense, .1);
+                color: $fin-expense;
+                border-color: rgba($fin-expense, .25);
+            }
+
+            &.transfer {
+                background: rgba($fin-transfer, .1);
+                color: $fin-transfer;
+                border-color: rgba($fin-transfer, .25);
+            }
+        }
+    }
+}
+

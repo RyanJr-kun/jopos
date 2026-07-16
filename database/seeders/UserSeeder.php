@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\User;
-use App\Models\Store;
+use App\Models\Bank;
 use App\Models\EmployeeProfile;
+use App\Models\Store;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
@@ -76,6 +77,86 @@ class UserSeeder extends Seeder
       'jabatan' => 'staff_it', // Atau 'Full Stack Developer'
       'nik' => '1234567890',
       'tanggal_bergabung' => now(),
+    ]);
+
+    Bank::insert([
+      // --- AKUN TUNAI PER TOKO ---
+      [
+        'store_id' => 1, // ID Toko Kartasura
+        'tipe_akun' => 'tunai',
+        'nama_bank' => 'Kas Tunai Kartasura',
+        'nomor_rekening' => null,
+        'nama_pemilik' => null,
+        'saldo_awal' => 0,
+        'logo_bank' => null,
+        'is_active' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+      ],
+      [
+        'store_id' => 2, // ID Toko Baturetno
+        'tipe_akun' => 'tunai',
+        'nama_bank' => 'Kas Tunai Baturetno',
+        'nomor_rekening' => null,
+        'nama_pemilik' => null,
+        'saldo_awal' => 0,
+        'logo_bank' => null,
+        'is_active' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+      ],
+
+      // --- AKUN BANK PUSAT ---
+      [
+        'store_id' => null, // Pusat (Bisa dipakai semua toko)
+        'tipe_akun' => 'bank',
+        'nama_bank' => 'BCA',
+        'nomor_rekening' => '392.029.4277',
+        'nama_pemilik' => 'Gunawan SetyaBudi N',
+        'saldo_awal' => 0,
+        'logo_bank' => 'banks/bank-bca-1781754601.png',
+        'is_active' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+      ],
+      [
+        'store_id' => null,
+        'tipe_akun' => 'bank',
+        'nama_bank' => 'Mandiri',
+        'nomor_rekening' => '138.001.728.4147',
+        'nama_pemilik' => 'Gunawan SetyaBudi N',
+        'saldo_awal' => 0,
+        'logo_bank' => 'banks/mandiri-1780995956.png',
+        'is_active' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+      ],
+      [
+        'store_id' => null,
+        'tipe_akun' => 'bank',
+        'nama_bank' => 'BRI',
+        'nomor_rekening' => '6959.01.028402.53.8',
+        'nama_pemilik' => 'Etik Yudiarini',
+        'saldo_awal' => 0,
+        'logo_bank' => 'banks/bank-bri-1781107738.png',
+        'is_active' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+      ],
+
+      // --- AKUN QRIS PUSAT ---
+      [
+        'store_id' => null,
+        'tipe_akun' => 'qris',
+        'nama_bank' => 'JO COMPUTER 1', // Bebas bisa disesuaikan namanya
+        'nomor_rekening' => null,
+        'nama_pemilik' => 'JO Computer',
+        'saldo_awal' => 0,
+        'logo_bank' => null,
+        'is_active' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+      ],
     ]);
   }
 }

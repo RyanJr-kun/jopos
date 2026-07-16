@@ -212,9 +212,9 @@
           "permission": "view-keuangan"
         },
         {
-          "url": "financial/cash-flows",
+          "url": "financial/cash-flows/income",
           "name": "Cash Flow",
-          "slug": "financial.cash-flows.index",
+          "slug": ["financial.cash-flows.index", "financial.cash-flows.index", "financial.cash-flows.index"],
           "permission": "view-cash-flow"
         },
         {

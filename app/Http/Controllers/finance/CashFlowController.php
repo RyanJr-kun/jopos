@@ -38,11 +38,7 @@ class CashFlowController extends Controller implements HasMiddleware
 
   private function viewFor(string $type): string
   {
-    return match ($type) {
-      CashFlow::TYPE_INCOME => 'content.finance.pemasukan',
-      CashFlow::TYPE_EXPENSE => 'content.finance.pengeluaran',
-      CashFlow::TYPE_TRANSFER => 'content.finance.transfer',
-    };
+    return 'content.finance.cash-flow';
   }
 
   /**
@@ -80,10 +76,10 @@ class CashFlowController extends Controller implements HasMiddleware
 
     if ($type !== CashFlow::TYPE_TRANSFER) {
       $kategoriFilters = TransactionCategory::query()->where('type', $type)->whereHas('cashFlows', fn($q) => $q->where('type', $type))->orderBy('name', 'asc')->get();
-
       $allKategoris = TransactionCategory::query()->where('type', $type)->where('status', 1)->orderBy('name', 'asc')->get();
     }
 
+    // Filter: pencarian teks
     if ($request->filled('search')) {
       $search = $request->input('search');
       $query->where(function ($q) use ($search) {
@@ -91,12 +87,29 @@ class CashFlowController extends Controller implements HasMiddleware
       });
     }
 
+    // Filter: kategori
     if ($request->filled('kategori_id')) {
       $query->where('transaction_category_id', $request->input('kategori_id'));
     }
 
+    // Filter: rentang tanggal
+    if ($request->filled('date_from')) {
+      $query->whereDate('tanggal', '>=', $request->input('date_from'));
+    }
+    if ($request->filled('date_to')) {
+      $query->whereDate('tanggal', '<=', $request->input('date_to'));
+    }
+
+    // Filter: status (aktif / batal)
+    if ($request->input('status') === 'aktif') {
+      $query->whereNull('dibatalkan_at');
+    } elseif ($request->input('status') === 'batal') {
+      $query->whereNotNull('dibatalkan_at');
+    }
+
     $cashFlows = $query->paginate(15)->withQueryString();
     $totalNominal = (clone $query)->sum('nominal');
+    $totalCount = (clone $query)->count();
 
     $viewData = [
       'title' => $type,
@@ -108,6 +121,9 @@ class CashFlowController extends Controller implements HasMiddleware
       'stores' => $stores,
       'banks' => Bank::all(),
       'totalNominal' => $totalNominal,
+      'totalCount' => $totalCount,
+      'dateFrom' => $request->input('date_from'),
+      'dateTo' => $request->input('date_to'),
     ];
 
     $view = $this->viewFor($type);
@@ -207,7 +223,7 @@ class CashFlowController extends Controller implements HasMiddleware
 
     if ($type === CashFlow::TYPE_TRANSFER) {
       $rules['keterangan'] = 'nullable|string|max:255'; // auto-diisi "Transfer Internal" kalau kosong
-      $rules['metode_pembayaran_tujuan'] = 'required|in:TUNAI,TRANSFER,QRIS';
+      $rules['metode_pembayaran'] = 'nullable|in:TUNAI,TRANSFER,QRIS';
       $rules['bank_id_tujuan'] = 'nullable|required_if:metode_pembayaran_tujuan,TRANSFER|exists:banks,id';
     } else {
       $rules['keterangan'] = 'required|string|max:255';
@@ -319,13 +335,18 @@ class CashFlowController extends Controller implements HasMiddleware
       ->with('success', CashFlow::typeLabel($type) . ' berhasil dicatat!');
   }
 
-  public function getjson(CashFlow $cash_flow)
+  public function getjson(string $type, CashFlow $cash_flow)
   {
     return response()->json($cash_flow);
   }
 
   public function update(Request $request, string $type, CashFlow $cash_flow)
   {
+    if ($cash_flow->source_type) {
+      $message = 'Data ini berasal dari transaksi Penjualan/Pembelian, tidak bisa diubah dari sini.';
+      return $this->wantsJson($request) ? response()->json(['message' => $message], 403) : back()->with('error', $message);
+    }
+
     $type = $this->resolveType($type);
 
     $validated = $request->validate($this->rulesFor($request, $type, $cash_flow));
@@ -369,6 +390,11 @@ class CashFlowController extends Controller implements HasMiddleware
 
   public function destroy(Request $request, string $type, CashFlow $cash_flow)
   {
+    if ($cash_flow->source_type) {
+      $message = 'Data ini berasal dari transaksi Penjualan/Pembelian, tidak bisa diubah dari sini.';
+      return $this->wantsJson($request) ? response()->json(['message' => $message], 403) : back()->with('error', $message);
+    }
+
     $type = $this->resolveType($type);
 
     if ($cash_flow->bukti) {
