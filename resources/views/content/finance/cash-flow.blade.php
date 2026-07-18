@@ -28,46 +28,42 @@
     {{-- ================================================================= --}}
     {{-- HEADER                                                             --}}
     {{-- ================================================================= --}}
-    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
-        <div>
-            <h4 class="mb-0 fw-bold">{{ $label }}</h4>
-            <p class="text-muted mb-0" style="font-size:13px">
-                Riwayat {{ strtolower($label) }}, termasuk yang tercatat otomatis dari penjualan/pembelian.
-            </p>
+    <div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
+        <div class="cf-type-nav">
+            <a href="{{ route('financial.cash-flows.index', ['type' => \App\Models\CashFlow::TYPE_INCOME]) }}"
+                class="cf-type-tab {{ $type === \App\Models\CashFlow::TYPE_INCOME ? 'active income' : '' }}">
+                <i class="bx bx-trending-up"></i>
+                <span>Pemasukan</span>
+            </a>
+            <a href="{{ route('financial.cash-flows.index', ['type' => \App\Models\CashFlow::TYPE_EXPENSE]) }}"
+                class="cf-type-tab {{ $type === \App\Models\CashFlow::TYPE_EXPENSE ? 'active expense' : '' }}">
+                <i class="bx bx-trending-down"></i>
+                <span>Pengeluaran</span>
+            </a>
+            <a href="{{ route('financial.cash-flows.index', ['type' => \App\Models\CashFlow::TYPE_TRANSFER]) }}"
+                class="cf-type-tab {{ $type === \App\Models\CashFlow::TYPE_TRANSFER ? 'active transfer' : '' }}">
+                <i class="bx bx-transfer-alt"></i>
+                <span>Transfer</span>
+            </a>
         </div>
-        <button type="button" class="btn btn-primary d-flex align-items-center gap-1"
+        <button type="button" class="btn btn-primary px-2"
             data-cash-flow-create="{{ route('financial.cash-flows.create', ['type' => $type]) }}"
-            data-label="Tambah {{ $label }}">
-            <i class="bx bx-plus fs-5"></i> Tambah {{ $label }}
+            data-label="Tambah {{ $label }}" title="Tambah {{ $label }}" data-bs-toggle="tooltip"
+            data-bs-placement="top">
+            <i class="bx bx-plus fs-5"></i>
         </button>
     </div>
 
     {{-- ================================================================= --}}
     {{-- TYPE SWITCHER NAV                                                   --}}
     {{-- ================================================================= --}}
-    <div class="cf-type-nav mb-4">
-        <a href="{{ route('financial.cash-flows.index', ['type' => \App\Models\CashFlow::TYPE_INCOME]) }}"
-            class="cf-type-tab {{ $type === \App\Models\CashFlow::TYPE_INCOME ? 'active income' : '' }}">
-            <i class="bx bx-trending-up"></i>
-            <span>Pemasukan</span>
-        </a>
-        <a href="{{ route('financial.cash-flows.index', ['type' => \App\Models\CashFlow::TYPE_EXPENSE]) }}"
-            class="cf-type-tab {{ $type === \App\Models\CashFlow::TYPE_EXPENSE ? 'active expense' : '' }}">
-            <i class="bx bx-trending-down"></i>
-            <span>Pengeluaran</span>
-        </a>
-        <a href="{{ route('financial.cash-flows.index', ['type' => \App\Models\CashFlow::TYPE_TRANSFER]) }}"
-            class="cf-type-tab {{ $type === \App\Models\CashFlow::TYPE_TRANSFER ? 'active transfer' : '' }}">
-            <i class="bx bx-transfer-alt"></i>
-            <span>Transfer</span>
-        </a>
-    </div>
+
 
 
     {{-- ================================================================= --}}
     {{-- RINGKASAN TOTAL                                                     --}}
     {{-- ================================================================= --}}
-    <div class="fin-summary-card {{ $cardClass }} mb-4">
+    <div class="fin-summary-card {{ $cardClass }} mb-3">
         <div class="d-flex align-items-center gap-3">
             <div class="fin-card-icon">
                 <i class="bx {{ $cardIcon }}"></i>
@@ -92,39 +88,31 @@
             <div class="row g-2 align-items-end">
                 {{-- Search --}}
                 <div class="col-12 col-md-4 col-lg-3">
-                    <label class="form-label form-label-sm text-muted mb-1">Cari</label>
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                    <label class="form-label text-muted mb-1">Cari</label>
+                    <div class="input-group">
                         <input type="text" name="search" class="form-control" placeholder="Keterangan / referensi..."
                             value="{{ request('search') }}">
                     </div>
                 </div>
 
                 {{-- Date From --}}
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label class="form-label form-label-sm text-muted mb-1">Dari Tanggal</label>
-                    <input type="text" name="date_from" id="dateFrom" class="form-control form-control-sm cf-datepicker"
-                        placeholder="dd/mm/yyyy"
-                        value="{{ $dateFrom ? \Carbon\Carbon::parse($dateFrom)->format('d/m/Y') : '' }}"
-                        autocomplete="off">
-                    {{-- Hidden field untuk nilai Y-m-d yang dikirim --}}
-                    <input type="hidden" name="date_from" id="dateFromHidden" value="{{ $dateFrom }}">
-                </div>
-
-                {{-- Date To --}}
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label class="form-label form-label-sm text-muted mb-1">Sampai Tanggal</label>
-                    <input type="text" name="date_to" id="dateTo" class="form-control form-control-sm cf-datepicker"
-                        placeholder="dd/mm/yyyy"
-                        value="{{ $dateTo ? \Carbon\Carbon::parse($dateTo)->format('d/m/Y') : '' }}" autocomplete="off">
-                    <input type="hidden" name="date_to" id="dateToHidden" value="{{ $dateTo }}">
+                {{-- Rentang Tanggal (Date Range) --}}
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label text-muted mb-1">Rentang Tanggal</label>
+                    <div class="input-group">
+                        <input type="text" id="dateRange" class="form-control" placeholder="Pilih rentang tanggal..."
+                            autocomplete="off">
+                        {{-- Hidden fields untuk dikirim ke Controller --}}
+                        <input type="hidden" name="date_from" id="dateFromHidden" value="{{ $dateFrom }}">
+                        <input type="hidden" name="date_to" id="dateToHidden" value="{{ $dateTo }}">
+                    </div>
                 </div>
 
                 {{-- Kategori --}}
                 @unless ($isTransfer)
                     <div class="col-12 col-md-4 col-lg-2">
                         <label class="form-label form-label-sm text-muted mb-1">Kategori</label>
-                        <select name="kategori_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <select name="kategori_id" class="form-select select2-filter">
                             <option value="">Semua Kategori</option>
                             @foreach ($kategoriFilters as $kategori)
                                 <option value="{{ $kategori->id }}"
@@ -140,7 +128,7 @@
                 @if ($stores)
                     <div class="col-12 col-md-4 col-lg-2">
                         <label class="form-label form-label-sm text-muted mb-1">Toko</label>
-                        <select name="store_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <select name="store_id" class="form-select select2-filter">
                             <option value="">Semua Toko</option>
                             @foreach ($stores as $store)
                                 <option value="{{ $store->id }}"
@@ -155,7 +143,7 @@
                 {{-- Status --}}
                 <div class="col-6 col-md-3 col-lg-2">
                     <label class="form-label form-label-sm text-muted mb-1">Status</label>
-                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <select name="status" class="form-select select2-filter">
                         <option value="">Semua Status</option>
                         <option value="aktif" {{ request('status') === 'aktif' ? 'selected' : '' }}>Aktif</option>
                         <option value="batal" {{ request('status') === 'batal' ? 'selected' : '' }}>Dibatalkan</option>
@@ -163,13 +151,15 @@
                 </div>
 
                 {{-- Action Buttons --}}
-                <div class="col-auto d-flex gap-1">
-                    <button type="submit" class="btn btn-sm btn-primary">
-                        <i class="bx bx-search me-1"></i>Filter
+                <div class="col-6 col-md-auto d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-primary px-2" title="Filter" data-bs-toggle="tooltip"
+                        data-bs-placement="top">
+                        <i class="bx bx-search fs-5"></i>
                     </button>
                     <a href="{{ route('financial.cash-flows.index', ['type' => $type]) }}"
-                        class="btn btn-sm btn-outline-secondary" title="Reset filter">
-                        <i class="bx bx-reset"></i>
+                        class="btn btn-outline-secondary px-2" title="Reset filter" data-bs-toggle="tooltip"
+                        data-bs-placement="top">
+                        <i class="bx bx-reset fs-5"></i>
                     </a>
                 </div>
             </div>
@@ -231,10 +221,10 @@
                                         </td>
                                     @endunless
                                     @if ($isTransfer)
-                                        <td class="cf-bank">{{ $cf->bank?->nama_bank ?? '—' }}</td>
-                                        <td class="cf-bank">{{ $cf->bankTujuan?->nama_bank ?? '—' }}</td>
+                                        <td class="cf-bank">{{ $cf->account?->account_name ?? '—' }}</td>
+                                        <td class="cf-bank">{{ $cf->toAccount?->account_name ?? '—' }}</td>
                                     @else
-                                        <td class="cf-bank">{{ $cf->bank?->nama_bank ?? '—' }}</td>
+                                        <td class="cf-bank">{{ $cf->account?->account_name ?? '—' }}</td>
                                     @endif
                                     <td>
                                         @php $metode = strtolower($cf->metode_pembayaran ?? ''); @endphp
@@ -362,38 +352,106 @@
 
         $(function() {
 
-            /* ── Flatpickr — Filter Tanggal ─────────────────────────────── */
-            if (typeof flatpickr !== 'undefined') {
-                flatpickr('#dateFrom', {
-                    dateFormat: 'd/m/Y',
-                    allowInput: true,
-                    locale: {
-                        firstDayOfWeek: 1
-                    },
-                    onChange(selectedDates) {
-                        $('#dateFromHidden').val(
-                            selectedDates[0] ? selectedDates[0].toISOString().split('T')[0] : ''
-                        );
-                    },
-                });
+            /**
+             * Select2 di-load secara ASYNC (dynamic import) oleh Vite wrapper.
+             * Pada saat $(function(){}) jalan, $.fn.select2 kemungkinan belum tersedia.
+             * Maka kita gunakan polling singkat untuk menunggu Select2 siap.
+             */
+            function waitForSelect2(callback, maxWait) {
+                maxWait = maxWait || 5000;
+                var interval = 50;
+                var elapsed = 0;
 
-                flatpickr('#dateTo', {
-                    dateFormat: 'd/m/Y',
-                    allowInput: true,
-                    locale: {
-                        firstDayOfWeek: 1
-                    },
-                    onChange(selectedDates) {
-                        $('#dateToHidden').val(
-                            selectedDates[0] ? selectedDates[0].toISOString().split('T')[0] : ''
-                        );
-                    },
-                });
+                var timer = setInterval(function() {
+                    elapsed += interval;
+                    if ($.fn.select2) {
+                        clearInterval(timer);
+                        callback();
+                    } else if (elapsed >= maxWait) {
+                        clearInterval(timer);
+                        console.warn('Select2 tidak tersedia setelah ' + maxWait +
+                            'ms, filter fallback ke <select> biasa.');
+                    }
+                }, interval);
             }
 
-            // Hapus nama input display supaya tidak dobel terkirim saat submit
-            $('#cashFlowFilterForm').on('submit', function() {
-                $('#dateFrom, #dateTo').removeAttr('name');
+            waitForSelect2(function() {
+                $('.select2-filter').select2({
+                    width: '100%',
+                    // Angka 10: kotak search disembunyikan jika pilihan < 10 (misal Status)
+                    minimumResultsForSearch: 10
+                }).on('change', function() {
+                    $('#cashFlowFilterForm').submit();
+                });
+            });
+
+            /* ── Flatpickr — Filter Tanggal (Mode Range) ─────────────────────────────── */
+            function waitForFlatpickr(callback, maxWait) {
+                maxWait = maxWait || 5000;
+                var interval = 50;
+                var elapsed = 0;
+
+                if (window.flatpickr) {
+                    callback();
+                    return;
+                }
+
+                var timer = setInterval(function() {
+                    elapsed += interval;
+                    if (window.flatpickr) {
+                        clearInterval(timer);
+                        callback();
+                    } else if (elapsed >= maxWait) {
+                        clearInterval(timer);
+                        console.warn('Flatpickr tidak tersedia setelah ' + maxWait + 'ms.');
+                    }
+                }, interval);
+            }
+
+            // Helper: konversi Date ke string 'YYYY-MM-DD' tanpa masalah timezone
+            function toISODate(date) {
+                var y = date.getFullYear();
+                var m = String(date.getMonth() + 1).padStart(2, '0');
+                var d = String(date.getDate()).padStart(2, '0');
+                return y + '-' + m + '-' + d;
+            }
+
+            waitForFlatpickr(function() {
+                // Ambil nilai filter yang sedang aktif dari URL (jika ada)
+                var activeDateFrom = $('#dateFromHidden').val(); // format: 'YYYY-MM-DD' atau ''
+                var activeDateTo = $('#dateToHidden').val();
+                var defaultDates = [];
+
+                // Flatpickr defaultDate harus berupa Date object atau string yang cocok
+                // dengan dateFormat. Karena dateFormat kita 'd/m/Y' tapi hidden value
+                // format 'Y-m-d', kita pass sebagai Date object agar aman.
+                if (activeDateFrom) defaultDates.push(new Date(activeDateFrom + 'T00:00:00'));
+                if (activeDateTo) defaultDates.push(new Date(activeDateTo + 'T00:00:00'));
+
+                flatpickr('#dateRange', {
+                    mode: 'range',
+                    dateFormat: 'd/m/Y',
+                    allowInput: true,
+                    defaultDate: defaultDates.length ? defaultDates : undefined,
+                    locale: {
+                        firstDayOfWeek: 1,
+                        rangeSeparator: ' sampai '
+                    },
+                    onChange: function(selectedDates) {
+                        if (selectedDates.length === 0) {
+                            $('#dateFromHidden').val('');
+                            $('#dateToHidden').val('');
+                            $('#cashFlowFilterForm').submit();
+                        } else if (selectedDates.length === 1) {
+                            $('#dateFromHidden').val(toISODate(selectedDates[0]));
+                            $('#dateToHidden').val('');
+                        } else if (selectedDates.length === 2) {
+                            $('#dateFromHidden').val(toISODate(selectedDates[0]));
+                            $('#dateToHidden').val(toISODate(selectedDates[1]));
+                            $('#cashFlowFilterForm').submit();
+                        }
+                    },
+                });
             });
 
             /* ── Modal Konfirmasi Hapus ─────────────────────────────────── */

@@ -39,14 +39,14 @@
                         </div>
 
                         <div id="transfer-details" class="d-none mt-3 animate__animated animate__fadeIn">
-                            <label for="bank_id" class="form-label fw-semibold">Rekening Tujuan <span
+                            <label for="account_id" class="form-label fw-semibold">Rekening Tujuan <span
                                     class="text-danger">*</span></label>
-                            <select name="bank_id" id="bank_id" class="form-select select2 select2-bank"
+                            <select name="account_id" id="account_id" class="form-select select2 select2-bank"
                                 data-placeholder="Pilih Rekening Bank" form="formPurchase">
                                 <option value=""></option>
-                                @foreach ($banks as $bank)
+                                @foreach ($accounts as $bank)
                                     <option value="{{ $bank->id }}" data-logo="{{ $bank->logo_url }}">
-                                        {{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}
+                                        {{ $bank->account_name }} - {{ $bank->nomor_rekening }}
                                     </option>
                                 @endforeach
                             </select>

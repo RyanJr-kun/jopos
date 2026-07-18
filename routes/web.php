@@ -53,13 +53,12 @@ Route::domain('jopos.' . $domain)->group(function () {
     Route::prefix('keuangan')
       ->name('keuangan.')
       ->group(function () {
-        // Mutasi Bank
         Route::post('/mutasi', [KeuanganController::class, 'storeMutasi'])->name('mutasi.store');
 
-        // Bank CRUD
-        Route::post('/bank', [KeuanganController::class, 'storeBank'])->name('bank.store');
-        Route::put('/bank/{bank}', [KeuanganController::class, 'updateBank'])->name('bank.update');
-        Route::delete('/bank/{bank}', [KeuanganController::class, 'destroyBank'])->name('bank.destroy');
+        // Account CRUD
+        Route::post('/account', [KeuanganController::class, 'storeBank'])->name('account.store');
+        Route::put('/account/{account}', [KeuanganController::class, 'updateBank'])->name('account.update');
+        Route::delete('/account/{account}', [KeuanganController::class, 'destroyBank'])->name('account.destroy');
       });
 
     Route::prefix('financial/cash-flows/{type}')

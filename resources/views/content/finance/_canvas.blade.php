@@ -79,6 +79,32 @@
             </div>`);
             }
 
+            /**
+             * Select2 di-load async oleh Vite wrapper.
+             * Kita polling sampai $.fn.select2 tersedia sebelum init.
+             */
+            function waitForSelect2(callback, maxWait) {
+                maxWait = maxWait || 5000;
+                var interval = 50;
+                var elapsed = 0;
+
+                if ($.fn.select2) {
+                    callback();
+                    return;
+                }
+
+                var timer = setInterval(function() {
+                    elapsed += interval;
+                    if ($.fn.select2) {
+                        clearInterval(timer);
+                        callback();
+                    } else if (elapsed >= maxWait) {
+                        clearInterval(timer);
+                        console.warn('Select2 tidak tersedia untuk form offcanvas.');
+                    }
+                }, interval);
+            }
+
             /* ── Load form via $.ajax ───────────────────────────────────── */
             function loadForm(url, label) {
                 $title.text(label);
@@ -94,6 +120,18 @@
                     success(data) {
                         $body.html(data.html).addClass('cf-form-fade-in');
                         setTimeout(() => $body.removeClass('cf-form-fade-in'), 400);
+
+                        // URUTAN PENTING:
+                        // 1. Init Select2 dulu (agar wrapping DOM selesai)
+                        // 2. Init bank toggle (agar jQuery event listener dipasang ke Select2)
+                        // 3. Bind form submit
+                        waitForSelect2(function() {
+                            initSelect2();
+                            // Panggil toggle bank setelah Select2 terpasang
+                            if (typeof window.initCfBankToggle === 'function') {
+                                window.initCfBankToggle();
+                            }
+                        });
                         bindFormSubmit();
                     },
                     error() {
@@ -104,6 +142,25 @@
                     </div>`);
                     },
                 });
+
+            }
+
+            function initSelect2() {
+                if ($.fn.select2) {
+                    $('#cashFlowOffcanvas .select2').each(function() {
+                        const $this = $(this);
+                        // Jika sudah diinisialisasi, skip
+                        if ($this.hasClass('select2-hidden-accessible')) return;
+
+                        $this.select2({
+                            placeholder: $this.data('placeholder') || "— Pilih —",
+                            allowClear: $this.find('option[value=""]').length > 0,
+                            width: '100%',
+                            // PENTING: Wajib agar dropdown tidak ngumpet di belakang Offcanvas
+                            dropdownParent: $('#cashFlowOffcanvas')
+                        });
+                    });
+                }
             }
 
             /* ── Bind form submit ───────────────────────────────────────── */
@@ -201,3 +258,4 @@
         }); // end $(function)
     </script>
 @endpush
+

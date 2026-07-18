@@ -740,7 +740,7 @@
                     // Toggle rekening transfer
                     const paymentRadios = document.querySelectorAll('input[name="metode_pembayaran"]');
                     const transferDetails = document.getElementById('transfer-details');
-                    const bankTujuanSelect = document.getElementById('bank_id');
+                    const bankTujuanSelect = document.getElementById('account_id');
 
                     function toggleTransferDetails() {
                         const isTransfer = document.getElementById('pay-transfer').checked;

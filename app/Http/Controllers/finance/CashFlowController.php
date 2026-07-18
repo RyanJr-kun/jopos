@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\finance;
 
 use App\Http\Controllers\Controller;
-use App\Models\Bank;
+use App\Models\Account;
 use App\Models\CashFlow;
 use App\Models\Store;
 use App\Models\TransactionCategory;
@@ -54,7 +54,7 @@ class CashFlowController extends Controller implements HasMiddleware
   {
     $type = $this->resolveType($type);
 
-    $query = CashFlow::with(['transaction_category', 'user', 'bank', 'bankTujuan', 'store'])
+    $query = CashFlow::with(['transaction_category', 'user', 'account', 'toAccount', 'store'])
       ->where('type', $type)
       ->latest('tanggal');
 
@@ -119,7 +119,7 @@ class CashFlowController extends Controller implements HasMiddleware
       'allKategoris' => $allKategoris,
       'referensi_otomatis' => $this->generateReferenceNumber($type),
       'stores' => $stores,
-      'banks' => Bank::all(),
+      'accounts' => Account::all(),
       'totalNominal' => $totalNominal,
       'totalCount' => $totalCount,
       'dateFrom' => $request->input('date_from'),
@@ -175,7 +175,8 @@ class CashFlowController extends Controller implements HasMiddleware
       'type' => $type,
       'cashFlow' => new CashFlow(['type' => $type]),
       'kategoris' => $type === CashFlow::TYPE_TRANSFER ? collect() : TransactionCategory::where('type', $type)->where('status', 1)->orderBy('name')->get(),
-      'banks' => Bank::all(),
+      'accounts' => Account::all(),
+      'banks' => Account::query()->where('tipe_akun', 'bank')->get(),
       'referensi_otomatis' => $this->generateReferenceNumber($type),
     ];
 
@@ -196,7 +197,8 @@ class CashFlowController extends Controller implements HasMiddleware
       'type' => $type,
       'cashFlow' => $cash_flow,
       'kategoris' => $type === CashFlow::TYPE_TRANSFER ? collect() : TransactionCategory::where('type', $type)->where('status', 1)->orderBy('name')->get(),
-      'banks' => Bank::all(),
+      'accounts' => Account::all(),
+      'banks' => Account::query()->where('tipe_akun', 'bank')->get(),
     ];
 
     if ($this->wantsJson($request)) {
@@ -214,7 +216,7 @@ class CashFlowController extends Controller implements HasMiddleware
       'tanggal' => 'required|date_format:Y-m-d|before_or_equal:today',
       'nominal' => 'required|numeric|min:1',
       'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS',
-      'bank_id' => 'nullable|required_if:metode_pembayaran,TRANSFER|exists:banks,id',
+      'account_id' => 'nullable|required_if:metode_pembayaran,TRANSFER|exists:accounts,id',
       'referensi' => ['nullable', 'string', 'max:100', Rule::unique('cash_flows', 'referensi')->ignore($cashFlow?->id)],
       'keterangan' => 'nullable|string|max:255',
       'description' => 'nullable|string|max:1000',
@@ -224,7 +226,8 @@ class CashFlowController extends Controller implements HasMiddleware
     if ($type === CashFlow::TYPE_TRANSFER) {
       $rules['keterangan'] = 'nullable|string|max:255'; // auto-diisi "Transfer Internal" kalau kosong
       $rules['metode_pembayaran'] = 'nullable|in:TUNAI,TRANSFER,QRIS';
-      $rules['bank_id_tujuan'] = 'nullable|required_if:metode_pembayaran_tujuan,TRANSFER|exists:banks,id';
+      $rules['account_id'] = 'required|exists:accounts,id';
+      $rules['to_account_id'] = 'required|exists:accounts,id';
     } else {
       $rules['keterangan'] = 'required|string|max:255';
       $rules['transaction_category_id'] = ['required', Rule::exists('transaction_categories', 'id')->where('type', $type)];
@@ -238,12 +241,11 @@ class CashFlowController extends Controller implements HasMiddleware
    */
   private function assertTransferAccountsDiffer(array $data): void
   {
-    $sameMethod = $data['metode_pembayaran'] === $data['metode_pembayaran_tujuan'];
-    $sameBank = ($data['bank_id'] ?? null) == ($data['bank_id_tujuan'] ?? null);
+    $sameBank = ($data['account_id'] ?? null) == ($data['to_account_id'] ?? null);
 
-    if ($sameMethod && $sameBank) {
+    if ($sameBank) {
       throw ValidationException::withMessages([
-        'bank_id_tujuan' => 'Rekening/metode asal dan tujuan tidak boleh sama.',
+        'to_account_id' => 'Rekening asal dan tujuan tidak boleh sama.',
       ]);
     }
   }

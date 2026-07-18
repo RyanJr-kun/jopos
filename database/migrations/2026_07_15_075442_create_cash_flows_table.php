@@ -12,6 +12,7 @@ return new class extends Migration {
   {
     Schema::create('cash_flows', function (Blueprint $table) {
       $table->id();
+      $table->string('type');
       $table->string('source_type')->nullable();
       $table->foreignId('source_id')->nullable();
       $table->foreignId('store_id')->constrained('stores')->onDelete('cascade');
@@ -19,8 +20,8 @@ return new class extends Migration {
       $table->dateTime('tanggal');
       $table->decimal('nominal', 15, 0);
       $table->string('metode_pembayaran', 30)->default('TUNAI');
-      $table->foreignId('bank_id')->nullable()->constrained('banks')->onDelete('set null');
-      $table->foreignId('bank_id_tujuan')->nullable()->constrained('banks')->onDelete('set null');
+      $table->foreignId('account_id')->nullable()->constrained('accounts')->onDelete('set null');
+      $table->foreignId('to_account_id')->nullable()->constrained('accounts')->onDelete('set null');
       $table->string('referensi')->nullable()->unique();
       $table->string('bukti')->nullable()->comment('foto');
       $table->string('keterangan');

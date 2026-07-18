@@ -10,11 +10,11 @@ return new class extends Migration {
    */
   public function up(): void
   {
-    Schema::create('banks', function (Blueprint $table) {
+    Schema::create('accounts', function (Blueprint $table) {
       $table->id();
       $table->foreignId('store_id')->nullable()->constrained('stores')->nullOnDelete();
       $table->string('tipe_akun');
-      $table->string('nama_bank');
+      $table->string('account_name');
       $table->string('nomor_rekening')->nullable();
       $table->string('nama_pemilik')->nullable();
       $table->decimal('saldo_awal', 15, 0)->default(0);
@@ -29,6 +29,6 @@ return new class extends Migration {
    */
   public function down(): void
   {
-    Schema::dropIfExists('banks');
+    Schema::dropIfExists('accounts');
   }
 };

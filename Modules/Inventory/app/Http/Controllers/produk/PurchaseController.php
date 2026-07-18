@@ -3,7 +3,7 @@
 namespace Modules\Inventory\Http\Controllers\produk;
 
 use App\Http\Controllers\Controller;
-use App\Models\Bank;
+use App\Models\Account;
 use App\Models\ProductStock;
 use App\Models\Store;
 use App\Models\Taxe;
@@ -36,11 +36,11 @@ class PurchaseController extends Controller implements HasMiddleware
   public function index(Request $request)
   {
     $statuses = Purchase::getPaymentStatus();
-    $barangs  = Purchase::getStatusBarangs();
+    $barangs = Purchase::getStatusBarangs();
 
     $user = Auth::user();
     $canViewAllStores = $user->can('view-toko-gudang');
-    $employeeStoreId  = $user->employee?->store_id;
+    $employeeStoreId = $user->employee?->store_id;
 
     $query = Purchase::with(['supplier', 'user', 'store'])->latest();
 
@@ -57,8 +57,7 @@ class PurchaseController extends Controller implements HasMiddleware
     if ($request->filled('search')) {
       $search = $request->input('search');
       $query->where(function ($q) use ($search) {
-        $q->where('referensi', 'like', "%{$search}%")
-          ->orWhereHas('supplier', fn($q_s) => $q_s->where('name', 'like', "%{$search}%"));
+        $q->where('referensi', 'like', "%{$search}%")->orWhereHas('supplier', fn($q_s) => $q_s->where('name', 'like', "%{$search}%"));
       });
     }
 
@@ -71,8 +70,7 @@ class PurchaseController extends Controller implements HasMiddleware
     }
 
     if ($request->filled('date_from') && $request->filled('date_to')) {
-    $query->whereDate('tanggal_pembelian', '>=', $request->input('date_from'))
-          ->whereDate('tanggal_pembelian', '<=', $request->input('date_to'));
+      $query->whereDate('tanggal_pembelian', '>=', $request->input('date_from'))->whereDate('tanggal_pembelian', '<=', $request->input('date_to'));
     }
 
     $pembelian = $query->paginate(15)->withQueryString();
@@ -98,9 +96,9 @@ class PurchaseController extends Controller implements HasMiddleware
     $barangs = Purchase::getStatusBarangs();
     $payments = Purchase::getPaymentStatus();
     $options = Purchase::getPaymentMethods();
-    $banks = Bank::all();
+    $accounts = Account::query()->where('tipe_akun', 'bank');
 
-    return view('inventory::pembelian.create', compact('supplier', 'taxes', 'nomer_referensi', 'statuses', 'barangs', 'payments', 'options', 'banks'));
+    return view('inventory::pembelian.create', compact('supplier', 'taxes', 'nomer_referensi', 'statuses', 'barangs', 'payments', 'options', 'accounts'));
   }
 
   /**
@@ -158,7 +156,7 @@ class PurchaseController extends Controller implements HasMiddleware
       'items.*.diskon' => 'nullable|numeric|min:0',
       'items.*.taxe_id' => 'nullable|exists:taxes,id',
       'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS',
-      'bank_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:banks,id',
+      'account_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:accounts,id',
     ]);
 
     try {
@@ -221,7 +219,7 @@ class PurchaseController extends Controller implements HasMiddleware
           'status_pembayaran' => $status_pembayaran,
           'status_barang' => $validatedData['status_barang'],
           'metode_pembayaran' => $validatedData['metode_pembayaran'],
-          'bank_id' => $validatedData['bank_id'] ?? null,
+          'account_id' => $validatedData['account_id'] ?? null,
           'catatan' => $validatedData['catatan'],
         ]);
 
@@ -231,7 +229,7 @@ class PurchaseController extends Controller implements HasMiddleware
             'tanggal_bayar' => $validatedData['tanggal'],
             'jumlah_bayar' => $jumlah_dibayar,
             'metode_pembayaran' => $validatedData['metode_pembayaran'],
-            'bank_id' => $validatedData['bank_id'] ?? null,
+            'account_id' => $validatedData['account_id'] ?? null,
             'referensi_pembayaran' => $validatedData['referensi'],
             'catatan' => $status_pembayaran === 'Lunas' ? 'Pembayaran Lunas Awal' : 'Pembayaran Uang Muka (DP)',
           ]);
@@ -301,14 +299,9 @@ class PurchaseController extends Controller implements HasMiddleware
   {
     $pembelian->load(['supplier', 'user', 'details.produk', 'payments.user', 'payments.bank']);
     $profilToko = $pembelian->store;
-    $banks = Bank::all(); // Diperlukan untuk pilihan bank di dalam modal cicilan
+    $accounts = Account::query()->where('tipe_akun', 'bank'); // Diperlukan untuk pilihan bank di dalam modal cicilan
 
-    return view('inventory::pembelian.show', [
-      'title' => 'Detail Purchase: ' . $pembelian->referensi,
-      'pembelian' => $pembelian,
-      'profilToko' => $profilToko,
-      'banks' => $banks, // Kirim data bank ke view
-    ]);
+    return view('inventory::pembelian.show', compact('pembelian', 'profilToko', 'accounts'));
   }
 
   /**
@@ -325,23 +318,12 @@ class PurchaseController extends Controller implements HasMiddleware
     $barangs = Purchase::getStatusBarangs();
     $payments = Purchase::getPaymentStatus();
     $options = Purchase::getPaymentMethods();
-    $banks = Bank::all();
+    $accounts = Account::query()->where('tipe_akun', 'bank');
+    $pemasok = Supplier::query()->where('status', 1)->get();
 
     $statuses = Purchase::select('status_pembayaran')->distinct()->pluck('status_pembayaran');
 
-    return view('inventory::pembelian.edit', [
-      'title' => 'Edit Invoice Purchase: ' . $pembelian->referensi,
-      'pembelian' => $pembelian,
-      'pemasok' => Supplier::where('status', 1)->get(),
-      'statuses' => $statuses,
-      'supplier' => $supplier,
-      'taxes' => $taxes,
-      'nomer_referensi' => $nomer_referensi,
-      'barangs' => $barangs,
-      'payments' => $payments,
-      'options' => $options,
-      'banks' => $banks,
-    ]);
+    return view('inventory::pembelian.edit', compact('accounts', 'pembelian', 'statuses', 'supplier', 'taxes', 'nomer_referensi', 'barangs', 'payments', 'options', 'pemasok'));
   }
 
   /**
@@ -426,7 +408,7 @@ class PurchaseController extends Controller implements HasMiddleware
       'items.*.diskon' => 'nullable|numeric|min:0',
       'items.*.taxe_id' => 'nullable|exists:taxes,id',
       'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS',
-      'bank_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:banks,id',
+      'account_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:accounts,id',
     ]);
 
     try {
@@ -513,7 +495,7 @@ class PurchaseController extends Controller implements HasMiddleware
           'total_akhir' => $total_akhir,
           'jumlah_dibayar' => $jumlah_dibayar,
           'metode_pembayaran' => $validatedData['metode_pembayaran'],
-          'bank_id' => $validatedData['bank_id'] ?? null,
+          'account_id' => $validatedData['account_id'] ?? null,
           'sisa_hutang' => $sisa,
           'status_pembayaran' => $statusBaru === 'Batal' ? 'Batal' : $status_pembayaran,
           'status_barang' => $validatedData['status_barang'],
@@ -530,7 +512,7 @@ class PurchaseController extends Controller implements HasMiddleware
               'tanggal_bayar' => $validatedData['tanggal'],
               'jumlah_bayar' => $jumlah_dibayar,
               'metode_pembayaran' => $validatedData['metode_pembayaran'],
-              'bank_id' => $validatedData['bank_id'] ?? null,
+              'account_id' => $validatedData['account_id'] ?? null,
               'catatan' => $status_pembayaran === 'Lunas' ? 'Revisi Pembayaran Lunas Awal' : 'Revisi Uang Muka (DP)',
             ]);
           } else {
@@ -540,7 +522,7 @@ class PurchaseController extends Controller implements HasMiddleware
               'tanggal_bayar' => $validatedData['tanggal'],
               'jumlah_bayar' => $jumlah_dibayar,
               'metode_pembayaran' => $validatedData['metode_pembayaran'],
-              'bank_id' => $validatedData['bank_id'] ?? null,
+              'account_id' => $validatedData['account_id'] ?? null,
               'catatan' => $status_pembayaran === 'Lunas' ? 'Pembayaran Lunas Awal' : 'Pembayaran Uang Muka (DP)',
             ]);
           }
@@ -649,13 +631,13 @@ class PurchaseController extends Controller implements HasMiddleware
         'tanggal_bayar' => 'required|date',
         'jumlah_bayar' => 'required|numeric|min:1|max:' . $pembelian->sisa_hutang,
         'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS',
-        'bank_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:banks,id',
+        'account_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:accounts,id',
         'referensi_pembayaran' => 'nullable|string|max:100',
         'catatan' => 'nullable|string',
       ],
       [
         'jumlah_bayar.max' => 'Jumlah pembayaran tidak boleh melebihi sisa hutang (Rp ' . number_format($pembelian->sisa_hutang, 0, ',', '.') . ').',
-        'bank_id.required_if' => 'Rekening tujuan wajib dipilih jika menggunakan metode TRANSFER.',
+        'account_id.required_if' => 'Rekening tujuan wajib dipilih jika menggunakan metode TRANSFER.',
       ],
     );
 
@@ -667,7 +649,7 @@ class PurchaseController extends Controller implements HasMiddleware
           'tanggal_bayar' => $validatedData['tanggal_bayar'],
           'jumlah_bayar' => $validatedData['jumlah_bayar'],
           'metode_pembayaran' => $validatedData['metode_pembayaran'],
-          'bank_id' => $validatedData['bank_id'] ?? null,
+          'account_id' => $validatedData['account_id'] ?? null,
           'referensi_pembayaran' => $validatedData['referensi_pembayaran'] ?? null,
           'catatan' => $validatedData['catatan'] ?? null,
         ]);

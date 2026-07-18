@@ -1380,7 +1380,7 @@
             // ── Handle Detail Transfer ─────────────────────────────────────────
             const paymentRadios = document.querySelectorAll('input[name="metode_pembayaran"]');
             const transferDetails = document.getElementById('transfer-details');
-            const bankTujuanSelect = document.getElementById('bank_id');
+            const bankTujuanSelect = document.getElementById('account_id');
 
             paymentRadios.forEach(radio => {
                 radio.addEventListener('change', (e) => {

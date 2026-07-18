@@ -15,14 +15,14 @@ class CashFlow extends Model
   const TYPE_TRANSFER = 'transfer';
 
   protected $fillable = [
+    'type',
     'store_id',
     'transaction_category_id',
     'tanggal',
     'nominal',
     'metode_pembayaran',
-    'bank_id',
-    'metode_pembayaran_tujuan',
-    'bank_id_tujuan',
+    'account_id',
+    'to_account_id',
     'referensi',
     'bukti',
     'keterangan',
@@ -67,15 +67,15 @@ class CashFlow extends Model
   }
 
   /** Bank sisi ASAL (dipakai juga oleh income/expense sebagai bank tujuan setor/tarik) */
-  public function bank(): BelongsTo
+  public function account(): BelongsTo
   {
-    return $this->belongsTo(Bank::class, 'bank_id');
+    return $this->belongsTo(Account::class, 'account_id');
   }
 
   /** Bank sisi TUJUAN — hanya terisi kalau type = transfer */
-  public function bankTujuan(): BelongsTo
+  public function toAccount(): BelongsTo
   {
-    return $this->belongsTo(Bank::class, 'bank_id_tujuan');
+    return $this->belongsTo(Account::class, 'to_account_id');
   }
 
   public function store(): BelongsTo

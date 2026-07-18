@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Bank;
+use App\Models\Account;
 use App\Models\EmployeeProfile;
 use App\Models\Store;
 use App\Models\User;
@@ -79,12 +79,12 @@ class UserSeeder extends Seeder
       'tanggal_bergabung' => now(),
     ]);
 
-    Bank::insert([
+    Account::insert([
       // --- AKUN TUNAI PER TOKO ---
       [
         'store_id' => 1, // ID Toko Kartasura
         'tipe_akun' => 'tunai',
-        'nama_bank' => 'Kas Tunai Kartasura',
+        'account_name' => 'Kas Tunai Kartasura',
         'nomor_rekening' => null,
         'nama_pemilik' => null,
         'saldo_awal' => 0,
@@ -96,7 +96,7 @@ class UserSeeder extends Seeder
       [
         'store_id' => 2, // ID Toko Baturetno
         'tipe_akun' => 'tunai',
-        'nama_bank' => 'Kas Tunai Baturetno',
+        'account_name' => 'Kas Tunai Baturetno',
         'nomor_rekening' => null,
         'nama_pemilik' => null,
         'saldo_awal' => 0,
@@ -110,7 +110,7 @@ class UserSeeder extends Seeder
       [
         'store_id' => null, // Pusat (Bisa dipakai semua toko)
         'tipe_akun' => 'bank',
-        'nama_bank' => 'BCA',
+        'account_name' => 'BCA',
         'nomor_rekening' => '392.029.4277',
         'nama_pemilik' => 'Gunawan SetyaBudi N',
         'saldo_awal' => 0,
@@ -122,7 +122,7 @@ class UserSeeder extends Seeder
       [
         'store_id' => null,
         'tipe_akun' => 'bank',
-        'nama_bank' => 'Mandiri',
+        'account_name' => 'Mandiri',
         'nomor_rekening' => '138.001.728.4147',
         'nama_pemilik' => 'Gunawan SetyaBudi N',
         'saldo_awal' => 0,
@@ -134,7 +134,7 @@ class UserSeeder extends Seeder
       [
         'store_id' => null,
         'tipe_akun' => 'bank',
-        'nama_bank' => 'BRI',
+        'account_name' => 'BRI',
         'nomor_rekening' => '6959.01.028402.53.8',
         'nama_pemilik' => 'Etik Yudiarini',
         'saldo_awal' => 0,
@@ -148,7 +148,7 @@ class UserSeeder extends Seeder
       [
         'store_id' => null,
         'tipe_akun' => 'qris',
-        'nama_bank' => 'JO COMPUTER 1', // Bebas bisa disesuaikan namanya
+        'account_name' => 'JO COMPUTER 1', // Bebas bisa disesuaikan namanya
         'nomor_rekening' => null,
         'nama_pemilik' => 'JO Computer',
         'saldo_awal' => 0,

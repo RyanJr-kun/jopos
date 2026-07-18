@@ -140,7 +140,9 @@
 
                                     // 1. Ambil URL default dari Accessor Product
                                     $imagePath = $detail->produk->primaryImage->path ?? null;
-                            $imageUrl = $imagePath ? \Illuminate\Support\Facades\Storage::url($imagePath) : asset('assets/img/produk.png');
+                                    $imageUrl = $imagePath
+                                        ? \Illuminate\Support\Facades\Storage::url($imagePath)
+                                        : asset('assets/img/produk.png');
                                     $namaVarian = '';
 
                                     // 2. Jika ini adalah Varian
@@ -508,7 +510,8 @@
                     const variantId = selectedData.variant_id;
                     const produkNama = selectedData.text;
                     const produkNama2 = selectedData.text2;
-                    const imageUrl = selectedData.img_produk ? selectedData.img_produk : defaultImage;
+                    const imageUrl = selectedData.img_produk ? selectedData.img_produk :
+                        defaultImage;
                     const hargaBeli = selectedData.harga_beli || 0;
                     const pajakId = selectedData.taxe_id || null;
                     const pajakRate = selectedData.pajak_rate || 0;
@@ -525,8 +528,8 @@
                         const subtotalAwal = (hargaBeli * qtyToAdd);
                         const pajakAwal = subtotalAwal * (pajakRate / 100);
                         const subtotalDenganTaxe = subtotalAwal + pajakAwal;
-                        
-                        const variantHtml = produkNama2 ? 
+
+                        const variantHtml = produkNama2 ?
                             `<small class="text-muted d-block">
                                 <i class="bx bx-list-ul text-xs me-1"></i>${produkNama2}
                             </small>` : '';
@@ -822,7 +825,7 @@
 
                     const paymentRadios = document.querySelectorAll('input[name="metode_pembayaran"]');
                     const transferDetails = document.getElementById('transfer-details');
-                    const bankTujuanSelect = document.getElementById('bank_id');
+                    const bankTujuanSelect = document.getElementById('account_id');
 
                     function toggleTransferDetails() {
                         const isTransfer = document.getElementById('pay-transfer').checked;
@@ -850,8 +853,8 @@
                     @endif
 
                     // ✅ Edit: pre-select bank jika metode transfer
-                    @if ($pembelian->bank_id)
-                        $(bankTujuanSelect).val("{{ $pembelian->bank_id }}").trigger('change');
+                    @if ($pembelian->account_id)
+                        $(bankTujuanSelect).val("{{ $pembelian->account_id }}").trigger('change');
                     @endif
                 }
 

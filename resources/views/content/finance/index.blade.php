@@ -6,6 +6,10 @@
     @vite(['resources/assets/vendor/scss/pages/page-bank.scss'])
 @endsection
 
+@section('vendor-script')
+    @vite(['resources/assets/vendor/libs/apex-charts/apexcharts.js'])
+@endsection
+
 @section('content')
 
     {{-- ========================================================= --}}
@@ -18,10 +22,6 @@
             <div class="fin-metode-pills">
                 <button type="button" class="fin-pill {{ !request('metode') ? 'active' : '' }}" onclick="setMetode('')">
                     <i class="bx bx-grid-alt"></i> Semua
-                </button>
-                <button type="button" class="fin-pill {{ request('metode') == 'store' ? 'active' : '' }}"
-                    data-metode="store" onclick="setMetode('store')">
-                    <i class="bx bx-store-alt"></i> Store
                 </button>
                 <button type="button" class="fin-pill {{ request('metode') == 'tunai' ? 'active' : '' }}"
                     data-metode="tunai" onclick="setMetode('tunai')">
@@ -41,12 +41,12 @@
 
             {{-- Bank select (muncul saat transfer) --}}
             <div id="bankSelectWrap" class="{{ in_array(request('metode'), ['transfer', 'qris']) ? '' : 'd-none' }}">
-                <select name="bank_id" class="form-select form-select-sm fin-bank-select" id="bankSelect"
+                <select name="account_id" class="form-select form-select-sm fin-bank-select" id="bankSelect"
                     onchange="document.getElementById('filterForm').submit()">
-                    <option value="">Semua Bank</option>
-                    @foreach ($banks as $bank)
-                        <option value="{{ $bank->id }}" {{ request('bank_id') == $bank->id ? 'selected' : '' }}>
-                            {{ $bank->nama_bank }}
+                    <option value="">Semua akun</option>
+                    @foreach ($accounts as $a)
+                        <option value="{{ $a->id }}" {{ request('account_id') == $a->id ? 'selected' : '' }}>
+                            {{ $a->account_name }}
                         </option>
                     @endforeach
                 </select>
@@ -78,7 +78,7 @@
                 {{-- Tombol Kelola Bank --}}
                 <button type="button" class="btn btn-sm btn-outline-primary px-3" data-bs-toggle="modal"
                     data-bs-target="#modalBank">
-                    <i class="bx bx-bank me-1"></i> Bank
+                    <i class="bx bxs-bank me-1"></i> Akun
                 </button>
             </div>
         </div>
@@ -186,22 +186,22 @@
                     @foreach ($saldoPerBank as $item)
                         <div class="fin-bank-card" style="cursor:pointer"
                             onclick="openEditBank(
-                                {{ $item['bank']->id }},
-                                '{{ addslashes($item['bank']->nama_bank) }}',
-                                '{{ addslashes($item['bank']->nomor_rekening) }}',
-                                '{{ addslashes($item['bank']->nama_pemilik) }}',
-                                {{ $item['bank']->is_active ? 1 : 0 }},
-                                '{{ $item['bank']->logo_bank ? $item['bank']->logo_url : '' }}'
+                                {{ $item['account']->id }},
+                                '{{ addslashes($item['account']->account_name) }}',
+                                '{{ addslashes($item['account']->nomor_rekening) }}',
+                                '{{ addslashes($item['account']->nama_pemilik) }}',
+                                {{ $item['account']->is_active ? 1 : 0 }},
+                                '{{ $item['account']->logo_bank ? $item['account']->logo_url : '' }}'
                             )">
-                            @if ($item['bank']->logo_bank)
-                                <img src="{{ $item['bank']->logo_url }}" alt="{{ $item['bank']->nama_bank }}"
+                            @if ($item['account']->logo_bank)
+                                <img src="{{ $item['account']->logo_url }}" alt="{{ $item['account']->account_name }}"
                                     class="fin-bank-logo">
                             @else
-                                <div class="fin-bank-inisial">{{ $item['bank']->inisial }}</div>
+                                <div class="fin-bank-inisial">{{ $item['account']->inisial }}</div>
                             @endif
                             <div>
-                                <p class="fin-bank-name">{{ $item['bank']->nama_bank }}</p>
-                                <p class="fin-bank-norek">{{ $item['bank']->nomor_rekening }}</p>
+                                <p class="fin-bank-name">{{ $item['account']->account_name }}</p>
+                                <p class="fin-bank-norek">{{ $item['account']->nomor_rekening }}</p>
                             </div>
                             <div class="fin-bank-saldo">
                                 <div class="saldo-val" style="color: {{ $item['saldo'] >= 0 ? '#28c76f' : '#ea5455' }}">
@@ -223,7 +223,6 @@
     <div class="row g-3 mb-3">
         @php
             $metodes = [
-                'store' => ['label' => 'Store', 'icon' => 'bx bx-store-alt', 'color' => '#20c997'],
                 'tunai' => ['label' => 'Tunai', 'icon' => 'bx bx-money', 'color' => '#ff9f43'],
                 'transfer' => ['label' => 'Transfer', 'icon' => 'bx bx-transfer-alt', 'color' => '#7367f0'],
                 'qris' => ['label' => 'QRIS', 'icon' => 'bx bx-qr', 'color' => '#00b4d8'],
@@ -280,7 +279,7 @@
                             <th>Tanggal</th>
                             <th>Keterangan</th>
                             <th>Metode</th>
-                            <th>Bank / Rekening</th>
+                            <th>Akun</th>
                             <th class="text-end">Jumlah</th>
                         </tr>
                     </thead>
@@ -300,16 +299,17 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="fin-tx-badge {{ $tx->metode_pembayaran ?? 'tunai' }}">
-                                        {{ ucfirst($tx->metode_pembayaran ?? 'tunai') }}
+                                    @php $metodeLower = strtolower($tx->metode_pembayaran ?? 'tunai'); @endphp
+                                    <span class="fin-tx-badge {{ $metodeLower }}">
+                                        {{ ucfirst($metodeLower) }}
                                     </span>
                                 </td>
                                 <td style="font-size:12px;color:var(--bs-secondary-color)">
-                                    {{ $tx->bank?->nama_bank ?? (in_array($tx->metode_pembayaran, ['tunai', 'store']) ? 'Kas' : '—') }}
+                                    {{ $tx->account?->account_name ?? ($metodeLower === 'tunai' ? 'Kas' : '—') }}
                                 </td>
                                 <td class="text-end">
                                     <span class="fin-amount {{ $tx->type }}">
-                                        {{ $isIncome ? '+' : '-' }} @money($tx->jumlah)
+                                        {{ $isIncome ? '+' : '-' }} @money($tx->nominal)
                                     </span>
                                 </td>
                             </tr>
@@ -373,19 +373,18 @@
                             <select name="metode_pembayaran" class="form-select form-select-sm" id="mutasiMetode"
                                 onchange="toggleMutasiBank(this.value)" required>
                                 <option value="tunai">Tunai / Kasir</option>
-                                <option value="store">Store</option>
                                 <option value="transfer">Transfer Bank</option>
                                 <option value="qris">QRIS</option>
                             </select>
                         </div>
                         <div class="col-12" id="mutasiBankWrap" style="display:none">
                             <label class="form-label" style="font-size:12.5px">Bank</label>
-                            <select name="bank_id" class="form-select form-select-sm" id="mutasiBank">
+                            <select name="account_id" class="form-select form-select-sm" id="mutasiBank">
                                 <option value="">-- Pilih Bank --</option>
-                                @foreach ($banks as $bank)
+                                @foreach ($accounts as $bank)
                                     <option value="{{ $bank->id }}"
-                                        {{ Str::lower($bank->nama_bank) === 'mandiri' ? 'data-default-qris=1' : '' }}>
-                                        {{ $bank->nama_bank }} — {{ $bank->nomor_rekening }}
+                                        {{ Str::lower($bank->account_name) === 'mandiri' ? 'data-default-qris=1' : '' }}>
+                                        {{ $bank->account_name }} — {{ $bank->nomor_rekening }}
                                     </option>
                                 @endforeach
                             </select>
@@ -414,11 +413,11 @@
     {{-- ========================================================= --}}
     <div class="modal fade fin-modal" id="modalBank" tabindex="-1" aria-labelledby="labelBank" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <form action="{{ route('keuangan.bank.store') }}" method="POST" enctype="multipart/form-data"
+            <form action="{{ route('keuangan.account.store') }}" method="POST" enctype="multipart/form-data"
                 class="modal-content">
                 @csrf
                 <div class="modal-header">
-                    <h5 class="modal-title" id="labelBank">Tambah Bank</h5>
+                    <h5 class="modal-title" id="labelBank">Tambah Account</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -426,7 +425,7 @@
                     {{-- Preview Logo --}}
                     <div class="d-flex align-items-center gap-3 mb-3">
                         <img id="logoPreview" src="{{ asset('assets/img/logo.png') }}" class="fin-logo-preview"
-                            alt="Logo Bank">
+                            alt="Logo akun">
                         <div class="flex-grow-1">
                             <label class="fin-upload-area" for="logoInput">
                                 <i class="bx bx-cloud-upload"></i>
@@ -439,8 +438,8 @@
 
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label" style="font-size:12.5px">Nama Bank</label>
-                            <input type="text" name="nama_bank" class="form-control form-control-sm"
+                            <label class="form-label" style="font-size:12.5px">Nama akun</label>
+                            <input type="text" name="account_name" class="form-control form-control-sm"
                                 placeholder="Contoh: Bank BCA" required>
                         </div>
                         <div class="col-12">
@@ -478,10 +477,10 @@
     <div class="modal fade fin-modal" id="modalEditBank" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form id="formEditBank" method="POST" enctype="multipart/form-data">
+                <form id="formEditAccount" method="POST" enctype="multipart/form-data">
                     @csrf @method('PUT')
                     <div class="modal-header">
-                        <h5 class="modal-title">Edit Bank</h5>
+                        <h5 class="modal-title">Edit Account</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -499,8 +498,8 @@
                         </div>
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="form-label" style="font-size:12.5px">Nama Bank</label>
-                                <input type="text" name="nama_bank" id="editNamaBank"
+                                <label class="form-label" style="font-size:12.5px">Nama Akun</label>
+                                <input type="text" name="account_name" id="editNamaBank"
                                     class="form-control form-control-sm" required>
                             </div>
                             <div class="col-12">
@@ -517,19 +516,17 @@
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" name="is_active" value="1"
                                         id="editBankAktif">
-                                    <label class="form-check-label" for="editBankAktif" style="font-size:13px">Bank
+                                    <label class="form-check-label" for="editBankAktif" style="font-size:13px">Akun
                                         aktif</label>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer d-flex justify-content-between">
-                        <form id="formDeleteBank" method="POST" onsubmit="return confirm('Hapus bank ini?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                <i class="bx bx-trash me-1"></i> Hapus
-                            </button>
-                        </form>
+                        <button type="submit" form="formDeleteBank" class="btn btn-sm btn-outline-danger"
+                            onclick="return confirm('Hapus Akun ini?')">
+                            <i class="bx bx-trash me-1"></i> Hapus
+                        </button>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary"
                                 data-bs-dismiss="modal">Batal</button>
@@ -537,206 +534,30 @@
                         </div>
                     </div>
                 </form>
+                {{-- Form terpisah (bukan nested) khusus untuk hapus akun. Tombol "Hapus" di atas
+                     terhubung ke form ini lewat atribut form="formDeleteBank" --}}
+                <form id="formDeleteBank" method="POST" class="d-none">
+                    @csrf @method('DELETE')
+                </form>
             </div>
         </div>
     </div>
 
 @endsection
 
+@php
+    $keuanganConfig = [
+        'startDate' => $startDate,
+        'endDate' => $endDate,
+        'chartData' => $chartData,
+        'accountBaseUrl' => url('keuangan/account'),
+        'defaultLogoUrl' => asset('assets/img/logo.png'),
+    ];
+@endphp
+
 @section('page-script')
-
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
-        // ============================================================
-        // Flatpickr — Date Range
-        // ============================================================
-        const fpRange = flatpickr('#dateRange', {
-            mode: 'range',
-            locale: 'id',
-            dateFormat: 'Y-m-d',
-            defaultDate: ['{{ $startDate }}', '{{ $endDate }}'],
-            altInput: true,
-            altFormat: 'j M Y',
-            onChange: function(dates) {
-                if (dates.length === 2) {
-                    document.getElementById('startDateInput').value = flatpickr.formatDate(dates[0], 'Y-m-d');
-                    document.getElementById('endDateInput').value = flatpickr.formatDate(dates[1], 'Y-m-d');
-                }
-            }
-        });
-
-        // ============================================================
-        // Filter metode pembayaran
-        // ============================================================
-        function setMetode(val) {
-            document.getElementById('inputMetode').value = val;
-            const bankWrap = document.getElementById('bankSelectWrap');
-            bankWrap.classList.toggle('d-none', !['transfer', 'qris'].includes(val));
-            document.getElementById('filterForm').submit();
-        }
-
-        // ============================================================
-        // Modal Mutasi — tipe masuk/keluar
-        // ============================================================
-        function setTipe(tipe) {
-            document.getElementById('inputTipe').value = tipe;
-            document.getElementById('btnMasuk').classList.toggle('active', tipe === 'masuk');
-            document.getElementById('btnKeluar').classList.toggle('active', tipe === 'keluar');
-        }
-
-        // Modal Mutasi — tampilkan select bank
-        function toggleMutasiBank(metode) {
-            const wrap = document.getElementById('mutasiBankWrap');
-            const note = document.getElementById('qrisNote');
-            const select = document.getElementById('mutasiBank');
-            const show = ['transfer', 'qris'].includes(metode);
-
-            wrap.style.display = show ? '' : 'none';
-            note.style.display = metode === 'qris' ? '' : 'none';
-
-            // Otopilot: pilih Mandiri jika QRIS
-            if (metode === 'qris') {
-                const mandiriOpt = select.querySelector('[data-default-qris="1"]');
-                if (mandiriOpt) select.value = mandiriOpt.value;
-            }
-        }
-
-        // ============================================================
-        // Preview logo bank (create)
-        // ============================================================
-        function previewLogo(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => document.getElementById('logoPreview').src = e.target.result;
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function previewEditLogo(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => document.getElementById('editLogoPreview').src = e.target.result;
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // ============================================================
-        // Isi modal edit bank
-        // ============================================================
-        function openEditBank(id, nama, norek, pemilik, isActive, logoUrl) {
-            const base = '{{ url('keuangan/bank') }}';
-            document.getElementById('formEditBank').action = `${base}/${id}`;
-            document.getElementById('formDeleteBank').action = `${base}/${id}`;
-            document.getElementById('editNamaBank').value = nama;
-            document.getElementById('editNomorRekening').value = norek;
-            document.getElementById('editNamaPemilik').value = pemilik;
-            document.getElementById('editBankAktif').checked = isActive == 1;
-            document.getElementById('editLogoPreview').src = logoUrl || '{{ asset('assets/img/banks/default-bank.png') }}';
-            new bootstrap.Modal(document.getElementById('modalEditBank')).show();
-        }
-
-        // ============================================================
-        // ApexCharts
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            const chartData = @json($chartData);
-
-            const opts = {
-                series: [{
-                        name: 'Pemasukan',
-                        data: chartData.income
-                    },
-                    {
-                        name: 'Pengeluaran',
-                        data: chartData.expense
-                    },
-                ],
-                chart: {
-                    type: 'area',
-                    height: 280,
-                    toolbar: {
-                        show: false
-                    },
-                    zoom: {
-                        enabled: false
-                    },
-                    sparkline: {
-                        enabled: false
-                    },
-                    fontFamily: 'inherit',
-                },
-                colors: ['#28c76f', '#ea5455'],
-                fill: {
-                    type: 'gradient',
-                    gradient: {
-                        shadeIntensity: 1,
-                        opacityFrom: 0.25,
-                        opacityTo: 0.02,
-                        stops: [0, 95, 100]
-                    }
-                },
-                stroke: {
-                    curve: 'smooth',
-                    width: 2.5
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                xaxis: {
-                    categories: chartData.labels,
-                    axisBorder: {
-                        show: false
-                    },
-                    axisTicks: {
-                        show: false
-                    },
-                    labels: {
-                        style: {
-                            fontSize: '11px',
-                            colors: '#6c757d'
-                        }
-                    },
-                },
-                yaxis: {
-                    labels: {
-                        formatter: v => 'Rp ' + new Intl.NumberFormat('id-ID').format(v),
-                        style: {
-                            fontSize: '11px',
-                            colors: '#6c757d'
-                        },
-                    }
-                },
-                grid: {
-                    borderColor: 'rgba(0,0,0,.06)',
-                    strokeDashArray: 4,
-                    xaxis: {
-                        lines: {
-                            show: false
-                        }
-                    },
-                },
-                tooltip: {
-                    y: {
-                        formatter: v => new Intl.NumberFormat('id-ID', {
-                            style: 'currency',
-                            currency: 'IDR',
-                            maximumFractionDigits: 0
-                        }).format(v)
-                    }
-                },
-                legend: {
-                    position: 'top',
-                    horizontalAlign: 'right',
-                    fontSize: '12px',
-                    markers: {
-                        width: 8,
-                        height: 8,
-                        radius: 4
-                    },
-                },
-            };
-
-            new ApexCharts(document.getElementById('financial-chart'), opts).render();
-        });
+        window.keuanganConfig = @json($keuanganConfig);
     </script>
+    @vite(['resources/assets/js/keuangan.js'])
 @endsection

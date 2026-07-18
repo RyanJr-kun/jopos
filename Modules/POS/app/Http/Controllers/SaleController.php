@@ -3,7 +3,7 @@
 namespace Modules\POS\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Bank;
+use App\Models\Account;
 use App\Models\Customer;
 use App\Models\ProductStock;
 use App\Models\Store;
@@ -150,9 +150,9 @@ class SaleController extends Controller implements HasMiddleware
     $kategoris = Category::whereNull('parent_id')->with('children')->get();
     $taxes = Taxe::all();
     $referensi = $this->generateInvoiceNumber();
-    $banks = Bank::where('is_active', true)->orderBy('nama_bank', 'asc')->get();
+    $accounts = Account::query()->where('is_active', true)->where('tipe_akun', 'bank')->orderBy('account_name', 'asc')->get();
 
-    return view('pos::penjualan.create', compact('products', 'customers', 'kategoris', 'taxes', 'referensi', 'banks'));
+    return view('pos::penjualan.create', compact('products', 'customers', 'kategoris', 'taxes', 'referensi', 'accounts'));
   }
 
   private function generateInvoiceNumber()
@@ -191,7 +191,7 @@ class SaleController extends Controller implements HasMiddleware
       'tanggal_jatuh_tempo' => 'nullable|date',
       'referensi' => 'required|string|unique:sales,referensi',
       'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS',
-      'bank_id' => 'nullable|exists:banks,id|required_if:metode_pembayaran,TRANSFER',
+      'account_id' => 'nullable|exists:accounts,id|required_if:metode_pembayaran,TRANSFER',
       'catatan' => 'nullable|string',
       'jumlah_dibayar' => 'required|numeric|min:0',
       'service' => 'nullable|numeric|min:0',
@@ -313,7 +313,7 @@ class SaleController extends Controller implements HasMiddleware
           'jumlah_dibayar' => $jumlah_dibayar,
           'status_pembayaran' => $status_pembayaran,
           'metode_pembayaran' => $validatedData['metode_pembayaran'],
-          'bank_id' => $validatedData['bank_id'] ?? null,
+          'account_id' => $validatedData['account_id'] ?? null,
           'catatan' => $validatedData['catatan'] ?? null,
           'sisa_piutang' => $sisa_piutang,
         ]);
@@ -324,9 +324,10 @@ class SaleController extends Controller implements HasMiddleware
             'tanggal_bayar' => now(),
             'jumlah_bayar' => $jumlah_dibayar,
             'metode_pembayaran' => $validatedData['metode_pembayaran'],
-            'bank_id' => $validatedData['bank_id'] ?? null,
+            'account_id' => $validatedData['account_id'] ?? null,
             'referensi_pembayaran' => $validatedData['referensi'],
             'catatan' => $status_pembayaran === 'Lunas' ? 'Pembayaran Lunas Awal' : 'Pembayaran Uang Muka (DP)',
+            'payment_status' => 'settlement',
           ]);
         }
 
@@ -387,16 +388,11 @@ class SaleController extends Controller implements HasMiddleware
    */
   public function show(Sale $penjualan)
   {
-    $penjualan->load('items.product', 'items.serialNumbers', 'customer', 'user', 'payments.user', 'payments.bank');
+    $penjualan->load('items.product', 'items.serialNumbers', 'customer', 'user', 'payments.user', 'payments.account');
     $profilToko = Store::find($penjualan->store_id);
-    $banks = Bank::all();
+    $accounts = Account::query()->where('tipe_akun', 'bank')->get();
 
-    return view('pos::penjualan.show', [
-      'title' => 'Faktur Sale: ' . $penjualan->referensi,
-      'penjualan' => $penjualan,
-      'profilToko' => $profilToko,
-      'banks' => $banks,
-    ]);
+    return view('pos::penjualan.show', compact('penjualan', 'profilToko', 'accounts'));
   }
 
   /**
@@ -413,18 +409,9 @@ class SaleController extends Controller implements HasMiddleware
     $taxes = Taxe::all();
     $payments = Sale::getPaymentStatuses();
     $options = Sale::getPaymentMethods();
-    $banks = Bank::all();
+    $accounts = Account::query()->where('tipe_akun', 'bank')->get();
 
-    return view('pos::penjualan.edit', [
-      'title' => 'Edit Invoice: ' . $penjualan->referensi,
-      'penjualan' => $penjualan,
-      'customers' => $customers,
-      'taxes' => $taxes,
-      'nomer_referensi' => $nomer_referensi,
-      'payments' => $payments,
-      'options' => $options,
-      'banks' => $banks,
-    ]);
+    return view('pos::penjualan.edit', compact('penjualan', 'customers', 'taxes', 'nomer_referensi', 'payments', 'options', 'accounts'));
   }
 
   /**
@@ -489,7 +476,7 @@ class SaleController extends Controller implements HasMiddleware
       'tanggal_penjualan'     => 'required|date',
       'tanggal_jatuh_tempo'   => 'nullable|date|after:tanggal_penjualan',
       'metode_pembayaran'     => 'required|in:TUNAI,TRANSFER,QRIS',
-      'bank_id'               => 'nullable|exists:banks,id|required_if:metode_pembayaran,TRANSFER',
+      'account_id'               => 'nullable|exists:accounts,id|required_if:metode_pembayaran,TRANSFER',
       'catatan'               => 'nullable|string',
       'jumlah_dibayar'        => 'required|numeric|min:0',
       'service'               => 'nullable|numeric|min:0',
@@ -618,7 +605,7 @@ class SaleController extends Controller implements HasMiddleware
           'tanggal_penjualan' => $validatedData['tanggal_penjualan'],
           'tanggal_jatuh_tempo' => $validatedData['tanggal_jatuh_tempo'] ?? null,
           'metode_pembayaran' => $validatedData['metode_pembayaran'],
-          'bank_id' => $validatedData['bank_id'] ?? null,
+          'account_id' => $validatedData['account_id'] ?? null,
           'status_pembayaran' => $status_pembayaran,
           'subtotal' => $subtotal_dpp,
           'diskon' => $diskon_global,
@@ -639,8 +626,9 @@ class SaleController extends Controller implements HasMiddleware
               'tanggal_bayar' => $validatedData['tanggal_penjualan'],
               'jumlah_bayar' => $jumlah_dibayar,
               'metode_pembayaran' => $validatedData['metode_pembayaran'],
-              'bank_id' => $validatedData['bank_id'] ?? null,
+              'account_id' => $validatedData['account_id'] ?? null,
               'catatan' => $status_pembayaran === 'Lunas' ? 'Revisi Pembayaran Lunas Awal' : 'Revisi Uang Muka (DP)',
+              'payment_status' => 'settlement',
             ]);
           } else {
             $penjualan->payments()->create([
@@ -648,8 +636,9 @@ class SaleController extends Controller implements HasMiddleware
               'tanggal_bayar' => $validatedData['tanggal_penjualan'],
               'jumlah_bayar' => $jumlah_dibayar,
               'metode_pembayaran' => $validatedData['metode_pembayaran'],
-              'bank_id' => $validatedData['bank_id'] ?? null,
+              'account_id' => $validatedData['account_id'] ?? null,
               'catatan' => $status_pembayaran === 'Lunas' ? 'Pembayaran Lunas Awal' : 'Pembayaran Uang Muka (DP)',
+              'payment_status' => 'settlement',
             ]);
           }
         }
@@ -723,7 +712,7 @@ class SaleController extends Controller implements HasMiddleware
 
   public function downloadFaktur($id)
   {
-    $penjualan = Penjualan::findOrFail($id);
+    $penjualan = Sale::findOrFail($id);
     $pdf = Pdf::loadView('faktur-penjualan-pdf', compact('penjualan'));
 
     return $pdf->stream('faktur.pdf');
@@ -802,13 +791,13 @@ class SaleController extends Controller implements HasMiddleware
         'tanggal_bayar' => 'required|date',
         'jumlah_bayar' => 'required|numeric|min:1|max:' . $penjualan->sisa_piutang,
         'metode_pembayaran' => 'required|in:TUNAI,TRANSFER,QRIS',
-        'bank_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:banks,id',
+        'account_id' => 'required_if:metode_pembayaran,TRANSFER|nullable|exists:accounts,id',
         'referensi_pembayaran' => 'nullable|string|max:100',
         'catatan' => 'nullable|string',
       ],
       [
         'jumlah_bayar.max' => 'Jumlah pembayaran tidak boleh melebihi sisa hutang (Rp ' . number_format($penjualan->sisa_piutang, 0, ',', '.') . ').',
-        'bank_id.required_if' => 'Rekening tujuan wajib dipilih jika menggunakan metode TRANSFER.',
+        'account_id.required_if' => 'Rekening tujuan wajib dipilih jika menggunakan metode TRANSFER.',
       ],
     );
 
@@ -820,7 +809,7 @@ class SaleController extends Controller implements HasMiddleware
           'tanggal_bayar' => $validatedData['tanggal_bayar'],
           'jumlah_bayar' => $validatedData['jumlah_bayar'],
           'metode_pembayaran' => $validatedData['metode_pembayaran'],
-          'bank_id' => $validatedData['bank_id'] ?? null,
+          'account_id' => $validatedData['account_id'] ?? null,
           'referensi_pembayaran' => $validatedData['referensi_pembayaran'] ?? null,
           'catatan' => $validatedData['catatan'] ?? null,
         ]);

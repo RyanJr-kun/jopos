@@ -1042,8 +1042,8 @@
                 @endif
 
                 // ✅ Edit: pre-select bank jika metode transfer
-                @if ($penjualan->bank_id)
-                    $(bankTujuanSelect).val("{{ $penjualan->bank_id }}").trigger('change');
+                @if ($penjualan->account_id)
+                    $(bankTujuanSelect).val("{{ $penjualan->account_id }}").trigger('change');
                     toggleTransferDetails();
                 @endif
 

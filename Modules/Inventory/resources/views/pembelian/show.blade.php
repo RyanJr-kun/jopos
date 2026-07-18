@@ -249,10 +249,10 @@
                                         <span class="badge badge-xs bg-label-info">
                                             {{ $payment->metode_pembayaran ?? '-' }}
                                         </span>
-                                        @if ($payment->bank)
+                                        @if ($payment->account)
                                             <div>
-                                                <img src="{{ $payment->bank->logo_url }}"
-                                                    alt="{{ $payment->bank->nama_bank ?? 'bank' }}"
+                                                <img src="{{ $payment->account->logo_url }}"
+                                                    alt="{{ $payment->account->account_name ?? 'bank' }}"
                                                     style="width:40px; height:40px; object-fit:contain">
 
                                             </div>
@@ -406,11 +406,11 @@
                                 <div class="col-12 d-none animate__animated animate__fadeIn" id="modal-bank-container">
                                     <label for="modal_bank_id" class="form-label fw-semibold">Rekening Tujuan <span
                                             class="text-danger">*</span></label>
-                                    <select name="bank_id" id="modal_bank_id" class="form-select select2-bank-modal">
+                                    <select name="account_id" id="modal_bank_id" class="form-select select2-bank-modal">
                                         <option value="" disabled selected>Pilih Rekening Bank...</option>
-                                        @foreach ($banks as $bank)
+                                        @foreach ($accounts as $bank)
                                             <option value="{{ $bank->id }}" data-logo="{{ $bank->logo_url }}">
-                                                {{ $bank->nama_bank }} - {{ $bank->nomor_rekening }}
+                                                {{ $bank->account_name }} - {{ $bank->nomor_rekening }}
                                             </option>
                                         @endforeach
                                     </select>

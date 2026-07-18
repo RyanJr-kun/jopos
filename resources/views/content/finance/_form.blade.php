@@ -40,7 +40,7 @@
     @unless ($isTransfer)
         <div class="mb-3">
             <label class="form-label fw-medium">Kategori <span class="text-danger">*</span></label>
-            <select name="transaction_category_id" class="form-select" required>
+            <select name="transaction_category_id" class="form-select select2" required>
                 <option value="">— Pilih Kategori —</option>
                 @foreach ($kategoris as $kategori)
                     <option value="{{ $kategori->id }}" @selected(old('transaction_category_id', $cashFlow->transaction_category_id) == $kategori->id)>
@@ -56,26 +56,25 @@
         <div class="row g-2 mb-3">
             {{-- Hidden metode supaya lolos validasi BE yang mengharuskan metode = TRANSFER --}}
             <input type="hidden" name="metode_pembayaran" value="TRANSFER">
-            <input type="hidden" name="metode_pembayaran_tujuan" value="TRANSFER">
 
             <div class="col-6">
                 <label class="form-label fw-medium">Dari (Rekening Asal) <span class="text-danger">*</span></label>
-                <select name="bank_id" class="form-select select2" required>
+                <select name="account_id" class="form-select select2" required>
                     <option value="">— Pilih Rekening —</option>
-                    @foreach ($banks as $bank)
-                        <option value="{{ $bank->id }}" @selected(old('bank_id', $cashFlow->bank_id) == $bank->id)>
-                            {{ $bank->nama_bank ?? $bank->name }}
+                    @foreach ($accounts as $a)
+                        <option value="{{ $a->id }}" @selected(old('account_id', $cashFlow->account_id) == $a->id)>
+                            {{ $a->account_name ?? $a->name }}
                         </option>
                     @endforeach
                 </select>
             </div>
             <div class="col-6">
                 <label class="form-label fw-medium">Ke (Rekening Tujuan) <span class="text-danger">*</span></label>
-                <select name="bank_id_tujuan" class="form-select select2" required>
+                <select name="to_account_id" class="form-select select2" required>
                     <option value="">— Pilih Rekening —</option>
-                    @foreach ($banks as $bank)
-                        <option value="{{ $bank->id }}" @selected(old('bank_id_tujuan', $cashFlow->bank_id_tujuan) == $bank->id)>
-                            {{ $bank->nama_bank ?? $bank->name }}
+                    @foreach ($accounts as $a)
+                        <option value="{{ $a->id }}" @selected(old('to_account_id', $cashFlow->to_account_id) == $a->id)>
+                            {{ $a->account_name ?? $a->name }}
                         </option>
                     @endforeach
                 </select>
@@ -95,11 +94,11 @@
             </div>
             <div class="col-6" id="bank_id_wrap">
                 <label class="form-label fw-medium">Bank</label>
-                <select name="bank_id" class="form-select select2">
+                <select name="account_id" class="form-select select2">
                     <option value="">— Pilih Bank —</option>
                     @foreach ($banks as $bank)
-                        <option value="{{ $bank->id }}" @selected(old('bank_id', $cashFlow->bank_id) == $bank->id)>
-                            {{ $bank->nama_bank ?? $bank->name }}
+                        <option value="{{ $bank->id }}" @selected(old('account_id', $cashFlow->account_id) == $bank->id)>
+                            {{ $bank->account_name ?? $bank->name }}
                         </option>
                     @endforeach
                 </select>
@@ -169,31 +168,62 @@
 
 <script>
     (function() {
+        var $ = window.jQuery;
+
         // ── Toggle bank field berdasarkan metode ────────────────
-        document.querySelectorAll('#cashFlowForm .js-metode').forEach(function(select) {
-            const target = document.querySelector(select.dataset.target);
+        // Dijadikan global agar bisa dipanggil ulang dari _canvas.blade.php
+        // setelah Select2 diinisialisasi pada form offcanvas.
+        window.initCfBankToggle = function() {
+            if (!$) return;
 
-            function toggle() {
-                if (!target) return;
-                target.style.transition = 'opacity .2s';
-                if (select.value === 'TRANSFER') {
-                    target.style.opacity = '1';
-                    target.style.pointerEvents = '';
-                    target.querySelector('select').required = false; // bank_id boleh kosong, validasi di BE
-                } else {
-                    target.style.opacity = '0.4';
-                    target.style.pointerEvents = 'none';
+            $('#cashFlowForm .js-metode').each(function() {
+                var $select = $(this);
+                var $target = $($select.data('target'));
+                var $bankSelect = $target.find('select');
+
+                if (!$target.length) return;
+
+                function toggle() {
+                    $target.css('transition', 'opacity .2s');
+
+                    if ($select.val() === 'TRANSFER') {
+                        $target.css({
+                            opacity: 1,
+                            'pointer-events': ''
+                        });
+                        $bankSelect.prop('disabled', false).prop('required', true);
+                        // Jika Select2 sudah aktif, refresh state-nya
+                        if ($bankSelect.hasClass('select2-hidden-accessible')) {
+                            $bankSelect.trigger('change.select2');
+                        }
+                    } else {
+                        $target.css({
+                            opacity: 0.4,
+                            'pointer-events': 'none'
+                        });
+                        $bankSelect.prop('disabled', false).prop('required', false);
+                        // Reset pilihan bank saat bukan TRANSFER
+                        $bankSelect.val('').trigger('change');
+                    }
                 }
-            }
 
-            select.addEventListener('change', toggle);
-            toggle();
-        });
+                // Unbind dulu supaya tidak double-bind saat dipanggil ulang
+                $select.off('change.cfBankToggle').on('change.cfBankToggle', toggle);
+                toggle(); // set state awal
+            });
+        };
+
+        // Jalankan langsung (untuk case non-offcanvas atau fallback)
+        if ($) {
+            $(function() {
+                window.initCfBankToggle();
+            });
+        }
 
         // ── Format nominal (Rupiah display) ────────────────────
-        const nominalDisplay = document.getElementById('nominalDisplay');
-        const nominalHidden = document.getElementById('nominalHidden');
-        const nominalReadable = document.getElementById('nominalReadable');
+        var nominalDisplay = document.getElementById('nominalDisplay');
+        var nominalHidden = document.getElementById('nominalHidden');
+        var nominalReadable = document.getElementById('nominalReadable');
 
         function terbilangSimple(n) {
             if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace('.0', '') + ' Miliar';
@@ -203,7 +233,7 @@
         }
 
         function formatRupiah(val) {
-            const num = parseInt(val.replace(/\D/g, ''), 10) || 0;
+            var num = parseInt(val.replace(/\D/g, ''), 10) || 0;
             nominalHidden.value = num || '';
             nominalDisplay.value = num ? num.toLocaleString('id-ID') : '';
             nominalReadable.textContent = num >= 1000 ? '≈ ' + terbilangSimple(num) + ' Rupiah' : '';
@@ -222,16 +252,16 @@
         }
 
         // ── Preview foto bukti ─────────────────────────────────
-        const fileInput = document.getElementById('buktiFoto');
-        const previewArea = document.getElementById('buktiFotoPreview');
-        const uploadArea = document.getElementById('cfUploadArea');
+        var fileInput = document.getElementById('buktiFoto');
+        var previewArea = document.getElementById('buktiFotoPreview');
+        var uploadArea = document.getElementById('cfUploadArea');
 
         if (fileInput) {
             fileInput.addEventListener('change', function() {
-                const file = this.files[0];
+                var file = this.files[0];
                 if (!file) return;
 
-                const reader = new FileReader();
+                var reader = new FileReader();
                 reader.onload = function(e) {
                     previewArea.classList.remove('d-none');
                     previewArea.innerHTML = `
