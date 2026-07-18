@@ -6,12 +6,11 @@ use App\Http\Controllers\Controller;
 
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\Supplier;
-use App\Models\Income;
+use App\Models\CashFlow;
 use App\Models\Customer;
 use Modules\Inventory\Models\Purchase;
 use Modules\POS\Models\Sale;
 use App\Models\Store;
-use App\Models\Expense;
 use Illuminate\Http\Request;
 use App\Exports\LabaRugiExport;
 use App\Exports\PurchaseExport;
@@ -499,9 +498,10 @@ class LaporanController extends Controller
             ->where('status_pembayaran', '!=', 'Dibatalkan')
             ->sum('total_akhir');
 
-        // Tambahan: Hitung Total Pendapatan Lain-lain dari tabel Income
-        $totalOtherIncome = Income::whereBetween('tanggal', [$startDate, $endDate])
-            ->sum('jumlah');
+        // Tambahan: Hitung Total Pendapatan Lain-lain dari CashFlow
+        $totalOtherIncome = CashFlow::income()->aktif()
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->sum('nominal');
 
         // 3. Hitung Harga Pokok Sale (HPP / COGS)
         // HPP = Jumlah barang terjual * harga beli produk
@@ -515,8 +515,10 @@ class LaporanController extends Controller
         // 4. Hitung Laba Kotor (Pendapatan - HPP)
         $grossProfit = $totalRevenue - $cogs;
 
-        // 5. Hitung Total Beban Operasional dari tabel expense
-        $totalExpenses = Expense::whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
+        // 5. Hitung Total Beban Operasional dari CashFlow
+        $totalExpenses = CashFlow::expense()->aktif()
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->sum('nominal');
 
         // 6. Hitung Laba Bersih (Laba Kotor - Beban Operasional)
         $netProfit = $grossProfit + $totalOtherIncome - $totalExpenses;
@@ -544,10 +546,14 @@ class LaporanController extends Controller
                 ->sum(DB::raw('sale_items.jumlah * products.harga_beli'));
 
             // Income lain-lain bulan ini
-            $monthlyOtherIncome = Income::whereBetween('tanggal', [$monthStart, $monthEnd])->sum('jumlah');
+            $monthlyOtherIncome = CashFlow::income()->aktif()
+                ->whereBetween('tanggal', [$monthStart, $monthEnd])
+                ->sum('nominal');
 
             // Beban bulan ini
-            $monthlyExpenses = Expense::whereBetween('tanggal', [$monthStart, $monthEnd])->sum('jumlah');
+            $monthlyExpenses = CashFlow::expense()->aktif()
+                ->whereBetween('tanggal', [$monthStart, $monthEnd])
+                ->sum('nominal');
 
             // Laba bersih bulan ini
             $monthlyGrossProfit = $monthlyRevenue - $monthlyCogs;
@@ -592,8 +598,9 @@ class LaporanController extends Controller
             ->sum('total_akhir');
 
         // Tambahan: Hitung Total Pendapatan Lain-lain
-        $totalOtherIncome = Income::whereBetween('tanggal', [$startDate, $endDate])
-            ->sum('jumlah');
+        $totalOtherIncome = CashFlow::income()->aktif()
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->sum('nominal');
 
         // 3. Hitung HPP
         $cogs = DB::table('sale_items')
@@ -607,7 +614,9 @@ class LaporanController extends Controller
         $grossProfit = $totalRevenue - $cogs;
 
         // 5. Hitung Total Beban
-        $totalExpenses = Expense::whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
+        $totalExpenses = CashFlow::expense()->aktif()
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->sum('nominal');
 
         // 6. Hitung Laba Bersih
         $netProfit = $grossProfit + $totalOtherIncome - $totalExpenses;

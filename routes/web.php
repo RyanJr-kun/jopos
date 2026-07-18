@@ -6,23 +6,17 @@ use App\Http\Controllers\dashboard\DashboardController;
 use App\Http\Controllers\dashboard\LaporanController;
 use App\Http\Controllers\dashboard\StoreController;
 use App\Http\Controllers\finance\CashFlowController;
-use App\Http\Controllers\finance\ExpenseController;
-use App\Http\Controllers\finance\IncomeController;
 use App\Http\Controllers\finance\KeuanganController;
 use App\Http\Controllers\finance\TransactionCategoryController;
 use App\Http\Controllers\hrd\CustomerController;
 use App\Http\Controllers\hrd\UserController;
 use App\Http\Controllers\SettingController;
-use App\Models\CashFlow;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-
-// Mengambil variabel domain dari .env
-$domain = env('APP_DOMAIN', 'jocomputer.com');
-
 // =========================================================
 // 1. ROUTING SUBDOMAIN (JOPOS - Khusus Karyawan/Admin)
 // =========================================================
-Route::domain('jopos.' . $domain)->group(function () {
+Route::domain(env('POS_DOMAIN'))->group(function () {
   // Akses Tamu (Belum Login)
   Route::middleware('guest')->group(function () {
     // Path URL diubah sesuai target Anda
@@ -116,7 +110,7 @@ Route::domain('jopos.' . $domain)->group(function () {
     Route::resource('roles', RoleController::class)->except('show');
 
     Route::get('/setting', function () {
-      return redirect()->route('setting.index', auth()->user()->username);
+      return redirect()->route('setting.index', Auth::user()->username);
     })->name('setting.redirect');
 
     Route::prefix('setting')

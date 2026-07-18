@@ -272,6 +272,13 @@ class CashFlowController extends Controller implements HasMiddleware
       ]);
     }
 
+    if (isset($validated['metode_pembayaran']) && $validated['metode_pembayaran'] === 'TUNAI' && empty($validated['account_id'])) {
+      $validated['account_id'] = Account::query()
+        ->where('tipe_akun', 'tunai')
+        ->where('store_id', $storeId)
+        ->value('id');
+    }
+
     $validated['type'] = $type;
     $validated['store_id'] = $storeId;
     $validated['user_id'] = Auth::id();

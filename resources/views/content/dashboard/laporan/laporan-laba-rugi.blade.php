@@ -1,122 +1,156 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Cards basic - UI elements')
+@section('title', 'Laporan Laba Rugi')
+
+@section('page-style')
+    @vite(['resources/assets/vendor/scss/pages/page-dashboard.scss'])
+@endsection
+
 @section('content')
-    <div class="container-fluid p-3">
-        <div class="card rounded-2">
-            <div class="card-header pb-0 px-3 pt-2 mb-3">
+    <div class="laporan-container">
+
+        {{-- Header --}}
+        <div class="card laporan-header-card mb-4">
+            <div class="card-body py-3 px-4">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-n1">Laporan Laba Rugi</h6>
-                        <p class="text-sm mb-0">Menampilkan ringkasan pendapatan, beban, dan laba bersih.</p>
+                    <div class="d-flex align-items-center">
+                        <div class="laporan-header-icon me-3">
+                            <i class="bx bx-line-chart"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-bold">Laporan Laba Rugi</h5>
+                            <span class="text-muted small">Ringkasan pendapatan, beban, dan laba bersih.</span>
+                        </div>
                     </div>
-                    <a href="#" id="exportPdf" class="btn btn-outline-danger me-2 p-2 mb-0" data-bs-toggle="tooltip"
+                    <a href="#" id="exportPdf" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip"
                         title="Export PDF">
-                        <img src="{{ asset('assets/img/pdf.png') }}" alt="Download PDF" width="20" height="20">
+                        <i class="bx bx-file me-1"></i>PDF
                     </a>
                 </div>
             </div>
-            <div class="card-body pt-0">
-                {{-- Filter Section --}}
-                <div class=" p-3 border-bottom mb-4">
-                    <form action="{{ route('laporan.laba-rugi') }}" method="GET">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-md-3">
-                                <label for="start_date" class="form-label">Tanggal Mulai</label>
-                                <input type="date" name="start_date" id="start_date" class="form-control"
-                                    value="{{ $startDate }}">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="end_date" class="form-label">Tanggal Selesai</label>
-                                <input type="date" name="end_date" id="end_date" class="form-control"
-                                    value="{{ $endDate }}">
-                            </div>
-                            <div class="col-md-3">
-                                <div class="d-flex mb-n3">
-                                    <button type="submit" class="btn btn-dark w-100 me-2">Filter</button>
-                                    <a href="{{ route('laporan.laba-rugi') }}"
-                                        class="btn btn-outline-secondary w-100">Reset</a>
-                                </div>
-                            </div>
+        </div>
+
+        {{-- Filter --}}
+        <div class="card dash-filter-bar mb-4">
+            <div class="card-body py-3 px-4">
+                <form action="{{ route('laporan.laba-rugi') }}" method="GET">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-auto d-flex align-items-center me-2">
+                            <i class="bx bx-calendar-alt text-primary me-2 fs-5"></i>
+                            <span class="fw-semibold text-body">Periode</span>
                         </div>
-                    </form>
-                </div>
-
-                {{-- Report Summary --}}
-                <div class="row px-3">
-                    <div class="col-lg-7">
-                        <div class="report-summary">
-                            <h6 class="mb-3">Ringkasan Periode: <span
-                                    class="fw-bold">{{ \Carbon\Carbon::parse($startDate)->isoFormat('D MMM Y') }} -
-                                    {{ \Carbon\Carbon::parse($endDate)->isoFormat('D MMM Y') }}</span></h6>
-
-                            <ul class="list-group rounded-2">
-                                {{-- Pendapatan --}}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Pendapatan dari Sale</span>
-                                    <span class="fw-bold text-success">@money($totalRevenue)</span>
-                                </li>
-                                {{-- HPP --}}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span>Harga Pokok Sale (HPP)</span>
-                                    <span>(@money($cogs))</span>
-                                </li>
-                                {{-- Laba Kotor --}}
-                                <li
-                                    class="list-group-item d-flex justify-content-between align-items-center border-top pt-3">
-                                    <span class="fw-bold">Laba Kotor</span>
-                                    <span class="fw-bold">@money($grossProfit)</span>
-                                </li>
-                                {{-- Pendapatan Lain-lain --}}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Pendapatan Lain-lain</span>
-                                    <span class="fw-bold text-info">@money($totalOtherIncome)</span>
-                                </li>
-                                {{-- Beban --}}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Beban Operasional</span>
-                                    <span>(@money($totalExpenses))</span>
-                                </li>
-                                {{-- Laba Bersih --}}
-                                <li
-                                    class="list-group-item d-flex justify-content-between align-items-center border-top pt-3 {{ $netProfit >= 0 ? 'bg-success-light' : 'bg-danger-light' }}">
-                                    <h5 class="mb-0">Laba Bersih</h5>
-                                    <h5 class="mb-0 {{ $netProfit >= 0 ? 'text-success' : 'text-danger' }}">
-                                        @money($netProfit)</h5>
-                                </li>
-                            </ul>
+                        <div class="col-md col-6">
+                            <input type="date" name="start_date" id="start_date" class="form-control form-control-sm"
+                                value="{{ $startDate }}">
+                        </div>
+                        <div class="col-auto d-flex align-items-center px-0">
+                            <span class="text-muted">—</span>
+                        </div>
+                        <div class="col-md col-6">
+                            <input type="date" name="end_date" id="end_date" class="form-control form-control-sm"
+                                value="{{ $endDate }}">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="bx bx-search me-1"></i>Terapkan
+                            </button>
+                        </div>
+                        <div class="col-auto">
+                            <a href="{{ route('laporan.laba-rugi') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bx bx-reset"></i>
+                            </a>
                         </div>
                     </div>
-                    <div class="col-lg-5 d-flex align-items-center @if (isset($isExport) && $isExport) d-none @endif">
-                        <div class="chart w-100">
-                            <canvas id="profit-loss-pie-chart" class="chart-canvas" height="300"></canvas>
+                </form>
+            </div>
+        </div>
+
+        {{-- Report Summary + Pie Chart --}}
+        <div class="row g-3 mb-4">
+            <div class="col-lg-7">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            Ringkasan Periode:
+                            <span class="fw-bold text-primary">
+                                {{ \Carbon\Carbon::parse($startDate)->isoFormat('D MMM Y') }} —
+                                {{ \Carbon\Carbon::parse($endDate)->isoFormat('D MMM Y') }}
+                            </span>
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="laporan-summary-list">
+                            <div class="laporan-summary-item">
+                                <span class="laporan-summary-label">Pendapatan dari Penjualan</span>
+                                <span class="laporan-summary-value text-success fw-bold">@money($totalRevenue)</span>
+                            </div>
+                            <div class="laporan-summary-item">
+                                <span class="laporan-summary-label">Harga Pokok Penjualan (HPP)</span>
+                                <span class="laporan-summary-value">(@money($cogs))</span>
+                            </div>
+                            <div class="laporan-summary-item laporan-summary-item--highlight">
+                                <span class="laporan-summary-label fw-bold">Laba Kotor</span>
+                                <span class="laporan-summary-value fw-bold">@money($grossProfit)</span>
+                            </div>
+                            <div class="laporan-summary-item">
+                                <span class="laporan-summary-label">Pendapatan Lain-lain</span>
+                                <span class="laporan-summary-value text-info fw-bold">@money($totalOtherIncome)</span>
+                            </div>
+                            <div class="laporan-summary-item">
+                                <span class="laporan-summary-label">Beban Operasional</span>
+                                <span class="laporan-summary-value">(@money($totalExpenses))</span>
+                            </div>
+                            <div
+                                class="laporan-summary-item laporan-summary-item--total {{ $netProfit >= 0 ? 'laporan-summary-item--profit' : 'laporan-summary-item--loss' }}">
+                                <span class="laporan-summary-label fw-bold fs-6">Laba Bersih</span>
+                                <span class="laporan-summary-value fw-bold fs-6">@money($netProfit)</span>
+                            </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 @if (isset($isExport) && $isExport) d-none @endif">
+                <div class="card dash-chart-card h-100">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center">
+                            <div class="dash-chart-icon me-2">
+                                <i class="bx bx-pie-chart-alt-2"></i>
+                            </div>
+                            <h6 class="mb-0">Komposisi Keuangan</h6>
+                        </div>
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <canvas id="profit-loss-pie-chart" class="chart-canvas" height="280"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Chart Section --}}
-        <div class="row mt-4 @if (isset($isExport) && $isExport) d-none @endif">
+        {{-- Line Chart --}}
+        <div class="row @if (isset($isExport) && $isExport) d-none @endif">
             <div class="col-12">
-                <div class="card rounded-2 z-index-2">
-                    <div class="card-header pb-0 pt-3 bg-transparent">
-                        <h6 class="text-capitalize">Grafik Laba Rugi 6 Bulan Terakhir</h6>
-                        <p class="text-sm mb-0">
-                            <i class="bx bx-arrow-up text-success"></i>
-                            <span class="font-weight-bold">Laba</span> vs
-                            <i class="bx bx-arrow-down text-danger"></i>
-                            <span class="font-weight-bold">Rugi</span>
-                        </p>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="chart">
-                            <canvas id="profit-loss-chart" class="chart-canvas" height="300"></canvas>
+                <div class="card dash-chart-card">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center">
+                            <div class="dash-chart-icon me-2">
+                                <i class="bx bx-trending-up"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Grafik Laba Rugi 6 Bulan Terakhir</h6>
+                                <span class="text-muted small">
+                                    <i class="bx bx-up-arrow-alt text-success"></i> Laba vs
+                                    <i class="bx bx-down-arrow-alt text-danger"></i> Rugi
+                                </span>
+                            </div>
                         </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="profit-loss-chart" class="chart-canvas" height="300"></canvas>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
     @if (!isset($isExport) || !$isExport)
@@ -124,29 +158,110 @@
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
-                    // Pie Chart untuk Ringkasan Laba Rugi
-                    const pieCtx = document.getElementById('profit-loss-pie-chart').getContext('2d');
-                    const pieLabels = ['Pendapatan', 'HPP', 'Beban'];
-                    const pieData = [@json($totalRevenue), @json($cogs),
-                        @json($totalExpenses)
-                    ];
+                    // --- Pie Chart ---
+                    const pieCtx = document.getElementById('profit-loss-pie-chart');
+                    if (pieCtx) {
+                        const pieData = [@json($totalRevenue), @json($cogs), @json($totalExpenses)];
+                        if (pieData[0] > 0) {
+                            new Chart(pieCtx, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['Pendapatan', 'HPP', 'Beban'],
+                                    datasets: [{
+                                        data: pieData,
+                                        backgroundColor: [
+                                            'rgba(40, 199, 111, 0.85)',
+                                            'rgba(255, 159, 67, 0.85)',
+                                            'rgba(234, 84, 85, 0.85)',
+                                        ],
+                                        borderColor: '#fff',
+                                        borderWidth: 3,
+                                        borderRadius: 4,
+                                        hoverOffset: 8,
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    cutout: '60%',
+                                    plugins: {
+                                        legend: {
+                                            position: 'bottom',
+                                            labels: {
+                                                padding: 16,
+                                                usePointStyle: true,
+                                                pointStyle: 'circle',
+                                            }
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function(context) {
+                                                    let label = context.label || '';
+                                                    if (label) label += ': ';
+                                                    label += new Intl.NumberFormat('id-ID', {
+                                                        style: 'currency',
+                                                        currency: 'IDR',
+                                                        minimumFractionDigits: 0,
+                                                    }).format(context.raw);
+                                                    return label;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
 
-                    // Hanya tampilkan chart jika ada pendapatan
-                    if (pieData[0] > 0) {
-                        new Chart(pieCtx, {
-                            type: 'pie',
+                    // --- Line Chart ---
+                    const lineCtx = document.getElementById('profit-loss-chart');
+                    if (lineCtx) {
+                        const ctx = lineCtx.getContext('2d');
+                        const data = @json($chartNetProfits);
+                        const profitColor = 'rgba(40, 199, 111, 1)';
+                        const lossColor = 'rgba(234, 84, 85, 1)';
+
+                        new Chart(ctx, {
+                            type: 'line',
                             data: {
-                                labels: pieLabels,
+                                labels: @json($chartLabels),
                                 datasets: [{
-                                    label: 'Jumlah',
-                                    data: pieData,
-                                    backgroundColor: [
-                                        'rgba(20, 214, 125, 0.8)', // Hijau untuk Pendapatan
-                                        'rgba(251, 99, 64, 0.8)', // Oranye untuk HPP
-                                        'rgba(234, 51, 94, 0.8)', // Merah untuk Beban
-                                    ],
-                                    borderColor: '#fff',
-                                    borderWidth: 2
+                                    label: 'Laba Bersih',
+                                    tension: 0.4,
+                                    borderWidth: 2.5,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6,
+                                    pointBackgroundColor: data.map(v => v >= 0 ? profitColor :
+                                        lossColor),
+                                    pointBorderColor: '#fff',
+                                    pointBorderWidth: 2,
+                                    segment: {
+                                        borderColor: ctx => (ctx.p0.parsed.y >= 0 && ctx.p1.parsed
+                                                .y >= 0) ? profitColor :
+                                            (ctx.p0.parsed.y < 0 && ctx.p1.parsed.y < 0) ?
+                                            lossColor : '#a1acb8',
+                                    },
+                                    backgroundColor: context => {
+                                        const chart = context.chart;
+                                        const {
+                                            ctx,
+                                            chartArea
+                                        } = chart;
+                                        if (!chartArea) return null;
+                                        const gradient = ctx.createLinearGradient(0, chartArea
+                                            .bottom, 0, chartArea.top);
+                                        const val = context.dataset.data[context.dataIndex];
+                                        if (val >= 0) {
+                                            gradient.addColorStop(0, 'rgba(40, 199, 111, 0)');
+                                            gradient.addColorStop(1, 'rgba(40, 199, 111, 0.15)');
+                                        } else {
+                                            gradient.addColorStop(0, 'rgba(234, 84, 85, 0)');
+                                            gradient.addColorStop(1, 'rgba(234, 84, 85, 0.15)');
+                                        }
+                                        return gradient;
+                                    },
+                                    fill: true,
+                                    data: data,
                                 }]
                             },
                             options: {
@@ -154,176 +269,78 @@
                                 maintainAspectRatio: false,
                                 plugins: {
                                     legend: {
-                                        position: 'bottom',
+                                        display: false
                                     },
                                     tooltip: {
+                                        backgroundColor: 'rgba(50, 50, 50, 0.9)',
+                                        padding: 12,
+                                        cornerRadius: 8,
                                         callbacks: {
                                             label: function(context) {
-                                                let label = context.label || '';
-                                                if (label) {
-                                                    label += ': ';
+                                                let label = context.dataset.label || '';
+                                                if (label) label += ': ';
+                                                if (context.parsed.y !== null) {
+                                                    label += new Intl.NumberFormat('id-ID', {
+                                                        style: 'currency',
+                                                        currency: 'IDR',
+                                                        minimumFractionDigits: 0,
+                                                    }).format(context.parsed.y);
                                                 }
-                                                label += new Intl.NumberFormat('id-ID', {
-                                                    style: 'currency',
-                                                    currency: 'IDR'
-                                                }).format(context.raw);
                                                 return label;
                                             }
                                         }
                                     }
+                                },
+                                interaction: {
+                                    intersect: false,
+                                    mode: 'index'
+                                },
+                                scales: {
+                                    y: {
+                                        grid: {
+                                            drawBorder: false,
+                                            color: 'rgba(0,0,0,0.05)',
+                                            borderDash: [5, 5]
+                                        },
+                                        ticks: {
+                                            padding: 10,
+                                            color: '#a1acb8',
+                                            font: {
+                                                size: 11
+                                            },
+                                            callback: function(value) {
+                                                if (Math.abs(value) >= 1000000) return 'Rp ' + (value /
+                                                    1000000).toFixed(1) + 'jt';
+                                                if (Math.abs(value) >= 1000) return 'Rp ' + (value /
+                                                    1000).toFixed(0) + 'rb';
+                                                return 'Rp ' + value;
+                                            }
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            color: '#a1acb8',
+                                            padding: 10,
+                                            font: {
+                                                size: 11
+                                            }
+                                        }
+                                    },
                                 }
                             }
                         });
                     }
 
-                    // Line Chart untuk Laba Rugi 6 Bulan
-                    const ctx = document.getElementById('profit-loss-chart').getContext('2d');
-                    const data = @json($chartNetProfits);
-
-                    // Warna untuk Laba (hijau) dan Rugi (merah)
-                    const profitColor = 'rgba(20, 214, 125, 1)';
-                    const lossColor = 'rgba(234, 51, 94, 1)';
-                    const profitBgColor = 'rgba(20, 214, 125, 0.1)';
-                    const lossBgColor = 'rgba(234, 51, 94, 0.1)';
-
-                    // Fungsi untuk membuat gradient berdasarkan nilai
-                    const getGradient = (ctx, chartArea, value) => {
-                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                        if (value >= 0) {
-                            gradient.addColorStop(0, profitBgColor);
-                            gradient.addColorStop(1, 'rgba(20, 214, 125, 0)');
-                        } else {
-                            gradient.addColorStop(0, lossBgColor);
-                            gradient.addColorStop(1, 'rgba(234, 51, 94, 0)');
-                        }
-                        return gradient;
-                    };
-                    new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: @json($chartLabels),
-                            datasets: [{
-                                label: 'Laba Bersih',
-                                tension: 0.4,
-                                borderWidth: 3,
-                                pointRadius: 0,
-                                // Mengatur warna garis secara dinamis per segmen
-                                segment: {
-                                    borderColor: ctx => (ctx.p0.parsed.y >= 0 && ctx.p1.parsed.y >= 0) ?
-                                        profitColor : (ctx.p0.parsed.y < 0 && ctx.p1.parsed.y < 0) ?
-                                        lossColor : 'gray',
-                                },
-                                // Mengatur warna background area
-                                backgroundColor: context => {
-                                    const chart = context.chart;
-                                    const {
-                                        ctx,
-                                        chartArea
-                                    } = chart;
-                                    if (!chartArea) {
-                                        return null;
-                                    }
-                                    return getGradient(ctx, chartArea, context.dataset.data[context
-                                        .dataIndex]);
-                                },
-                                fill: true,
-                                data: data,
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false,
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            let label = context.dataset.label || '';
-                                            if (label) {
-                                                label += ': ';
-                                            }
-                                            if (context.parsed.y !== null) {
-                                                label += new Intl.NumberFormat('id-ID', {
-                                                    style: 'currency',
-                                                    currency: 'IDR'
-                                                }).format(context.parsed.y);
-                                            }
-                                            return label;
-                                        }
-                                    }
-                                }
-                            },
-                            interaction: {
-                                intersect: false,
-                                mode: 'index',
-                            },
-                            scales: {
-                                y: {
-                                    grid: {
-                                        drawBorder: false,
-                                        display: true,
-                                        drawOnChartArea: true,
-                                        drawTicks: false,
-                                        borderDash: [5, 5]
-                                    },
-                                    ticks: {
-                                        display: true,
-                                        padding: 10,
-                                        color: '#6c757d',
-                                        font: {
-                                            size: 11,
-                                            family: "Open Sans",
-                                            style: 'normal',
-                                            lineHeight: 2
-                                        },
-                                        callback: function(value, index, values) {
-                                            return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
-                                        }
-                                    }
-                                },
-                                x: {
-                                    grid: {
-                                        drawBorder: false,
-                                        display: false,
-                                        drawOnChartArea: false,
-                                        drawTicks: false,
-                                        borderDash: [5, 5]
-                                    },
-                                    ticks: {
-                                        display: true,
-                                        color: '#6c757d',
-                                        padding: 20,
-                                        font: {
-                                            size: 11,
-                                            family: "Open Sans",
-                                            style: 'normal',
-                                            lineHeight: 2
-                                        },
-                                    }
-                                },
-                            }
-                        }
-                    });
-
-                    // Handle Export
-                    const exportPdfBtn = document.getElementById('exportPdf');
-
-                    function handleExport(e) {
+                    // --- Export ---
+                    document.getElementById('exportPdf').addEventListener('click', function(e) {
                         e.preventDefault();
-
-                        // Ambil nilai filter saat ini dari form
-                        const form = document.querySelector('. form');
+                        const form = document.querySelector('form');
                         const params = new URLSearchParams(new FormData(form)).toString();
-
-                        // Bangun URL untuk ekspor
-                        const exportUrl = `{{ route('laporan.laba-rugi.export') }}?${params}`;
-
-                        // Buka URL di tab baru untuk memulai unduhan
-                        window.open(exportUrl, '_blank');
-                    }
-                    exportPdfBtn.addEventListener('click', handleExport);
+                        window.open(`{{ route('laporan.laba-rugi.export') }}?${params}`, '_blank');
+                    });
                 });
             </script>
         @endsection

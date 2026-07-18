@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\CashFlow;
 use App\Models\Customer;
-use App\Models\Expense;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,39 +17,44 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Ambil request untuk filter tanggal
         $request = request();
 
-        // 1. Atur rentang tanggal, defaultnya bulan ini
+        // Rentang tanggal, default bulan ini
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->endOfMonth()->toDateString());
 
-        // --- DATA UNTUK STATS CARDS ---
-
-        // --- Perbandingan dengan Periode Sebelumnya ---
+        // Periode sebelumnya untuk perbandingan
         $startCarbon = Carbon::parse($startDate);
         $endCarbon = Carbon::parse($endDate);
         $daysDifference = $endCarbon->diffInDays($startCarbon);
 
-        // Tentukan periode sebelumnya dengan duration yang sama
         $previousStartDate = $startCarbon->copy()->subDays($daysDifference + 1);
         $previousEndDate = $endCarbon->copy()->subDays($daysDifference + 1);
 
-        // 1. Pendapatan Periode Ini vs Periode Sebelumnya
-        $pendapatanPeriodeIni = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])->where('status_pembayaran', '!=', 'Dibatalkan')->sum('total_akhir');
-        $pendapatanPeriodeLalu = Sale::whereBetween('tanggal_penjualan', [$previousStartDate, $previousEndDate])->where('status_pembayaran', '!=', 'Dibatalkan')->sum('total_akhir');
+        // --- PENDAPATAN ---
+        $pendapatanPeriodeIni = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])
+            ->where('status_pembayaran', '!=', 'Dibatalkan')
+            ->sum('total_akhir');
 
-        // 2. Transaksi Periode Ini vs Periode Sebelumnya
-        $transaksiPeriodeIni = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])->where('status_pembayaran', '!=', 'Dibatalkan')->count();
-        $transaksiPeriodeLalu = Sale::whereBetween('tanggal_penjualan', [$previousStartDate, $previousEndDate])->where('status_pembayaran', '!=', 'Dibatalkan')->count();
+        $pendapatanPeriodeLalu = Sale::whereBetween('tanggal_penjualan', [$previousStartDate, $previousEndDate])
+            ->where('status_pembayaran', '!=', 'Dibatalkan')
+            ->sum('total_akhir');
 
-        // 3. Hitung persentase perubahan (untuk pendapatan dan transaksi)
         $persentasePendapatan = 0;
         if ($pendapatanPeriodeLalu > 0) {
             $persentasePendapatan = (($pendapatanPeriodeIni - $pendapatanPeriodeLalu) / $pendapatanPeriodeLalu) * 100;
         } elseif ($pendapatanPeriodeIni > 0) {
-            $persentasePendapatan = 100; // Jika periode lalu 0 dan periode ini ada penjualan
+            $persentasePendapatan = 100;
         }
+
+        // --- TRANSAKSI ---
+        $transaksiPeriodeIni = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])
+            ->where('status_pembayaran', '!=', 'Dibatalkan')
+            ->count();
+
+        $transaksiPeriodeLalu = Sale::whereBetween('tanggal_penjualan', [$previousStartDate, $previousEndDate])
+            ->where('status_pembayaran', '!=', 'Dibatalkan')
+            ->count();
 
         $persentaseTransaksi = 0;
         if ($transaksiPeriodeLalu > 0) {
@@ -58,17 +63,12 @@ class DashboardController extends Controller
             $persentaseTransaksi = 100;
         }
 
-        // --- DATA UNTUK STATS CARDS ---
-
-       /// Ambil ID Toko user yang sedang login
+        // --- STOK RENDAH ---
         $currentStoreId = Auth::user()->employee->store_id;
 
-        // 1. Siapkan Query Dasar
-        // withSum berfungsi agar variabel 'total_stok' otomatis tersedia saat di-looping di Blade
-        $lowStockQuery = Product::withSum(['stocks as total_stok' => function($query) use ($currentStoreId) {
-                $query->where('store_id', $currentStoreId);
-            }], 'qty')
-            // whereRaw berfungsi untuk memfilter data secara aman tanpa melanggar aturan MySQL
+        $lowStockQuery = Product::withSum(['stocks as total_stok' => function ($query) use ($currentStoreId) {
+            $query->where('store_id', $currentStoreId);
+        }], 'qty')
             ->whereRaw('
                 COALESCE((
                     SELECT SUM(qty) 
@@ -78,17 +78,14 @@ class DashboardController extends Controller
                 ), 0) <= products.stok_minimum
             ', [$currentStoreId]);
 
-        // 2. Hitung jumlah total produk yang stoknya rendah
-        // Kabar baik! Karena kita pakai whereRaw, kita bisa kembali menggunakan ->count() biasa dengan sangat aman
         $stokRendahCount = (clone $lowStockQuery)->count();
 
-        // 3. Ambil 5 produk dengan stok paling menipis untuk ditampilkan di widget
-        $produkStockRendah = clone($lowStockQuery)
+        $produkStockRendah = (clone $lowStockQuery)
             ->orderBy('total_stok', 'asc')
             ->limit(5)
             ->get();
 
-        // 5. Total Sale & Purchase Berdasarkan Periode
+        // --- TOTAL SALE & PURCHASE (PERIODE) ---
         $totalSalePeriode = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])
             ->where('status_pembayaran', '!=', 'Dibatalkan')
             ->sum('total_akhir');
@@ -97,11 +94,13 @@ class DashboardController extends Controller
             ->where('status_pembayaran', '!=', 'Dibatalkan')
             ->sum('total_akhir');
 
-        // Total Expense Berdasarkan Periode
-        $totalExpensePeriode = Expense::whereBetween('tanggal', [$startDate, $endDate])
-            ->sum('jumlah');
+        // --- EXPENSE (dari CashFlow) ---
+        $totalExpensePeriode = CashFlow::expense()
+            ->aktif()
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->sum('nominal');
 
-        // Hitung Harga Pokok Sale (HPP / COGS) Berdasarkan Periode
+        // --- LABA BERSIH (Pendapatan - HPP - Expense) ---
         $cogsPeriode = DB::table('sale_items')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
@@ -109,27 +108,9 @@ class DashboardController extends Controller
             ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
             ->sum(DB::raw('sale_items.jumlah * products.harga_beli'));
 
-        // Hitung Laba Bersih Berdasarkan Periode (Pendapatan - HPP - Expense)
         $labaBersihPeriode = $totalSalePeriode - $cogsPeriode - $totalExpensePeriode;
 
-
-        // Total Retur Sale & Purchase Berdasarkan Periode
-        $totalReturSalePeriode = Sale::whereBetween('tanggal_penjualan', [$startDate, $endDate])
-            ->where('status_pembayaran', 'Dibatalkan')
-            ->sum('total_akhir');
-
-        $totalReturPurchasePeriode = Purchase::whereBetween('tanggal_pembelian', [$startDate, $endDate])
-            ->where('status_pembayaran', 'Dibatalkan')
-            ->sum('total_akhir');
-
-        $totalCustomer = Customer::count();
-        $totalSupplier = Supplier::count();
-        $totalOrder = Sale::count();
-        $totalPurchase = Purchase::count();
-
-
-
-        // --- DATA UNTUK GRAFIK PENJUALAN (30 HARI TERAKHIR) ---
+        // --- GRAFIK PENJUALAN (30 HARI TERAKHIR) ---
         $salesData = Sale::select(
             DB::raw('DATE(tanggal_penjualan) as tanggal'),
             DB::raw('SUM(total_akhir) as total')
@@ -143,12 +124,10 @@ class DashboardController extends Controller
         $salesChartLabels = $salesData->pluck('tanggal')->map(function ($date) {
             return Carbon::parse($date)->format('d M');
         });
-        
+
         $salesChartData = $salesData->pluck('total');
 
-
-        // --- DATA UNTUK PRODUK TERLARIS (BERDASARKAN PERIODE) ---
-        // 1. Dapatkan produk terlaris periode ini beserta jumlah terjual dan harga jualnya
+        // --- PRODUK TERLARIS (BERDASARKAN PERIODE) ---
         $currentMonthSales = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
@@ -165,7 +144,6 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // 2. Dapatkan penjualan bulan sebelumnya untuk produk-produk terlaris ini
         $previousMonthSales = DB::table('sale_items')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->select(
@@ -179,8 +157,6 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('product_id');
 
-        // 3. Gabungkan data dan hitung persentase kenaikan
-        // 3. Gabungkan data dan hitung persentase kenaikan
         $produkTerlaris = $currentMonthSales->map(function ($product) use ($previousMonthSales) {
             $previousSales = $previousMonthSales->get($product->product_id);
             $totalTerjualPreviousMonth = $previousSales ? $previousSales->total_terjual_previous_month : 0;
@@ -189,21 +165,17 @@ class DashboardController extends Controller
             if ($totalTerjualPreviousMonth > 0) {
                 $percentageIncrease = (($product->total_terjual_current_month - $totalTerjualPreviousMonth) / $totalTerjualPreviousMonth) * 100;
             } elseif ($product->total_terjual_current_month > 0) {
-                $percentageIncrease = 100; 
+                $percentageIncrease = 100;
             }
 
-            // --- PERBAIKAN MULAI DI SINI ---
-            // Ambil model Product berdasarkan product_id untuk memanggil properti/accessor image_url
             $productModel = Product::find($product->product_id);
-            
-            // Assign nilai image_url ke dalam objek stdClass $product
-            $product->image_url = $productModel ? $productModel->image_url : asset('assets/img/produk.png'); 
-
+            $product->image_url = $productModel ? $productModel->image_url : asset('assets/img/produk.png');
             $product->percentage_increase = $percentageIncrease;
             $product->total_terjual = $product->total_terjual_current_month;
             return $product;
         });
 
+        // --- PELANGGAN TERBAIK ---
         $pelangganTerbaik = Sale::join('customers', 'sales.customer_id', '=', 'customers.id')
             ->select(
                 'customers.name',
@@ -212,13 +184,14 @@ class DashboardController extends Controller
             )
             ->whereBetween('sales.tanggal_penjualan', [$startDate, $endDate])
             ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
-            ->whereNotNull('sales.customer_id') // Pastikan pelanggan ada
-            ->where('customers.name', '!=', 'Customer Umum') // Abaikan pelanggan umum
+            ->whereNotNull('sales.customer_id')
+            ->where('customers.name', '!=', 'Customer Umum')
             ->groupBy('customers.id', 'customers.name')
             ->orderBy('total_spent', 'desc')
             ->limit(5)
             ->get();
 
+        // --- AKTIVITAS TERAKHIR ---
         $recentSales = Sale::with('customer')
             ->latest('tanggal_penjualan')
             ->take(11)
@@ -229,7 +202,7 @@ class DashboardController extends Controller
             ->take(11)
             ->get();
 
-        // --- DATA UNTUK GRAFIK KATEGORI TERLARIS (BERDASARKAN PERIODE) ---
+        // --- KATEGORI TERLARIS (PIE CHART) ---
         $categorySalesData = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
             ->join('categories', 'products.category_id', '=', 'categories.id')
@@ -242,12 +215,11 @@ class DashboardController extends Controller
             ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
             ->groupBy('categories.name')
             ->orderBy('total_sold', 'desc')
-            ->limit(5) // Ambil 5 kategori teratas
+            ->limit(5)
             ->get();
 
         $categoryChartLabels = $categorySalesData->pluck('category_name');
         $categoryChartData = $categorySalesData->pluck('total_sold');
-
 
         return view('content.dashboard.index', [
             'title' => 'Dashboard',
@@ -261,8 +233,6 @@ class DashboardController extends Controller
             'totalPurchasePeriode' => $totalPurchasePeriode,
             'totalExpensePeriode' => $totalExpensePeriode,
             'labaBersihPeriode' => $labaBersihPeriode,
-            'totalReturSalePeriode' => $totalReturSalePeriode,
-            'totalReturPurchasePeriode' => $totalReturPurchasePeriode,
             'stokRendahCount' => $stokRendahCount,
             'salesChartLabels' => $salesChartLabels,
             'salesChartData' => $salesChartData,
@@ -271,10 +241,6 @@ class DashboardController extends Controller
             'pelangganTerbaik' => $pelangganTerbaik,
             'recentSales' => $recentSales,
             'recentPurchases' => $recentPurchases,
-            'totalCustomer' => $totalCustomer,
-            'totalSupplier' => $totalSupplier,
-            'totalOrder' => $totalOrder,
-            'totalPurchase' => $totalPurchase,
             'categoryChartLabels' => $categoryChartLabels,
             'categoryChartData' => $categoryChartData,
         ]);

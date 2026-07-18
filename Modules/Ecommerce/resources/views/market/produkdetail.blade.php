@@ -221,60 +221,63 @@
 
                             {{-- Tambah ke Keranjang --}}
                             @if ($stockReady)
-                                <button type="button" class="btn-add-cart w-100" id="btn-add-cart"
+                                {{-- <button type="button" class="btn-add-cart w-100" id="btn-add-cart"
                                     onclick="handleAddToCart(this)">
                                     <i class="bx bx-cart-add fs-5" aria-hidden="true"></i>
                                     <span id="cart-label">Tambah ke keranjang</span>
-                                </button>
+                                </button> --}}
                             @else
-                                <button type="button" class="btn-add-cart w-100" disabled
+                                {{-- <button type="button" class="btn-add-cart w-100" disabled
                                     style="background:#adb5bd;cursor:not-allowed;opacity:.7">
                                     <i class="bx bx-cart-add fs-5" aria-hidden="true"></i>
                                     Tambah ke keranjang
-                                </button>
+                                </button> --}}
                             @endif
 
                             {{-- Beli Sekarang (Checkout) --}}
                             @if ($stockReady)
-                                <button type="button" class="btn-checkout w-100" onclick="handleCheckout()">
+                                {{-- <button type="button" class="btn-checkout w-100" onclick="handleCheckout()">
                                     <i class="bx bx-zap fs-5" aria-hidden="true"></i>
                                     Beli sekarang
+                                </button> --}}
+                                <button type="button" class="btn-checkout w-100" onclick="handleCheckoutWA()">
+                                    <i class="bx bx-cart me-2 fs-4"></i> Beli sekarang
                                 </button>
                             @else
                                 <button type="button" class="btn-checkout w-100" disabled
                                     style="background:#adb5bd;cursor:not-allowed;opacity:.7">
-                                    <i class="bx bx-zap fs-5" aria-hidden="true"></i>
+                                    <i class="bx bx-zap fs-4" aria-hidden="true"></i>
                                     Beli sekarang
                                 </button>
                             @endif
 
                         </div>
-                        <hr class="my-3" style="opacity:.1">
+                        <hr class="my-3">
 
                         {{-- ── Secondary Icon Actions ─────────────────────────── --}}
-                        <div class="d-flex justify-content-center flex-wrap">
+                        <div class="d-flex justify-content-start flex-wrap">
 
                             {{-- Wishlist --}}
-                            <button type="button" class="btn-icon-action" id="btn-wish" onclick="toggleWishlist(this)"
+                            {{-- <button type="button" class="btn-icon-action" id="btn-wish" onclick="toggleWishlist(this)"
                                 aria-label="Tambah ke wishlist" data-product-id="{{ $produk->id }}">
                                 <i class="bx bx-heart" aria-hidden="true"></i>
                                 <span>Wishlist</span>
-                            </button>
+                            </button> --}}
 
                             {{-- Bagikan --}}
-                            <button type="button" class="btn-icon-action mx-3" onclick="shareProduct(this)"
+                            <button type="button" class="btn-icon-action" onclick="shareProduct(this)"
                                 aria-label="Bagikan produk ini">
                                 <i class="bx bx-share-alt" aria-hidden="true"></i>
                                 <span>Bagikan</span>
                             </button>
 
                             {{-- Bandingkan --}}
-                            <button type="button" class="btn-icon-action" onclick="addToCompare(this)"
+                            {{-- <button type="button" class="btn-icon-action" onclick="addToCompare(this)"
                                 aria-label="Bandingkan produk ini" data-product-id="{{ $produk->id }}"
                                 data-product-name="{{ $produk->name_product }}">
                                 <i class="bx bx-transfer-alt" aria-hidden="true"></i>
                                 <span>Bandingkan</span>
-                            </button>
+                            </button> --}}
 
                         </div>
                     </div>
@@ -377,10 +380,15 @@
                                     </a>
                                     <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
                                         @if ($stokQty > 0)
-                                            <button type="button"
+                                            {{-- <button type="button"
                                                 class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
                                                 <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
-                                            </button>
+                                            </button> --}}
+                                            <a href="https://wa.me/6281318000699?text={{ urlencode('Halo, saya ingin membeli produk ' . $produk->name_product) }}"
+                                                target="_blank" type="button"
+                                                class="btn btn-sm btn-success flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
+                                                <i class="bx bx-cart me-2 fs-5"></i> Beli
+                                            </a>
                                         @else
                                             <button type="button"
                                                 class="btn btn-sm btn-danger text-muted flex-grow-1 d-flex align-items-center justify-content-center">
@@ -388,11 +396,11 @@
                                             </button>
                                         @endif
 
-                                        <button type="button"
+                                        {{-- <button type="button"
                                             class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center rounded-2 px-2 "
                                             data-bs-toggle="tooltip" data-bs-placement="top" title="Wishlist">
                                             <i class="bx bx-heart fs-5"></i>
-                                        </button>
+                                        </button> --}}
                                     </div>
                                 </div>
 
@@ -440,9 +448,9 @@
                     <div class="d-flex justify-content-center gap-3 mb-4">
                         <a href="https://wa.me/?text={{ urlencode('Cek produk ini: ' . $produk->name_product . ' di JO Computer. ' . url()->current()) }}"
                             target="_blank"
-                            class="btn btn-success rounded-circle d-flex align-items-center justify-content-center"
+                            class="social-icon social-tokopedia rounded-circle d-flex align-items-center justify-content-center"
                             style="width: 45px; height: 45px;">
-                            <i class="bx bxl-whatsapp fs-3"></i>
+                            <i class="bx bx-bxl-whatsapp fs-3"></i>
                         </a>
 
                         <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}"
@@ -452,16 +460,9 @@
                             <i class="bx bxl-facebook icon-lg"></i>
                         </a>
 
-                        <a href="https://twitter.com/intent/tweet?text={{ urlencode('Cek produk keren ini: ' . $produk->name_product) }}&url={{ urlencode(url()->current()) }}"
-                            target="_blank"
-                            class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center"
-                            style="width: 45px; height: 45px;">
-                            <i class="bx bxl-twitter fs-3"></i>
-                        </a>
-
                         <a href="https://t.me/share/url?url={{ urlencode(url()->current()) }}&text={{ urlencode('Cek produk ini: ' . $produk->name_product) }}"
                             target="_blank"
-                            class="btn btn-info text-white rounded-circle d-flex align-items-center justify-content-center"
+                            class="social-icon social-telegram rounded-circle d-flex align-items-center justify-content-center"
                             style="width: 45px; height: 45px;">
                             <i class="bx bxl-telegram fs-3"></i>
                         </a>
@@ -584,6 +585,36 @@
                         btn.classList.remove('text-white');
                     }, 2000);
                 });
+            };
+            // ── Beli via WhatsApp Dinamis ─────────────────────────────────────
+            window.handleCheckoutWA = function() {
+                // 1. Ambil nama produk dari Blade (gunakan addslashes untuk menghindari error kutip)
+                const productName = '{{ addslashes($produk->name_product) }}';
+
+                // 2. Cek apakah ada varian yang dipilih
+                let variantText = '';
+                const activeVariantBtn = document.querySelector('.variant-btn.active');
+
+                if (activeVariantBtn) {
+                    // Ambil teks nama variannya dan bersihkan spasi berlebih
+                    const variantName = activeVariantBtn.textContent.trim();
+                    variantText = `\n*Varian:* ${variantName}`;
+                }
+
+                // 3. Ambil nilai qty saat ini (variabel 'qty' sudah ada di script kamu sebelumnya)
+                const currentQty = qty;
+
+                // 4. Rangkai pesan WhatsApp-nya
+                const message =
+                    `Halo JO Computer, saya ingin membeli produk berikut:\n\n*${productName}*${variantText}\n*Jumlah:* ${currentQty} item\n\nApakah stoknya masih tersedia?`;
+
+                // 5. Ubah teks menjadi format URL yang aman
+                const encodedMessage = encodeURIComponent(message);
+                const waNumber = '6281318000699';
+                const waUrl = `https://wa.me/${waNumber}?text=${encodedMessage}`;
+
+                // 6. Buka WhatsApp di tab baru
+                window.open(waUrl, '_blank');
             };
 
             // ── Bandingkan ────────────────────────────────────────

@@ -81,19 +81,90 @@ function previewEditLogo(input) {
 }
 
 // ============================================================
+// Toggle field form akun (create/edit) berdasarkan tipe_akun
+// ============================================================
+// prefix: 'create' atau 'edit' — dipakai untuk mencocokkan id elemen
+// (createNorekWrap/editNorekWrap, dst).
+function toggleAccountFields(tipe, prefix) {
+  // id nomor_rekening/nama_pemilik beda antara modal create & edit (edit memakai
+  // id lama editNomorRekening/editNamaPemilik supaya tidak perlu ubah field lain).
+  const ids =
+    prefix === 'edit'
+      ? { norekInput: 'editNomorRekening', pemilikInput: 'editNamaPemilik' }
+      : { norekInput: 'createNorek', pemilikInput: 'createPemilik' };
+
+  const fieldsWrap = document.getElementById(`${prefix}AccountFields`);
+  const norekWrap = document.getElementById(`${prefix}NorekWrap`);
+  const pemilikWrap = document.getElementById(`${prefix}PemilikWrap`);
+  const norekInput = document.getElementById(ids.norekInput);
+  const pemilikInput = document.getElementById(ids.pemilikInput);
+  const storeSelect = document.getElementById(`${prefix}StoreId`);
+  const storeNote = document.getElementById(`${prefix}StoreNote`);
+
+  // Untuk modal create, field lain baru muncul setelah tipe akun dipilih.
+  if (!tipe) {
+    if (fieldsWrap) fieldsWrap.classList.add('d-none');
+    return;
+  }
+  if (fieldsWrap) fieldsWrap.classList.remove('d-none');
+
+  // Nomor rekening & nama pemilik: hanya untuk QRIS & Bank.
+  // Untuk Tunai, disembunyikan DAN dikosongkan supaya terkirim null.
+  const showNorekPemilik = tipe === 'qris' || tipe === 'bank';
+  if (norekWrap) norekWrap.classList.toggle('d-none', !showNorekPemilik);
+  if (pemilikWrap) pemilikWrap.classList.toggle('d-none', !showNorekPemilik);
+  if (norekInput) {
+    norekInput.required = showNorekPemilik;
+    if (!showNorekPemilik) norekInput.value = '';
+  }
+  if (pemilikInput) {
+    pemilikInput.required = showNorekPemilik;
+    if (!showNorekPemilik) pemilikInput.value = '';
+  }
+
+  // Toko: wajib untuk Tunai & QRIS, opsional untuk Bank (bisa lintas toko).
+  if (storeSelect) storeSelect.required = tipe !== 'bank';
+  if (storeNote) {
+    storeNote.textContent =
+      tipe === 'bank' ? 'Opsional — akun bank bisa dipakai lintas toko.' : 'Wajib dipilih.';
+  }
+}
+
+// ============================================================
 // Isi modal edit bank
 // ============================================================
-function openEditBank(id, nama, norek, pemilik, isActive, logoUrl) {
+function openEditBank(id, nama, tipeAkun, norek, pemilik, storeId, saldoAwal, isActive, logoUrl) {
   const base = cfg.accountBaseUrl;
   document.getElementById('formEditAccount').action = `${base}/${id}`;
   document.getElementById('formDeleteBank').action = `${base}/${id}`;
+  document.getElementById('editTipeAkun').value = tipeAkun;
   document.getElementById('editNamaBank').value = nama;
   document.getElementById('editNomorRekening').value = norek;
   document.getElementById('editNamaPemilik').value = pemilik;
+  document.getElementById('editStoreId').value = storeId ?? '';
+  document.getElementById('editSaldoAwal').value = saldoAwal ?? 0;
   document.getElementById('editBankAktif').checked = isActive == 1;
   document.getElementById('editLogoPreview').src = logoUrl || cfg.defaultLogoUrl;
+
+  toggleAccountFields(tipeAkun, 'edit');
+
   new bootstrap.Modal(document.getElementById('modalEditBank')).show();
 }
+
+// ============================================================
+// Reset modal create setiap kali ditutup, supaya kembali ke
+// step 1 (hanya select tipe akun) saat dibuka lagi.
+// ============================================================
+document.addEventListener('DOMContentLoaded', function () {
+  const modalBank = document.getElementById('modalBank');
+  if (modalBank) {
+    modalBank.addEventListener('hidden.bs.modal', function () {
+      const form = document.getElementById('formCreateAccount');
+      if (form) form.reset();
+      document.getElementById('createAccountFields')?.classList.add('d-none');
+    });
+  }
+});
 
 // Fungsi-fungsi di atas dipanggil lewat atribut onclick="..." di HTML.
 // Karena file ini dikompilasi Vite sebagai module, scope-nya tidak otomatis
@@ -104,6 +175,7 @@ window.toggleMutasiBank = toggleMutasiBank;
 window.previewLogo = previewLogo;
 window.previewEditLogo = previewEditLogo;
 window.openEditBank = openEditBank;
+window.toggleAccountFields = toggleAccountFields;
 
 // ============================================================
 // ApexCharts

@@ -207,7 +207,7 @@
       "submenu": [
         {
           "url": "keuangan",
-          "name": "Akuntan",
+          "name": "Accounts",
           "slug": "keuangan",
           "permission": "view-keuangan"
         },

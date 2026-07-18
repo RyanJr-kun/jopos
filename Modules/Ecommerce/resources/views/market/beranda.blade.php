@@ -372,22 +372,27 @@
                                                     </a>
                                                     <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
                                                         @if ($stokQty > 0)
-                                                            <button type="button"
+                                                            {{-- <button type="button"
                                                                 class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
                                                                 <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
-                                                            </button>
+                                                            </button> --}}
+                                                            <a href="https://wa.me/6281318000699?text={{ urlencode('Halo, saya ingin membeli produk ' . $produk->name_product) }}"
+                                                                target="_blank" type="button"
+                                                                class="btn btn-sm btn-success flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
+                                                                <i class="bx bx-cart me-2 fs-5"></i> Beli
+                                                            </a>
                                                         @else
                                                             <button type="button"
                                                                 class="btn btn-sm btn-danger text-muted flex-grow-1 d-flex align-items-center justify-content-center">
                                                                 <i class="bx bx-minus-circle me-2 fs-6"></i> HABIS
                                                             </button>
                                                         @endif
-                                                        <button type="button"
+                                                        {{-- <button type="button"
                                                             class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center rounded-2 px-2"
                                                             data-bs-toggle="tooltip" data-bs-placement="top"
                                                             title="Wishlist">
                                                             <i class="bx bx-heart fs-5"></i>
-                                                        </button>
+                                                        </button> --}}
                                                     </div>
                                                 </div>
                                                 <div class="card-body border-top py-2">
@@ -526,10 +531,16 @@
                                             </a>
                                             <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
                                                 @if ($stokQty > 0)
-                                                    <button type="button"
+                                                    {{-- <button type="button"
                                                         class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
                                                         <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
-                                                    </button>
+                                                    </button> --}}
+                                                    {{-- Button Pesan ke WA --}}
+                                                    <a href="https://wa.me/6281318000699?text={{ urlencode('Halo, saya ingin membeli produk ' . $produk->name_product) }}"
+                                                        target="_blank" type="button"
+                                                        class="btn btn-sm btn-success flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
+                                                        <i class="bx bx-cart me-2 fs-5"></i> Beli
+                                                    </a>
                                                 @else
                                                     <button type="button"
                                                         class="btn btn-sm btn-danger text-muted flex-grow-1 d-flex align-items-center justify-content-center">
@@ -537,11 +548,11 @@
                                                     </button>
                                                 @endif
 
-                                                <button type="button"
+                                                {{-- <button type="button"
                                                     class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center rounded-2 px-2 "
                                                     data-bs-toggle="tooltip" data-bs-placement="top" title="Wishlist">
                                                     <i class="bx bx-heart fs-5"></i>
-                                                </button>
+                                                </button> --}}
                                             </div>
                                         </div>
 
@@ -628,10 +639,16 @@
                                 </a>
                                 <div class="product-card-actions d-flex gap-2 mt-2 align-items-center">
                                     @if ($stokQty > 0)
-                                        <button type="button"
+                                        {{-- <button type="button"
                                             class="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
                                             <i class="bx bx-shopping-bag me-2 fs-6"></i> Add Cart
-                                        </button>
+                                        </button> --}}
+
+                                        <a href="https://wa.me/6281318000699?text={{ urlencode('Halo, saya ingin membeli produk ' . $produk->name_product) }}"
+                                            target="_blank" type="button"
+                                            class="btn btn-sm btn-success flex-grow-1 d-flex align-items-center justify-content-center rounded-2">
+                                            <i class="bx bx-cart me-2 fs-5"></i> Beli
+                                        </a>
                                     @else
                                         <button type="button"
                                             class="btn btn-sm btn-danger text-muted flex-grow-1 d-flex align-items-center justify-content-center">
@@ -639,11 +656,11 @@
                                         </button>
                                     @endif
 
-                                    <button type="button"
+                                    {{-- <button type="button"
                                         class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center rounded-2 px-2 "
                                         data-bs-toggle="tooltip" data-bs-placement="top" title="Wishlist">
                                         <i class="bx bx-heart fs-5"></i>
-                                    </button>
+                                    </button> --}}
                                 </div>
                             </div>
                             <div class="card-body border-top py-2">

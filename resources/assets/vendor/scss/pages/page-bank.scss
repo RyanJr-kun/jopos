@@ -4,12 +4,12 @@
 // =============================================================================
 
 // --- Token lokal (sesuai Sneat CSS vars) ---
-$fin-radius : 6px;
-$fin-radius-lg : 10px;
-$fin-income : #28c76f;
-$fin-expense : #ea5455;
+$fin-radius : 4px;
+$fin-radius-lg : 8px;
+$fin-income : #0def2f;
+$fin-expense : #c50000;
 $fin-neutral : #696cff;
-$fin-qris : #00b4d8;
+$fin-qris : #0073d8;
 $fin-tunai : #ff9f43;
 $fin-transfer : #7367f0;
 $fin-store : #20c997;
@@ -19,7 +19,7 @@ $fin-store : #20c997;
 // =============================================================================
 .fin-filter-bar {
     background: var(--bs-card-bg, #fff);
-    border: 1px solid var(--bs-border-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .07);
     border-radius: $fin-radius-lg;
     padding: 1rem 1.25rem;
 

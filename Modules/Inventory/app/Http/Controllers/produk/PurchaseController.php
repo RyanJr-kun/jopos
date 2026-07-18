@@ -96,7 +96,7 @@ class PurchaseController extends Controller implements HasMiddleware
     $barangs = Purchase::getStatusBarangs();
     $payments = Purchase::getPaymentStatus();
     $options = Purchase::getPaymentMethods();
-    $accounts = Account::query()->where('tipe_akun', 'bank');
+    $accounts = Account::query()->where('tipe_akun', 'bank')->get();
 
     return view('inventory::pembelian.create', compact('supplier', 'taxes', 'nomer_referensi', 'statuses', 'barangs', 'payments', 'options', 'accounts'));
   }
@@ -299,7 +299,7 @@ class PurchaseController extends Controller implements HasMiddleware
   {
     $pembelian->load(['supplier', 'user', 'details.produk', 'payments.user', 'payments.bank']);
     $profilToko = $pembelian->store;
-    $accounts = Account::query()->where('tipe_akun', 'bank'); // Diperlukan untuk pilihan bank di dalam modal cicilan
+    $accounts = Account::query()->where('tipe_akun', 'bank')->get(); // Diperlukan untuk pilihan bank di dalam modal cicilan
 
     return view('inventory::pembelian.show', compact('pembelian', 'profilToko', 'accounts'));
   }
@@ -318,7 +318,7 @@ class PurchaseController extends Controller implements HasMiddleware
     $barangs = Purchase::getStatusBarangs();
     $payments = Purchase::getPaymentStatus();
     $options = Purchase::getPaymentMethods();
-    $accounts = Account::query()->where('tipe_akun', 'bank');
+    $accounts = Account::query()->where('tipe_akun', 'bank')->get();
     $pemasok = Supplier::query()->where('status', 1)->get();
 
     $statuses = Purchase::select('status_pembayaran')->distinct()->pluck('status_pembayaran');

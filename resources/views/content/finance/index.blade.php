@@ -52,6 +52,20 @@
                 </select>
             </div>
 
+            @can('view-toko-gudang')
+                <div id="storeSelectWrap">
+                    <select name="store_id" class="form-select form-select-sm fin-bank-select" id="storeSelect"
+                        onchange="document.getElementById('filterForm').submit()">
+                        <option value="">Semua Toko</option>
+                        @foreach ($stores as $s)
+                            <option value="{{ $s->id }}" {{ request('store_id') == $s->id ? 'selected' : '' }}>
+                                {{ $s->name_toko }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endcan
+
             <div class="fin-filter-divider"></div>
 
             {{-- Date range - Flatpickr --}}
@@ -64,17 +78,19 @@
             </div>
 
             <div class="d-flex gap-2 ms-auto">
-                <button type="submit" class="btn btn-sm btn-primary px-3">
-                    <i class="bx bx-filter-alt me-1"></i> Terapkan
+                <button type="submit" class="btn btn-sm btn-primary px-2" title="Filter" data-bs-toggle="tooltip"
+                    data-bs-placement="top">
+                    <i class="bx bx-filter-alt fs-5"></i>
                 </button>
-                <a href="{{ route('keuangan') }}" class="btn btn-sm btn-outline-secondary px-3">
-                    <i class="bx bx-reset me-1"></i>
+                <a href="{{ route('keuangan') }}" class="btn btn-sm btn-outline-secondary px-2" title="Reset Filter"
+                    data-bs-toggle="tooltip" data-bs-placement="top">
+                    <i class="bx bx-reset fs-5"></i>
                 </a>
                 {{-- Tombol Tambah Mutasi --}}
-                <button type="button" class="btn btn-sm btn-success px-3" data-bs-toggle="modal"
+                {{-- <button type="button" class="btn btn-sm btn-success px-3" data-bs-toggle="modal"
                     data-bs-target="#modalMutasi">
                     <i class="bx bx-plus me-1"></i> Mutasi
-                </button>
+                </button> --}}
                 {{-- Tombol Kelola Bank --}}
                 <button type="button" class="btn btn-sm btn-outline-primary px-3" data-bs-toggle="modal"
                     data-bs-target="#modalBank">
@@ -162,58 +178,72 @@
                 </div>
                 <div class="card-body p-3 d-flex flex-column gap-2 overflow-auto" style="max-height:300px">
                     {{-- Kas Tunai --}}
-                    @php
-                        $kasIncome = $breakdownIncome->get('tunai')?->total ?? 0;
-                        $kasExpense = $breakdownExpense->get('tunai')?->total ?? 0;
-                    @endphp
-                    <div class="fin-bank-card">
-                        <div class="fin-bank-inisial" style="background:rgba(255,159,67,.12);color:#ff9f43">
-                            <i class="bx bx-money fs-5"></i>
+                    @if ($kasTunaiAccount)
+                        <div class="fin-bank-card" style="cursor:pointer"
+                            onclick="openEditBank(
+                                {{ $kasTunaiAccount->id }},
+                                '{{ addslashes($kasTunaiAccount->account_name) }}',
+                                '{{ $kasTunaiAccount->tipe_akun }}',
+                                '{{ addslashes($kasTunaiAccount->nomor_rekening ?? '') }}',
+                                '{{ addslashes($kasTunaiAccount->nama_pemilik ?? '') }}',
+                                {{ $kasTunaiAccount->store_id ?? 'null' }},
+                                {{ $kasTunaiAccount->saldo_awal ?? 0 }},
+                                {{ $kasTunaiAccount->is_active ? 1 : 0 }},
+                                '{{ $kasTunaiAccount->logo_bank ? $kasTunaiAccount->logo_url : '' }}'
+                            )">
+                        @else
+                            <div class="fin-bank-card">
+                    @endif
+                    <div class="fin-bank-inisial" style="background:rgba(255,159,67,.12);color:#ff9f43">
+                        <i class="bx bx-money fs-5"></i>
+                    </div>
+                    <div>
+                        <p class="fin-bank-name">{{ $kasTunaiAccount ? $kasTunaiAccount->account_name : 'Kas Tunai' }}</p>
+                        <p class="fin-bank-norek">Uang fisik / kasir</p>
+                    </div>
+                    <div class="fin-bank-saldo">
+                        <div class="saldo-val"
+                            style="color: {{ $kasSaldoAwal + $kasIncome - $kasExpense >= 0 ? '#28c76f' : '#ea5455' }}">
+                            @money($kasSaldoAwal + $kasIncome - $kasExpense)
                         </div>
+                        <div class="saldo-lbl">Saldo</div>
+                    </div>
+                </div>
+
+                @foreach ($saldoPerBank as $item)
+                    <div class="fin-bank-card" style="cursor:pointer"
+                        onclick="openEditBank(
+                                {{ $item['account']->id }},
+                                '{{ addslashes($item['account']->account_name) }}',
+                                '{{ $item['account']->tipe_akun }}',
+                                '{{ addslashes($item['account']->nomor_rekening) }}',
+                                '{{ addslashes($item['account']->nama_pemilik) }}',
+                                {{ $item['account']->store_id ?? 'null' }},
+                                {{ $item['account']->saldo_awal ?? 0 }},
+                                {{ $item['account']->is_active ? 1 : 0 }},
+                                '{{ $item['account']->logo_bank ? $item['account']->logo_url : '' }}'
+                            )">
+                        @if ($item['account']->logo_bank)
+                            <img src="{{ $item['account']->logo_url }}" alt="{{ $item['account']->account_name }}"
+                                class="fin-bank-logo">
+                        @else
+                            <div class="fin-bank-inisial">{{ $item['account']->inisial }}</div>
+                        @endif
                         <div>
-                            <p class="fin-bank-name">Kas Tunai</p>
-                            <p class="fin-bank-norek">Uang fisik / kasir</p>
+                            <p class="fin-bank-name">{{ $item['account']->account_name }}</p>
+                            <p class="fin-bank-norek">{{ $item['account']->nomor_rekening }}</p>
                         </div>
                         <div class="fin-bank-saldo">
-                            <div class="saldo-val"
-                                style="color: {{ $kasIncome - $kasExpense >= 0 ? '#28c76f' : '#ea5455' }}">
-                                @money($kasIncome - $kasExpense)
+                            <div class="saldo-val" style="color: {{ $item['saldo'] >= 0 ? '#28c76f' : '#ea5455' }}">
+                                @money($item['saldo'])
                             </div>
                             <div class="saldo-lbl">Saldo</div>
                         </div>
                     </div>
-
-                    @foreach ($saldoPerBank as $item)
-                        <div class="fin-bank-card" style="cursor:pointer"
-                            onclick="openEditBank(
-                                {{ $item['account']->id }},
-                                '{{ addslashes($item['account']->account_name) }}',
-                                '{{ addslashes($item['account']->nomor_rekening) }}',
-                                '{{ addslashes($item['account']->nama_pemilik) }}',
-                                {{ $item['account']->is_active ? 1 : 0 }},
-                                '{{ $item['account']->logo_bank ? $item['account']->logo_url : '' }}'
-                            )">
-                            @if ($item['account']->logo_bank)
-                                <img src="{{ $item['account']->logo_url }}" alt="{{ $item['account']->account_name }}"
-                                    class="fin-bank-logo">
-                            @else
-                                <div class="fin-bank-inisial">{{ $item['account']->inisial }}</div>
-                            @endif
-                            <div>
-                                <p class="fin-bank-name">{{ $item['account']->account_name }}</p>
-                                <p class="fin-bank-norek">{{ $item['account']->nomor_rekening }}</p>
-                            </div>
-                            <div class="fin-bank-saldo">
-                                <div class="saldo-val" style="color: {{ $item['saldo'] >= 0 ? '#28c76f' : '#ea5455' }}">
-                                    @money($item['saldo'])
-                                </div>
-                                <div class="saldo-lbl">Saldo</div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+                @endforeach
             </div>
         </div>
+    </div>
     </div>
 
     {{-- ========================================================= --}}
@@ -231,11 +261,17 @@
 
         @foreach ($metodes as $key => $m)
             @php
-                $inc = $breakdownIncome->get($key);
-                $exp = $breakdownExpense->get($key);
-                $totalIn = $inc?->total ?? 0;
-                $totalOut = $exp?->total ?? 0;
-                $txCount = ($inc?->jumlah_transaksi ?? 0) + ($exp?->jumlah_transaksi ?? 0);
+                if ($key === 'tunai' && isset($kasTunaiAccount)) {
+                    $totalIn = $kasIncome;
+                    $totalOut = $kasExpense;
+                    $txCount = $kasTxCount ?? 0;
+                } else {
+                    $inc = $breakdownIncome->get($key);
+                    $exp = $breakdownExpense->get($key);
+                    $totalIn = $inc?->total ?? 0;
+                    $totalOut = $exp?->total ?? 0;
+                    $txCount = ($inc?->jumlah_transaksi ?? 0) + ($exp?->jumlah_transaksi ?? 0);
+                }
             @endphp
             <div class="col-6 col-md-3">
                 <div class="card border rounded-3 h-100" style="border-color: var(--bs-border-color) !important;">
@@ -332,7 +368,7 @@
     {{-- ========================================================= --}}
     {{-- MODAL MUTASI                                               --}}
     {{-- ========================================================= --}}
-    <div class="modal fade fin-modal" id="modalMutasi" tabindex="-1" aria-labelledby="labelMutasi" aria-hidden="true">
+    {{-- <div class="modal fade fin-modal" id="modalMutasi" tabindex="-1" aria-labelledby="labelMutasi" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form action="{{ route('keuangan.mutasi.store') }}" method="POST" class="modal-content">
                 @csrf
@@ -342,7 +378,6 @@
                 </div>
                 <div class="modal-body">
 
-                    {{-- Toggle Masuk / Keluar --}}
                     <div class="mb-3">
                         <div class="fin-tipe-switch">
                             <button type="button" class="fin-tipe-btn active masuk" id="btnMasuk"
@@ -406,7 +441,7 @@
                 </div>
             </form>
         </div>
-    </div>
+    </div> --}}
 
     {{-- ========================================================= --}}
     {{-- MODAL BANK (Create)                                        --}}
@@ -414,7 +449,7 @@
     <div class="modal fade fin-modal" id="modalBank" tabindex="-1" aria-labelledby="labelBank" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form action="{{ route('keuangan.account.store') }}" method="POST" enctype="multipart/form-data"
-                class="modal-content">
+                class="modal-content" id="formCreateAccount">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title" id="labelBank">Tambah Account</h5>
@@ -422,42 +457,74 @@
                 </div>
                 <div class="modal-body">
 
-                    {{-- Preview Logo --}}
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <img id="logoPreview" src="{{ asset('assets/img/logo.png') }}" class="fin-logo-preview"
-                            alt="Logo akun">
-                        <div class="flex-grow-1">
-                            <label class="fin-upload-area" for="logoInput">
-                                <i class="bx bx-cloud-upload"></i>
-                                Klik untuk upload logo (PNG/JPG/WebP, max 1 MB)
-                            </label>
-                            <input type="file" name="logo_bank" id="logoInput" accept="image/*" class="d-none"
-                                onchange="previewLogo(this)">
-                        </div>
+                    {{-- STEP 1: Tipe Akun — field lain baru muncul setelah ini dipilih --}}
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size:12.5px">Tipe Akun</label>
+                        <select name="tipe_akun" class="form-select form-select-sm" id="createTipeAkun"
+                            onchange="toggleAccountFields(this.value, 'create')" required>
+                            <option value="" selected disabled>-- Pilih tipe akun --</option>
+                            <option value="tunai">Tunai</option>
+                            <option value="qris">QRIS</option>
+                            <option value="bank">Bank</option>
+                        </select>
                     </div>
 
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label" style="font-size:12.5px">Nama akun</label>
-                            <input type="text" name="account_name" class="form-control form-control-sm"
-                                placeholder="Contoh: Bank BCA" required>
+                    {{-- STEP 2: Form lainnya, hidden sampai tipe akun dipilih --}}
+                    <div id="createAccountFields" class="d-none">
+
+                        {{-- Preview Logo --}}
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <img id="logoPreview" src="{{ asset('assets/img/logo.png') }}" class="fin-logo-preview"
+                                alt="Logo akun">
+                            <div class="flex-grow-1">
+                                <label class="fin-upload-area" for="logoInput">
+                                    <i class="bx bx-cloud-upload"></i>
+                                    Klik untuk upload logo (PNG/JPG/WebP, max 1 MB)
+                                </label>
+                                <input type="file" name="logo_bank" id="logoInput" accept="image/*" class="d-none"
+                                    onchange="previewLogo(this)">
+                            </div>
                         </div>
-                        <div class="col-12">
-                            <label class="form-label" style="font-size:12.5px">Nomor Rekening</label>
-                            <input type="text" name="nomor_rekening" class="form-control form-control-sm"
-                                placeholder="1234567890" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label" style="font-size:12.5px">Nama Pemilik Rekening</label>
-                            <input type="text" name="nama_pemilik" class="form-control form-control-sm"
-                                placeholder="Nama sesuai rekening" required>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="is_active" value="1"
-                                    id="bankAktif" checked>
-                                <label class="form-check-label" for="bankAktif" style="font-size:13px">Aktifkan bank
-                                    ini</label>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" style="font-size:12.5px">Nama akun</label>
+                                <input type="text" name="account_name" id="createAccountName"
+                                    class="form-control form-control-sm" placeholder="Contoh: Bank BCA / Kas Toko A">
+                            </div>
+                            <div class="col-12" id="createNorekWrap">
+                                <label class="form-label" style="font-size:12.5px">Nomor Rekening</label>
+                                <input type="text" name="nomor_rekening" id="createNorek"
+                                    class="form-control form-control-sm" placeholder="1234567890">
+                            </div>
+                            <div class="col-12" id="createPemilikWrap">
+                                <label class="form-label" style="font-size:12.5px">Nama Pemilik Rekening</label>
+                                <input type="text" name="nama_pemilik" id="createPemilik"
+                                    class="form-control form-control-sm" placeholder="Nama sesuai rekening">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" style="font-size:12.5px">Toko</label>
+                                <select name="store_id" class="form-select form-select-sm" id="createStoreId">
+                                    <option value="">-- Pilih toko --</option>
+                                    @foreach ($stores as $store)
+                                        <option value="{{ $store->id }}">{{ $store->name_toko }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted" id="createStoreNote" style="font-size:11px"></small>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" style="font-size:12.5px">Saldo Awal (Rp)</label>
+                                <input type="number" name="saldo_awal" id="createSaldoAwal"
+                                    class="form-control form-control-sm" placeholder="0" min="0" step="1"
+                                    value="0">
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="is_active" value="1"
+                                        id="bankAktif" checked>
+                                    <label class="form-check-label" for="bankAktif" style="font-size:13px">Aktifkan
+                                        akun ini</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -465,7 +532,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-outline-secondary"
                         data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-sm btn-primary px-4">Simpan Bank</button>
+                    <button type="submit" class="btn btn-sm btn-primary px-4">Simpan Akun</button>
                 </div>
             </form>
         </div>
@@ -484,40 +551,67 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <img id="editLogoPreview" src="{{ asset('assets/img/logo.png') }}" class="fin-logo-preview"
-                                alt="Logo">
-                            <div class="flex-grow-1">
-                                <label class="fin-upload-area" for="editLogoInput">
-                                    <i class="bx bx-cloud-upload"></i>
-                                    Ganti logo (kosongkan = tetap pakai yang lama)
-                                </label>
-                                <input type="file" name="logo_bank" id="editLogoInput" accept="image/*"
-                                    class="d-none" onchange="previewEditLogo(this)">
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label" style="font-size:12.5px">Tipe Akun</label>
+                            <select name="tipe_akun" class="form-select form-select-sm" id="editTipeAkun"
+                                onchange="toggleAccountFields(this.value, 'edit')" required>
+                                <option value="tunai">Tunai</option>
+                                <option value="qris">QRIS</option>
+                                <option value="bank">Bank</option>
+                            </select>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label" style="font-size:12.5px">Nama Akun</label>
-                                <input type="text" name="account_name" id="editNamaBank"
-                                    class="form-control form-control-sm" required>
+
+                        <div id="editAccountFields">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <img id="editLogoPreview" src="{{ asset('assets/img/logo.png') }}"
+                                    class="fin-logo-preview" alt="Logo">
+                                <div class="flex-grow-1">
+                                    <label class="fin-upload-area" for="editLogoInput">
+                                        <i class="bx bx-cloud-upload"></i>
+                                        Ganti logo (kosongkan = tetap pakai yang lama)
+                                    </label>
+                                    <input type="file" name="logo_bank" id="editLogoInput" accept="image/*"
+                                        class="d-none" onchange="previewEditLogo(this)">
+                                </div>
                             </div>
-                            <div class="col-12">
-                                <label class="form-label" style="font-size:12.5px">Nomor Rekening</label>
-                                <input type="text" name="nomor_rekening" id="editNomorRekening"
-                                    class="form-control form-control-sm" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label" style="font-size:12.5px">Nama Pemilik</label>
-                                <input type="text" name="nama_pemilik" id="editNamaPemilik"
-                                    class="form-control form-control-sm" required>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" name="is_active" value="1"
-                                        id="editBankAktif">
-                                    <label class="form-check-label" for="editBankAktif" style="font-size:13px">Akun
-                                        aktif</label>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label" style="font-size:12.5px">Nama Akun</label>
+                                    <input type="text" name="account_name" id="editNamaBank"
+                                        class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-12" id="editNorekWrap">
+                                    <label class="form-label" style="font-size:12.5px">Nomor Rekening</label>
+                                    <input type="text" name="nomor_rekening" id="editNomorRekening"
+                                        class="form-control form-control-sm">
+                                </div>
+                                <div class="col-12" id="editPemilikWrap">
+                                    <label class="form-label" style="font-size:12.5px">Nama Pemilik</label>
+                                    <input type="text" name="nama_pemilik" id="editNamaPemilik"
+                                        class="form-control form-control-sm">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" style="font-size:12.5px">Toko</label>
+                                    <select name="store_id" class="form-select form-select-sm" id="editStoreId">
+                                        <option value="">-- Pilih toko --</option>
+                                        @foreach ($stores as $store)
+                                            <option value="{{ $store->id }}">{{ $store->name_toko }}</option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted" id="editStoreNote" style="font-size:11px"></small>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" style="font-size:12.5px">Saldo Awal (Rp)</label>
+                                    <input type="number" name="saldo_awal" id="editSaldoAwal"
+                                        class="form-control form-control-sm" min="0" step="1">
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="is_active" value="1"
+                                            id="editBankAktif">
+                                        <label class="form-check-label" for="editBankAktif" style="font-size:13px">Akun
+                                            aktif</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
