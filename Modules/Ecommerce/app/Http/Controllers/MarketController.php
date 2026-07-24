@@ -3,416 +3,363 @@
 namespace Modules\Ecommerce\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Store;
 use Illuminate\Http\Request;
-use App\Enums\BannerPosition;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Modules\Ecommerce\Models\Banner;
 use Modules\Ecommerce\Models\Promotion;
 use Modules\Inventory\Models\Brand;
 use Modules\Inventory\Models\Category;
 use Modules\Inventory\Models\Product;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
-use App\Models\Store;
 
 class MarketController extends Controller
 {
-    /**
-     * Menampilkan halaman utama (homepage) web market.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function index()
-    {
-        // ── FIX A: Banner — 6 query → 1 query ─────────────────────────────
-        $banners = Banner::where('is_active', true)
-            ->orderBy('urutan')
-            ->get()
-            ->groupBy('posisi');  // groupBy di PHP, bukan SQL
+  /**
+   * Menampilkan halaman utama (homepage) web market.
+   *
+   * @return \Illuminate\View\View
+   */
+  public function index()
+  {
+    // ── FIX A: Banner — 6 query → 1 query ─────────────────────────────
+    $banners = Banner::where('is_active', true)->orderBy('urutan')->get()->groupBy('posisi'); // groupBy di PHP, bukan SQL
 
-        // ── FIX B: Products — tambah withSum stocks (ganti ->with('stocks')) ─
-        $products = Product::with([
-            'category',
-            'unit',
-            'brand',
-            'primaryImage',
-            'promotions' => fn($q) => $q->select(
-                'promotions.id',
-                'promotions.type',
-                'promotions.nilai_diskon',
-                'promotions.max_diskon',
-                'promotions.status',
-                'promotions.tanggal_mulai',
-                'promotions.tanggal_berakhir'
-            )
-                ->where('promotions.status', true)
-                ->where('promotions.tanggal_mulai', '<=', now())
-                ->where('promotions.tanggal_berakhir', '>=', now()),
-        ])
-            ->withSum('stocks', 'qty')
-            ->latest()
-            ->paginate(10);
+    // ── FIX B: Products — tambah withSum stocks (ganti ->with('stocks')) ─
+    $products = Product::with([
+      'category',
+      'unit',
+      'brand',
+      'primaryImage',
+      'promotions' => fn($q) => $q
+        ->select('promotions.id', 'promotions.type', 'promotions.nilai_diskon', 'promotions.max_diskon', 'promotions.status', 'promotions.tanggal_mulai', 'promotions.tanggal_berakhir')
+        ->where('promotions.status', true)
+        ->where('promotions.tanggal_mulai', '<=', now())
+        ->where('promotions.tanggal_berakhir', '>=', now()),
+    ])
+      ->withSum('stocks', 'qty')
+      ->latest()
+      ->paginate(10);
 
-        // ── FIX C: produkTerlaris — tambah primaryImage + withSum stocks ───
-        $produkTerlaris = Product::with([
-            'unit',
-            'primaryImage',
-            'promotions' => fn($q) => $q->select(
-                'promotions.id',
-                'promotions.type',
-                'promotions.nilai_diskon',
-                'promotions.max_diskon',
-                'promotions.status',
-                'promotions.tanggal_mulai',
-                'promotions.tanggal_berakhir'
-            )
-                ->where('promotions.status', true)
-                ->where('promotions.tanggal_mulai', '<=', now())
-                ->where('promotions.tanggal_berakhir', '>=', now()),
-        ])
-            ->withSum('stocks', 'qty')
-            ->withSum(['itemSales as total_terjual' => function ($query) {
-                $query->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-                    ->where('sales.status_pembayaran', '!=', 'Dibatalkan');
-            }], 'jumlah')
-            ->orderByDesc('total_terjual')
-            ->limit(6)
-            ->get();
+    // ── FIX C: produkTerlaris — tambah primaryImage + withSum stocks ───
+    $produkTerlaris = Product::with([
+      'unit',
+      'primaryImage',
+      'promotions' => fn($q) => $q
+        ->select('promotions.id', 'promotions.type', 'promotions.nilai_diskon', 'promotions.max_diskon', 'promotions.status', 'promotions.tanggal_mulai', 'promotions.tanggal_berakhir')
+        ->where('promotions.status', true)
+        ->where('promotions.tanggal_mulai', '<=', now())
+        ->where('promotions.tanggal_berakhir', '>=', now()),
+    ])
+      ->withSum('stocks', 'qty')
+      ->withSum(
+        [
+          'itemSales as total_terjual' => function ($query) {
+            $query->join('sales', 'sale_items.sale_id', '=', 'sales.id')->where('sales.status_pembayaran', '!=', 'Dibatalkan');
+          },
+        ],
+        'jumlah',
+      )
+      ->orderByDesc('total_terjual')
+      ->limit(6)
+      ->get();
 
-        // ── FIX D: produkPromotion — tambah primaryImage + withSum stocks ──
-        $produkPromotion = Product::with([
-            'unit',
-            'primaryImage',
-            'promotions' => fn($q) => $q->select(
-                'promotions.id',
-                'promotions.type',
-                'promotions.nilai_diskon',
-                'promotions.max_diskon',
-                'promotions.status',
-                'promotions.tanggal_mulai',
-                'promotions.tanggal_berakhir'
-            )
-                ->where('promotions.status', true)
-                ->where('promotions.tanggal_mulai', '<=', now())
-                ->where('promotions.tanggal_berakhir', '>=', now()),
-        ])
-            ->withSum('stocks', 'qty')
-            ->whereHas(
-                'promotions',
-                fn($q) => $q
-                    ->where('status', true)
-                    ->where('tanggal_mulai', '<=', now())
-                    ->where('tanggal_berakhir', '>=', now())
-            )
-            ->inRandomOrder()
-            ->limit(8)
-            ->get();
+    // ── FIX D: produkPromotion — tambah primaryImage + withSum stocks ──
+    $produkPromotion = Product::with([
+      'unit',
+      'primaryImage',
+      'promotions' => fn($q) => $q
+        ->select('promotions.id', 'promotions.type', 'promotions.nilai_diskon', 'promotions.max_diskon', 'promotions.status', 'promotions.tanggal_mulai', 'promotions.tanggal_berakhir')
+        ->where('promotions.status', true)
+        ->where('promotions.tanggal_mulai', '<=', now())
+        ->where('promotions.tanggal_berakhir', '>=', now()),
+    ])
+      ->withSum('stocks', 'qty')
+      ->whereHas('promotions', fn($q) => $q->where('status', true)->where('tanggal_mulai', '<=', now())->where('tanggal_berakhir', '>=', now()))
+      ->inRandomOrder()
+      ->limit(8)
+      ->get();
 
-        $promotions = Promotion::where('status', true)
-            ->where('tanggal_mulai', '<=', now())
-            ->where('tanggal_berakhir', '>=', now())
-            ->latest()->get();
+    $promotions = Promotion::where('status', true)->where('tanggal_mulai', '<=', now())->where('tanggal_berakhir', '>=', now())->latest()->get();
 
-        $kategoris = Category::with('children')->whereNull('parent_id')->get();
+    $kategoris = Category::with('children')->whereNull('parent_id')->get();
 
-        return view('ecommerce::market.beranda', [
-            'title'               => 'Beranda',
-            'products'            => $products,
-            // Banner dari 1 query, diambil per posisi di view
-            'mainImg'             => $banners->get('main', collect()),
-            'main2Img'            => $banners->get('main2', collect()),
-            'main3Img'            => $banners->get('main3', collect()),
-            'promoImg'            => $banners->get('promo', collect()),
-            'bestsellerImg'       => $banners->get('bestseller', collect()),
-            'bestsellerMobileImg' => $banners->get('bestseller_mobile', collect()),
-            'produkTerlaris'      => $produkTerlaris,
-            'promotions'          => $promotions,
-            'produkPromotion'     => $produkPromotion,
-            'kategoris'           => $kategoris,
-        ]);
+    return view('ecommerce::market.beranda', [
+      'title' => 'Beranda',
+      'products' => $products,
+      // Banner dari 1 query, diambil per posisi di view
+      'mainImg' => $banners->get('main', collect()),
+      'main2Img' => $banners->get('main2', collect()),
+      'main3Img' => $banners->get('main3', collect()),
+      'promoImg' => $banners->get('promo', collect()),
+      'bestsellerImg' => $banners->get('bestseller', collect()),
+      'bestsellerMobileImg' => $banners->get('bestseller_mobile', collect()),
+      'produkTerlaris' => $produkTerlaris,
+      'promotions' => $promotions,
+      'produkPromotion' => $produkPromotion,
+      'kategoris' => $kategoris,
+    ]);
+  }
+
+  /**
+   * Menampilkan halaman daftar semua produk dengan filter dan paginasi.
+   *
+   * @return \Illuminate\View\View
+   */
+
+  public function produk(Request $request)
+  {
+    $query = Product::with(['category', 'unit', 'brand', 'promotions', 'stocks', 'primaryImage']);
+
+    // Filter Kategori (Mencakup Parent & Child)
+    if ($request->filled('kategori')) {
+      $kategoriTarget = Category::where('slug', $request->kategori)->first();
+
+      if ($kategoriTarget) {
+        // Ambil ID dari kategori target dan gabungkan dengan ID semua child-nya
+        $kategoriIds = Category::where('parent_id', $kategoriTarget->id)->pluck('id')->push($kategoriTarget->id)->toArray();
+
+        // Filter menggunakan whereIn ke foreign key category_id agar lebih cepat
+        $query->whereIn('category_id', $kategoriIds);
+      }
     }
 
-    /**
-     * Menampilkan halaman daftar semua produk dengan filter dan paginasi.
-     *
-     * @return \Illuminate\View\View
-     */
-
-    public function produk(Request $request)
-    {
-        $query = Product::with([
-            'category',
-            'unit',
-            'brand',
-            'promotions',
-            'stocks',
-            'primaryImage'
-        ]);
-
-        // Filter Kategori (Mencakup Parent & Child)
-        if ($request->filled('kategori')) {
-            $kategoriTarget = Category::where('slug', $request->kategori)->first();
-
-            if ($kategoriTarget) {
-                // Ambil ID dari kategori target dan gabungkan dengan ID semua child-nya
-                $kategoriIds = Category::where('parent_id', $kategoriTarget->id)
-                    ->pluck('id')
-                    ->push($kategoriTarget->id)
-                    ->toArray();
-
-                // Filter menggunakan whereIn ke foreign key category_id agar lebih cepat
-                $query->whereIn('category_id', $kategoriIds);
-            }
-        }
-
-        // Filter Brand (checkbox — bisa multiple)
-        if ($request->filled('brand')) {
-            $brandIds = (array) $request->brand;
-            $query->whereIn('brand_id', $brandIds);
-        }
-
-        // Filter Pencarian Multi-fungsi (Nama, SKU, Brand, atau Kategori)
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name_product', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%")
-                    // Mencari berdasarkan nama Brand
-                    ->orWhereHas('brand', function ($b) use ($search) {
-                        $b->where('name', 'like', "%{$search}%");
-                    })
-                    // Mencari berdasarkan nama Kategori
-                    ->orWhereHas('category', function ($c) use ($search) {
-                        $c->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        // Sorting
-        switch ($request->get('sort')) {
-            case 'nama_asc':
-                $query->orderBy('name_product', 'asc');
-                break;
-            case 'nama_desc':
-                $query->orderBy('name_product', 'desc');
-                break;
-            case 'terpopuler':
-                $query->addSelect([
-                    'total_terjual' => DB::table('sale_items')
-                        ->leftJoin('sales', 'sale_items.sale_id', '=', 'sales.id')
-                        ->whereColumn('sale_items.product_id', 'products.id')
-                        ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
-                        ->selectRaw('COALESCE(SUM(sale_items.jumlah), 0)')
-                ])->orderByDesc('total_terjual');
-                break;
-            case 'harga_asc':
-                $query->orderBy('harga_jual', 'asc');
-                break;
-            case 'harga_desc':
-                $query->orderBy('harga_jual', 'desc');
-                break;
-            default:
-                $query->latest();
-        }
-
-        $products = $query->paginate(20)->withQueryString();
-
-        if ($request->ajax()) {
-            return view('ecommerce::market._produk_list', compact('products'))->render();
-        }
-        $kategoris = Category::with('children')->whereNull('parent_id')->get();
-
-        $brands = Brand::whereHas('products')
-            ->orderBy('name')
-            ->get();
-
-        return view('ecommerce::market.produk', compact(
-            'products',
-            'kategoris',
-            'brands'
-        ));
+    // Filter Brand (checkbox — bisa multiple)
+    if ($request->filled('brand')) {
+      $brandIds = (array) $request->brand;
+      $query->whereIn('brand_id', $brandIds);
     }
 
-    /**
-     * Menampilkan halaman detail satu produk berdasarkan slug atau ID.
-     *
-     * @param  string  $slug
-     * @return \Illuminate\View\View
-     */
-    public function produkDetail($slug)
-    {
-        // PERBAIKAN: Eager load variants beserta opsinya agar bisa dimanipulasi JS
-        $produk = Product::with(['category', 'brand', 'unit', 'garansi', 'pajak', 'user', 'images', 'variants.options', 'stocks'])
-            ->where('slug', $slug)
-            ->firstOrFail();
-
-        $produkSerupa = Product::with([
-            'unit',
-            'primaryImage',
-            'promotions' => fn($q) => $q->select(
-                'promotions.id',
-                'promotions.type',
-                'promotions.nilai_diskon',
-                'promotions.max_diskon',
-                'promotions.status',
-                'promotions.tanggal_mulai',
-                'promotions.tanggal_berakhir'
-            )
-                ->where('promotions.status', true)
-                ->where('promotions.tanggal_mulai', '<=', now())
-                ->where('promotions.tanggal_berakhir', '>=', now()),
-        ])
-            ->withSum('stocks', 'qty')
-            ->where('category_id', $produk->category_id)
-            ->where('id', '!=', $produk->id)
-            ->inRandomOrder()
-            ->limit(5)
-            ->get();
-
-        $kategoris = Category::with('children')->whereNull('parent_id')->get();
-
-        return view('ecommerce::market.produkdetail', compact('produk', 'produkSerupa', 'kategoris'));
+    // Filter Pencarian Multi-fungsi (Nama, SKU, Brand, atau Kategori)
+    if ($request->filled('search')) {
+      $search = $request->search;
+      $query->where(function ($q) use ($search) {
+        $q->where('name_product', 'like', "%{$search}%")
+          ->orWhere('sku', 'like', "%{$search}%")
+          // Mencari berdasarkan nama Brand
+          ->orWhereHas('brand', function ($b) use ($search) {
+            $b->where('name', 'like', "%{$search}%");
+          })
+          // Mencari berdasarkan nama Kategori
+          ->orWhereHas('category', function ($c) use ($search) {
+            $c->where('name', 'like', "%{$search}%");
+          });
+      });
     }
 
-    public function layanan()
-    {
-        $kategoris = Category::with('children')->whereNull('parent_id')->get();
-
-        $googleData = Cache::remember('google_reviews_jocomputer', 1440, function () {
-            $placeId = env('GOOGLE_MAPS_PLACE_ID'); // Taruh di .env
-            $apiKey = env('GOOGLE_MAPS_API_KEY');   // Taruh di .env
-
-            $response = Http::get("https://maps.googleapis.com/maps/api/place/details/json", [
-                'place_id' => $placeId,
-                'fields'   => 'rating,user_ratings_total,reviews',
-                'key'      => $apiKey,
-                'language' => 'id' // Meminta ulasan dalam bahasa Indonesia
-            ]);
-
-            if ($response->successful() && isset($response['result'])) {
-                return $response['result'];
-            }
-
-            return null; // Fallback jika API gagal
-        });
-
-        // Format ulang data agar sesuai dengan struktur Blade Anda
-        $reviewSources = [];
-        $googleRating = 0;
-        $googleTotal = 0;
-
-        if ($googleData) {
-            $googleRating = $googleData['rating'] ?? 0;
-            $googleTotal  = $googleData['user_ratings_total'] ?? 0;
-
-            if (isset($googleData['reviews'])) {
-                foreach ($googleData['reviews'] as $review) {
-                    // Buat inisial dari nama
-                    $initials = (string) Str::of($review['author_name'])->explode(' ')->map(fn($n) => substr($n, 0, 1))->take(2)->join('');
-
-                    $reviewSources[] = [
-                        'source'   => 'google',
-                        'name'     => $review['author_name'],
-                        'avatar'   => $initials,
-                        'rating'   => $review['rating'],
-                        'date'     => $review['relative_time_description'], // Contoh: "2 minggu lalu"
-                        'text'     => $review['text'],
-                        'verified' => false,
-                    ];
-                }
-            }
-        }
-
-        return view('ecommerce::market.layanan', compact(
-            'kategoris',
-            'reviewSources',
-            'googleRating',
-            'googleTotal',
-        ));
+    // Sorting
+    switch ($request->get('sort')) {
+      case 'nama_asc':
+        $query->orderBy('name_product', 'asc');
+        break;
+      case 'nama_desc':
+        $query->orderBy('name_product', 'desc');
+        break;
+      case 'terpopuler':
+        $query
+          ->addSelect([
+            'total_terjual' => DB::table('sale_items')
+              ->leftJoin('sales', 'sale_items.sale_id', '=', 'sales.id')
+              ->whereColumn('sale_items.product_id', 'products.id')
+              ->where('sales.status_pembayaran', '!=', 'Dibatalkan')
+              ->selectRaw('COALESCE(SUM(sale_items.jumlah), 0)'),
+          ])
+          ->orderByDesc('total_terjual');
+        break;
+      case 'harga_asc':
+        $query->orderBy('harga_jual', 'asc');
+        break;
+      case 'harga_desc':
+        $query->orderBy('harga_jual', 'desc');
+        break;
+      default:
+        $query->latest();
     }
 
-    public function tentang(Request $request)
-    {
-        // Mulai query
-        $query = Store::query();
+    $products = $query->paginate(20)->withQueryString();
 
-        // 1. Filter Pencarian berdasarkan Nama Toko
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name_toko', 'like', "%{$search}%")
-                    ->orWhere('kecamatan', 'like', "%{$search}%")
-                    ->orWhere('kabupaten_kota', 'like', "%{$search}%")
-                    ->orWhere('desa', 'like', "%{$search}%")
-                    ->orWhere('alamat', 'like', "%{$search}%");
-            });
-        }
-
-        // 2. Filter Select berdasarkan Daerah
-        if ($request->filled('daerah')) {
-            $query->where('daerah', $request->daerah);
-        }
-
-        // Eksekusi query
-        $stores = $query->get();
-
-        // 3. Jika Request berasal dari AJAX
-        if ($request->ajax()) {
-            // Kembalikan data dalam bentuk JSON berisi potongan HTML dan jumlah data
-            return response()->json([
-                // Render file blade partial dan ubah jadi string HTML
-                'html'  => view('ecommerce::market._list_toko', compact('stores'))->render(),
-                'count' => $stores->count()
-            ]);
-        }
-
-        $kategoris = Category::with('children')->whereNull('parent_id')->get();
-
-        // 4. Jika Request biasa (Load halaman pertama kali)
-        return view('ecommerce::market.tentang', compact('stores', 'kategoris'));
+    if ($request->ajax()) {
+      return view('ecommerce::market._produk_list', compact('products'))->render();
     }
-    /**
-     * Menangani permintaan live search dari header.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function liveSearch(\Illuminate\Http\Request $request)
-    {
-        $query = $request->input('query');
+    $kategoris = Category::with('children')->whereNull('parent_id')->get();
 
-        if (empty($query)) {
-            return response()->json(['products' => [], 'total' => 0]);
+    $brands = Brand::whereHas('products')->orderBy('name')->get();
+
+    return view('ecommerce::market.produk', compact('products', 'kategoris', 'brands'));
+  }
+
+  /**
+   * Menampilkan halaman detail satu produk berdasarkan slug atau ID.
+   *
+   * @param  string  $slug
+   * @return \Illuminate\View\View
+   */
+  public function produkDetail($slug)
+  {
+    // PERBAIKAN: Eager load variants beserta opsinya agar bisa dimanipulasi JS
+    $produk = Product::with(['category', 'brand', 'unit', 'garansi', 'pajak', 'user', 'images', 'variants.options', 'stocks'])
+      ->where('slug', $slug)
+      ->firstOrFail();
+
+    $produkSerupa = Product::with([
+      'unit',
+      'primaryImage',
+      'promotions' => fn($q) => $q
+        ->select('promotions.id', 'promotions.type', 'promotions.nilai_diskon', 'promotions.max_diskon', 'promotions.status', 'promotions.tanggal_mulai', 'promotions.tanggal_berakhir')
+        ->where('promotions.status', true)
+        ->where('promotions.tanggal_mulai', '<=', now())
+        ->where('promotions.tanggal_berakhir', '>=', now()),
+    ])
+      ->withSum('stocks', 'qty')
+      ->where('category_id', $produk->category_id)
+      ->where('id', '!=', $produk->id)
+      ->inRandomOrder()
+      ->limit(5)
+      ->get();
+
+    $kategoris = Category::with('children')->whereNull('parent_id')->get();
+
+    return view('ecommerce::market.produkdetail', compact('produk', 'produkSerupa', 'kategoris'));
+  }
+
+  public function layanan()
+  {
+    $kategoris = Category::with('children')->whereNull('parent_id')->get();
+
+    $googleData = Cache::remember('google_reviews_jocomputer', 1440, function () {
+      $placeId = env('GOOGLE_MAPS_PLACE_ID'); // Taruh di .env
+      $apiKey = env('GOOGLE_MAPS_API_KEY'); // Taruh di .env
+
+      $response = Http::get('https://maps.googleapis.com/maps/api/place/details/json', [
+        'place_id' => $placeId,
+        'fields' => 'rating,user_ratings_total,reviews',
+        'key' => $apiKey,
+        'language' => 'id', // Meminta ulasan dalam bahasa Indonesia
+      ]);
+
+      if ($response->successful() && isset($response['result'])) {
+        return $response['result'];
+      }
+
+      return null; // Fallback jika API gagal
+    });
+
+    // Format ulang data agar sesuai dengan struktur Blade Anda
+    $reviewSources = [];
+    $googleRating = 0;
+    $googleTotal = 0;
+
+    if ($googleData) {
+      $googleRating = $googleData['rating'] ?? 0;
+      $googleTotal = $googleData['user_ratings_total'] ?? 0;
+
+      if (isset($googleData['reviews'])) {
+        foreach ($googleData['reviews'] as $review) {
+          // Buat inisial dari nama
+          $initials = (string) Str::of($review['author_name'])->explode(' ')->map(fn($n) => substr($n, 0, 1))->take(2)->join('');
+
+          $reviewSources[] = [
+            'source' => 'google',
+            'name' => $review['author_name'],
+            'avatar' => $initials,
+            'rating' => $review['rating'],
+            'date' => $review['relative_time_description'], // Contoh: "2 minggu lalu"
+            'text' => $review['text'],
+            'verified' => false,
+          ];
+        }
+      }
+    }
+
+    return view('ecommerce::market.layanan', compact('kategoris', 'reviewSources', 'googleRating', 'googleTotal'));
+  }
+
+  public function tentang(Request $request)
+  {
+    // Mulai query
+    $query = Store::query();
+
+    // 1. Filter Pencarian berdasarkan Nama Toko
+    if ($request->filled('search')) {
+      $search = $request->input('search');
+      $query->where(function ($q) use ($search) {
+        $q->where('name_toko', 'like', "%{$search}%")
+          ->orWhere('kecamatan', 'like', "%{$search}%")
+          ->orWhere('kabupaten_kota', 'like', "%{$search}%")
+          ->orWhere('desa', 'like', "%{$search}%")
+          ->orWhere('alamat', 'like', "%{$search}%");
+      });
+    }
+
+    // 2. Filter Select berdasarkan Daerah
+    if ($request->filled('daerah')) {
+      $query->where('daerah', $request->daerah);
+    }
+
+    // Eksekusi query
+    $stores = $query->get();
+
+    // 3. Jika Request berasal dari AJAX
+    if ($request->ajax()) {
+      // Kembalikan data dalam bentuk JSON berisi potongan HTML dan jumlah data
+      return response()->json([
+        // Render file blade partial dan ubah jadi string HTML
+        'html' => view('ecommerce::market._list_toko', compact('stores'))->render(),
+        'count' => $stores->count(),
+      ]);
+    }
+
+    $kategoris = Category::with('children')->whereNull('parent_id')->get();
+
+    // 4. Jika Request biasa (Load halaman pertama kali)
+    return view('ecommerce::market.tentang', compact('stores', 'kategoris'));
+  }
+  /**
+   * Menangani permintaan live search dari header.
+   *
+   * @param  \Illuminate\Http\Request  $request
+   * @return \Illuminate\Http\JsonResponse
+   */
+  public function liveSearch(\Illuminate\Http\Request $request)
+  {
+    $query = $request->input('query');
+
+    if (empty($query)) {
+      return response()->json(['products' => [], 'total' => 0]);
+    }
+
+    $products = Product::with(['category', 'brand', 'promotions', 'primaryImage'])
+      ->where(function ($q) use ($query) {
+        $q->where('name_product', 'LIKE', "%{$query}%")->orWhere('sku', 'LIKE', "%{$query}%");
+      })
+      ->limit(5)
+      ->get()
+      ->map(function ($product) {
+        // Find an active promotion for this product, if any
+        $activePromo = $product->promotions->where('status', true)->where('tanggal_mulai', '<=', now())->where('tanggal_berakhir', '>=', now())->first();
+
+        // Compute harga_diskon based on promotion type
+        if ($activePromo) {
+          $product->harga_diskon =
+            $activePromo->type === 'percentage' ? $product->harga_jual - ($product->harga_jual * $activePromo->nilai_diskon) / 100 : $product->harga_jual - $activePromo->nilai_diskon;
+        } else {
+          $product->harga_diskon = null;
         }
 
-        $products = Product::with(['category', 'brand', 'promotions'])
-            ->where(function ($q) use ($query) {
-                $q->where('name_product', 'LIKE', "%{$query}%")
-                    ->orWhere('sku', 'LIKE', "%{$query}%");
-            })
-            ->limit(5)
-            ->get()
-            ->map(function ($product) {
-                // Find an active promotion for this product, if any
-                $activePromo = $product->promotions
-                    ->where('status', true)
-                    ->where('tanggal_mulai', '<=', now())
-                    ->where('tanggal_berakhir', '>=', now())
-                    ->first();
+        if ($product->primaryImage && $product->primaryImage->path) {
+          // Generate URL utuh dari disk R2
+          $product->image_url = Storage::disk('r2')->url($product->primaryImage->path);
+        } else {
+          // Fallback jika tidak ada gambar
+          $product->image_url = asset('assets/img/produk.png');
+        }
 
-                // Compute harga_diskon based on promotion type
-                if ($activePromo) {
-                    $product->harga_diskon = $activePromo->type === 'percentage'
-                        ? $product->harga_jual - ($product->harga_jual * $activePromo->nilai_diskon / 100)
-                        : $product->harga_jual - $activePromo->nilai_diskon;
-                } else {
-                    $product->harga_diskon = null;
-                }
+        return $product;
+      });
 
-                return $product;
-            });
-
-        return response()->json(['products' => $products, 'total' => $products->count()]);
-    }
+    return response()->json(['products' => $products, 'total' => $products->count()]);
+  }
 }

@@ -35,7 +35,7 @@ class Product extends Model
   {
     return 'slug';
   }
-  
+
   public function stocks()
   {
     return $this->hasMany(ProductStock::class, 'product_id');
@@ -44,9 +44,7 @@ class Product extends Model
   public function scopeWithTotalStock($query, $storeId = null)
   {
     return $query->addSelect([
-      'total_stock' => ProductStock::selectRaw('COALESCE(SUM(qty), 0)')
-        ->whereColumn('product_id', 'products.id')
-        ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+      'total_stock' => ProductStock::selectRaw('COALESCE(SUM(qty), 0)')->whereColumn('product_id', 'products.id')->when($storeId, fn($q) => $q->where('store_id', $storeId)),
     ]);
   }
 
@@ -77,7 +75,7 @@ class Product extends Model
   }
   public function garansi(): BelongsTo
   {
-    return $this->belongsTo(Warrantie::class);
+    return $this->belongsTo(Warrantie::class, 'warrantie_id');
   }
   public function pajak(): BelongsTo
   {
@@ -135,10 +133,7 @@ class Product extends Model
     // Ini yang terjadi di POS create() setelah kita tambahkan with('promotions')
     if ($this->relationLoaded('promotions')) {
       // Cari promo aktif dari collection yang sudah ada di memory
-      $promo = $this->promotions
-        ->where('status', true)
-        ->filter(fn($p) => $p->tanggal_mulai <= now() && $p->tanggal_berakhir >= now())
-        ->first();
+      $promo = $this->promotions->where('status', true)->filter(fn($p) => $p->tanggal_mulai <= now() && $p->tanggal_berakhir >= now())->first();
 
       // Fallback global promo: tidak bisa dicek dari memory karena
       // global promo tidak di-attach ke produk ini.
@@ -148,19 +143,11 @@ class Product extends Model
     }
 
     // ── Jalur 2: Relasi belum di-load — query normal (untuk halaman detail, dll) ──
-    $promo = $this->promotions()
-      ->where('status', true)
-      ->where('tanggal_mulai', '<=', now())
-      ->where('tanggal_berakhir', '>=', now())
-      ->first();
+    $promo = $this->promotions()->where('status', true)->where('tanggal_mulai', '<=', now())->where('tanggal_berakhir', '>=', now())->first();
 
-    if (! $promo) {
+    if (!$promo) {
       // Global promotion: berlaku untuk semua produk tanpa assignment spesifik
-      $promo = Promotion::where('status', true)
-        ->where('tanggal_mulai', '<=', now())
-        ->where('tanggal_berakhir', '>=', now())
-        ->whereDoesntHave('products')
-        ->first();
+      $promo = Promotion::where('status', true)->where('tanggal_mulai', '<=', now())->where('tanggal_berakhir', '>=', now())->whereDoesntHave('products')->first();
     }
 
     return $promo;
@@ -171,7 +158,7 @@ class Product extends Model
     // ── Fix: simpan ke variabel lokal — jangan panggil $this->active_promotion DUA KALI ──
     $promo = $this->active_promotion; // ← cukup sekali
 
-    if (! $promo) {
+    if (!$promo) {
       return null;
     }
 

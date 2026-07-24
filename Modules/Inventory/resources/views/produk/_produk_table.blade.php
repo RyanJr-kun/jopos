@@ -32,7 +32,23 @@
                                     <span class="fw-bold text-dark text-wrap"
                                         style="max-width: 250px;">{{ Str::limit(strip_tags($products->name_product), 30) ?: '-' }}</span>
                                     <small class="text-muted">SKU:
-                                        {{ Str::limit(strip_tags($products->sku), 20) ?: '-' }}</small>
+                                        @if ($products->sku)
+                                            {{-- Jika produk utama punya SKU (Produk Simple) --}}
+                                            {{ Str::limit(strip_tags($products->sku), 20) }}
+                                        @elseif ($products->variants && $products->variants->count() > 0)
+                                            {{-- Jika tidak punya SKU utama, ambil SKU dari varian pertama --}}
+                                            {{ Str::limit(strip_tags($products->variants->first()->sku), 15) }}
+
+                                            {{-- Tambahkan indikator jika variannya lebih dari 1 --}}
+                                            @if ($products->variants->count() > 1)
+                                                <span class="badge bg-label-secondary px-1" style="font-size: 0.6rem;">
+                                                    +{{ $products->variants->count() - 1 }} Varian
+                                                </span>
+                                            @endif
+                                        @else
+                                            -
+                                        @endif
+                                    </small>
                                     <div class="flex-inlane mt-1">
                                         <span class="badge bg-label-primary"
                                             style="width: fit-content;">{{ $products->category->name ?? '-' }}</span>

@@ -100,7 +100,24 @@
                         <div class="row mb-3">
                             <div class="col-sm-6 mb-3 mb-sm-0">
                                 <small class="text-muted text-uppercase d-block mb-1">SKU</small>
-                                <span class="fw-bold text-dark">{{ $produk->sku }}</span>
+                                <span class="fw-bold text-dark">
+                                    @if ($produk->sku)
+                                        {{-- Jika produk utama punya SKU (Produk Simple) --}}
+                                        {{ Str::limit(strip_tags($produk->sku), 20) }}
+                                    @elseif ($produk->variants && $produk->variants->count() > 0)
+                                        {{-- Jika tidak punya SKU utama, ambil SKU dari varian pertama --}}
+                                        {{ Str::limit(strip_tags($produk->variants->first()->sku), 15) }} &nbsp;
+
+                                        {{-- Tambahkan indikator jika variannya lebih dari 1 --}}
+                                        @if ($produk->variants->count() > 1)
+                                            <span class="badge bg-label-secondary px-1" style="font-size: 0.6rem;">
+                                                +{{ $produk->variants->count() - 1 }} Varian
+                                            </span>
+                                        @endif
+                                    @else
+                                        -
+                                    @endif
+                                </span>
                             </div>
                             <div class="col-sm-6">
                                 <small class="text-muted text-uppercase d-block mb-1">Barcode</small>

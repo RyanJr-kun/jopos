@@ -31,7 +31,7 @@
                             <input type="text" name="search" id="searchInput" class="form-control"
                                 placeholder="Cari Nama Produk..." value="{{ request('search') }}">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-6 col-md-3">
                             <select id="kategoriFilter" name="kategori" class="form-select select2"
                                 data-placeholder="Semua Kategori">
                                 <option value="">Semua Kategori</option>
@@ -42,7 +42,18 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3 me-3">
+                        <div class="col-6 col-md-3">
+                            <select id="brandFilter" name="brand" class="form-select select2"
+                                data-placeholder="Semua brand">
+                                <option value="">Semua brand</option>
+                                @foreach ($brands as $brand)
+                                    <option value="{{ $brand->id }}" @selected(request('brand') == $brand->id)>
+                                        {{ $brand->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
                             <select id="storeFilter" name="store" class="form-select select2"
                                 data-placeholder="Semua Toko">
                                 <option value="">Semua Toko</option>
@@ -53,24 +64,28 @@
                                 @endforeach
                             </select>
                         </div>
-                        @can('create-produk')
-                            <div class="col-md-auto ms-md-auto">
-                                <a href="{{ route('produk.create') }}" class="btn btn-outline-info mb-0">
-                                    <i class="bx bx-plus me- cursor-pointer"></i> Product
-                                </a>
-                            </div>
-                        @endcan
+
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-12">
             <div class="card">
-                <div class="card-header py-3">
-                    <h5 class="mb-n1 fw-bolder">Data Product</h5>
-                    <p class="text-sm mb-0">
-                        Kelola Data Productmu
+                <div class="card-header d-flex align-items-center justify-content-between py-3">
+                    <div class="">
+                        <h5 class="mb-n1 fw-bolder">Data Product</h5>
+                        <p class="text-sm mb-0">
+                            Kelola Data Productmu
+                    </div>
                     </p>
+                    @can('create-produk')
+                        <div class="col-md-auto ms-md-auto">
+                            <a href="{{ route('produk.create') }}" class="btn btn-outline-blue px-2" title="tambah produk"
+                                data-bs-toggle="tooltip" data-bs-placement="top">
+                                <i class="bx bx-plus-circle fs-5"></i>
+                            </a>
+                        </div>
+                    @endcan
                 </div>
                 <div class="card-body px-0 pt-0 pb-2">
                     {{-- Container untuk tabel yang akan di-refresh oleh AJAX --}}
@@ -216,6 +231,7 @@
                     function fetchData(page = 1) {
                         let search = $('#searchInput').val();
                         let kategori = $('#kategoriFilter').val();
+                        let brand = $('#brandFilter').val();
                         let store = $('#storeFilter').val(); // BARU
                         let url = '{{ route('produk.index') }}';
 
@@ -227,6 +243,7 @@
                             data: {
                                 search: search,
                                 kategori: kategori,
+                                brand: brand,
                                 store: store,
                                 page: page
                             }, // BARU
@@ -237,6 +254,7 @@
                                 if (page > 1) newParams.append('page', page);
                                 if (search) newParams.append('search', search);
                                 if (kategori) newParams.append('kategori', kategori);
+                                if (brand) newParams.append('barand', brand);
                                 if (store) newParams.append('store', store); // BARU
 
                                 let newUrl = url + (newParams.toString() ? '?' + newParams
@@ -259,6 +277,9 @@
 
                     // Event Listener Filter Kategori (Select2)
                     $('#kategoriFilter').on('change', function() {
+                        fetchData(1);
+                    });
+                    $('#brandFilter').on('change', function() {
                         fetchData(1);
                     });
 

@@ -150,7 +150,7 @@
                     <div class="d-flex flex-column gap-2 mb-4">
                         @if ($produk->garansi)
                             <div class="d-flex align-items-center">
-                                <i class="bx bx-shield-check fs-5 me-2 text-primary"></i>
+                                <i class="bx bx-shield-quarter fs-5 me-2 text-blue"></i>
                                 <span class="fw-medium me-2">Garansi:</span>
                                 <span class="text-dark">{{ $produk->garansi->name }}
                                     {{ $produk->garansi->formatted_duration }}</span>

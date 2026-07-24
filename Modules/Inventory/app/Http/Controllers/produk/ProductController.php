@@ -43,7 +43,7 @@ class ProductController extends Controller implements HasMiddleware
 
     $storeId = $request->filled('store') ? $request->input('store') : null; // null = semua toko
 
-    $query = Product::with(['category', 'brand', 'unit', 'user', 'primaryImage'])
+    $query = Product::with(['category', 'brand', 'unit', 'user', 'primaryImage', 'variants'])
       ->withTotalStock($storeId) // <-- filter stock per store, null = total semua store
       ->latest();
 
@@ -63,7 +63,11 @@ class ProductController extends Controller implements HasMiddleware
       $query->whereIn('category_id', $childIds);
     }
 
-    $products = $query->paginate(15)->withQueryString();
+    if ($request->filled('brand')) {
+      $query->where('brand_id', $request->input('brand'));
+    }
+
+    $products = $query->paginate(25)->withQueryString();
 
     if ($request->ajax()) {
       return view('inventory::produk._produk_table', [
@@ -78,7 +82,7 @@ class ProductController extends Controller implements HasMiddleware
         ->whereHas('products')
         ->orderBy('name')
         ->get(),
-
+      'brands' => Brand::query()->where('status', 1)->get(),
       'stores' => Store::where('is_active', 1)->orderBy('name_toko')->get(),
     ]);
   }
@@ -114,7 +118,7 @@ class ProductController extends Controller implements HasMiddleware
       'name_product' => 'required|string|max:255',
       'slug' => 'required|string|unique:products,slug',
       'barcode' => 'nullable|string|unique:products,barcode',
-      'sku' => 'required|string|unique:products,sku',
+      'sku' => 'nullable|string|unique:products,sku',
       'kategori' => 'required|exists:categories,id',
       'brand' => 'required|exists:brands,id',
       'unit' => 'required|exists:units,id',
@@ -228,7 +232,7 @@ class ProductController extends Controller implements HasMiddleware
       'name_product'    => 'required|string|max:255',
       'slug'            => ['required', 'string', Rule::unique('products', 'slug')->ignore($produk->id)],
       'barcode'         => ['nullable', 'string', Rule::unique('products', 'barcode')->ignore($produk->id)],
-      'sku'             => ['required', 'string', Rule::unique('products', 'sku')->ignore($produk->id)],
+      'sku'             => ['nullable', 'string', Rule::unique('products', 'sku')->ignore($produk->id)],
       'kategori'        => 'required|exists:categories,id',
       'brand'           => 'required|exists:brands,id',
       'unit'            => 'required|exists:units,id',
@@ -343,7 +347,10 @@ class ProductController extends Controller implements HasMiddleware
     });
     $produk->delete();
 
-    return redirect()->route('produk.index')->with('success', 'Product Berhasil Dihapus.');
+    return response()->json([
+      'success' => true,
+      'message' => 'Produk berhasil dihapus!',
+    ]);
   }
 
   /**

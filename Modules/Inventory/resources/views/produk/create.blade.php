@@ -49,12 +49,14 @@
                             <option value="" disabled selected>Pilih Kategori...</option>
                             @foreach ($kategoris as $parent)
                                 @if ($parent->children->isEmpty())
-                                    <option value="{{ $parent->id }}" @selected(old('kategori') == $parent->id)>{{ $parent->name }}
+                                    <option value="{{ $parent->id }}" @selected(old('kategori') == $parent->id) data-level="parent">
+                                        {{ $parent->name }}
                                     </option>
                                 @else
                                     <optgroup label="{{ $parent->name }}">
                                         @foreach ($parent->children as $child)
-                                            <option value="{{ $child->id }}" @selected(old('kategori') == $child->id)>
+                                            <option value="{{ $child->id }}" @selected(old('kategori') == $child->id)
+                                                data-level="child">
                                                 {{ $child->name }}</option>
                                         @endforeach
                                     </optgroup>
@@ -161,9 +163,9 @@
                     <hr class="my-3">
 
                     <div class="col-md-4">
-                        <label class="form-label">SKU <span class="text-danger">*</span></label>
+                        <label class="form-label">SKU</label>
                         <input type="text" class="form-control" id="sku" name="sku"
-                            value="{{ old('sku') }}" required>
+                            value="{{ old('sku') }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Barcode</label>
@@ -264,6 +266,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const storageBaseUrl = "{{ rtrim(Storage::disk('r2')->url(''), '/') }}";
 
             // 1. GENERATE SLUG & SKU AUTO
             document.getElementById('name_product').addEventListener('change', function() {
@@ -497,7 +500,7 @@
                             .then(r => r.text()).then(path => {
                                 document.getElementById(`v-path-${i}`).value = path;
                                 const prev = document.getElementById(`v-preview-${i}`);
-                                prev.src = `/storage/${path}`;
+                                prev.src = `${storageBaseUrl}/${path.trim()}`;
                                 prev.style.display = 'inline-block';
                             });
                     });

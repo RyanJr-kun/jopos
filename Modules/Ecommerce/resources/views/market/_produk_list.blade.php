@@ -26,7 +26,7 @@
     @forelse ($products as $produk)
         @php
             $hargaDiskon = $produk->harga_diskon;
-            $stokQty = $produk->stocks_sum_qty ?? 0;
+            $stokQty = $produk->stocks->sum('qty') ?? 0;
             $promoAktif = $produk->promotions->first();
             $imgUrl =
                 $produk->primaryImage && $produk->primaryImage->path
