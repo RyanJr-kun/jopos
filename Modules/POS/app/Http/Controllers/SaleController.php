@@ -346,6 +346,7 @@ class SaleController extends Controller implements HasMiddleware
             'product_variant_id' => $variantId,
             'jumlah' => $itemData['jumlah'],
             'harga_jual' => $itemData['harga_jual'],
+            'harga_beli' => $produk->harga_beli,
             'diskon_item' => $itemData['diskon'],
             'taxe_id' => $itemData['taxe_id'] ?? null,
             'pajak_item' => $pajak,
@@ -648,12 +649,21 @@ class SaleController extends Controller implements HasMiddleware
         foreach ($validatedData['items'] as $itemData) {
           $variantId = !empty($itemData['product_variant_id']) ? $itemData['product_variant_id'] : null;
 
+          $produk = $products->get($itemData['product_id']);
+
+          $oldItemMatch = $oldItemsWithSerials->first(function ($old) use ($itemData, $variantId) {
+            return $old->product_id == $itemData['product_id'] && $old->product_variant_id == $variantId;
+          });
+
+          $harga_beli_fix = $oldItemMatch ? $oldItemMatch->harga_beli : $produk->harga_beli;
+
           [$dpp, $pajak] = $this->hitungDppDanPajak((float) $itemData['harga_jual'], (int) $itemData['jumlah'], (float) $itemData['diskon'], $itemData['taxe_id'] ?? null, $taxesData);
 
           $newItem = $penjualan->items()->create([
             'product_id' => $itemData['product_id'],
             'product_variant_id' => $variantId,
             'jumlah' => $itemData['jumlah'],
+            'harga_beli' => $harga_beli_fix,
             'harga_jual' => $itemData['harga_jual'],
             'diskon_item' => $itemData['diskon'],
             'taxe_id' => $itemData['taxe_id'] ?? null,

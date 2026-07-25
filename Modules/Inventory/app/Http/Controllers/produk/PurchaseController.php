@@ -177,28 +177,34 @@ class PurchaseController extends Controller implements HasMiddleware
         $itemsForDetail = [];
 
         foreach ($validatedData['items'] as $itemData) {
-          $harga_beli = $itemData['harga_beli'];
-          $qty = $itemData['qty'];
-          $diskon_item = $itemData['diskon'] ?? 0;
+          $harga_beli = (float) $itemData['harga_beli'];
+          $qty = (int) $itemData['qty'];
+          $diskon_item = (float) ($itemData['diskon'] ?? 0);
           $taxe_id = $itemData['taxe_id'] ?? null;
           $pajak_rate = $taxe_id ? $taxesData->get($taxe_id)->rate ?? 0 : 0;
 
-          $subtotal_item = $harga_beli * $qty - $diskon_item;
-          $pajak_amount_item = $subtotal_item * ($pajak_rate / 100);
-          $subtotal_item_with_tax = $subtotal_item + $pajak_amount_item;
+          // DPP (Dasar Pengenaan Pajak) = Harga murni setelah diskon item
+          $dpp_item = $harga_beli * $qty - $diskon_item;
+          $pajak_amount_item = $dpp_item * ($pajak_rate / 100);
 
-          $subtotal_keseluruhan += $subtotal_item_with_tax;
+          // [PERBAIKAN 1]: Pisahkan subtotal murni dan pajak
+          $subtotal_keseluruhan += $dpp_item;
           $total_pajak_item += $pajak_amount_item;
+
+          // [PERBAIKAN 1]: subtotal_with_tax hanya dipakai untuk detail item, bukan untuk grand total
+          $subtotal_item_with_tax = $dpp_item + $pajak_amount_item;
           $itemsForDetail[] = array_merge($itemData, ['subtotal' => $subtotal_item_with_tax]);
         }
 
-        $ongkir = $validatedData['ongkir'] ?? 0;
-        $diskon_tambahan = $validatedData['diskon_tambahan'] ?? 0;
-        $total_akhir = $subtotal_keseluruhan - $diskon_tambahan + $ongkir;
-        $jumlah_dibayar = $validatedData['jumlah_dibayar'] ?? 0;
+        $ongkir = (float) ($validatedData['ongkir'] ?? 0);
+        $diskon_tambahan = (float) ($validatedData['diskon_tambahan'] ?? 0);
 
-        // 3. Tentukan status pembayaran
-        $sisa = $total_akhir - $jumlah_dibayar;
+        // Perhitungan grand total sekarang aman
+        $total_akhir = $subtotal_keseluruhan + $total_pajak_item - $diskon_tambahan + $ongkir;
+        $jumlah_dibayar = (float) ($validatedData['jumlah_dibayar'] ?? 0);
+
+        // [PERBAIKAN 3]: Cegah hutang minus jika bayar lebih
+        $sisa = max(0, $total_akhir - $jumlah_dibayar);
         $status_pembayaran = $jumlah_dibayar >= $total_akhir ? 'Lunas' : 'Hutang';
 
         // 4. Buat record Purchase
@@ -250,34 +256,89 @@ class PurchaseController extends Controller implements HasMiddleware
             'subtotal' => $itemData['subtotal'],
           ]);
 
-          // B. Update data harga beli produk master atau varian
-          if ($variantId && $variants->has($variantId)) {
-            // Jika varian, update harga beli di tabel product_variants
-            $varian = $variants->get($variantId);
-            $varian->harga_beli = $itemData['harga_beli'];
-            $varian->save();
-          } else {
-            // Jika produk simple, update harga beli di tabel products
-            $produk = $products->get($itemData['product_id']);
-            if ($produk) {
-              $produk->harga_beli = $itemData['harga_beli'];
-              $produk->save();
-            }
-          }
+          $subtotal_dpp_global = (int) $subtotal_keseluruhan > 0 ? (int) $subtotal_keseluruhan : 1;
 
-          // C. Tambah stok menggunakan tabel `product_stocks`
+          $ongkir = (int) ($validatedData['ongkir'] ?? 0);
+          $diskon_tambahan = (int) ($validatedData['diskon_tambahan'] ?? 0);
+          $net_adjustment_global = $ongkir - $diskon_tambahan;
+
           if ($validatedData['status_barang'] === 'Diterima') {
-            // Cari baris stok yang sudah ada, atau buat baru jika belum ada di toko ini
+            $qty_baru = (int) $itemData['qty'];
+            $harga_beli_form = (int) $itemData['harga_beli'];
+            $diskon_item = (int) ($itemData['diskon'] ?? 0);
+
+            // ─── 1. KALKULASI HARGA BELI RIIL PER UNIT (TOTAL COST OF ACQUISITION) ───
+
+            // A. Cari Nilai Dasar Item (DPP)
+            $dpp_item = $harga_beli_form * $qty_baru - $diskon_item;
+
+            // B. Cari Pajak Item Ini
+            $taxe_id = $itemData['taxe_id'] ?? null;
+            $pajak_rate = $taxe_id ? $taxesData->get($taxe_id)->rate ?? 0 : 0;
+            $pajak_item = (int) round($dpp_item * ($pajak_rate / 100));
+
+            // C. Distribusikan Ongkir & Diskon Global ke Item Ini
+            $proporsi_item = $dpp_item / $subtotal_dpp_global;
+            $beban_global_item = $net_adjustment_global * $proporsi_item;
+
+            // D. Total Modal untuk Baris Item Ini
+            $total_modal_item = $dpp_item + $pajak_item + $beban_global_item;
+
+            // E. HPP Riil (Modal Akhir Per Pcs) - Dibulatkan ke integer mutlak
+            $harga_beli_riil = $qty_baru > 0 ? (int) round($total_modal_item / $qty_baru) : $harga_beli_form;
+
+            // ─── 2. TERAPKAN MOVING AVERAGE DENGAN HARGA RIIL ───
+
+            $queryStokLama = ProductStock::where('product_id', $itemData['product_id']);
+            if ($variantId) {
+              $queryStokLama->where('product_variant_id', $variantId);
+            } else {
+              $queryStokLama->whereNull('product_variant_id');
+            }
+
+            $total_stok_lama = (int) $queryStokLama->sum('qty');
+            $total_stok_baru = $total_stok_lama + $qty_baru;
+
+            if ($variantId && $variants->has($variantId)) {
+              $varian = $variants->get($variantId);
+              $old_hpp = (int) $varian->harga_beli;
+
+              $nilai_aset_lama = $total_stok_lama * $old_hpp;
+              $nilai_aset_baru = $qty_baru * $harga_beli_riil;
+
+              // Rumus Average Costing
+              $hpp_rata_rata = $total_stok_baru > 0 ? (int) round(($nilai_aset_lama + $nilai_aset_baru) / $total_stok_baru) : $harga_beli_riil;
+
+              $varian->harga_beli = $hpp_rata_rata;
+              $varian->save();
+            } else {
+              $produk = $products->get($itemData['product_id']);
+              if ($produk) {
+                $old_hpp = (int) $produk->harga_beli;
+
+                $nilai_aset_lama = $total_stok_lama * $old_hpp;
+                $nilai_aset_baru = $qty_baru * $harga_beli_riil;
+
+                // Rumus Average Costing
+                $hpp_rata_rata = $total_stok_baru > 0 ? (int) round(($nilai_aset_lama + $nilai_aset_baru) / $total_stok_baru) : $harga_beli_riil;
+
+                $produk->harga_beli = $hpp_rata_rata;
+                $produk->save();
+              }
+            }
+
+            // ─── 3. INJEKSI STOK KE GUDANG AKTIF ───
+
             $stockRecord = ProductStock::firstOrCreate(
               [
                 'store_id' => $storeId,
                 'product_id' => $itemData['product_id'],
                 'product_variant_id' => $variantId,
               ],
-              ['qty' => 0], // Nilai default jika harus create baru
+              ['qty' => 0],
             );
 
-            $stockRecord->increment('qty', $itemData['qty']);
+            $stockRecord->increment('qty', $qty_baru);
           }
         }
 
@@ -331,18 +392,15 @@ class PurchaseController extends Controller implements HasMiddleware
    */
   public function update(Request $request, Purchase $pembelian)
   {
-    // Karena tabel purchases butuh store_id (seperti di fungsi store)
     $storeId = $pembelian->store_id;
 
     // --- LOGIKA PEMBATALAN CEPAT DARI HALAMAN INDEX ---
     if ($request->input('status_pembayaran') === 'Batal' && !$request->has('items')) {
       if ($pembelian->status_pembayaran !== 'Batal') {
-        // 🛑 TAMBAHKAN VALIDASI INI SEBELUM TRANSACTION
         if ($pembelian->status_barang === 'Diterima') {
           foreach ($pembelian->details as $detail) {
             $stockRecord = ProductStock::query()->where('store_id', $storeId)->where('product_id', $detail->product_id)->where('product_variant_id', $detail->product_variant_id)->first();
 
-            // Jika stok saat ini lebih kecil dari qty faktur, artinya sebagian sudah terjual
             $currentQty = $stockRecord ? $stockRecord->qty : 0;
             if ($currentQty < $detail->qty) {
               $namaProduk = $detail->produk->name_product ?? 'Produk';
@@ -355,37 +413,37 @@ class PurchaseController extends Controller implements HasMiddleware
 
         try {
           DB::transaction(function () use ($pembelian, $storeId) {
-            // Jika barangnya pernah diterima, kurangi stoknya dari product_stocks
             if ($pembelian->status_barang === 'Diterima') {
               foreach ($pembelian->details as $detail) {
                 $stockRecord = ProductStock::query()->where('store_id', $storeId)->where('product_id', $detail->product_id)->where('product_variant_id', $detail->product_variant_id)->first();
 
-                // Hapus pengecekan >= qty di sini (seperti revisi sebelumnya)
                 if ($stockRecord) {
                   $stockRecord->decrement('qty', $detail->qty);
                 }
               }
             }
-            // Update status dan reset pembayaran
+
             $pembelian->update([
               'status_pembayaran' => 'Batal',
               'status_barang' => 'Batal',
               'sisa_hutang' => 0,
             ]);
           });
-          session()->flash('success', 'Transaksi berhasil dibatalkan dan stok telah dikembalikan.');
+          return redirect()->route('pembelian.index')->with('success', 'Transaksi berhasil dibatalkan dan stok telah dikembalikan.');
         } catch (\Exception $e) {
-          session()->flash('error', 'Gagal membatalkan transaksi: ' . $e->getMessage());
+          return redirect()
+            ->route('pembelian.index')
+            ->with('error', 'Gagal membatalkan transaksi: ' . $e->getMessage());
         }
       }
       return redirect()->route('pembelian.index');
     }
 
+    // --- LOGIKA UPDATE FULL (DARI HALAMAN EDIT) ---
     if ($pembelian->status_pembayaran === 'Batal') {
       return back()->with('error', 'Transaksi yang sudah dibatalkan tidak dapat diedit kembali.');
     }
 
-    // Membersihkan input mata uang dari format ribuan sebelum validasi
     $request->merge([
       'jumlah_dibayar' => preg_replace('/[^0-9]/', '', $request->input('jumlah_dibayar', 0)),
     ]);
@@ -395,7 +453,7 @@ class PurchaseController extends Controller implements HasMiddleware
       'tanggal' => 'required|date',
       'tanggal_jatuh_tempo' => 'nullable|date|after:tanggal',
       'status_pembayaran' => 'required|in:Lunas,Hutang,Batal',
-      'status_barang' => 'required|in:Diterima, Pre Order, Retur, Batal',
+      'status_barang' => 'required|in:Diterima,Pre Order,Retur,Batal',
       'jumlah_dibayar' => 'nullable|numeric|min:0',
       'ongkir' => 'nullable|numeric|min:0',
       'diskon_tambahan' => 'nullable|numeric|min:0',
@@ -421,43 +479,108 @@ class PurchaseController extends Controller implements HasMiddleware
         $statusBarangLama = $pembelian->status_barang;
         $statusBarangBaru = $validatedData['status_barang'];
 
-        // --- MANAJEMEN STOK ---
         $newProductIds = collect($validatedData['items'])->pluck('product_id')->unique();
         $products = \Modules\Inventory\Models\Product::whereIn('id', $newProductIds)->get()->keyBy('id');
 
         $variantIds = collect($validatedData['items'])->pluck('product_variant_id')->filter()->unique();
         $variants = \Modules\Inventory\Models\ProductVariant::whereIn('id', $variantIds)->get()->keyBy('id');
 
+        // 1. REVERT STOK DAN REVERT HPP LAMA
+        $oldItemsWithPrices = clone $pembelian->details;
+
+        // ID dari item BARU (form yang baru disubmit)
+        $newProductIds = collect($validatedData['items'])->pluck('product_id')->unique();
+        $newVariantIds = collect($validatedData['items'])->pluck('product_variant_id')->filter()->unique();
+        $newTaxeIds = collect($validatedData['items'])->pluck('taxe_id')->filter()->unique();
+
+        // [FIX 4] ID dari item LAMA (sebelum diedit) — supaya produk yang dihapus dari form
+
+        // tetap bisa dikoreksi HPP-nya saat proses revert
+        $oldProductIds = $oldItemsWithPrices->pluck('product_id')->unique();
+        $oldVariantIds = $oldItemsWithPrices->pluck('product_variant_id')->filter()->unique();
+        $oldTaxeIds = $oldItemsWithPrices->pluck('taxe_id')->filter()->unique();
+
+        // Gabungan lama + baru — dipakai baik di blok revert maupun blok forward
+        $allProductIds = $newProductIds->merge($oldProductIds)->unique();
+        $allVariantIds = $newVariantIds->merge($oldVariantIds)->unique();
+        $allTaxeIds = $newTaxeIds->merge($oldTaxeIds)->unique();
+
+        $products = \Modules\Inventory\Models\Product::whereIn('id', $allProductIds)->get()->keyBy('id');
+        $variants = \Modules\Inventory\Models\ProductVariant::whereIn('id', $allVariantIds)->get()->keyBy('id');
+        $taxesData = Taxe::findMany($allTaxeIds)->keyBy('id');
+
+        // 1. REVERT STOK DAN REVERT HPP LAMA
         if ($statusLama !== 'Batal' && $statusBarangLama === 'Diterima') {
-          foreach ($pembelian->details as $oldDetail) {
+          // Pajak dari item lama + baru, supaya tarif pajak item lama selalu tersedia
+
+          $old_subtotal_global = $pembelian->subtotal > 0 ? (int) $pembelian->subtotal : 1;
+          $old_net_adjustment = (int) $pembelian->ongkir - (int) $pembelian->diskon;
+
+          foreach ($oldItemsWithPrices as $oldDetail) {
+            // A. Hitung HPP Riil (modal akhir) versi nota lama
+            $old_dpp_item = (int) $oldDetail->harga_beli * (int) $oldDetail->qty - (int) ($oldDetail->diskon ?? 0);
+            $old_proporsi = $old_dpp_item / $old_subtotal_global;
+
+            $old_tax_rate = $oldDetail->taxe_id ? $taxesData->get($oldDetail->taxe_id)->rate ?? 0 : 0;
+            $old_pajak = (int) round($old_dpp_item * ($old_tax_rate / 100));
+
+            $old_beban_global = $old_net_adjustment * $old_proporsi;
+            $old_total_modal = $old_dpp_item + $old_pajak + $old_beban_global;
+
+            $old_hpp_riil = $oldDetail->qty > 0 ? (int) round($old_total_modal / $oldDetail->qty) : (int) $oldDetail->harga_beli;
+
+            // B. Stok GLOBAL (semua toko) — basis rata-rata, konsisten dgn perhitungan maju
+            $queryStokGlobal = ProductStock::where('product_id', $oldDetail->product_id);
+            if ($oldDetail->product_variant_id) {
+              $queryStokGlobal->where('product_variant_id', $oldDetail->product_variant_id);
+            } else {
+              $queryStokGlobal->whereNull('product_variant_id');
+            }
+            $stok_global_sekarang = (int) $queryStokGlobal->sum('qty');
+            $sisa_stok_setelah_revert = $stok_global_sekarang - (int) $oldDetail->qty;
+
+            // C. Stok fisik toko pusat — yang benar-benar akan dikurangi
             $stockRecord = ProductStock::query()->where('store_id', $storeId)->where('product_id', $oldDetail->product_id)->where('product_variant_id', $oldDetail->product_variant_id)->first();
 
+            $stok_pusat_sekarang = $stockRecord ? (int) $stockRecord->qty : 0;
+
+            // D. Validasi stok cukup sebelum ditarik
+            if ($stok_pusat_sekarang < (int) $oldDetail->qty) {
+              $namaProduk = $oldDetail->produk->name_product ?? 'Produk';
+              throw new \Exception(
+                "Gagal diedit! Sebagian stok '{$namaProduk}' dari pembelian ini sudah ditransfer ke toko cabang / terjual. Stok toko pusat saat ini ({$stok_pusat_sekarang}) tidak cukup untuk ditarik ({$oldDetail->qty}).",
+              );
+            }
+
+            // E. REVERT HPP DI MASTER (Reverse Average Formula)
+            // [FIX 5] Cari target langsung dari koleksi gabungan, tanpa cek ->has()
+            // (koleksi $products/$variants sudah pasti memuat entri dari item lama)
+            $targetModel = $oldDetail->product_variant_id ? $variants->get($oldDetail->product_variant_id) : $products->get($oldDetail->product_id);
+
+            if ($targetModel) {
+              $hpp_sekarang = (int) $targetModel->harga_beli;
+
+              if ($sisa_stok_setelah_revert > 0) {
+                $aset_sekarang = $stok_global_sekarang * $hpp_sekarang;
+                $aset_yg_dibatalkan = (int) $oldDetail->qty * $old_hpp_riil;
+
+                $hpp_mundur = (int) round(($aset_sekarang - $aset_yg_dibatalkan) / $sisa_stok_setelah_revert);
+                $targetModel->harga_beli = $hpp_mundur;
+              }
+              // Jika sisa stok global 0 atau minus, biarkan harga_beli seperti terakhir kali
+
+              $targetModel->save();
+            }
+
+            // F. REVERT STOK FISIK (toko pusat)
             if ($stockRecord) {
               $stockRecord->decrement('qty', $oldDetail->qty);
             }
           }
         }
 
-        // 2. Tambah stok baru sesuai qty di form
-        if ($statusBarangBaru === 'Diterima') {
-          foreach ($validatedData['items'] as $itemData) {
-            $variantId = $itemData['product_variant_id'] ?? null;
-
-            $stockRecord = \App\Models\ProductStock::firstOrCreate(
-              [
-                'store_id' => $storeId,
-                'product_id' => $itemData['product_id'],
-                'product_variant_id' => $variantId,
-              ],
-              ['qty' => 0],
-            );
-
-            $stockRecord->increment('qty', $itemData['qty']);
-          }
-        }
-
-        // --- PENGHITUNGAN ULANG TOTAL (SERVER-SIDE) ---
-        $subtotal_keseluruhan = 0;
+        // 2. HITUNG GRAND TOTAL & SIAPKAN DISTRIBUSI BEBAN
+        $subtotal_keseluruhan = 0; // Murni DPP tanpa pajak
         $total_pajak_item = 0;
         $itemsForDetail = [];
 
@@ -465,24 +588,28 @@ class PurchaseController extends Controller implements HasMiddleware
           $taxe_id = $itemData['taxe_id'] ?? null;
           $pajak_rate = $taxe_id ? $taxesData->get($taxe_id)->rate ?? 0 : 0;
 
-          $subtotal_item = $itemData['harga_beli'] * $itemData['qty'] - ($itemData['diskon'] ?? 0);
-          $pajak_amount_item = $subtotal_item * ($pajak_rate / 100);
-          $subtotal_item_with_tax = $subtotal_item + $pajak_amount_item;
+          $dpp_item = (int) $itemData['harga_beli'] * (int) $itemData['qty'] - (int) ($itemData['diskon'] ?? 0);
+          $pajak_amount_item = (int) round($dpp_item * ($pajak_rate / 100));
 
-          $subtotal_keseluruhan += $subtotal_item_with_tax;
+          $subtotal_keseluruhan += $dpp_item;
           $total_pajak_item += $pajak_amount_item;
+
+          $subtotal_item_with_tax = $dpp_item + $pajak_amount_item;
           $itemsForDetail[] = array_merge($itemData, ['subtotal' => $subtotal_item_with_tax]);
         }
 
-        $ongkir = $validatedData['ongkir'] ?? 0;
-        $diskon_tambahan = $validatedData['diskon_tambahan'] ?? 0;
-        $total_akhir = $subtotal_keseluruhan - $diskon_tambahan + $ongkir;
-        $jumlah_dibayar = $validatedData['jumlah_dibayar'] ?? 0;
+        $ongkir = (int) ($validatedData['ongkir'] ?? 0);
+        $diskon_tambahan = (int) ($validatedData['diskon_tambahan'] ?? 0);
+        $net_adjustment_global = $ongkir - $diskon_tambahan;
+        $subtotal_dpp_global = $subtotal_keseluruhan > 0 ? $subtotal_keseluruhan : 1;
 
-        // Tentukan status pembayaran
-        $sisa = $total_akhir - $jumlah_dibayar;
+        $total_akhir = $subtotal_keseluruhan + $total_pajak_item - $diskon_tambahan + $ongkir;
+        $jumlah_dibayar = (int) ($validatedData['jumlah_dibayar'] ?? 0);
+
+        $sisa = max(0, $total_akhir - $jumlah_dibayar);
         $status_pembayaran = $jumlah_dibayar >= $total_akhir ? 'Lunas' : 'Hutang';
-        // --- UPDATE DATA PEMBELIAN ---
+
+        // 3. UPDATE HEADER PEMBELIAN
         $pembelian->update([
           'supplier_id' => $validatedData['supplier_id'],
           'tanggal_pembelian' => $validatedData['tanggal'],
@@ -498,63 +625,108 @@ class PurchaseController extends Controller implements HasMiddleware
           'account_id' => $validatedData['account_id'] ?? null,
           'sisa_hutang' => $sisa,
           'status_pembayaran' => $statusBaru === 'Batal' ? 'Batal' : $status_pembayaran,
-          'status_barang' => $validatedData['status_barang'],
+          'status_barang' => $statusBarangBaru,
           'catatan' => $validatedData['catatan'],
         ]);
 
+        // 4. MANAJEMEN PEMBAYARAN
         if ($jumlah_dibayar > 0) {
-          // Cari data pembayaran pertama berdasarkan ID transaksi ini
           $pembayaranAwal = $pembelian->payments()->oldest('id')->first();
+          $paymentData = [
+            'tanggal_bayar' => $validatedData['tanggal'],
+            'jumlah_bayar' => $jumlah_dibayar,
+            'metode_pembayaran' => $validatedData['metode_pembayaran'],
+            'account_id' => $validatedData['account_id'] ?? null,
+            'catatan' => $status_pembayaran === 'Lunas' ? 'Revisi Pembayaran Lunas Awal' : 'Revisi Uang Muka (DP)',
+          ];
 
           if ($pembayaranAwal) {
-            // Jika sudah ada pembayaran awal, lakukan UPDATE
-            $pembayaranAwal->update([
-              'tanggal_bayar' => $validatedData['tanggal'],
-              'jumlah_bayar' => $jumlah_dibayar,
-              'metode_pembayaran' => $validatedData['metode_pembayaran'],
-              'account_id' => $validatedData['account_id'] ?? null,
-              'catatan' => $status_pembayaran === 'Lunas' ? 'Revisi Pembayaran Lunas Awal' : 'Revisi Uang Muka (DP)',
-            ]);
+            $pembayaranAwal->update($paymentData);
           } else {
-            // Jika sebelumnya belum ada pembayaran (hutang penuh), lalu saat diedit diisi nominal
-            $pembelian->payments()->create([
-              'user_id' => Auth::id(),
-              'tanggal_bayar' => $validatedData['tanggal'],
-              'jumlah_bayar' => $jumlah_dibayar,
-              'metode_pembayaran' => $validatedData['metode_pembayaran'],
-              'account_id' => $validatedData['account_id'] ?? null,
-              'catatan' => $status_pembayaran === 'Lunas' ? 'Pembayaran Lunas Awal' : 'Pembayaran Uang Muka (DP)',
-            ]);
+            $paymentData['user_id'] = Auth::id();
+            $pembelian->payments()->create($paymentData);
           }
         }
 
-        // Hapus detail lama dan buat yang baru
+        // 5. RE-INSERT DETAIL LALU KALKULASI HPP & STOK BARU
         $pembelian->details()->delete();
 
         foreach ($itemsForDetail as $itemData) {
           $variantId = $itemData['product_variant_id'] ?? null;
+          $qty_baru = (int) $itemData['qty'];
+          $harga_beli_form = (int) $itemData['harga_beli'];
 
+          // A. Insert ke detail (snapshot struk pakai harga form)
           $pembelian->details()->create([
             'product_id' => $itemData['product_id'],
             'product_variant_id' => $variantId,
-            'qty' => $itemData['qty'],
-            'harga_beli' => $itemData['harga_beli'],
+            'qty' => $qty_baru,
+            'harga_beli' => $harga_beli_form,
             'diskon' => $itemData['diskon'] ?? 0,
             'taxe_id' => $itemData['taxe_id'] ?? null,
             'subtotal' => $itemData['subtotal'],
           ]);
 
-          // Update harga beli master (Produk Induk atau Varian)
-          if ($variantId && $variants->has($variantId)) {
-            $varian = $variants->get($variantId);
-            $varian->harga_beli = $itemData['harga_beli'];
-            $varian->save();
-          } else {
-            $produk = $products->get($itemData['product_id']);
-            if ($produk) {
-              $produk->harga_beli = $itemData['harga_beli'];
-              $produk->save();
+          // B. Hitung HPP dan Injeksi Stok jika Diterima
+          if ($statusBarangBaru === 'Diterima') {
+            // --- Distribusi Beban untuk HPP Riil ---
+            $dpp_item = $harga_beli_form * $qty_baru - (int) ($itemData['diskon'] ?? 0);
+            $proporsi_item = $dpp_item / $subtotal_dpp_global;
+
+            $taxe_id = $itemData['taxe_id'] ?? null;
+            $pajak_rate = $taxe_id ? $taxesData->get($taxe_id)->rate ?? 0 : 0;
+            $pajak_item = (int) round($dpp_item * ($pajak_rate / 100));
+
+            $beban_global_item = $net_adjustment_global * $proporsi_item;
+            $total_modal_item = $dpp_item + $pajak_item + $beban_global_item;
+
+            $harga_beli_riil = $qty_baru > 0 ? (int) round($total_modal_item / $qty_baru) : $harga_beli_form;
+
+            // --- Moving Average ---
+            $queryStokLama = ProductStock::where('product_id', $itemData['product_id']);
+            if ($variantId) {
+              $queryStokLama->where('product_variant_id', $variantId);
+            } else {
+              $queryStokLama->whereNull('product_variant_id');
             }
+
+            $total_stok_lama = (int) $queryStokLama->sum('qty');
+            $total_stok_baru = $total_stok_lama + $qty_baru;
+
+            if ($variantId && $variants->has($variantId)) {
+              $varian = $variants->get($variantId);
+              $old_hpp = (int) $varian->harga_beli;
+
+              $nilai_aset_lama = $total_stok_lama * $old_hpp;
+              $nilai_aset_baru = $qty_baru * $harga_beli_riil;
+              $hpp_rata_rata = $total_stok_baru > 0 ? (int) round(($nilai_aset_lama + $nilai_aset_baru) / $total_stok_baru) : $harga_beli_riil;
+
+              $varian->harga_beli = $hpp_rata_rata;
+              $varian->save();
+            } else {
+              $produk = $products->get($itemData['product_id']);
+              if ($produk) {
+                $old_hpp = (int) $produk->harga_beli;
+
+                $nilai_aset_lama = $total_stok_lama * $old_hpp;
+                $nilai_aset_baru = $qty_baru * $harga_beli_riil;
+                $hpp_rata_rata = $total_stok_baru > 0 ? (int) round(($nilai_aset_lama + $nilai_aset_baru) / $total_stok_baru) : $harga_beli_riil;
+
+                $produk->harga_beli = $hpp_rata_rata;
+                $produk->save();
+              }
+            }
+
+            // --- Injeksi Stok Fisik ---
+            $stockRecord = ProductStock::firstOrCreate(
+              [
+                'store_id' => $storeId,
+                'product_id' => $itemData['product_id'],
+                'product_variant_id' => $variantId,
+              ],
+              ['qty' => 0],
+            );
+            $stockRecord->increment('qty', $qty_baru);
           }
         }
       });
