@@ -37,7 +37,8 @@
                                     <div class="swiper-slide w-100 h-100">
                                         <a href="{{ $b->url_tujuan ?? '#' }}" class="d-block w-100 h-100">
                                             <img src="{{ Storage::url($b->img_banner) }}" loading="eager"
-                                                class="w-100 h-100" style="object-fit: cover;" alt="Main Banner">
+                                                fetchpriority="high" width="800" height="450" class="w-100 h-100"
+                                                style="object-fit: cover;" alt="Main Banner">
                                         </a>
                                     </div>
                                 @endforeach
@@ -55,7 +56,8 @@
                                         <div class="swiper-slide w-100 h-100">
                                             <a href="{{ $b->url_tujuan ?? '#' }}" class="d-block w-100 h-100">
                                                 <img src="{{ Storage::url($b->img_banner) }}" loading="eager"
-                                                    class="w-100 h-100 transition-all" style="object-fit: cover;">
+                                                    class="w-100 h-100 transition-all" style="object-fit: cover;"
+                                                    width="400" height="400">
                                             </a>
                                         </div>
                                     @endforeach
@@ -72,7 +74,8 @@
                                         <div class="swiper-slide w-100 h-100">
                                             <a href="{{ $b->url_tujuan ?? '#' }}" class="d-block w-100 h-100">
                                                 <img src="{{ Storage::url($b->img_banner) }}" loading="eager"
-                                                    class="w-100 h-100 transition-all" style="object-fit: cover;">
+                                                    class="w-100 h-100 transition-all" style="object-fit: cover;"
+                                                    width="400" height="400">
                                             </a>
                                         </div>
                                     @endforeach
@@ -256,7 +259,8 @@
                                 class="text-decoration-none d-flex flex-column align-items-center category-mobile-item">
                                 <div class="category-mobile-img-wrap">
                                     <img src="{{ $kategori->img_kategori ? Storage::url($kategori->img_kategori) : asset('assets/img/produk.png') }}"
-                                        style="width: 50px; height: 50px;" alt="{{ $kategori->name }}">
+                                        style="width: 50px; height: 50px;" alt="{{ $kategori->name }}" width="50"
+                                        height="50" loading="eager">
                                 </div>
                                 <span class="text-center">{{ $kategori->name }}</span>
                             </a>
@@ -276,7 +280,8 @@
                                         class="text-decoration-none text-dark">
                                         <div class="card category-card overflow-hidden">
                                             <img src="{{ $kategori->img_kategori ? Storage::url($kategori->img_kategori) : asset('assets/img/produk.png') }}"
-                                                class="card-img-top" alt="{{ $kategori->name }}">
+                                                class="card-img-top" alt="{{ $kategori->name }}" width="100"
+                                                height="100" loading="lazy">
                                         </div>
                                         <div class="card-body p-2 text-center">
                                             <h6 class="card-title fw-bold text-truncate mb-1"
@@ -319,8 +324,9 @@
                                             <a href="{{ $banner->url_tujuan ?? '#' }}" class="d-block"
                                                 style="width: 240px; height: 375px;">
                                                 <img src="{{ Storage::url($banner->img_banner) }}"
-                                                    style="width: 240px; height: 375px; object-fit: cover; display: block;"
-                                                    alt="{{ $banner->judul ?? 'Promotion' }}">
+                                                    style="object-fit: cover; display: block;"
+                                                    alt="{{ $banner->judul ?? 'Promotion' }}" width="240"
+                                                    height="375" loading="lazy">
                                             </a>
                                         </div>
                                     @endforeach
@@ -510,7 +516,8 @@
                                         <div class="product-card-img-container">
                                             <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                                                 <img src="{{ $imgUrl }}" class="card-img-top"
-                                                    alt="{{ $produk->name_product }}">
+                                                    alt="{{ $produk->name_product }}" width="200" height="200"
+                                                    loading="lazy">
 
                                                 <div class="product-badge">
                                                     @if ($stokQty < 1)
@@ -621,7 +628,7 @@
                             <div class="product-card-img-container">
                                 <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                                     <img src="{{ $imgUrl }}" alt="{{ $produk->name_product }}"
-                                        class="card-img-top">
+                                        class="card-img-top" width="200" height="200" loading="lazy">
                                     <div class="product-badge">
                                         @if ($stokQty < 1)
                                             <span class="badge bg-danger">Habis</span>

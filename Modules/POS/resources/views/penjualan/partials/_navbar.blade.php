@@ -6,7 +6,7 @@
 
         {{-- Logo --}}
         <a href="/dashboard" target="_blank" aria-label="Ke Dashboard" class="flex-shrink-0">
-            <img src="{{ asset('assets/img/LM-Default.png') }}" class="navbar-brand-logo" alt="Logo JO Computer">
+            <img src="{{ asset('assets/img/LM-Default.webp') }}" class="navbar-brand-logo" alt="Logo JO Computer">
         </a>
 
         {{-- Clock Badge --}}

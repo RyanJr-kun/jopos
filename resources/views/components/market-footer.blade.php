@@ -2,7 +2,7 @@
     <div class="container-market pb-md-2">
         <div class="d-flex justify-content-center justify-content-md-start align-items-center mt-3">
             <a class="navbar-brand d-inline-block mb-3" href="{{ url('/') }}">
-                <img src="{{ asset('assets/img/LM-Putih.png') }}" alt="Logo Jo Computer Putih"
+                <img src="{{ asset('assets/img/LM-Putih.webp') }}" alt="Logo Jo Computer Putih"
                     class="img-fluid footer-logo">
             </a>
         </div>

@@ -19,7 +19,7 @@
                 <div class="el-accent-bar"></div>
 
                 <div class="el-brand-logo">
-                    <img src="{{ asset('assets/img/LM-Default.png') }}" alt="JOPOS Logo" class="el-logo-img" />
+                    <img src="{{ asset('assets/img/LM-Default.webp') }}" alt="JOPOS Logo" class="el-logo-img" />
                 </div>
 
                 <div class="el-brand-copy">

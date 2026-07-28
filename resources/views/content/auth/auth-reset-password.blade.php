@@ -19,7 +19,7 @@
         <div class="fp-card rp-card">
 
             <div class="fp-logo">
-                <img src="{{ asset('assets/img/LM-Default.png') }}" alt="JOPOS" class="fp-logo-img" />
+                <img src="{{ asset('assets/img/LM-Default.webp') }}" alt="JOPOS" class="fp-logo-img" />
             </div>
 
             <header class="fp-header">

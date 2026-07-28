@@ -573,7 +573,7 @@ use Carbon\Carbon;
     <div class="pdf-header">
         <div class="pdf-header-inner">
             <div class="pdf-header-logo">
-                <img src="{{ asset('assets/img/LM-Default.png') }}" alt="{{ $profilToko->name_toko ?? 'JO COMPUTER' }}">
+                <img src="{{ asset('assets/img/LM-Default.webp') }}" alt="{{ $profilToko->name_toko ?? 'JO COMPUTER' }}">
             </div>
             <div class="pdf-header-title">
                 <h1>FAKTUR pembelian</h1>

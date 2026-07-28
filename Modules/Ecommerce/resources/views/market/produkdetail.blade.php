@@ -73,12 +73,13 @@
                                     @foreach ($allImages as $img)
                                         <div class="swiper-slide">
                                             <img src="{{ Storage::url($img->path) }}" alt="{{ $produk->name_product }}"
-                                                loading="lazy">
+                                                loading="eager" fetchpriority="high" width="500" height="500">
                                         </div>
                                     @endforeach
                                 @else
                                     <div class="swiper-slide">
-                                        <img src="{{ asset('assets/img/produk.png') }}" alt="Default" loading="lazy">
+                                        <img src="{{ asset('assets/img/produk.png') }}" width="500" height="500"
+                                            alt="Default" loading="lazy">
                                     </div>
                                 @endif
                             </div>
@@ -88,7 +89,8 @@
                                 <div class="swiper-wrapper">
                                     @foreach ($allImages as $img)
                                         <div class="swiper-slide">
-                                            <img src="{{ Storage::url($img->path) }}" alt="Thumb">
+                                            <img src="{{ Storage::url($img->path) }}" alt="Thumb" width="80"
+                                                height="80" loading="lazy">
                                         </div>
                                     @endforeach
                                 </div>
@@ -362,7 +364,7 @@
                                 <div class="product-card-img-container">
                                     <a href="{{ route('market.produk.detail', ['slug' => $serupa->slug]) }}">
                                         <img src="{{ $imgUrl }}" alt="{{ $serupa->name_product }}"
-                                            class="card-img-top">
+                                            class="card-img-top" width="200" height="200" loading="lazy">
                                         <div class="product-badge">
                                             @if ($stokQty < 1)
                                                 <span class="badge bg-danger">Habis</span>

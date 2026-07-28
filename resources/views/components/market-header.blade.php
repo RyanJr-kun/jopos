@@ -8,10 +8,11 @@
 
             {{-- 1. Logo --}}
             <a class="navbar-brand d-none d-lg-block" href="{{ url('/') }}">
-                <img src="{{ asset('assets/img/LM-Default.png') }}" alt="gambar logo" loading="eager" style="height: 40px;">
+                <img src="{{ asset('assets/img/LM-Default.webp') }}" alt="gambar logo" loading="eager"
+                    style="height: 40px;">
             </a>
             <a class="navbar-brand d-lg-none" href="{{ url('/') }}">
-                <img src="{{ asset('assets/img/LM-Default.png') }}" alt="gambar logo" loading="eager"
+                <img src="{{ asset('assets/img/LM-Default.webp') }}" alt="gambar logo" loading="eager"
                     style="height: 25px;">
             </a>
 

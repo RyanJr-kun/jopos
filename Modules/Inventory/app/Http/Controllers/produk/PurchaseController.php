@@ -358,7 +358,7 @@ class PurchaseController extends Controller implements HasMiddleware
    */
   public function show(Purchase $pembelian)
   {
-    $pembelian->load(['supplier', 'user', 'details.produk', 'payments.user', 'payments.bank']);
+    $pembelian->load(['supplier', 'user', 'details.produk', 'payments.user', 'payments.account']);
     $profilToko = $pembelian->store;
     $accounts = Account::query()->where('tipe_akun', 'bank')->get(); // Diperlukan untuk pilihan bank di dalam modal cicilan
 
