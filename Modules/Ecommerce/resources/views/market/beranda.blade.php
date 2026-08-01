@@ -11,10 +11,6 @@
     <link rel="preload" as="image">
 @endsection
 
-@section('page-style')
-    @vite('resources/assets/css/page-market.scss')
-@endsection
-
 @section('vendor-script')
     @vite('resources/assets/vendor/libs/swiper/swiper.js')
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

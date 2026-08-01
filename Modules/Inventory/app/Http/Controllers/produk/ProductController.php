@@ -77,13 +77,9 @@ class ProductController extends Controller implements HasMiddleware
 
     return view('inventory::produk.index', [
       'produk' => $products,
-      'kategoris' => Category::where('status', 1)
-        ->whereNull('parent_id') // hanya parent untuk filter
-        ->whereHas('products')
-        ->orderBy('name')
-        ->get(),
+      'kategoris' => Category::where('status', 1)->whereNull('parent_id')->orderBy('name', 'asc')->get(),
       'brands' => Brand::query()->where('status', 1)->get(),
-      'stores' => Store::where('is_active', 1)->orderBy('name_toko')->get(),
+      'stores' => Store::query()->where('is_active', 1)->orderBy('name_toko', 'asc')->get(),
     ]);
   }
 
