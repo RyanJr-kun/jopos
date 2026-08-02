@@ -520,27 +520,29 @@
                     })
                     .then(r => r.text())
                     .then(html => {
-                        productContainer.innerHTML = html;
-                        productContainer.style.opacity = '1';
+                        requestAnimationFrame(() => {
+                            productContainer.innerHTML = html;
+                            productContainer.style.opacity = '1';
 
-                        // Push state agar URL di browser berubah
-                        window.history.pushState({
-                            path: url
-                        }, '', url);
+                            // Push state agar URL di browser berubah
+                            window.history.pushState({
+                                path: url
+                            }, '', url);
 
-                        // Re-inisialisasi komponen
-                        updateBreadcrumb();
-                        observeSentinel();
+                            // Re-inisialisasi komponen
+                            updateBreadcrumb();
+                            observeSentinel();
 
-                        // PENTING: Karena Select2 #sort ada di dalam partial yang baru di-load, 
-                        // kita harus inisialisasi ulang Select2-nya.
-                        if (typeof $ !== 'undefined' && $.fn.select2) {
-                            $('#sort').select2({
-                                width: '100%'
-                            });
-                        }
+                            // PENTING: Karena Select2 #sort ada di dalam partial yang baru di-load, 
+                            // kita harus inisialisasi ulang Select2-nya.
+                            if (typeof $ !== 'undefined' && $.fn.select2) {
+                                $('#sort').select2({
+                                    width: '100%'
+                                });
+                            }
 
-                        isLoading = false;
+                            isLoading = false;
+                        });
                     })
                     .catch(err => {
                         console.error('Fetch error:', err);
@@ -613,9 +615,11 @@
             });
 
             // Tetap pertahankan vanilla JS untuk filter lainnya
+            let filterDebounceTimer = null;
             document.addEventListener('change', function(event) {
                 if (event.target.matches('.filter-change')) {
-                    fetchProducts(1);
+                    clearTimeout(filterDebounceTimer);
+                    filterDebounceTimer = setTimeout(() => fetchProducts(1), 300);
                 }
             });
 

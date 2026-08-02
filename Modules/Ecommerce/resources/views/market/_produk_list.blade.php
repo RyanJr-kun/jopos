@@ -38,7 +38,7 @@
                 <div class="product-card-img-container">
                     <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                         <img src="{{ $imgUrl }}" class="card-img-top" alt="{{ $produk->name_product }}"
-                            width="200" height="200" loading="lazy">
+                            loading="lazy">
                         <div class="product-badge">
                             @if ($stokQty < 1)
                                 <span class="badge bg-danger">Habis</span>

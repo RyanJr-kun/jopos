@@ -204,9 +204,12 @@
                 <li class="nav-item me-4">
                     <a class="nav-link text-sm nav-link-animated" href="{{ route('market.layanan') }}">Layanan</a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item me-4">
                     <a class="nav-link text-sm nav-link-animated" href="{{ route('market.tentang') }}">Tentang
                         Kami</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-sm nav-link-animated" href="{{ route('market.artikel') }}">Artikel</a>
                 </li>
             </ul>
         </div>
@@ -282,6 +285,9 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('market.tentang') }}">Tentang Kami</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('market.artikel') }}">Artikel</a>
             </li>
         </ul>
     </div>

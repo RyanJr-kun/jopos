@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Modules\Ecommerce\Models\Banner;
 use Modules\Ecommerce\Models\Promotion;
+use Modules\Ecommerce\Models\Artikel;
 use Modules\Inventory\Models\Brand;
 use Modules\Inventory\Models\Category;
 use Modules\Inventory\Models\Product;
@@ -317,6 +318,97 @@ class MarketController extends Controller
     // 4. Jika Request biasa (Load halaman pertama kali)
     return view('ecommerce::market.tentang', compact('stores', 'kategoris'));
   }
+
+  /**
+   * Menampilkan halaman daftar artikel publik.
+   */
+  public function artikelIndex(Request $request)
+  {
+      $query = Artikel::with('user')
+          ->where('status', 'published')
+          ->latest();
+
+      // Filter Kategori
+      if ($request->filled('kategori')) {
+          $query->whereJsonContains('kategori', $request->kategori);
+      }
+
+      // Pencarian
+      if ($request->filled('search')) {
+          $search = $request->search;
+          $query->where(function ($q) use ($search) {
+              $q->where('judul_artikel', 'like', "%{$search}%")
+                ->orWhere('isi_artikel', 'like', "%{$search}%");
+          });
+      }
+
+      $artikels = $query->paginate(9)->withQueryString();
+
+      // Ambil semua kategori unik dari artikel published
+      $semuaKategori = Artikel::where('status', 'published')
+          ->whereNotNull('kategori')
+          ->pluck('kategori')
+          ->flatten()
+          ->unique()
+          ->sort()
+          ->values();
+
+      // Artikel unggulan (terbaru, untuk featured card)
+      $artikelUnggulan = Artikel::with('user')
+          ->where('status', 'published')
+          ->latest()
+          ->first();
+
+      $kategoris = Category::with('children')->whereNull('parent_id')->get();
+
+      return view('ecommerce::market.artikel-index', compact(
+          'artikels', 'semuaKategori', 'artikelUnggulan', 'kategoris'
+      ));
+  }
+
+  /**
+   * Menampilkan detail artikel publik.
+   */
+  public function artikelShow($slug)
+  {
+      $artikel = Artikel::with('user')
+          ->where('status', 'published')
+          ->where('slug', $slug)
+          ->firstOrFail();
+
+      // Artikel terkait (kategori sama)
+      $artikelTerkait = collect();
+      if ($artikel->kategori && count($artikel->kategori) > 0) {
+          $artikelTerkait = Artikel::with('user')
+              ->where('status', 'published')
+              ->where('id', '!=', $artikel->id)
+              ->where(function ($q) use ($artikel) {
+                  foreach ($artikel->kategori as $kat) {
+                      $q->orWhereJsonContains('kategori', $kat);
+                  }
+              })
+              ->latest()
+              ->limit(3)
+              ->get();
+      }
+
+      // Fallback: jika tidak ada artikel terkait, ambil yang terbaru
+      if ($artikelTerkait->isEmpty()) {
+          $artikelTerkait = Artikel::with('user')
+              ->where('status', 'published')
+              ->where('id', '!=', $artikel->id)
+              ->latest()
+              ->limit(3)
+              ->get();
+      }
+
+      $kategoris = Category::with('children')->whereNull('parent_id')->get();
+
+      return view('ecommerce::market.artikel-show', compact(
+          'artikel', 'artikelTerkait', 'kategoris'
+      ));
+  }
+
   /**
    * Menangani permintaan live search dari header.
    *

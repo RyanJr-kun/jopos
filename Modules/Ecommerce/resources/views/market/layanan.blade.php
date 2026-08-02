@@ -39,7 +39,8 @@
             <div class="row align-items-center g-5">
                 <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
                     <img src="https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=1964"
-                        class="img-fluid rounded-3 shadow-lg" alt="Teknisi Profesional Jo Computer">
+                        class="img-fluid rounded-3 shadow-lg" alt="Teknisi Profesional Jo Computer"
+                        width="800" height="533" loading="eager" fetchpriority="high">
                 </div>
                 <div class="col-lg-6" data-aos="fade-up" data-aos-delay="400">
                     <h2 class="fw-bolder display-5 mb-3">Integritas dan Keunggulan Layanan Kami</h2>

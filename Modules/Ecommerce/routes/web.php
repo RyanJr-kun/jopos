@@ -49,6 +49,10 @@ Route::domain($domain)->group(function () {
     Route::get('/market/layanan', [MarketController::class, 'layanan'])->name('market.layanan');
     Route::get('/market/tentang', [MarketController::class, 'tentang'])->name('market.tentang');
     Route::get('/market/live-search', [MarketController::class, 'liveSearch'])->name('market.liveSearch');
+
+    // Rute untuk Blog / Artikel Publik
+    Route::get('/market/artikel', [MarketController::class, 'artikelIndex'])->name('market.artikel');
+    Route::get('/market/artikel/{slug}', [MarketController::class, 'artikelShow'])->name('market.artikel.show');
 });
 
 

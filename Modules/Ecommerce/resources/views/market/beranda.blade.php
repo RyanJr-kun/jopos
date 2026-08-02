@@ -512,8 +512,7 @@
                                         <div class="product-card-img-container">
                                             <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                                                 <img src="{{ $imgUrl }}" class="card-img-top"
-                                                    alt="{{ $produk->name_product }}" width="200" height="200"
-                                                    loading="lazy">
+                                                    alt="{{ $produk->name_product }}" loading="lazy">
 
                                                 <div class="product-badge">
                                                     @if ($stokQty < 1)
@@ -624,7 +623,7 @@
                             <div class="product-card-img-container">
                                 <a href="{{ route('market.produk.detail', ['slug' => $produk->slug]) }}">
                                     <img src="{{ $imgUrl }}" alt="{{ $produk->name_product }}"
-                                        class="card-img-top" width="200" height="200" loading="lazy">
+                                        class="card-img-top" loading="lazy">
                                     <div class="product-badge">
                                         @if ($stokQty < 1)
                                             <span class="badge bg-danger">Habis</span>

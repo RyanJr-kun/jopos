@@ -35,7 +35,7 @@
             <div class="row align-items-start g-5">
                 <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
                     <img src="{{ asset('assets/img/toko.webp') }}" class="img-fluid rounded-3 shadow-lg"
-                        alt="Toko Jo Computer">
+                        alt="Toko Jo Computer" width="800" height="533" loading="eager" fetchpriority="high">
                 </div>
                 <div class="col-lg-6" data-aos="fade-up" data-aos-delay="400">
                     <h2 class="mb-3">Selamat Datang di <span class="tg-red-blue fw-bolder">JO Computer</span></h1>
@@ -58,7 +58,7 @@
                 <div class="col-lg-6 order-lg-2" data-aos="fade-up" data-aos-delay="600">
                     <!-- Ganti 'src' dengan screenshot atau logo aplikasi Jo-POS -->
                     <img src="https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=1931"
-                        class="img-fluid rounded-3 shadow-lg" alt="Aplikasi Jo-POS">
+                        class="img-fluid rounded-3 shadow-lg" alt="Aplikasi Jo-POS" width="800" height="533" loading="lazy">
                 </div>
                 <div class="col-lg-6 order-lg-1" data-aos="fade-up" data-aos-delay="800">
                     <h2 class="fw-bolder display-5 mb-3">Didukung oleh JO-POS</h2>
