@@ -44,7 +44,7 @@
                         </div>
                     </div>
 
-                    <div class="d-flex flex-lg-column flex-row gap-2 gap-lg-3 w-100 h-100">
+                    <div class="d-none d-md-block d-flex flex-lg-column flex-row gap-2 gap-lg-3 w-100 h-100">
                         <div class="hero-side-banner flex-fill rounded-3 overflow-hidden shadow-sm">
                             <div class="swiper myHeroSwiper w-100 h-100">
                                 <div class="swiper-wrapper">

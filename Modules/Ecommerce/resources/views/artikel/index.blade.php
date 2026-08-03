@@ -74,13 +74,6 @@
                     @endcan
                 </div>
                 <div class="card-body px-0 pt-0 pb-2">
-                    @if (session('success'))
-                        <div class="alert alert-success alert-dismissible mx-3 mt-3" role="alert">
-                            <i class="bx bx-check-circle me-2"></i>{{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
-
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-label-secondary">
