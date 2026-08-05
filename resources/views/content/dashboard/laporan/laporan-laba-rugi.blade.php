@@ -34,30 +34,40 @@
         <div class="card dash-filter-bar mb-4">
             <div class="card-body py-3 px-4">
                 <form action="{{ route('laporan.laba-rugi') }}" method="GET">
-                    <div class="row g-2 align-items-end">
+                    <div class="row g-2 align-items-center">
                         <div class="col-auto d-flex align-items-center me-2">
                             <i class="bx bx-calendar-alt text-primary me-2 fs-5"></i>
                             <span class="fw-semibold text-body">Periode</span>
                         </div>
-                        <div class="col-md col-6">
+                        <div class="col-md-3">
+                            <select name="store_id" id="store_id" class="form-select form-select-sm select2"
+                                data-placeholder="Pilih Toko">
+                                <option value="">Semua Toko</option>
+                                @foreach ($stores as $store)
+                                    <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>
+                                        {{ $store->name_toko }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-6">
                             <input type="date" name="start_date" id="start_date" class="form-control form-control-sm"
                                 value="{{ $startDate }}">
                         </div>
                         <div class="col-auto d-flex align-items-center px-0">
                             <span class="text-muted">—</span>
                         </div>
-                        <div class="col-md col-6">
+                        <div class="col-md-3 col-6">
                             <input type="date" name="end_date" id="end_date" class="form-control form-control-sm"
                                 value="{{ $endDate }}">
                         </div>
-                        <div class="col-auto">
+                        <div class="col-md-auto col-6">
                             <button type="submit" class="btn btn-primary btn-sm">
-                                <i class="bx bx-search me-1"></i>Terapkan
+                                <i class="bx bx-search fs-5 me-1"></i>Terapkan
                             </button>
                         </div>
-                        <div class="col-auto">
+                        <div class="col-md-auto col-6">
                             <a href="{{ route('laporan.laba-rugi') }}" class="btn btn-outline-secondary btn-sm">
-                                <i class="bx bx-reset"></i>
+                                <i class="bx bx-reset fs-5"></i>
                             </a>
                         </div>
                     </div>
@@ -153,196 +163,216 @@
 
     </div>
 
+@endsection
+@section('page-script')
+    <script type="module">
+        const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    $this.select2({
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
+                    });
+                });
+            } else {
+                setTimeout(initSelect2, 100);
+            }
+        };
+        initSelect2();
+    </script>
     @if (!isset($isExport) || !$isExport)
-        @section('page-script')
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    // --- Pie Chart ---
-                    const pieCtx = document.getElementById('profit-loss-pie-chart');
-                    if (pieCtx) {
-                        const pieData = [@json($totalRevenue), @json($cogs), @json($totalExpenses)];
-                        if (pieData[0] > 0) {
-                            new Chart(pieCtx, {
-                                type: 'doughnut',
-                                data: {
-                                    labels: ['Pendapatan', 'HPP', 'Beban'],
-                                    datasets: [{
-                                        data: pieData,
-                                        backgroundColor: [
-                                            'rgba(40, 199, 111, 0.85)',
-                                            'rgba(255, 159, 67, 0.85)',
-                                            'rgba(234, 84, 85, 0.85)',
-                                        ],
-                                        borderColor: '#fff',
-                                        borderWidth: 3,
-                                        borderRadius: 4,
-                                        hoverOffset: 8,
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    cutout: '60%',
-                                    plugins: {
-                                        legend: {
-                                            position: 'bottom',
-                                            labels: {
-                                                padding: 16,
-                                                usePointStyle: true,
-                                                pointStyle: 'circle',
-                                            }
-                                        },
-                                        tooltip: {
-                                            callbacks: {
-                                                label: function(context) {
-                                                    let label = context.label || '';
-                                                    if (label) label += ': ';
-                                                    label += new Intl.NumberFormat('id-ID', {
-                                                        style: 'currency',
-                                                        currency: 'IDR',
-                                                        minimumFractionDigits: 0,
-                                                    }).format(context.raw);
-                                                    return label;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                    }
-
-                    // --- Line Chart ---
-                    const lineCtx = document.getElementById('profit-loss-chart');
-                    if (lineCtx) {
-                        const ctx = lineCtx.getContext('2d');
-                        const data = @json($chartNetProfits);
-                        const profitColor = 'rgba(40, 199, 111, 1)';
-                        const lossColor = 'rgba(234, 84, 85, 1)';
-
-                        new Chart(ctx, {
-                            type: 'line',
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // --- Pie Chart ---
+                const pieCtx = document.getElementById('profit-loss-pie-chart');
+                if (pieCtx) {
+                    const pieData = [@json($totalRevenue), @json($cogs),
+                        @json($totalExpenses)
+                    ];
+                    if (pieData[0] > 0) {
+                        new Chart(pieCtx, {
+                            type: 'doughnut',
                             data: {
-                                labels: @json($chartLabels),
+                                labels: ['Pendapatan', 'HPP', 'Beban'],
                                 datasets: [{
-                                    label: 'Laba Bersih',
-                                    tension: 0.4,
-                                    borderWidth: 2.5,
-                                    pointRadius: 4,
-                                    pointHoverRadius: 6,
-                                    pointBackgroundColor: data.map(v => v >= 0 ? profitColor :
-                                        lossColor),
-                                    pointBorderColor: '#fff',
-                                    pointBorderWidth: 2,
-                                    segment: {
-                                        borderColor: ctx => (ctx.p0.parsed.y >= 0 && ctx.p1.parsed
-                                                .y >= 0) ? profitColor :
-                                            (ctx.p0.parsed.y < 0 && ctx.p1.parsed.y < 0) ?
-                                            lossColor : '#a1acb8',
-                                    },
-                                    backgroundColor: context => {
-                                        const chart = context.chart;
-                                        const {
-                                            ctx,
-                                            chartArea
-                                        } = chart;
-                                        if (!chartArea) return null;
-                                        const gradient = ctx.createLinearGradient(0, chartArea
-                                            .bottom, 0, chartArea.top);
-                                        const val = context.dataset.data[context.dataIndex];
-                                        if (val >= 0) {
-                                            gradient.addColorStop(0, 'rgba(40, 199, 111, 0)');
-                                            gradient.addColorStop(1, 'rgba(40, 199, 111, 0.15)');
-                                        } else {
-                                            gradient.addColorStop(0, 'rgba(234, 84, 85, 0)');
-                                            gradient.addColorStop(1, 'rgba(234, 84, 85, 0.15)');
-                                        }
-                                        return gradient;
-                                    },
-                                    fill: true,
-                                    data: data,
+                                    data: pieData,
+                                    backgroundColor: [
+                                        'rgba(40, 199, 111, 0.85)',
+                                        'rgba(255, 159, 67, 0.85)',
+                                        'rgba(234, 84, 85, 0.85)',
+                                    ],
+                                    borderColor: '#fff',
+                                    borderWidth: 3,
+                                    borderRadius: 4,
+                                    hoverOffset: 8,
                                 }]
                             },
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
+                                cutout: '60%',
                                 plugins: {
                                     legend: {
-                                        display: false
+                                        position: 'bottom',
+                                        labels: {
+                                            padding: 16,
+                                            usePointStyle: true,
+                                            pointStyle: 'circle',
+                                        }
                                     },
                                     tooltip: {
-                                        backgroundColor: 'rgba(50, 50, 50, 0.9)',
-                                        padding: 12,
-                                        cornerRadius: 8,
                                         callbacks: {
                                             label: function(context) {
-                                                let label = context.dataset.label || '';
+                                                let label = context.label || '';
                                                 if (label) label += ': ';
-                                                if (context.parsed.y !== null) {
-                                                    label += new Intl.NumberFormat('id-ID', {
-                                                        style: 'currency',
-                                                        currency: 'IDR',
-                                                        minimumFractionDigits: 0,
-                                                    }).format(context.parsed.y);
-                                                }
+                                                label += new Intl.NumberFormat('id-ID', {
+                                                    style: 'currency',
+                                                    currency: 'IDR',
+                                                    minimumFractionDigits: 0,
+                                                }).format(context.raw);
                                                 return label;
                                             }
                                         }
                                     }
-                                },
-                                interaction: {
-                                    intersect: false,
-                                    mode: 'index'
-                                },
-                                scales: {
-                                    y: {
-                                        grid: {
-                                            drawBorder: false,
-                                            color: 'rgba(0,0,0,0.05)',
-                                            borderDash: [5, 5]
-                                        },
-                                        ticks: {
-                                            padding: 10,
-                                            color: '#a1acb8',
-                                            font: {
-                                                size: 11
-                                            },
-                                            callback: function(value) {
-                                                if (Math.abs(value) >= 1000000) return 'Rp ' + (value /
-                                                    1000000).toFixed(1) + 'jt';
-                                                if (Math.abs(value) >= 1000) return 'Rp ' + (value /
-                                                    1000).toFixed(0) + 'rb';
-                                                return 'Rp ' + value;
-                                            }
-                                        }
-                                    },
-                                    x: {
-                                        grid: {
-                                            display: false
-                                        },
-                                        ticks: {
-                                            color: '#a1acb8',
-                                            padding: 10,
-                                            font: {
-                                                size: 11
-                                            }
-                                        }
-                                    },
                                 }
                             }
                         });
                     }
+                }
 
-                    // --- Export ---
-                    document.getElementById('exportPdf').addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const form = document.querySelector('form');
-                        const params = new URLSearchParams(new FormData(form)).toString();
-                        window.open(`{{ route('laporan.laba-rugi.export') }}?${params}`, '_blank');
+                // --- Line Chart ---
+                const lineCtx = document.getElementById('profit-loss-chart');
+                if (lineCtx) {
+                    const ctx = lineCtx.getContext('2d');
+                    const data = @json($chartNetProfits);
+                    const profitColor = 'rgba(40, 199, 111, 1)';
+                    const lossColor = 'rgba(234, 84, 85, 1)';
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: @json($chartLabels),
+                            datasets: [{
+                                label: 'Laba Bersih',
+                                tension: 0.4,
+                                borderWidth: 2.5,
+                                pointRadius: 4,
+                                pointHoverRadius: 6,
+                                pointBackgroundColor: data.map(v => v >= 0 ? profitColor :
+                                    lossColor),
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2,
+                                segment: {
+                                    borderColor: ctx => (ctx.p0.parsed.y >= 0 && ctx.p1.parsed
+                                            .y >= 0) ? profitColor : (ctx.p0.parsed.y < 0 && ctx.p1
+                                            .parsed.y < 0) ?
+                                        lossColor : '#a1acb8',
+                                },
+                                backgroundColor: context => {
+                                    const chart = context.chart;
+                                    const {
+                                        ctx,
+                                        chartArea
+                                    } = chart;
+                                    if (!chartArea) return null;
+                                    const gradient = ctx.createLinearGradient(0, chartArea
+                                        .bottom, 0, chartArea.top);
+                                    const val = context.dataset.data[context.dataIndex];
+                                    if (val >= 0) {
+                                        gradient.addColorStop(0, 'rgba(40, 199, 111, 0)');
+                                        gradient.addColorStop(1, 'rgba(40, 199, 111, 0.15)');
+                                    } else {
+                                        gradient.addColorStop(0, 'rgba(234, 84, 85, 0)');
+                                        gradient.addColorStop(1, 'rgba(234, 84, 85, 0.15)');
+                                    }
+                                    return gradient;
+                                },
+                                fill: true,
+                                data: data,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(50, 50, 50, 0.9)',
+                                    padding: 12,
+                                    cornerRadius: 8,
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) label += ': ';
+                                            if (context.parsed.y !== null) {
+                                                label += new Intl.NumberFormat('id-ID', {
+                                                    style: 'currency',
+                                                    currency: 'IDR',
+                                                    minimumFractionDigits: 0,
+                                                }).format(context.parsed.y);
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            interaction: {
+                                intersect: false,
+                                mode: 'index'
+                            },
+                            scales: {
+                                y: {
+                                    grid: {
+                                        drawBorder: false,
+                                        color: 'rgba(0,0,0,0.05)',
+                                        borderDash: [5, 5]
+                                    },
+                                    ticks: {
+                                        padding: 10,
+                                        color: '#a1acb8',
+                                        font: {
+                                            size: 11
+                                        },
+                                        callback: function(value) {
+                                            if (Math.abs(value) >= 1000000) return 'Rp ' + (value /
+                                                1000000).toFixed(1) + 'jt';
+                                            if (Math.abs(value) >= 1000) return 'Rp ' + (value /
+                                                1000).toFixed(0) + 'rb';
+                                            return 'Rp ' + value;
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: '#a1acb8',
+                                        padding: 10,
+                                        font: {
+                                            size: 11
+                                        }
+                                    }
+                                },
+                            }
+                        }
                     });
+                }
+
+                // --- Export ---
+                document.getElementById('exportPdf').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const form = document.querySelector('form');
+                    const params = new URLSearchParams(new FormData(form)).toString();
+                    window.open(`{{ route('laporan.laba-rugi.export') }}?${params}`, '_blank');
                 });
-            </script>
-        @endsection
+            });
+        </script>
     @endif
 @endsection

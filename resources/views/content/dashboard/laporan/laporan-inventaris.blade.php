@@ -6,12 +6,6 @@
     @vite(['resources/assets/vendor/scss/pages/page-dashboard.scss'])
 @endsection
 
-@section('vendor-style')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-@endsection
-
 @section('content')
     <div class="laporan-container">
 
@@ -50,8 +44,7 @@
                             <i class="bx bx-log-in-circle"></i>
                         </div>
                         <div class="dash-stat-content">
-                            <span class="dash-stat-label">Total Masuk <span
-                                    class="text-muted">(Filter)</span></span>
+                            <span class="dash-stat-label">Total Masuk <span class="text-muted">(Filter)</span></span>
                             <h4 class="dash-stat-value text-success">
                                 +{{ number_format($summary->total_masuk, 0, ',', '.') }}</h4>
                         </div>
@@ -65,8 +58,7 @@
                             <i class="bx bx-log-out-circle"></i>
                         </div>
                         <div class="dash-stat-content">
-                            <span class="dash-stat-label">Total Keluar <span
-                                    class="text-muted">(Filter)</span></span>
+                            <span class="dash-stat-label">Total Keluar <span class="text-muted">(Filter)</span></span>
                             <h4 class="dash-stat-value text-danger">
                                 -{{ number_format($summary->total_keluar, 0, ',', '.') }}</h4>
                         </div>
@@ -105,19 +97,35 @@
                 <div class="laporan-filter-section p-3 border-bottom">
                     <form action="{{ route('laporan.inventaris') }}" method="GET">
                         <div class="row g-2 align-items-end">
+                            <div class="col-md-2">
+                                <label for="store_id" class="form-label small fw-semibold">Toko</label>
+                                <select name="store_id" id="store_id" class="form-select form-select-sm select2"
+                                    data-placeholder="Pilih Toko">
+                                    <option value="">Semua Toko</option>
+                                    @foreach ($stores as $store)
+                                        <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>
+                                            {{ $store->name_toko }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <div class="col-md-3">
                                 <label for="product_id" class="form-label small fw-semibold">Produk</label>
-                                <select name="product_id" id="product_id" class="form-select form-select-sm">
+                                <select name="product_id" id="product_id" class="form-select form-select-sm select2"
+                                    data-placeholder="Pilih Produk">
                                     <option value="">Semua Produk</option>
                                     @foreach ($products as $produk)
+                                        {{-- Gunakan $produk->display_name sesuai object bentukan di Controller --}}
                                         <option value="{{ $produk->id }}" @selected(request('product_id') == $produk->id)>
-                                            {{ $produk->name_product }}</option>
+                                            {{ $produk->display_name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-2">
                                 <label for="tipe_gerakan" class="form-label small fw-semibold">Tipe Gerakan</label>
-                                <select name="tipe_gerakan" id="tipe_gerakan" class="form-select form-select-sm">
+                                <select name="tipe_gerakan" id="tipe_gerakan" class="form-select form-select-sm select2"
+                                    data-placeholder="Pilih Tipe Gerakan">
+
                                     <option value="">Semua Tipe</option>
                                     @foreach ($tipe_gerakan_options as $tipe)
                                         <option value="{{ $tipe }}" @selected(request('tipe_gerakan') == $tipe)>
@@ -126,22 +134,21 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md">
                                 <label for="start_date" class="form-label small fw-semibold">Mulai</label>
-                                <input type="date" name="start_date" id="start_date"
-                                    class="form-control form-control-sm" value="{{ request('start_date') }}">
+                                <input type="date" name="start_date" id="start_date" class="form-control form-control-sm"
+                                    value="{{ request('start_date') }}">
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md">
                                 <label for="end_date" class="form-label small fw-semibold">Selesai</label>
                                 <input type="date" name="end_date" id="end_date" class="form-control form-control-sm"
                                     value="{{ request('end_date') }}">
                             </div>
-                            <div class="col-md-3 d-flex gap-2">
-                                <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <div class="col-auto d-flex gap-2">
+                                <button type="submit" class="btn btn-primary btn-sm">
                                     <i class="bx bx-search me-1"></i>Filter
                                 </button>
-                                <a href="{{ route('laporan.inventaris') }}"
-                                    class="btn btn-outline-secondary btn-sm w-100">
+                                <a href="{{ route('laporan.inventaris') }}" class="btn btn-outline-secondary btn-sm">
                                     <i class="bx bx-reset me-1"></i>Reset
                                 </a>
                             </div>
@@ -172,9 +179,15 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <span
-                                            class="text-sm fw-semibold d-block">{{ $item->name_product ?? 'Produk Dihapus' }}</span>
-                                        <span class="text-xs text-muted">{{ $item->sku ?? '-' }}</span>
+                                        <span class="text-sm fw-semibold d-block">
+                                            {{ $item->name_product ?? 'Produk Dihapus' }}
+                                            {{-- Tampilkan varian jika ada --}}
+                                            @if (!empty($item->nama_varian))
+                                                <span
+                                                    class="badge bg-label-secondary ms-1">{{ $item->nama_varian }}</span>
+                                            @endif
+                                        </span>
+                                        <span class="text-xs text-muted">SKU: {{ $item->sku ?? '-' }}</span>
                                     </td>
                                     <td>
                                         <span
@@ -204,8 +217,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="text-sm text-truncate d-inline-block"
-                                            style="max-width: 200px;">
+                                        <span class="text-sm text-truncate d-inline-block" style="max-width: 200px;">
                                             {{ $item->keterangan ?: '-' }}
                                         </span>
                                     </td>
@@ -236,14 +248,25 @@
 @endsection
 
 @section('page-script')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
+    <script type="module">
+        const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    $this.select2({
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
+                    });
+                });
+            } else {
+                setTimeout(initSelect2, 100);
+            }
+        };
+        initSelect2();
+
         $(document).ready(function() {
-            $('#product_id').select2({
-                theme: "bootstrap-5",
-                placeholder: 'Pilih Produk',
-            });
 
             function handleExport(e) {
                 e.preventDefault();

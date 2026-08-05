@@ -136,3 +136,40 @@ $custom-height: 37px;
 .select2-results__options::-webkit-scrollbar-track {
     background: rgba(174, 207, 242, 0.1);
 }
+
+$custom-height-sm: 31px; // Tinggi standar form-select-sm di Sneat/Bootstrap
+
+select.form-select-sm + .select2-container {
+  .select2-selection--single {
+    height: $custom-height-sm !important;
+    padding-top: 0.1rem !important;
+  }
+  
+  .select2-selection__rendered {
+    line-height: calc(#{$custom-height-sm} - 2px);
+    font-size: 0.875rem; // Ukuran font small (14px)
+    padding-left: 0.5rem;
+  }
+  
+  .select2-selection__arrow {
+    height: calc(#{$custom-height-sm} - 2px);
+    right: 0.5rem;
+  }
+
+  // Dukungan ukuran kecil untuk Multiple Select (Tagging)
+  .select2-selection--multiple {
+    min-height: $custom-height-sm;
+    
+    .select2-selection__choice {
+      font-size: 0.75rem; // Teks tag lebih kecil
+      padding-left: 0.6rem !important;
+      padding-right: 0.2rem !important;
+      margin-top: 2px; // Penyesuaian agar tidak terpotong border atas
+      line-height: 1.5;
+    }
+    
+    .select2-selection__choice__remove {
+      margin-right: 0.3rem !important;
+    }
+  }
+}

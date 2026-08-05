@@ -56,7 +56,7 @@ class Sale extends Model
    */
   public function customer(): BelongsTo
   {
-    return $this->belongsTo(Customer::class)->withDefault([
+    return $this->belongsTo(Customer::class, 'customer_id')->withDefault([
       'name' => 'Customer Umum',
     ]);
   }

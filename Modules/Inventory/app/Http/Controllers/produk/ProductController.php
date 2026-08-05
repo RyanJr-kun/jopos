@@ -183,8 +183,20 @@ class ProductController extends Controller implements HasMiddleware
 
   public function show(Product $produk)
   {
+    $user = auth()->user();
+    $canViewOtherStore = $user->can('view-toko-gudang');
+
+    // IDOR guard: query param store_id hanya dipakai kalau user punya izin.
+    // Tanpa izin, store_id dipaksa ke toko sendiri, apapun yang dikirim di URL.
+    $selectedStoreId = $canViewOtherStore ? (request()->integer('store_id') ?: $user->store_id) : $user->store_id;
+
+    $produk->load(['category', 'brand', 'unit', 'garansi', 'user', 'pajak', 'images', 'variantTypes.options', 'variants.options.variantType']);
+
     return view('inventory::produk.show', [
-      'produk' => $produk->load(['category', 'brand', 'unit', 'garansi', 'user', 'pajak', 'images', 'variantTypes.options', 'variants.options.variantType']),
+      'produk' => $produk,
+      'selectedStoreId' => $selectedStoreId,
+      'canViewOtherStore' => $canViewOtherStore,
+      'stores' => $canViewOtherStore ? Store::orderBy('name_toko', 'asc')->get(['id', 'name_toko']) : collect(),
     ]);
   }
 

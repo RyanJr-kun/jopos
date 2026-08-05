@@ -90,9 +90,21 @@
                 <div class="laporan-filter-section p-3 border-bottom">
                     <form action="{{ route('laporan.pembelian') }}" method="GET">
                         <div class="row g-2 align-items-end">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <label for="store_id" class="form-label small fw-semibold">Toko</label>
+                                <select name="store_id" id="store_id" class="form-select form-select-sm select2"
+                                    data-placeholder="Pilih Toko">
+                                    <option value="">Semua Toko</option>
+                                    @foreach ($stores as $store)
+                                        <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>
+                                            {{ $store->name_toko }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
                                 <label for="supplier_id" class="form-label small fw-semibold">Supplier</label>
-                                <select name="supplier_id" id="supplier_id" class="form-select form-select-sm">
+                                <select name="supplier_id" id="supplier_id" class="form-select form-select-sm select2"
+                                    data-placeholder="Pilih Supplier">
                                     <option value="">Semua Supplier</option>
                                     @foreach ($suppliers as $pemasok)
                                         <option value="{{ $pemasok->id }}" @selected(request('supplier_id') == $pemasok->id)>
@@ -103,7 +115,7 @@
                             <div class="col-md-2">
                                 <label for="status_pembayaran" class="form-label small fw-semibold">Status Bayar</label>
                                 <select name="status_pembayaran" id="status_pembayaran"
-                                    class="form-select form-select-sm">
+                                    class="form-select form-select-sm select2" data-placeholder="Pilih Status Bayar">
                                     <option value="">Semua Status</option>
                                     @foreach ($statusPembayaranOptions as $status)
                                         <option value="{{ $status }}" @selected(request('status_pembayaran') == $status)>{{ $status }}
@@ -111,9 +123,10 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md">
                                 <label for="status_barang" class="form-label small fw-semibold">Status Barang</label>
-                                <select name="status_barang" id="status_barang" class="form-select form-select-sm">
+                                <select name="status_barang" id="status_barang" class="form-select form-select-sm select2"
+                                    data-placeholder="Pilih Status Barang">
                                     <option value="">Semua Status</option>
                                     @foreach ($statusBarangOptions as $status)
                                         <option value="{{ $status }}" @selected(request('status_barang') == $status)>
@@ -123,20 +136,19 @@
                             </div>
                             <div class="col-md">
                                 <label for="start_date" class="form-label small fw-semibold">Mulai</label>
-                                <input type="date" name="start_date" id="start_date"
-                                    class="form-control form-control-sm" value="{{ request('start_date') }}">
+                                <input type="date" name="start_date" id="start_date" class="form-control form-control-sm"
+                                    value="{{ request('start_date') }}">
                             </div>
                             <div class="col-md">
                                 <label for="end_date" class="form-label small fw-semibold">Selesai</label>
-                                <input type="date" name="end_date" id="end_date" class="form-control form-control-sm"
-                                    value="{{ request('end_date') }}">
+                                <input type="date" name="end_date" id="end_date"
+                                    class="form-control form-control-sm" value="{{ request('end_date') }}">
                             </div>
                             <div class="col-auto d-flex gap-2">
                                 <button type="submit" class="btn btn-primary btn-sm">
                                     <i class="bx bx-search me-1"></i>Filter
                                 </button>
-                                <a href="{{ route('laporan.pembelian') }}"
-                                    class="btn btn-outline-secondary btn-sm">
+                                <a href="{{ route('laporan.pembelian') }}" class="btn btn-outline-secondary btn-sm">
                                     <i class="bx bx-reset"></i>
                                 </a>
                             </div>
@@ -174,8 +186,7 @@
                                         </a>
                                     </td>
                                     <td>
-                                        <span
-                                            class="text-sm fw-semibold">{{ $pembelian->pemasok->name ?? 'N/A' }}</span>
+                                        <span class="text-sm fw-semibold">{{ $pembelian->supplier->name ?? 'N/A' }}</span>
                                     </td>
                                     <td class="text-center">
                                         <span
@@ -225,14 +236,24 @@
 @endsection
 
 @section('page-script')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
+    <script type="module">
+        const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    $this.select2({
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
+                    });
+                });
+            } else {
+                setTimeout(initSelect2, 100);
+            }
+        };
+        initSelect2();
         $(document).ready(function() {
-            $('#supplier_id').select2({
-                theme: "bootstrap-5",
-                placeholder: 'Pilih Supplier',
-            });
 
             function handleExport(e) {
                 e.preventDefault();
@@ -246,4 +267,6 @@
             document.getElementById('exportPdf').addEventListener('click', handleExport);
         });
     </script>
+
+
 @endsection

@@ -27,6 +27,17 @@
                     <span class="text-muted ms-2 d-none d-md-block">Edit Produk</span>
                 </a>
             @endcan
+
+            <form method="GET" class="" style="max-width: 260px;">
+                <select name="store_id" class="form-select select2" onchange="this.form.submit()">
+                    @foreach ($stores as $store)
+                        <option value="{{ $store->id }}" {{ $selectedStoreId == $store->id ? 'selected' : '' }}>
+                            {{ $store->name_toko }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+
         </div>
 
         <div class="row">
@@ -138,7 +149,8 @@
                             </div>
                             <div class="col-sm-4">
                                 <small class="text-muted d-block mb-1">Total Stok Tersedia</small>
-                                @php $totalStok = $produk->stocks->sum('qty') ?? 0; @endphp
+                                {{-- baris 141, sebelumnya: $produk->stocks->sum('qty') --}}
+                                @php $totalStok = $produk->stocks->where('store_id', $selectedStoreId)->sum('qty') ?? 0; @endphp
                                 <span
                                     class="badge {{ $totalStok <= $produk->stok_minimum ? 'bg-danger' : 'bg-primary' }} fs-6">
                                     {{ $totalStok }} {{ $produk->unit->singkat ?? 'Unit' }}
@@ -228,7 +240,8 @@
                         @if ($produk->variants->count() > 0)
                             <div class="row g-3">
                                 @foreach ($produk->variants as $variant)
-                                    @php $varStok = $produk->stocks->where('product_variant_id', $variant->id)->sum('qty') ?? 0; @endphp
+                                    {{-- baris 231, sebelumnya tanpa filter store --}}
+                                    @php $varStok = $produk->stocks->where('product_variant_id', $variant->id)->where('store_id', $selectedStoreId)->sum('qty') ?? 0; @endphp
                                     <div class="col-12">
                                         <div class="card mx-3 border h-100 variant-card">
                                             <div class="card-body d-flex gap-3">
@@ -285,6 +298,24 @@
 @endsection
 
 @section('page-script')
+    <script type="module">
+        const initSelect2 = () => {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').each(function() {
+                    const $this = $(this);
+                    $this.select2({
+                        placeholder: $this.data('placeholder') || "Pilih...",
+                        allowClear: $this.find('option[value=""]').length > 0,
+                        width: '100%',
+                        minimumResultsForSearch: 10
+                    });
+                });
+            } else {
+                setTimeout(initSelect2, 100);
+            }
+        };
+        initSelect2();
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof Swiper !== 'undefined') {
