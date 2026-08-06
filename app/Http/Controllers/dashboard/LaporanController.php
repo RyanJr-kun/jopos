@@ -25,6 +25,33 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class LaporanController extends Controller
 {
   /**
+   * Menentukan store_id yang berlaku untuk laporan.
+   * Tidak ada lagi opsi "Semua Toko" — setiap user selalu terikat ke satu toko.
+   * Employee tanpa permission 'view-toko-gudang' selalu dikunci ke tokonya sendiri
+   * (diambil dari $user->employee->store_id), terlepas dari apa yang dikirim di
+   * request, untuk mencegah IDOR (lihat data toko lain via query string).
+   * Admin/manager dengan 'view-toko-gudang' boleh memilih toko mana pun, dengan
+   * default toko miliknya sendiri.
+   *
+   * NOTE: sesuaikan $user->can('view-toko-gudang') kalau cara cek permission-nya
+   * beda di controller lain (mis. hasPermissionTo()).
+   *
+   * @param  \Illuminate\Http\Request  $request
+   * @return int|null
+   */
+  private function resolveStoreId(Request $request): ?int
+  {
+    $user = $request->user();
+    $ownStoreId = optional($user->employee)->store_id;
+
+    if (!$user->can('view-toko-gudang')) {
+      return $ownStoreId;
+    }
+
+    return $request->input('store_id') ?: $ownStoreId;
+  }
+
+  /**
    * Menampilkan laporan pergerakan inventaris.
    *
    * @param  \Illuminate\Http\Request  $request
@@ -32,7 +59,7 @@ class LaporanController extends Controller
    */
   public function inventaris(Request $request)
   {
-    $storeId = $request->input('store_id');
+    $storeId = $this->resolveStoreId($request);
 
     // ========================================================
     // Query 1: Purchase (Stock Masuk)
@@ -142,8 +169,65 @@ class LaporanController extends Controller
         'stock_adjustments.kode_penyesuaian as referensi_id',
       );
 
+    // ========================================================
+    // Query 5: Stock Transfer - Keluar (dari toko asal)
+    // Dicatat bersamaan saat toko tujuan approve terima (bukan saat kirim),
+    // karena qty final baru pasti setelah approval.
+    // ========================================================
+    $transferKeluar = DB::table('stock_transfer_items')
+      ->join('stock_transfers', 'stock_transfer_items.stock_transfer_id', '=', 'stock_transfers.id')
+      ->join('products', 'stock_transfer_items.product_id', '=', 'products.id')
+      ->leftJoin('product_variants', 'stock_transfer_items.product_variant_id', '=', 'product_variants.id')
+      ->whereIn('stock_transfers.status', ['diterima', 'diterima_sebagian'])
+      ->when($storeId, fn($q) => $q->where('stock_transfers.store_asal_id', $storeId))
+      ->select(
+        'stock_transfers.tanggal_diterima as tanggal',
+        'products.id as product_id',
+        'products.name_product',
+        DB::raw('COALESCE(product_variants.sku, products.sku) as sku'),
+        DB::raw('(SELECT GROUP_CONCAT(product_variant_options.value SEPARATOR " - ") 
+                  FROM product_variant_option_pivot 
+                  JOIN product_variant_options ON product_variant_option_pivot.product_variant_option_id = product_variant_options.id 
+                  WHERE product_variant_option_pivot.product_variant_id = product_variants.id) as nama_varian'),
+        DB::raw("'Transfer Keluar' as tipe_gerakan"),
+        'stock_transfers.kode_transfer as referensi',
+        DB::raw('0 as jumlah_masuk'),
+        'stock_transfer_items.qty_kirim as jumlah_keluar',
+        'stock_transfers.catatan_terima as keterangan',
+        DB::raw("'stok-transfer.show' as route_name"),
+        'stock_transfers.kode_transfer as referensi_id',
+      );
+
+    // ========================================================
+    // Query 6: Stock Transfer - Masuk (ke toko tujuan)
+    // ========================================================
+    $transferMasuk = DB::table('stock_transfer_items')
+      ->join('stock_transfers', 'stock_transfer_items.stock_transfer_id', '=', 'stock_transfers.id')
+      ->join('products', 'stock_transfer_items.product_id', '=', 'products.id')
+      ->leftJoin('product_variants', 'stock_transfer_items.product_variant_id', '=', 'product_variants.id')
+      ->whereIn('stock_transfers.status', ['diterima', 'diterima_sebagian'])
+      ->whereNotNull('stock_transfer_items.qty_diterima')
+      ->when($storeId, fn($q) => $q->where('stock_transfers.store_tujuan_id', $storeId))
+      ->select(
+        'stock_transfers.tanggal_diterima as tanggal',
+        'products.id as product_id',
+        'products.name_product',
+        DB::raw('COALESCE(product_variants.sku, products.sku) as sku'),
+        DB::raw('(SELECT GROUP_CONCAT(product_variant_options.value SEPARATOR " - ") 
+                  FROM product_variant_option_pivot 
+                  JOIN product_variant_options ON product_variant_option_pivot.product_variant_option_id = product_variant_options.id 
+                  WHERE product_variant_option_pivot.product_variant_id = product_variants.id) as nama_varian'),
+        DB::raw("'Transfer Masuk' as tipe_gerakan"),
+        'stock_transfers.kode_transfer as referensi',
+        'stock_transfer_items.qty_diterima as jumlah_masuk',
+        DB::raw('0 as jumlah_keluar'),
+        'stock_transfers.catatan_terima as keterangan',
+        DB::raw("'stok-transfer.show' as route_name"),
+        'stock_transfers.kode_transfer as referensi_id',
+      );
+
     // Gabungkan semua query
-    $unionQuery = $penyesuaian->unionAll($opname)->unionAll($penjualan)->unionAll($pembelian);
+    $unionQuery = $penyesuaian->unionAll($opname)->unionAll($penjualan)->unionAll($pembelian)->unionAll($transferKeluar)->unionAll($transferMasuk);
 
     // Buat query baru dari hasil union untuk bisa diurutkan dan difilter
     $query = DB::query()->fromSub($unionQuery, 'stock_movements');
@@ -206,8 +290,10 @@ class LaporanController extends Controller
       ],
       // GANTI DI SINI: Kirim collection yang sudah di-format di atas
       'products' => $formattedProducts,
-      'tipe_gerakan_options' => ['Purchase', 'Sale', 'Stock Opname', 'Penyesuaian'],
+      'tipe_gerakan_options' => ['Purchase', 'Sale', 'Stock Opname', 'Penyesuaian', 'Transfer Keluar', 'Transfer Masuk'],
       'stores' => Store::orderBy('name_toko')->get(['id', 'name_toko']),
+      'selectedStoreId' => $storeId,
+      'canViewAllStore' => $request->user()->can('view-toko-gudang'),
     ]);
   }
 
@@ -225,7 +311,7 @@ class LaporanController extends Controller
 
     // --- REUSEABLE QUERY LOGIC ---
     $baseQuery = function (Request $request) {
-      $storeId = $request->input('store_id');
+      $storeId = $this->resolveStoreId($request);
 
       // Query 1: Purchase (Stock Masuk)
       $pembelian = DB::table('purchase_items')
@@ -298,8 +384,45 @@ class LaporanController extends Controller
           'stock_adjustment_items.alasan as keterangan',
         );
 
+      // Query 5: Stock Transfer - Keluar (dari toko asal)
+      $transferKeluar = DB::table('stock_transfer_items')
+        ->join('stock_transfers', 'stock_transfer_items.stock_transfer_id', '=', 'stock_transfers.id')
+        ->join('products', 'stock_transfer_items.product_id', '=', 'products.id')
+        ->whereIn('stock_transfers.status', ['diterima', 'diterima_sebagian'])
+        ->when($storeId, fn($q) => $q->where('stock_transfers.store_asal_id', $storeId))
+        ->select(
+          'stock_transfers.tanggal_diterima as tanggal',
+          'products.id as product_id',
+          'products.name_product',
+          'products.sku',
+          DB::raw("'Transfer Keluar' as tipe_gerakan"),
+          'stock_transfers.kode_transfer as referensi',
+          DB::raw('0 as jumlah_masuk'),
+          'stock_transfer_items.qty_kirim as jumlah_keluar',
+          'stock_transfers.catatan_terima as keterangan',
+        );
+
+      // Query 6: Stock Transfer - Masuk (ke toko tujuan)
+      $transferMasuk = DB::table('stock_transfer_items')
+        ->join('stock_transfers', 'stock_transfer_items.stock_transfer_id', '=', 'stock_transfers.id')
+        ->join('products', 'stock_transfer_items.product_id', '=', 'products.id')
+        ->whereIn('stock_transfers.status', ['diterima', 'diterima_sebagian'])
+        ->whereNotNull('stock_transfer_items.qty_diterima')
+        ->when($storeId, fn($q) => $q->where('stock_transfers.store_tujuan_id', $storeId))
+        ->select(
+          'stock_transfers.tanggal_diterima as tanggal',
+          'products.id as product_id',
+          'products.name_product',
+          'products.sku',
+          DB::raw("'Transfer Masuk' as tipe_gerakan"),
+          'stock_transfers.kode_transfer as referensi',
+          'stock_transfer_items.qty_diterima as jumlah_masuk',
+          DB::raw('0 as jumlah_keluar'),
+          'stock_transfers.catatan_terima as keterangan',
+        );
+
       // Gabungkan semua query
-      $unionQuery = $penyesuaian->unionAll($opname)->unionAll($penjualan)->unionAll($pembelian);
+      $unionQuery = $penyesuaian->unionAll($opname)->unionAll($penjualan)->unionAll($pembelian)->unionAll($transferKeluar)->unionAll($transferMasuk);
 
       // Buat query baru dari hasil union untuk bisa diurutkan dan difilter
       $query = DB::query()->fromSub($unionQuery, 'stock_movements');

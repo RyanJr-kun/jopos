@@ -20,11 +20,7 @@ class StockTransferController extends Controller implements HasMiddleware
 {
   public static function middleware(): array
   {
-    return [
-      new Middleware('permission:view-stok-transfer', only: ['index', 'data', 'show']),
-      new Middleware('permission:create-stok-transfer', only: ['create', 'store']),
-      new Middleware('permission:approve-stok-transfer', only: ['approve', 'reject']),
-    ];
+    return [new Middleware('permission:view-stok-transfer', only: ['index', 'data', 'show']), new Middleware('permission:create-stok-transfer', only: ['create', 'store', 'approve', 'reject'])];
   }
 
   /**

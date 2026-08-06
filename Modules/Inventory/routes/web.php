@@ -61,12 +61,8 @@ Route::domain('jopos.' . $domain)->group(function () {
           ->name('show')
           ->middleware('permission:view-stok-transfer');
 
-        Route::post('/{stock_transfer}/approve', [StockTransferController::class, 'approve'])
-          ->name('approve')
-          ->middleware('permission:approve-stok-transfer');
-        Route::post('/{stock_transfer}/reject', [StockTransferController::class, 'reject'])
-          ->name('reject')
-          ->middleware('permission:approve-stok-transfer');
+        Route::post('/{stock_transfer}/approve', [StockTransferController::class, 'approve'])->name('approve');
+        Route::post('/{stock_transfer}/reject', [StockTransferController::class, 'reject'])->name('reject');
 
         // Route create/store/show/approve/reject akan ditambahkan setelah index ready
       });

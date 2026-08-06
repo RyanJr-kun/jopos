@@ -99,14 +99,18 @@
                         <div class="row g-2 align-items-end">
                             <div class="col-md-2">
                                 <label for="store_id" class="form-label small fw-semibold">Toko</label>
-                                <select name="store_id" id="store_id" class="form-select form-select-sm select2"
-                                    data-placeholder="Pilih Toko">
-                                    <option value="">Semua Toko</option>
+                                <select name="store_id" id="store_id"
+                                    class="form-select form-select-sm @if ($canViewAllStore) select2 @endif"
+                                    data-placeholder="Pilih Toko" @disabled(!$canViewAllStore)>
                                     @foreach ($stores as $store)
-                                        <option value="{{ $store->id }}" @selected(request('store_id') == $store->id)>
+                                        <option value="{{ $store->id }}" @selected($selectedStoreId == $store->id)>
                                             {{ $store->name_toko }}</option>
                                     @endforeach
                                 </select>
+                                @unless ($canViewAllStore)
+                                    {{-- Select di-disable, jadi tidak ikut ke-submit di form GET. Kirim value lewat hidden input. --}}
+                                    <input type="hidden" name="store_id" value="{{ $selectedStoreId }}">
+                                @endunless
                             </div>
                             <div class="col-md-3">
                                 <label for="product_id" class="form-label small fw-semibold">Produk</label>
@@ -191,7 +195,7 @@
                                     </td>
                                     <td>
                                         <span
-                                            class="badge badge-sm bg-label-{{ ['Purchase' => 'success', 'Sale' => 'info', 'Retur Sale' => 'dark', 'Stock Opname' => 'primary', 'Penyesuaian' => 'warning'][$item->tipe_gerakan] ?? 'secondary' }}">
+                                            class="badge badge-sm bg-label-{{ ['Purchase' => 'success', 'Sale' => 'info', 'Retur Sale' => 'dark', 'Stock Opname' => 'primary', 'Penyesuaian' => 'warning', 'Transfer Keluar' => 'danger', 'Transfer Masuk' => 'success'][$item->tipe_gerakan] ?? 'secondary' }}">
                                             {{ $item->tipe_gerakan }}
                                         </span>
                                     </td>

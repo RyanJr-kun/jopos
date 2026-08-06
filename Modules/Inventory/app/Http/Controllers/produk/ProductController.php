@@ -184,7 +184,7 @@ class ProductController extends Controller implements HasMiddleware
   public function show(Product $produk)
   {
     $user = auth()->user();
-    $canViewOtherStore = $user->can('view-toko-gudang');
+    $canViewOtherStore = $user->can('view-produk');
 
     // IDOR guard: query param store_id hanya dipakai kalau user punya izin.
     // Tanpa izin, store_id dipaksa ke toko sendiri, apapun yang dikirim di URL.
