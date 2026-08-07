@@ -111,8 +111,8 @@
                     <h6 class="mb-0 fw-bold">Item Transfer</h6>
                     <p class="text-sm text-muted mb-0">
                         @if ($canApprove)
-                            Periksa jumlah barang yang benar-benar diterima. Ubah "Qty Diterima" kalau ada yang
-                            kurang/rusak, lalu isi keterangan selisihnya.
+                            Periksa jumlah barang yang diterima. Untuk produk ber-serial number, centang/hapus centang
+                            SN yang sesuai. Untuk produk non-SN, ubah qty secara manual.
                         @else
                             Rincian produk yang dikirim dalam transfer ini
                         @endif
@@ -149,13 +149,87 @@
 
                                                     {{-- TAMPILAN NOMOR SERI --}}
                                                     @if ($detail->serialNumbers->isNotEmpty())
-                                                        <div class="mt-1">
-                                                            <small class="text-info fw-medium">
-                                                                <i class="bx bx-barcode text-xs me-1"></i>
-                                                                SN:
-                                                                {{ $detail->serialNumbers->pluck('nomor_seri')->implode(', ') }}
-                                                            </small>
-                                                        </div>
+                                                        @if ($canApprove)
+                                                            @php $snCollapseId = 'sn-collapse-' . $detail->id; @endphp
+                                                            {{-- MODE PENERIMAAN: dropdown trigger, checkbox SN disembunyikan sampai diklik --}}
+                                                            <div class="mt-2 sn-receive-section">
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 sn-toggle-btn"
+                                                                    data-bs-toggle="collapse"
+                                                                    data-bs-target="#{{ $snCollapseId }}"
+                                                                    aria-expanded="false"
+                                                                    aria-controls="{{ $snCollapseId }}">
+                                                                    <i class="bx bx-barcode text-xs"></i>
+                                                                    <span
+                                                                        class="sn-toggle-summary">{{ $detail->serialNumbers->count() }}
+                                                                        SN dipilih</span>
+                                                                    <i class="bx bx-chevron-down sn-toggle-chevron"></i>
+                                                                </button>
+
+                                                                <div class="collapse mt-2" id="{{ $snCollapseId }}">
+                                                                    <div class="border rounded-3 p-2 sn-list-scroll"
+                                                                        style="max-height: 220px; overflow-y: auto;">
+                                                                        @foreach ($detail->serialNumbers as $sn)
+                                                                            <div
+                                                                                class="sn-item d-flex align-items-start gap-2 mb-1">
+                                                                                <div class="form-check mb-0">
+                                                                                    <input type="checkbox"
+                                                                                        class="form-check-input sn-receive-check"
+                                                                                        name="items[{{ $loop->parent->index }}][serial_numbers_diterima][]"
+                                                                                        value="{{ $sn->id }}"
+                                                                                        data-row-index="{{ $loop->parent->index }}"
+                                                                                        data-sn-id="{{ $sn->id }}"
+                                                                                        id="sn-{{ $detail->id }}-{{ $sn->id }}"
+                                                                                        checked>
+                                                                                    <label
+                                                                                        class="form-check-label font-monospace text-sm"
+                                                                                        for="sn-{{ $detail->id }}-{{ $sn->id }}">
+                                                                                        {{ $sn->nomor_seri }}
+                                                                                    </label>
+                                                                                </div>
+                                                                                <input type="text"
+                                                                                    name="items[{{ $loop->parent->index }}][alasan_tolak_sn][{{ $sn->id }}]"
+                                                                                    class="form-control form-control-sm sn-reason-input"
+                                                                                    placeholder="Alasan tolak SN ini..."
+                                                                                    style="display: none; max-width: 220px; font-size: 0.75rem;">
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @else
+                                                            {{-- MODE VIEW ONLY --}}
+                                                            <div class="mt-1">
+                                                                @php
+                                                                    $hasStatusTerima = $detail->serialNumbers->contains(
+                                                                        fn($sn) => $sn->pivot->status_terima !== null,
+                                                                    );
+                                                                @endphp
+                                                                @if ($hasStatusTerima)
+                                                                    {{-- Tampilkan dengan badge warna per status --}}
+                                                                    @foreach ($detail->serialNumbers as $sn)
+                                                                        <div
+                                                                            class="d-inline-flex align-items-center me-1 mb-1">
+                                                                            <span
+                                                                                class="badge {{ $sn->pivot->status_terima === 'ditolak' ? 'bg-label-danger' : 'bg-label-success' }}">
+                                                                                <i
+                                                                                    class="bx {{ $sn->pivot->status_terima === 'ditolak' ? 'bx-x' : 'bx-check' }} me-1"></i>{{ $sn->nomor_seri }}
+                                                                            </span>
+                                                                            @if ($sn->pivot->alasan_tolak)
+                                                                                <small
+                                                                                    class="text-muted ms-1 fst-italic">{{ $sn->pivot->alasan_tolak }}</small>
+                                                                            @endif
+                                                                        </div>
+                                                                    @endforeach
+                                                                @else
+                                                                    <small class="text-info fw-medium">
+                                                                        <i class="bx bx-barcode text-xs me-1"></i>
+                                                                        SN:
+                                                                        {{ $detail->serialNumbers->pluck('nomor_seri')->implode(', ') }}
+                                                                    </small>
+                                                                @endif
+                                                            </div>
+                                                        @endif
                                                     @endif
                                                 </div>
                                             </div>
@@ -167,11 +241,23 @@
                                             @if ($canApprove)
                                                 <input type="hidden" name="items[{{ $loop->index }}][id]"
                                                     value="{{ $detail->id }}">
-                                                <input type="number" name="items[{{ $loop->index }}][qty_diterima]"
-                                                    class="form-control form-control-sm text-center qty-diterima-input"
-                                                    data-qty-kirim="{{ $detail->qty_kirim }}"
-                                                    value="{{ $detail->qty_kirim }}" min="0"
-                                                    max="{{ $detail->qty_kirim }}" required>
+                                                @if ($detail->serialNumbers->isNotEmpty())
+                                                    {{-- SN item: qty readonly, otomatis dari checkbox --}}
+                                                    <input type="number" name="items[{{ $loop->index }}][qty_diterima]"
+                                                        class="form-control form-control-sm text-center qty-diterima-input sn-auto-qty"
+                                                        data-qty-kirim="{{ $detail->qty_kirim }}"
+                                                        value="{{ $detail->qty_kirim }}" min="0"
+                                                        max="{{ $detail->qty_kirim }}" required readonly>
+                                                    <small class="text-muted d-block mt-1"
+                                                        style="font-size: 0.65rem;">Otomatis dari SN</small>
+                                                @else
+                                                    {{-- Non-SN item: qty manual --}}
+                                                    <input type="number" name="items[{{ $loop->index }}][qty_diterima]"
+                                                        class="form-control form-control-sm text-center qty-diterima-input"
+                                                        data-qty-kirim="{{ $detail->qty_kirim }}"
+                                                        value="{{ $detail->qty_kirim }}" min="0"
+                                                        max="{{ $detail->qty_kirim }}" required>
+                                                @endif
                                             @else
                                                 @if (is_null($detail->qty_diterima))
                                                     <span class="text-muted">-</span>
@@ -198,7 +284,8 @@
                                         </td>
                                         <td class="align-middle text-sm">
                                             @if ($canApprove)
-                                                <input type="text" name="items[{{ $loop->index }}][keterangan_selisih]"
+                                                <input type="text"
+                                                    name="items[{{ $loop->index }}][keterangan_selisih]"
                                                     class="form-control form-control-sm keterangan-input"
                                                     placeholder="Isi kalau ada selisih" style="display: none;">
                                             @else
@@ -309,15 +396,148 @@
                 });
             });
 
+            // === SERIAL NUMBER CHECKBOX HANDLING (Fase 2) ===
+            document.querySelectorAll('.sn-receive-check').forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    const snItem = this.closest('.sn-item');
+                    const reasonInput = snItem.querySelector('.sn-reason-input');
+                    const row = this.closest('tr');
+
+                    // Show/hide alasan tolak input
+                    if (!this.checked) {
+                        reasonInput.style.display = 'block';
+                        reasonInput.setAttribute('required', 'required');
+                    } else {
+                        reasonInput.style.display = 'none';
+                        reasonInput.removeAttribute('required');
+                        reasonInput.value = '';
+                    }
+
+                    // Auto-calculate qty_diterima dari jumlah SN yang dicentang
+                    const qtyInput = row.querySelector('.sn-auto-qty');
+                    if (qtyInput) {
+                        const checkedCount = row.querySelectorAll('.sn-receive-check:checked')
+                            .length;
+                        qtyInput.value = checkedCount;
+                        // Trigger existing selisih update
+                        qtyInput.dispatchEvent(new Event('input'));
+                    }
+
+                    // Auto-generate keterangan selisih dari alasan tolak SN
+                    updateKeteranganFromSN(row);
+
+                    // Update badge ringkasan di tombol dropdown SN
+                    updateSnToggleSummary(row);
+                });
+            });
+
+            // Sinkronkan arah chevron dengan status buka/tutup dropdown SN
+            document.querySelectorAll('.sn-toggle-btn').forEach(function(btn) {
+                const target = document.querySelector(btn.getAttribute('data-bs-target'));
+                const chevron = btn.querySelector('.sn-toggle-chevron');
+                if (!target || !chevron) return;
+
+                target.addEventListener('show.bs.collapse', function() {
+                    chevron.classList.replace('bx-chevron-down', 'bx-chevron-up');
+                });
+                target.addEventListener('hide.bs.collapse', function() {
+                    chevron.classList.replace('bx-chevron-up', 'bx-chevron-down');
+                });
+            });
+
+            /**
+             * Update label "X SN dipilih" / "Y/X SN dipilih" di tombol dropdown,
+             * plus warnai tombolnya kalau ada SN yang ditolak.
+             */
+            function updateSnToggleSummary(row) {
+                const toggleBtn = row.querySelector('.sn-toggle-btn');
+                if (!toggleBtn) return;
+
+                const summarySpan = toggleBtn.querySelector('.sn-toggle-summary');
+                const total = row.querySelectorAll('.sn-receive-check').length;
+                const checked = row.querySelectorAll('.sn-receive-check:checked').length;
+
+                if (summarySpan) {
+                    summarySpan.textContent = checked === total ?
+                        `${total} SN dipilih` :
+                        `${checked}/${total} SN dipilih`;
+                }
+
+                toggleBtn.classList.toggle('btn-outline-secondary', checked === total);
+                toggleBtn.classList.toggle('btn-outline-danger', checked !== total);
+            }
+
+            // Listen juga pada perubahan input alasan tolak SN
+            document.querySelectorAll('.sn-reason-input').forEach(function(input) {
+                input.addEventListener('input', function() {
+                    const row = this.closest('tr');
+                    updateKeteranganFromSN(row);
+                });
+            });
+
+            /**
+             * Gabungkan alasan tolak per-SN menjadi keterangan selisih item.
+             */
+            function updateKeteranganFromSN(row) {
+                const keteranganInput = row.querySelector('.keterangan-input');
+                if (!keteranganInput) return;
+
+                const unchecked = row.querySelectorAll('.sn-receive-check:not(:checked)');
+                if (unchecked.length === 0) return;
+
+                const reasons = [];
+                unchecked.forEach(function(cb) {
+                    const snItem = cb.closest('.sn-item');
+                    const label = snItem.querySelector('.form-check-label');
+                    const reasonInput = snItem.querySelector('.sn-reason-input');
+                    const snLabel = label ? label.textContent.trim() : '';
+                    const reason = reasonInput ? reasonInput.value.trim() : '';
+                    if (reason) {
+                        reasons.push(snLabel + ': ' + reason);
+                    }
+                });
+
+                if (reasons.length > 0) {
+                    keteranganInput.value = reasons.join('; ');
+                }
+            }
+
             // Konfirmasi sebelum submit approve, khusus kalau ada selisih
             const approveForm = document.getElementById('approveForm');
             if (approveForm) {
                 approveForm.addEventListener('submit', function(e) {
+                    // Validasi: SN yang ditolak harus punya alasan
+                    let missingReason = false;
+                    document.querySelectorAll('.sn-receive-check:not(:checked)').forEach(function(cb) {
+                        const snItem = cb.closest('.sn-item');
+                        const reasonInput = snItem.querySelector('.sn-reason-input');
+                        if (reasonInput && !reasonInput.value.trim()) {
+                            missingReason = true;
+                            reasonInput.classList.add('is-invalid');
+
+                            // Buka dropdown SN-nya biar user bisa lihat & isi alasannya
+                            const collapseEl = cb.closest('.collapse');
+                            if (collapseEl && window.bootstrap) {
+                                window.bootstrap.Collapse.getOrCreateInstance(collapseEl, {
+                                    toggle: false
+                                }).show();
+                            }
+                        } else if (reasonInput) {
+                            reasonInput.classList.remove('is-invalid');
+                        }
+                    });
+
+                    if (missingReason) {
+                        e.preventDefault();
+                        alert('Harap isi alasan untuk setiap serial number yang ditolak.');
+                        return;
+                    }
+
                     const adaSelisih = Array.from(document.querySelectorAll('.selisih-cell'))
                         .some(cell => cell.querySelector('.bg-label-danger'));
 
                     if (adaSelisih && !confirm(
-                            'Ada selisih qty pada transfer ini. Selisih akan otomatis dicatat sebagai penyesuaian stok di toko asal. Lanjutkan?'
+                            'Ada selisih qty pada transfer ini. Selisih akan otomatis dikembalikan sebagai stok di toko asal. Lanjutkan?'
                         )) {
                         e.preventDefault();
                     }

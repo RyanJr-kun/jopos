@@ -27,7 +27,7 @@ class StockTransferItem extends Model
       'stock_transfer_item_serial_number', // Nama tabel pivot
       'stock_transfer_item_id',
       'serial_number_id',
-    );
+    )->withPivot('status_terima', 'alasan_tolak')->withTimestamps();
   }
 
   public function variant(): BelongsTo

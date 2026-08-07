@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\SerialNumber;
-use Modules\Inventory\Models\StockAdjustment;
 use Modules\Inventory\Models\StockMovement;
 use Modules\Inventory\Models\StockTransfer;
 
@@ -214,8 +213,11 @@ class StockTransferController extends Controller implements HasMiddleware
 
   /**
    * Konfirmasi penerimaan barang oleh toko tujuan.
-   * Qty diterima per item bisa beda dari qty kirim (barang rusak/hilang di jalan).
-   * Kalau ada selisih, otomatis generate StockAdjustment di toko asal buat audit trail.
+   * Qty diterima per item bisa beda dari qty kirim. Selisihnya (baik unit
+   * ber-SN yang ditolak maupun qty non-SN yang kurang) otomatis dikembalikan
+   * sebagai stok di toko asal - urusan apakah itu rusak atau cuma kelebihan
+   * kirim diselesaikan manual oleh toko asal saat barang fisik sampai
+   * (misal lewat Stok Penyesuaian / Stok Opname terpisah), bukan di sini.
    */
   public function approve(Request $request, StockTransfer $stock_transfer)
   {
@@ -235,12 +237,15 @@ class StockTransferController extends Controller implements HasMiddleware
       'items.*.id' => 'required|exists:stock_transfer_items,id',
       'items.*.qty_diterima' => 'required|integer|min:0',
       'items.*.keterangan_selisih' => 'nullable|string|max:255',
+      'items.*.serial_numbers_diterima' => 'nullable|array',
+      'items.*.serial_numbers_diterima.*' => 'integer',
+      'items.*.alasan_tolak_sn' => 'nullable|array',
+      'items.*.alasan_tolak_sn.*' => 'nullable|string|max:255',
     ]);
 
     try {
       DB::transaction(function () use ($validated, $stock_transfer, $user) {
         $adaSelisih = false;
-        $itemSelisih = [];
         $storeTujuanId = $stock_transfer->store_tujuan_id;
         $now = now();
 
@@ -258,7 +263,19 @@ class StockTransferController extends Controller implements HasMiddleware
           ->get()
           ->keyBy(fn($item) => $item->product_id . '_' . ($item->product_variant_id ?: 'null'));
 
-        $movements = []; // Menampung data untuk Batch Insert
+        // 2b. Pre-fetch dan Lock ProductStock toko ASAL sekaligus.
+        // Dipakai untuk mengembalikan qty setiap kali ada selisih (qty_diterima < qty_kirim),
+        // baik dari SN yang ditolak maupun kekurangan qty pada produk non-SN.
+        $existingStocksAsal = ProductStock::query()
+          ->where('store_id', $stock_transfer->store_asal_id)
+          ->whereIn('product_id', $productIds)
+          ->orderBy('product_id') // Konsisten dengan urutan lock stok tujuan di atas
+          ->lockForUpdate()
+          ->get()
+          ->keyBy(fn($item) => $item->product_id . '_' . ($item->product_variant_id ?: 'null'));
+
+        $movements = []; // Menampung data untuk Batch Insert (stok masuk toko tujuan)
+        $returnMovements = []; // Menampung data untuk Batch Insert (selisih dikembalikan ke toko asal)
 
         foreach ($validated['items'] as $itemInput) {
           $detail = $details->get($itemInput['id']);
@@ -311,66 +328,94 @@ class StockTransferController extends Controller implements HasMiddleware
 
           if ($qtyDiterima < $detail->qty_kirim) {
             $adaSelisih = true;
-            $itemSelisih[] = $detail;
+            $selisihQty = $detail->qty_kirim - $qtyDiterima;
+
+            // Kembalikan selisihnya sebagai stok di toko asal. Tidak dinilai di sini
+            // apakah ini rusak atau cuma kelebihan kirim - itu urusan toko asal
+            // saat barang fisik sampai (via Stok Penyesuaian terpisah bila perlu).
+            $stockKeyAsal = $detail->product_id . '_' . ($detail->product_variant_id ?: 'null');
+            $stockAsal = $existingStocksAsal->get($stockKeyAsal);
+
+            if (!$stockAsal) {
+              $stockAsal = ProductStock::create([
+                'product_id' => $detail->product_id,
+                'product_variant_id' => $detail->product_variant_id,
+                'store_id' => $stock_transfer->store_asal_id,
+                'qty' => 0,
+              ]);
+              $existingStocksAsal->put($stockKeyAsal, $stockAsal);
+            }
+
+            $stokAsalSebelum = $stockAsal->qty;
+            $stokAsalSetelah = $stokAsalSebelum + $selisihQty;
+            $stockAsal->update(['qty' => $stokAsalSetelah]);
+
+            $returnMovements[] = [
+              'store_id' => $stock_transfer->store_asal_id,
+              'product_id' => $detail->product_id,
+              'product_variant_id' => $detail->product_variant_id,
+              'qty' => $selisihQty,
+              'stok_sebelum' => $stokAsalSebelum,
+              'stok_setelah' => $stokAsalSetelah,
+              'type' => StockMovement::TYPE_TRANSFER_IN,
+              'keterangan' => "Selisih dikembalikan ke toko asal - transfer {$stock_transfer->kode_transfer} (diterima toko tujuan {$qtyDiterima}/{$detail->qty_kirim})",
+              'user_id' => $user->id,
+              'referensi_type' => StockTransfer::class,
+              'referensi_id' => $stock_transfer->id,
+              'created_at' => $now,
+              'updated_at' => $now,
+            ];
           }
-        }
 
-        $snIdsToTransfer = $detail->serialNumbers()->pluck('serial_numbers.id')->toArray();
+          // === PROSES SERIAL NUMBER PER-UNIT (Fase 2) ===
+          $allSnIds = $detail->serialNumbers()->pluck('serial_numbers.id')->toArray();
 
-        if (!empty($snIdsToTransfer)) {
-          SerialNumber::whereIn('id', $snIdsToTransfer)->update([
-            'store_id' => $storeTujuanId,
-            'status' => 'Tersedia',
-          ]);
+          if (!empty($allSnIds)) {
+            $snIdsDiterima = array_map('intval', $itemInput['serial_numbers_diterima'] ?? []);
+            $snIdsDitolak = array_values(array_diff($allSnIds, $snIdsDiterima));
+
+            // SN yang diterima → pindahkan ke toko tujuan, status Tersedia
+            if (!empty($snIdsDiterima)) {
+              SerialNumber::whereIn('id', $snIdsDiterima)->update([
+                'store_id' => $storeTujuanId,
+                'status' => 'Tersedia',
+              ]);
+              DB::table('stock_transfer_item_serial_number')
+                ->where('stock_transfer_item_id', $detail->id)
+                ->whereIn('serial_number_id', $snIdsDiterima)
+                ->update(['status_terima' => 'diterima']);
+            }
+
+            // SN yang ditolak → kembalikan ke toko asal, status Tersedia
+            if (!empty($snIdsDitolak)) {
+              SerialNumber::whereIn('id', $snIdsDitolak)->update([
+                'store_id' => $stock_transfer->store_asal_id,
+                'status' => 'Tersedia',
+              ]);
+              foreach ($snIdsDitolak as $snId) {
+                $alasan = $itemInput['alasan_tolak_sn'][$snId] ?? 'Ditolak saat penerimaan transfer';
+                DB::table('stock_transfer_item_serial_number')
+                  ->where('stock_transfer_item_id', $detail->id)
+                  ->where('serial_number_id', $snId)
+                  ->update([
+                    'status_terima' => 'ditolak',
+                    'alasan_tolak' => $alasan,
+                  ]);
+              }
+            }
+          }
         }
         // 3. Eksekusi Batch Insert StockMovement (1 query untuk banyak baris)
         if (!empty($movements)) {
           StockMovement::insert($movements);
         }
 
-        // Pencatatan otomatis jika ada selisih (Tetap dipertahankan)
-        if ($adaSelisih) {
-          $adjustment = StockAdjustment::create([
-            'store_id' => $stock_transfer->store_asal_id,
-            'kode_penyesuaian' => StockAdjustment::generateKode(),
-            'tanggal_penyesuaian' => $now,
-            'user_id' => $user->id,
-            'catatan' => "Selisih otomatis dari transfer {$stock_transfer->kode_transfer}",
-            'sumber_type' => StockTransfer::class,
-            'sumber_id' => $stock_transfer->id,
-          ]);
-
-          // Fetch stok asal sekaligus (menghindari query lagi di loop adjustment)
-          $selisihProductIds = collect($itemSelisih)->pluck('product_id')->unique();
-          $stokAsalList = ProductStock::query()
-            ->where('store_id', $stock_transfer->store_asal_id)
-            ->whereIn('product_id', $selisihProductIds)
-            ->get()
-            ->keyBy(fn($item) => $item->product_id . '_' . ($item->product_variant_id ?: 'null'));
-
-          $adjustmentDetails = [];
-          foreach ($itemSelisih as $detail) {
-            $selisihQty = $detail->qty_kirim - $detail->qty_diterima;
-            $stockKey = $detail->product_id . '_' . ($detail->product_variant_id ?: 'null');
-            $stokAsalSaatIni = $stokAsalList->get($stockKey)?->qty ?? 0;
-
-            $adjustmentDetails[] = [
-              'stock_adjustment_id' => $adjustment->id,
-              'product_id' => $detail->product_id,
-              'product_variant_id' => $detail->product_variant_id,
-              'type' => 'hilang',
-              'jumlah' => -$selisihQty,
-              'stok_sebelum' => $stokAsalSaatIni,
-              'stok_setelah' => $stokAsalSaatIni,
-              'alasan' => $detail->keterangan_selisih ?: 'Selisih diterima saat transfer stok',
-              'created_at' => $now,
-              'updated_at' => $now,
-            ];
-          }
-
-          if (!empty($adjustmentDetails)) {
-            $adjustment->details()->insert($adjustmentDetails); // Batch insert details
-          }
+        // Batch insert pergerakan stok untuk selisih yang dikembalikan ke toko asal.
+        // Tidak ada StockAdjustment otomatis di sini - kalau selisihnya ternyata
+        // rusak (bukan cuma kelebihan kirim), toko asal yang mencatat penyesuaian
+        // itu sendiri setelah barang fisik diperiksa.
+        if (!empty($returnMovements)) {
+          StockMovement::insert($returnMovements);
         }
 
         $stock_transfer->update([
@@ -455,14 +500,18 @@ class StockTransferController extends Controller implements HasMiddleware
             'created_at' => $now,
             'updated_at' => $now,
           ];
-        }
 
-        $snIdsToRevert = $detail->serialNumbers()->pluck('serial_numbers.id')->toArray();
+          // Kembalikan SN item ini ke toko asal dengan status Tersedia
+          // (sebelumnya kode ini di luar loop, hanya memproses item terakhir
+          //  dan tidak mengembalikan store_id ke toko asal)
+          $snIdsToRevert = $detail->serialNumbers()->pluck('serial_numbers.id')->toArray();
 
-        if (!empty($snIdsToRevert)) {
-          SerialNumber::whereIn('id', $snIdsToRevert)->update([
-            'status' => 'Tersedia',
-          ]);
+          if (!empty($snIdsToRevert)) {
+            SerialNumber::whereIn('id', $snIdsToRevert)->update([
+              'store_id' => $storeAsalId,
+              'status' => 'Tersedia',
+            ]);
+          }
         }
 
         // Batch Insert pergerakan stok
