@@ -27,9 +27,8 @@ class SaleController extends Controller implements HasMiddleware
   {
     return [
       new Middleware('permission:view-penjualan', only: ['index', 'show']),
-      new Middleware('permission:create-penjualan', only: ['create', 'store', 'getTodayHistory', 'generateInvoiceNumber']),
+      new Middleware('permission:create-penjualan', only: ['create', 'store', 'getTodayHistory', 'generateInvoiceNumber', 'printThermal', 'generatePdf']),
       new Middleware('permission:edit-penjualan', only: ['edit', 'update']),
-      new Middleware('permission:print-penjualan', only: ['printThermal', 'generatePdf']),
     ];
   }
   /**

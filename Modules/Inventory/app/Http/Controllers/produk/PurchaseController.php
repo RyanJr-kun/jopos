@@ -24,10 +24,9 @@ class PurchaseController extends Controller implements HasMiddleware
   {
     return [
       new Middleware('permission:view-pembelian', only: ['index', 'show', 'generatePurchaseInvoiceNumber']),
-      new Middleware('permission:create-pembelian', only: ['create', 'store']),
+      new Middleware('permission:create-pembelian', only: ['create', 'store', 'printThermal', 'generatePdf']),
       new Middleware('permission:edit-pembelian', only: ['edit', 'update']),
-      new Middleware('permission:delete-pembelian', only: ['destroy']),
-      new Middleware('permission:print-pembelian', only: ['printThermal', 'generatePdf']),
+      new Middleware('permission:delete-pembelian', only: ['destroy'])
     ];
   }
   /**
